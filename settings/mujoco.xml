@@ -1,0 +1,62 @@
+<!-- MuJoCo simulation model.
+     This file is MuJoCo-native and intentionally contains the robot model,
+     actuators, scene objects, camera, and simulation options. -->
+<mujoco model="planar_3dof">
+  <compiler angle="radian" coordinate="local"/>
+  <option gravity="0 0 0" timestep="0.002" integrator="RK4"/>
+
+  <default>
+    <joint damping="0.1"/>
+    <geom type="capsule" size="0.05" rgba="0.8 0.6 0.4 1"/>
+  </default>
+
+  <worldbody>
+    <light name="top_light" pos="0 0 5" dir="0 0 -1"/>
+    <camera name="top_down" pos="0 0 6" xyaxes="1 0 0 0 1 0"/>
+
+    <geom name="floor" type="plane" pos="0 0 -0.1" size="3 3 0.1" rgba="0.9 0.9 0.9 1"/>
+    <geom name="obstacle_geom" type="cylinder" pos="0.5 0.5 0" size="0.2 0.05" rgba="1 0 0 0.8" contype="0" conaffinity="0"/>
+
+    <!-- <body name="base_link" pos="0 0 0">
+      <body name="link1" pos="0 0 0">
+        <joint name="joint1" type="hinge" axis="0 0 1" pos="0 0 0" limited="true" range="-3.14 3.14"/>
+        <geom name="geom1" fromto="0 0 0 1.0 0 0" mass="1.0"/>
+
+        <body name="link2" pos="1.0 0 0">
+          <joint name="joint2" type="hinge" axis="0 0 1" pos="0 0 0" limited="true" range="-3.14 3.14"/>
+          <geom name="geom2" fromto="0 0 0 1.0 0 0" mass="1.0"/>
+
+          <body name="link3" pos="1.0 0 0">
+            <joint name="joint3" type="hinge" axis="0 0 1" pos="0 0 0" limited="true" range="-3.14 3.14"/>
+            <geom name="geom3" fromto="0 0 0 1.0 0 0" mass="1.0"/>
+
+            <body name="ee_link" pos="1.0 0 0">
+              <geom name="ee_geom" type="sphere" size="0.06" rgba="0 0 1 1" mass="0"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body> -->
+    <body name="link1">
+      <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
+      <joint name="joint1" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+      <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
+      <body name="link2" pos="1 0 0">
+        <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
+        <joint name="joint2" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+        <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
+        <body name="link3" pos="1 0 0">
+          <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
+          <joint name="joint3" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+          <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <velocity name="vel1" joint="joint1" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+    <velocity name="vel2" joint="joint2" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+    <velocity name="vel3" joint="joint3" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+  </actuator>
+</mujoco>

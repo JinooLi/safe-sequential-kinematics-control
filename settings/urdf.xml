@@ -1,0 +1,116 @@
+<?xml version="1.0" ?>
+<robot name="planar_3dof">
+
+  <!-- 베이스 링크 (고정점) -->
+  <link name="base_link">
+  </link>
+
+  <!-- 관절 1 -->
+  <joint name="joint1" type="revolute">
+    <limit lower="-3.14" upper="3.14" effort="100" velocity="10"/>
+    <dynamics damping="0.1"/>
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- 링크 1 -->
+  <link name="link1">
+    <inertial>
+      <origin xyz="0.5 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- 관절 2: 링크 1의 끝(x=1.0)에 위치 -->
+  <joint name="joint2" type="revolute">
+    <limit lower="-3.14" upper="3.14" effort="100" velocity="10"/>
+    <dynamics damping="0.1"/>
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="1.0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- 링크 2 -->
+  <link name="link2">
+    <inertial>
+      <origin xyz="0.5 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- 관절 3: 링크 2의 끝(x=1.0)에 위치 -->
+  <joint name="joint3" type="revolute">
+    <limit lower="-3.14" upper="3.14" effort="100" velocity="10"/>
+    <dynamics damping="0.1"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="1.0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- 링크 3 -->
+  <link name="link3">
+    <inertial>
+      <origin xyz="0.5 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.1" ixy="0.0" ixz="0.0" iyy="0.1" iyz="0.0" izz="0.1"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.5 0 0" rpy="0 1.57079632679 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- 끝단(End-effector) 프레임: 링크 3의 끝(x=1.0)에 위치 -->
+  <joint name="ee_joint" type="fixed">
+    <parent link="link3"/>
+    <child link="ee_link"/>
+    <origin xyz="1.0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="ee_link">
+    <visual>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+    </visual>
+  </link>
+
+</robot>
