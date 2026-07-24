@@ -3,6 +3,7 @@ import os
 import numpy as np
 import osqp
 import scipy.sparse as sparse
+from scipy.linalg import block_diag
 import yaml
 
 
@@ -18,6 +19,12 @@ class Controller:
 
         self.solver_num: int = data["solver_num"]
         self.dof: int = data["dof"]
+        self.ee_obj: list[float] = data["ee_obj"]
+        R = np.array(data["QP_ctrl"]["R"])
+        Q = np.array(data["QP_ctrl"]["Q"])
+        self.P = np.array(block_diag(R, Q))
+        self.d = data["QP_ctrl"]["d"]
+
         self.solver: list[osqp.OSQP] = []
         self.is_initialized: list[bool] = []
         for i in range(self.solver_num):
@@ -98,12 +105,29 @@ class Controller:
             아직 구현되지 않았다. 보통 pseudo-inverse나 QP를 사용해
             q_dot을 계산하는 함수로 채우면 된다.
         """
-        dest = np.array([1, 2])
         J = J[:2]  # orientation과 z축 방향까지 자른다.
         p_ee = p_ee[:2]  # 어차피 2차원이니까 z축은 자른다.
 
-        err = dest - p_ee
-        input = J.T @ np.linalg.inv(J @ J.T + np.eye(2) * 0.01) @ err
+        A1 = self.dclf(p_ee) @ J
+        A2 = np.array([-1])
+
+        l1 = -np.inf
+        l2 = 0
+
+        u1 = -self.clf(p_ee)
+        u2 = self.d * self.clf(p_ee)
+
+        A = np.array(block_diag(A1, A2))
+        l = np.array([l1, l2])
+        u = np.array([u1, u2])
+
+        solve, res = self.QP(1, self.P, np.zeros(4), A, l, u)
+
+        if solve:
+            input = res[:3]
+        else:
+            print("QP failed")
+            input = np.zeros(3)
 
         return input
 
@@ -119,6 +143,12 @@ class Controller:
             목표 관절 속도 0 rad/s를 의미한다.
         """
         return np.zeros(self.dof)
+
+    def clf(self, ee):
+        return float(0.5 * (ee - self.ee_obj) @ (ee - self.ee_obj))
+
+    def dclf(self, ee):
+        return np.array(ee - self.ee_obj).T
 
 
 if __name__ == "__main__":
