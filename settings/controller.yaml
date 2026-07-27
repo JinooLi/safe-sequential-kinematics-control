@@ -5,12 +5,28 @@ obstacle:
   - radius: 0.2
     pos: [0.5, 0.5]
 
-solver_num: 5
+# Exact capsule-SDF CBF.  link_lengths/radius must match settings/urdf.xml
+# and settings/mujoco.xml.  ``safe_distance`` is the clearance beyond both
+# physical radii; increase it later by the measured RDF approximation error.
+safety:
+  enabled: true
+  # The checked-in model was trained with `python -m src.train_rdf --degree 12
+  # --samples 12000 --seed 0`.  Its sampled max error was 0.024857 m; the
+  # 0.08 m margin below retains the desired 0.05 m physical clearance plus a
+  # rounded-up RDF error allowance.  Re-measure after every retraining.
+  representation: bernstein # capsule | bernstein
+  rdf_model_path: models/planar_bernstein_rdf.npz
+  link_lengths: [1.0, 1.0, 1.0]
+  link_radius: 0.05
+  safe_distance: 0.08
+  alpha: 8.0
+  velocity_limit: 4.0
+  clf_rate: 1.0
+
 QP_ctrl:
   R:
     - [1, 0, 0]
     - [0, 1, 0]
     - [0, 0, 1]
   Q:
-    - [0.1]
-  d: 0.01 # 0 초과 1 미만 크면 클수록 관대함
+    - [2]

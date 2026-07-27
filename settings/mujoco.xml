@@ -3,10 +3,10 @@
      actuators, scene objects, camera, and simulation options. -->
 <mujoco model="planar_3dof">
   <compiler angle="radian" coordinate="local"/>
-  <option gravity="0 0 0" timestep="0.002" integrator="RK4"/>
+  <option gravity="0 0 0" timestep="0.002" integrator="implicitfast"/>
 
   <default>
-    <joint damping="0.1"/>
+    <joint damping="1.0"/>
     <geom type="capsule" size="0.05" rgba="0.8 0.6 0.4 1"/>
   </default>
 
@@ -39,15 +39,15 @@
     </body> -->
     <body name="link1">
       <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
-      <joint name="joint1" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+      <joint name="joint1" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="1.0"/>
       <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
       <body name="link2" pos="1 0 0">
         <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
-        <joint name="joint2" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+        <joint name="joint2" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="1.0"/>
         <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
         <body name="link3" pos="1 0 0">
           <inertial pos="0.5 0 0" mass="1" diaginertia="0.1 0.1 0.1"/>
-          <joint name="joint3" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="0.1"/>
+          <joint name="joint3" pos="0 0 0" axis="0 0 1" range="-3.14 3.14" actuatorfrcrange="-100 100" damping="1.0"/>
           <geom size="0.05 0.5" pos="0.5 0 0" quat="0.707107 0 0.707107 0" type="cylinder"/>
         </body>
       </body>
@@ -55,8 +55,8 @@
   </worldbody>
 
   <actuator>
-    <velocity name="vel1" joint="joint1" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
-    <velocity name="vel2" joint="joint2" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
-    <velocity name="vel3" joint="joint3" kv="100" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+    <velocity name="vel1" joint="joint1" kv="30" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+    <velocity name="vel2" joint="joint2" kv="30" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
+    <velocity name="vel3" joint="joint3" kv="30" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-100 100"/>
   </actuator>
 </mujoco>

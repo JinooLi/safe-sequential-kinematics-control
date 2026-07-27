@@ -3,16 +3,7 @@ import os
 
 import numpy as np
 
-
-idx = {
-    "t": 0,
-    "q": 1,
-    "dq": 2,
-    "ee": 3,
-    "u": 4,
-    "clbf1": 5,
-    "clbf2": 6,
-}
+from ..domain.types import SimulationStep
 
 
 class Recorder:
@@ -20,7 +11,7 @@ class Recorder:
 
     Usage:
         recorder = Recorder()
-        recorder.record(t=0.0, q=q, dq=dq, ee=p_ee, u=ctrl)
+        recorder.record(step)
         recorder.save_npz("outputs/sim_data.npz")
         recorder.save_csv("outputs/sim_data.csv")
         recorder.plot("outputs/sim_plot.png")
@@ -28,35 +19,28 @@ class Recorder:
     """
 
     def __init__(self):
+        self.barrier_labels: tuple[str, ...] = ()
         self._data = {
             "t": [],
             "q": [],
             "dq": [],
             "ee": [],
             "u": [],
-            "clbf1": [],
-            "clbf2": [],
+            "barrier": [],
         }
 
-    def record(self, t, q, dq, ee, u=None, clbf1=None, clbf2=None):
-        """한 simulation step의 데이터를 기록한다.
-
-        Args:
-            t: MuJoCo simulation time.
-            q: joint position vector.
-            dq: joint velocity vector.
-            ee: end-effector position vector.
-            u: actuator command vector. 현재 모델에서는 목표 joint velocity.
-            clbf1: 필요할 때 추가로 기록할 scalar/vector 값.
-            clbf2: 필요할 때 추가로 기록할 scalar/vector 값.
-        """
-        self._data["t"].append(float(t))
-        self._data["q"].append(np.asarray(q, dtype=float).copy())
-        self._data["dq"].append(np.asarray(dq, dtype=float).copy())
-        self._data["ee"].append(np.asarray(ee, dtype=float).copy())
-        self._data["u"].append(self._optional_array(u))
-        self._data["clbf1"].append(self._optional_array(clbf1))
-        self._data["clbf2"].append(self._optional_array(clbf2))
+    def record(self, step: SimulationStep):
+        """Record one typed simulation step and its named safety diagnostics."""
+        labels = step.safety.barrier_labels
+        if self.barrier_labels and self.barrier_labels != labels:
+            raise ValueError("barrier label order changed during recording")
+        self.barrier_labels = labels
+        self._data["t"].append(float(step.time))
+        self._data["q"].append(np.asarray(step.q, dtype=float).copy())
+        self._data["dq"].append(np.asarray(step.dq, dtype=float).copy())
+        self._data["ee"].append(np.asarray(step.end_effector, dtype=float).copy())
+        self._data["u"].append(np.asarray(step.command, dtype=float).copy())
+        self._data["barrier"].append(step.safety.barrier_values.copy())
 
     def arrays(self):
         """기록된 데이터를 numpy array dictionary로 반환한다."""
@@ -83,6 +67,8 @@ class Recorder:
         """
         recorder = cls()
         loaded = np.load(path)
+        if "barrier_labels" in loaded:
+            recorder.barrier_labels = tuple(str(label) for label in loaded["barrier_labels"])
         for key in recorder._data:
             recorder._data[key] = []
             if key not in loaded:
@@ -97,7 +83,11 @@ class Recorder:
     def save_npz(self, path):
         """기록된 데이터를 .npz 파일로 저장한다."""
         self._ensure_parent_dir(path)
-        np.savez(path, **self.arrays())
+        np.savez(
+            path,
+            **self.arrays(),
+            barrier_labels=np.asarray(self.barrier_labels, dtype=str),
+        )
 
     def save_csv(self, path):
         """기록된 데이터를 사람이 읽기 쉬운 CSV 파일로 저장한다.
@@ -110,10 +100,14 @@ class Recorder:
 
         self._ensure_parent_dir(path)
         headers = ["t"]
-        vector_keys = [key for key in ("q", "dq", "ee", "u", "clbf1", "clbf2") if key in arrays]
+        vector_keys = [
+            key
+            for key in ("q", "dq", "ee", "u", "barrier")
+            if key in arrays
+        ]
         for key in vector_keys:
             width = self._vector_width(arrays[key])
-            headers.extend(f"{key}_{i}" for i in range(width))
+            headers.extend(self._component_label(key, i) for i in range(width))
 
         with open(path, "w", newline="") as f:
             writer = csv.writer(f)
@@ -140,7 +134,11 @@ class Recorder:
         if "t" not in arrays:
             raise ValueError("No recorded data to plot.")
 
-        plot_keys = [key for key in ("q", "dq", "ee", "u", "clbf1", "clbf2") if key in arrays]
+        plot_keys = [
+            key
+            for key in ("q", "dq", "ee", "u", "barrier")
+            if key in arrays
+        ]
         if show:
             import matplotlib.pyplot as plt
 
@@ -165,7 +163,9 @@ class Recorder:
                 ax.plot(t, values, label=key)
             else:
                 for i in range(values.shape[1]):
-                    ax.plot(t, values[:, i], label=f"{key}_{i}")
+                    ax.plot(t, values[:, i], label=self._component_label(key, i))
+            if key == "barrier":
+                ax.axhline(0.0, color="black", linestyle="--", linewidth=1, label="boundary")
             ax.set_ylabel(key)
             ax.grid(True)
             ax.legend(loc="best")
@@ -203,7 +203,11 @@ class Recorder:
         if "t" not in arrays:
             raise ValueError("No recorded data to show.")
 
-        plot_keys = [key for key in ("q", "dq", "ee", "u", "clbf1", "clbf2") if key in arrays]
+        plot_keys = [
+            key
+            for key in ("q", "dq", "ee", "u", "barrier")
+            if key in arrays
+        ]
         if not plot_keys:
             raise ValueError("No vector data to show.")
 
@@ -233,7 +237,7 @@ class Recorder:
             values = np.asarray(arrays[key][sample_index])
             text = [f"{key} @ {t[sample_index]:.4f} s"]
             for i, value in enumerate(np.ravel(values)):
-                text.append(f"{key}_{i}: {value:.6g}")
+                text.append(f"{self._component_label(key, i)}: {value:.6g}")
             ax_value.clear()
             ax_value.axis("off")
             ax_value.text(0.0, 1.0, "\n".join(text), va="top", family="monospace")
@@ -246,7 +250,12 @@ class Recorder:
             else:
                 line = []
                 for i in range(values.shape[1]):
-                    line.extend(ax_plot.plot(t, values[:, i], label=f"{key}_{i}"))
+                    line.extend(
+                        ax_plot.plot(t, values[:, i], label=self._component_label(key, i))
+                    )
+
+            if key == "barrier":
+                ax_plot.axhline(0.0, color="black", linestyle="--", linewidth=1, label="boundary")
 
             cursor = ax_plot.axvline(slider.val, color="black", linestyle="--", linewidth=1)
             lines[:] = [*line, cursor]
@@ -324,12 +333,6 @@ class Recorder:
         )
 
     @staticmethod
-    def _optional_array(value):
-        if value is None:
-            return None
-        return np.asarray(value, dtype=float).copy()
-
-    @staticmethod
     def _ensure_parent_dir(path):
         parent = os.path.dirname(path)
         if parent:
@@ -341,3 +344,8 @@ class Recorder:
         if values.ndim == 1:
             return 1
         return values.shape[1]
+
+    def _component_label(self, key, index):
+        if key == "barrier" and index < len(self.barrier_labels):
+            return self.barrier_labels[index]
+        return f"{key}_{index}"

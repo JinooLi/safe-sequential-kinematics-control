@@ -1,5 +1,6 @@
-__pycache__
+__pycache__/
+*.py[cod]
 .python-version
 MJDATA.TXT
-.matplotlib
-outputs
+.matplotlib/
+outputs/
