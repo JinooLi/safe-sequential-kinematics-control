@@ -15,10 +15,15 @@ class QPController:
         self.dof = config.dof
         self.ee_obj = config.ee_target
         self.P = np.array(block_diag(config.qp.R, config.qp.Q))
+        self.clf_slack_ratio = config.qp.d
         safety_config = config.safety
         self.safety_enabled = safety_config.enabled
         self.obstacles = obstacles_from_config(
-            [{"pos": obstacle.position, "radius": obstacle.radius} for obstacle in config.obstacles]
+            [
+                {"pos": obstacle.position, "radius": obstacle.radius}
+                for obstacle in config.obstacles
+                if obstacle.enabled
+            ]
         )
         self.safety_model = None
         if self.safety_enabled:
@@ -81,6 +86,14 @@ class QPController:
             rows.append(row)
             lower.append(-self.velocity_limit)
             upper.append(self.velocity_limit)
+
+        # The relaxation is non-negative and at most d times the current CLF
+        # value. CBF rows remain hard constraints and are never relaxed.
+        slack_row = np.zeros(self.dof + 1)
+        slack_row[-1] = 1.0
+        rows.append(slack_row)
+        lower.append(0.0)
+        upper.append(self.clf_slack_ratio * self.clf(p_ee))
 
         A = np.vstack(rows)
         l = np.asarray(lower)

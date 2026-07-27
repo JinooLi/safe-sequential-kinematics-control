@@ -19,4 +19,12 @@ if __name__ == "__main__":
     controller = QPController(config, OSQPSolver())
     robot = RobotInterface(urdf_path, "ee_joint")
     recorder = Recorder()
-    run_simulation(mjc_path, controller, robot, recorder=recorder, duration=20)
+    run_simulation(
+        mjc_path,
+        controller,
+        robot,
+        target_position=config.ee_target,
+        obstacle_enabled=[obstacle.enabled for obstacle in config.obstacles],
+        recorder=recorder,
+        duration=20,
+    )

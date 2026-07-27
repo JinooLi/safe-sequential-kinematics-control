@@ -3,6 +3,7 @@ import time
 
 import mujoco
 import mujoco.viewer
+import numpy as np
 
 from ..domain.interfaces import KinematicsProvider, SimulationRecorder, VelocityController
 from ..domain.types import SimulationStep
@@ -22,7 +23,7 @@ def load_mujoco_model(mujoco_xml_path):
         model = load_mujoco_model("settings/mujoco.xml")
         data = mujoco.MjData(model)
     """
-    return mujoco.MjModel.from_xml_path(mujoco_xml_path)
+    return mujoco.MjModel.from_xml_path(str(mujoco_xml_path))
 
 
 def _use_fixed_camera_if_available(viewer, mj_model, camera_name):
@@ -41,10 +42,37 @@ def _use_fixed_camera_if_available(viewer, mj_model, camera_name):
     viewer.cam.fixedcamid = cam_id
 
 
+def set_goal_marker_position(mj_model, target_position):
+    """Set the visual-only ``goal_marker`` geom to a planar target position."""
+    target_position = np.asarray(target_position, dtype=float)
+    if target_position.shape != (2,):
+        raise ValueError("target_position must contain exactly [x, y]")
+
+    marker_id = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_GEOM, "goal_marker")
+    if marker_id == -1:
+        raise ValueError("MuJoCo model must define a geom named 'goal_marker'")
+
+    mj_model.geom_pos[marker_id, :2] = target_position
+
+
+def set_obstacle_visibility(mj_model, obstacle_enabled):
+    """Show or hide numbered MuJoCo obstacle geoms without changing geometry."""
+    for index, enabled in enumerate(obstacle_enabled, start=1):
+        geom_id = mujoco.mj_name2id(
+            mj_model, mujoco.mjtObj.mjOBJ_GEOM, f"obstacle_geom{index}"
+        )
+        if geom_id == -1:
+            raise ValueError(f"MuJoCo model must define a geom named 'obstacle_geom{index}'")
+        if not enabled:
+            mj_model.geom_rgba[geom_id, 3] = 0.0
+
+
 def run_simulation(
     mujoco_xml_path,
     controller: VelocityController,
     robot: KinematicsProvider,
+    target_position=None,
+    obstacle_enabled=None,
     duration=20.0,
     visualize=True,
     camera_name="top_down",
@@ -60,6 +88,10 @@ def run_simulation(
         mujoco_xml_path: 완전한 MuJoCo MJCF 모델 파일 경로.
         controller: 속도 명령과 barrier를 제공하는 제어기 구현체.
         robot: end-effector 위치/Jacobian을 제공하는 기구학 구현체.
+        target_position: [x, y] 목표 좌표. 지정하면 visual-only ``goal_marker``를
+            이 위치에 표시한다.
+        obstacle_enabled: 장애물별 표시/CBF 활성화 여부. False인 장애물은 화면에서
+            숨긴다. CBF 제외는 controller가 같은 설정을 사용해 처리한다.
         duration: simulated time 기준 실행 시간, 단위는 초.
         visualize: True이면 MuJoCo viewer 창을 띄워 실시간에 가깝게 보여준다.
         camera_name: viewer에서 사용할 MuJoCo fixed camera 이름. 없으면 기본 viewer
@@ -81,6 +113,10 @@ def run_simulation(
         )
     """
     mj_model = load_mujoco_model(mujoco_xml_path)
+    if target_position is not None:
+        set_goal_marker_position(mj_model, target_position)
+    if obstacle_enabled is not None:
+        set_obstacle_visibility(mj_model, obstacle_enabled)
     mj_data = mujoco.MjData(mj_model)
     dt = mj_model.opt.timestep
     mujoco.mj_forward(mj_model, mj_data)

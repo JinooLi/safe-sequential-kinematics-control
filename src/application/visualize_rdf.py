@@ -134,7 +134,11 @@ def main():
         raise ValueError(f"--q must provide exactly {config.dof} joint angles")
     robot = build_distance_model(config, args.representation)
     obstacles = obstacles_from_config(
-        [{"pos": item.position, "radius": item.radius} for item in config.obstacles]
+        [
+            {"pos": item.position, "radius": item.radius}
+            for item in config.obstacles
+            if item.enabled
+        ]
     )
     render_distance_field(
         robot,

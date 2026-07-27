@@ -61,6 +61,10 @@ Bernstein RDF에서는 검증 데이터의 최악 근사오차보다 큰 값을 
 포함해 보수성을 유지한다. `link_lengths`와 `link_radius`는 현재 반드시
 URDF/MuJoCo와 동일하게 유지해야 한다.
 
+`QP_ctrl.d`는 CLF relaxation의 허용 비율이다. QP에는
+`0 <= delta <= d * V` 제약이 추가되며, 값이 클수록 목표 추종 CLF를 더 많이
+완화할 수 있다. CBF 안전 제약은 이 slack으로 완화되지 않는다.
+
 기준 구현의 검증은 다음으로 실행한다.
 
 ```bash
@@ -101,6 +105,19 @@ uv run python -m src.application.visualize_rdf \
 기준 capsule과 학습된 RDF를 비교하려면 `--representation capsule` 또는
 `--representation bernstein`을 지정한다. 화면에 바로 표시하려면 `--show`를
 추가한다.
+
+### 시뮬레이션 목표 표시
+
+MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구체 `goal_marker`가
+표시된다. 위치는 별도 XML 값이 아니라 `settings/controller.yaml`의
+`ee_obj: [x, y]`를 실행 시 직접 사용하므로, 목표를 바꾸려면 이 설정만 수정하면
+된다.
+
+### 장애물 비활성화 비교
+
+`settings/controller.yaml`의 각 `obstacle` 항목에 있는 `enabled`를 `false`로
+바꾸면 해당 장애물은 CBF 제약, MuJoCo 장면, 거리장 PNG에서 모두 제외된다.
+초기 자세와 목표를 유지한 채 장애물이 있을 때와 없을 때를 비교할 수 있다.
 
 ### Barrier 기록과 시각화
 

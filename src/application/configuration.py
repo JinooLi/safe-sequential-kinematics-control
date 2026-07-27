@@ -14,6 +14,7 @@ import yaml
 class ObstacleConfig:
     position: tuple[float, float]
     radius: float
+    enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class SafetyConfig:
 class QPConfig:
     R: np.ndarray
     Q: np.ndarray
+    d: float
 
 
 @dataclass(frozen=True)
@@ -51,7 +53,11 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     safety_data = data["safety"]
     qp_data = data["QP_ctrl"]
     obstacles = tuple(
-        ObstacleConfig(tuple(map(float, entry["pos"])), float(entry["radius"]))
+        ObstacleConfig(
+            tuple(map(float, entry["pos"])),
+            float(entry["radius"]),
+            bool(entry.get("enabled", True)),
+        )
         for entry in data.get("obstacle", [])
     )
     safety = SafetyConfig(
@@ -70,7 +76,11 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         ee_target=np.asarray(data["ee_obj"], dtype=float),
         obstacles=obstacles,
         safety=safety,
-        qp=QPConfig(np.asarray(qp_data["R"], dtype=float), np.asarray(qp_data["Q"], dtype=float)),
+        qp=QPConfig(
+            np.asarray(qp_data["R"], dtype=float),
+            np.asarray(qp_data["Q"], dtype=float),
+            float(qp_data["d"]),
+        ),
     )
     if config.dof != len(config.safety.link_lengths):
         raise ValueError("dof and safety.link_lengths must have the same length")
@@ -78,6 +88,8 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         raise ValueError("ee_obj must contain exactly [x, y]")
     if config.qp.R.shape != (config.dof, config.dof) or config.qp.Q.shape != (1, 1):
         raise ValueError("QP_ctrl must contain a dof-by-dof R and 1-by-1 Q")
+    if not 0.0 < config.qp.d < 1.0:
+        raise ValueError("QP_ctrl.d must satisfy 0 < d < 1")
     if config.safety.representation not in {"capsule", "bernstein"}:
         raise ValueError("safety representation must be 'capsule' or 'bernstein'")
     return config
