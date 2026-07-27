@@ -64,7 +64,7 @@ URDF/MuJoCo와 동일하게 유지해야 한다.
 기준 구현의 검증은 다음으로 실행한다.
 
 ```bash
-UV_CACHE_DIR=/tmp/codex-uv-cache uv run python -m unittest discover -s tests -v
+uv run python -m unittest discover -s tests -v
 ```
 
 ### Bernstein RDF 학습과 사용
@@ -73,7 +73,7 @@ UV_CACHE_DIR=/tmp/codex-uv-cache uv run python -m unittest discover -s tests -v
 `models/planar_bernstein_rdf.npz`에 저장한다.
 
 ```bash
-UV_CACHE_DIR=/tmp/codex-uv-cache uv run python -m src.application.train_rdf \
+uv run python -m src.application.train_rdf \
   --degree 12 --samples 12000 --seed 0
 ```
 
@@ -87,6 +87,20 @@ UV_CACHE_DIR=/tmp/codex-uv-cache uv run python -m src.application.train_rdf \
 해석적 gradient를 쓰는 Newton projection으로 정확한 level-set 점을 만든다.
 이는 surface 시각화나 표면점 기반 비교용이며, 제어기는 매 주기 장애물의
 중심점을 RDF에 직접 질의하므로 표면점 샘플링을 기다리지 않는다.
+
+### 거리장 시각화
+
+현재 설정의 RDF, 로봇 표면(`f=0` 실선), 안전 level set
+(`f=safe_distance` 점선), 장애물을 하나의 PNG로 렌더링한다.
+
+```bash
+uv run python -m src.application.visualize_rdf \
+  --q 0.2 -0.4 0.1 --output outputs/distance_field.png
+```
+
+기준 capsule과 학습된 RDF를 비교하려면 `--representation capsule` 또는
+`--representation bernstein`을 지정한다. 화면에 바로 표시하려면 `--show`를
+추가한다.
 
 ### Barrier 기록과 시각화
 
