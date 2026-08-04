@@ -36,6 +36,27 @@ src/
 이전 중복 MuJoCo 모델 `mjmodel.xml`은 사용 경로가 없고
 `settings/mujoco.xml`과 중복되어 제거했다.
 
+### 명령 별칭
+
+반복해서 입력할 필요 없이 아래 Makefile 별칭을 사용할 수 있다.
+
+```bash
+make help            # 가능한 별칭 확인
+make run             # MuJoCo 시뮬레이션
+make test            # 전체 테스트
+make train-rdf       # RDF 학습
+make visualize-rdf   # 거리장 PNG
+make visualize-clf   # CLF q-space 등고면 PNG
+make visualize-clbf  # end-effector CLBF 3D 단면 PNG
+```
+
+각 시각화의 추가 인자는 `ARGS`로 전달한다. 예를 들어 창을 열고 CLBF 해상도를
+높이려면 다음처럼 실행한다.
+
+```bash
+make visualize-clbf ARGS="--show --resolution 160"
+```
+
 ## 거리장 기반 CBF 안전 제약
 
 `src/domain/safety.py`는 각 링크를 capsule로 외접하는 2D signed distance
@@ -64,6 +85,52 @@ URDF/MuJoCo와 동일하게 유지해야 한다.
 `QP_ctrl.d`는 CLF relaxation의 허용 비율이다. QP에는
 `0 <= delta <= d * V` 제약이 추가되며, 값이 클수록 목표 추종 CLF를 더 많이
 완화할 수 있다. CBF 안전 제약은 이 slack으로 완화되지 않는다.
+
+`ee_obj: [x, y]`와 `ee_orientation: yaw`는 각각 end-effector의 목표 위치와
+목표 yaw[rad]를 정의한다. 평면 CLF task는 `[x, y, yaw]`이며 Pinocchio 6D
+spatial Jacobian에서는 `[J_x, J_y, J_angular_z] = J[[0, 1, 5], :]`를 사용한다.
+특히 `J[2, :]`는 linear z 속도이므로 yaw 제어에 사용하면 안 된다. yaw 오차는
+`[-pi, pi)`로 wrap하여 ±pi 경계에서 짧은 회전 방향을 택한다.
+
+### CLF / CLBF QP 선택
+
+`settings/controller.yaml`의 `control_mode`로 목표 수렴 constraint를 선택한다.
+
+```yaml
+control_mode: clf   # 기존 CLF-QP
+# 또는
+control_mode: clbf  # 최종 누적 CLBF-QP
+```
+
+`clf` 모드에서는 기존 제약
+
+\[
+\dot V - \delta \le -k_V V
+\]
+
+을 사용한다. `clbf` 모드에서는 **end-effector와 활성 장애물 사이의** barrier만
+설정 순서대로 하나씩 누적한다. 링크별 CBF의 \(h\)와 혼동하지 않도록, 여기서는
+unsafe 영역에서 양수가 되는 다음 barrier를 사용한다.
+
+\[
+b_i=r_i+r_{ee}+d_{safe}-\lVert p_{ee}-p_{obs,i}\rVert,
+\qquad B_i=\max(b_i,0)^2-\epsilon_i,
+\qquad W_0=V,\qquad W_k=W_{k-1}+\lambda_kB_k+\kappa_k
+\]
+
+두 장애물이 활성화된 기본 설정에서는 \(W_1,W_2\)를 만들며, 중간 \(W_1\)은
+기록용이고 마지막 \(W_2\)만으로 단 하나의 CLBF QP 행을 추가한다.
+
+\[
+\nabla_qW_M\dot q\le-\gamma W_M
+\]
+
+CLBF 행에는 slack을 허용하지 않는다. 기존 링크별 CBF는 CLBF mode에서도 그대로
+hard constraint로 유지한다. `clbf.barriers`의 첫 항은 \(\epsilon_1,\lambda_1,\kappa_1\)를
+직접 지정한다. \(B_i\)는 구성상 항상 \(B_i\ge-\epsilon_i\)를 만족한다. 이후
+`auto_from_previous: true` 항은 \(\epsilon_i=\epsilon_1\)로 두고, 논문의 재귀식과 해당
+장애물의 \(c_{i,3}\)로 \(\lambda_i,\kappa_i\)를 자동 계산한다. recorder는 `clf`와
+`clbf` 항목으로 각각 \(V\), \(W_1,\ldots,W_M\)를 기록한다.
 
 기준 구현의 검증은 다음으로 실행한다.
 
@@ -106,6 +173,35 @@ uv run python -m src.application.visualize_rdf \
 `--representation bernstein`을 지정한다. 화면에 바로 표시하려면 `--show`를
 추가한다.
 
+### q-space CLF 등고면 시각화
+
+3자유도 로봇에서는 CLF를 forward kinematics로 관절 공간에 직접 대입한
+`V(q1, q2, q3)`를 만들 수 있다. 아래 명령은 기본 관절 범위
+`[-pi, pi]^3`에서 `V(q)=1`인 2차원 등고면을 3D PNG로 저장한다.
+
+```bash
+uv run python -m src.application.visualize_clf \
+  --level 1 --resolution 36 --output outputs/clf_level_set.png
+```
+
+`--q-min`, `--q-max`으로 세 관절에 공통으로 적용할 표시 범위, `--level`로
+원하는 CLF 값을 바꿀 수 있다. 이 CLF는 controller와 동일하게
+`V=2(||p_ee(q)-p_goal||^2 + wrap(yaw(q)-yaw_goal)^2)`를 사용한다.
+`--show`를 더하면 회전 가능한 matplotlib 창으로도 확인할 수 있다.
+
+### End-effector CLBF 단면 시각화
+
+다음 명령은 최종 CLBF \(W_2\)를 task state \([x,y,\mathrm{yaw}]\)의 세 가지
+2차원 조합 \((x,y)\), \((x,\mathrm{yaw})\), \((y,\mathrm{yaw})\)에 대해 3D surface로
+그린다. 각 패널에서 표시하지 않는 한 축은 목표값에 고정된다. 빨간 선은 \(W_2=0\),
+점은 목표 task state다.
+
+```bash
+uv run python -m src.application.visualize_clbf --show
+```
+
+기본 출력 경로는 `outputs/clbf_task_slices.png`다.
+
 ### 시뮬레이션 목표 표시
 
 MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구체 `goal_marker`가
@@ -122,9 +218,10 @@ MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구�
 ### Barrier 기록과 시각화
 
 `run_simulation(..., recorder=Recorder())`은 매 제어 step을 typed
-`SimulationStep`으로 기록한다. 그 안의 `SafetyDiagnostics`가 각 장애물--링크
-barrier를 이름과 함께 보유한다. 순서는 `obs1_link1`, `obs1_link2`, ... 이며,
-각 성분은 다음과 같다.
+`SimulationStep`으로 기록한다. end-effector 위치 `ee`와 world-frame yaw
+`ee_yaw`[rad]는 NPZ/CSV/PNG 및 Recorder GUI에서 각각 확인할 수 있다. 그 안의
+`SafetyDiagnostics`가 각 장애물--링크 barrier를 이름과 함께 보유한다. 순서는
+`obs1_link1`, `obs1_link2`, ... 이며, 각 성분은 다음과 같다.
 
 ```text
 h = f_link(obstacle_center, q) - obstacle_radius - safe_distance
