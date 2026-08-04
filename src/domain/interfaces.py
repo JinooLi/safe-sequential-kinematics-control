@@ -12,11 +12,21 @@ from .types import SafetyDiagnostics, SimulationStep
 class KinematicsProvider(Protocol):
     def update_kinematics(self, q: np.ndarray) -> tuple[np.ndarray, np.ndarray]: ...
 
+    def end_effector_yaw(self) -> float: ...
+
 
 class VelocityController(Protocol):
-    def get_velocity(self, q: np.ndarray, J: np.ndarray, p_ee: np.ndarray) -> np.ndarray: ...
+    def get_velocity(
+        self, q: np.ndarray, J: np.ndarray, p_ee: np.ndarray, ee_yaw: float
+    ) -> np.ndarray: ...
 
-    def safety_diagnostics(self, q: np.ndarray) -> SafetyDiagnostics: ...
+    def safety_diagnostics(
+        self,
+        q: np.ndarray,
+        J: np.ndarray | None = None,
+        p_ee: np.ndarray | None = None,
+        ee_yaw: float | None = None,
+    ) -> SafetyDiagnostics: ...
 
 
 class SimulationRecorder(Protocol):

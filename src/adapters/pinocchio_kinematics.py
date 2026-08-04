@@ -18,6 +18,7 @@ class RobotInterface:
         self.data = self.model.createData()
         self.ee_frame_id = self.model.getFrameId(ee_frame_name)
         self.nv = self.model.nv
+        self._ee_yaw = 0.0
 
     def update_kinematics(self, q):
         """현재 관절 위치 q에서 end-effector 위치와 Jacobian을 계산한다.
@@ -40,6 +41,8 @@ class RobotInterface:
 
         # End-effector 위치 및 자코비안
         p_ee = self.data.oMf[self.ee_frame_id].translation
+        rotation = self.data.oMf[self.ee_frame_id].rotation
+        self._ee_yaw = float(np.arctan2(rotation[1, 0], rotation[0, 0]))
         J = pin.computeFrameJacobian(
             self.model,
             self.data,
@@ -49,3 +52,7 @@ class RobotInterface:
         )
 
         return p_ee, J
+
+    def end_effector_yaw(self):
+        """Return the world-frame planar yaw from the latest kinematics update."""
+        return self._ee_yaw

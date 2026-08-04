@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -22,12 +22,19 @@ class SafetyDiagnostics:
 
     barrier_labels: tuple[str, ...]
     barrier_values: np.ndarray
+    clf_value: float | None = None
+    clbf_labels: tuple[str, ...] = ()
+    clbf_values: np.ndarray = field(default_factory=lambda: np.empty(0))
 
     def __post_init__(self):
         values = np.asarray(self.barrier_values, dtype=float).reshape(-1)
         if len(values) != len(self.barrier_labels):
             raise ValueError("barrier_labels and barrier_values must have the same length")
         object.__setattr__(self, "barrier_values", values.copy())
+        clbf_values = np.asarray(self.clbf_values, dtype=float).reshape(-1)
+        if len(clbf_values) != len(self.clbf_labels):
+            raise ValueError("clbf_labels and clbf_values must have the same length")
+        object.__setattr__(self, "clbf_values", clbf_values.copy())
 
 
 @dataclass(frozen=True)
@@ -40,3 +47,4 @@ class SimulationStep:
     end_effector: np.ndarray
     command: np.ndarray
     safety: SafetyDiagnostics
+    end_effector_yaw: float = 0.0

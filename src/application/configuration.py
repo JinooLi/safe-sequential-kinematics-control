@@ -31,6 +31,29 @@ class SafetyConfig:
 
 
 @dataclass(frozen=True)
+class CLBFConfig:
+    gamma: float
+    end_effector_radius: float
+    barriers: tuple[CLBFBarrierConfig, ...]
+
+
+@dataclass(frozen=True)
+class CLBFBarrierConfig:
+    """One end-effector obstacle barrier in hierarchical CLBF order.
+
+    The first entry is the user-selected seed.  A later entry with
+    ``auto_from_previous`` derives its epsilon/lambda/kappa from all previous
+    entries and its own obstacle geometry, following the paper's recursion.
+    """
+
+    obstacle_index: int
+    epsilon: float | None = None
+    lambda_: float | None = None
+    kappa: float | None = None
+    auto_from_previous: bool = False
+
+
+@dataclass(frozen=True)
 class QPConfig:
     R: np.ndarray
     Q: np.ndarray
@@ -41,8 +64,11 @@ class QPConfig:
 class ControllerConfig:
     dof: int
     ee_target: np.ndarray
+    ee_orientation: float
+    control_mode: str
     obstacles: tuple[ObstacleConfig, ...]
     safety: SafetyConfig
+    clbf: CLBFConfig
     qp: QPConfig
 
 
@@ -51,6 +77,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     with open(path, "r") as file:
         data = yaml.safe_load(file)
     safety_data = data["safety"]
+    clbf_data = data["clbf"]
     qp_data = data["QP_ctrl"]
     obstacles = tuple(
         ObstacleConfig(
@@ -71,11 +98,28 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         velocity_limit=float(safety_data["velocity_limit"]),
         clf_rate=float(safety_data["clf_rate"]),
     )
+    clbf = CLBFConfig(
+        gamma=float(clbf_data["gamma"]),
+        end_effector_radius=float(clbf_data["end_effector_radius"]),
+        barriers=tuple(
+            CLBFBarrierConfig(
+                obstacle_index=int(barrier["obstacle_index"]),
+                epsilon=(float(barrier["epsilon"]) if "epsilon" in barrier else None),
+                lambda_=(float(barrier["lambda"]) if "lambda" in barrier else None),
+                kappa=(float(barrier["kappa"]) if "kappa" in barrier else None),
+                auto_from_previous=bool(barrier.get("auto_from_previous", False)),
+            )
+            for barrier in clbf_data["barriers"]
+        ),
+    )
     config = ControllerConfig(
         dof=int(data["dof"]),
         ee_target=np.asarray(data["ee_obj"], dtype=float),
+        ee_orientation=float(data.get("ee_orientation", 0.0)),
+        control_mode=str(data.get("control_mode", "clf")),
         obstacles=obstacles,
         safety=safety,
+        clbf=clbf,
         qp=QPConfig(
             np.asarray(qp_data["R"], dtype=float),
             np.asarray(qp_data["Q"], dtype=float),
@@ -86,12 +130,43 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         raise ValueError("dof and safety.link_lengths must have the same length")
     if config.ee_target.shape != (2,):
         raise ValueError("ee_obj must contain exactly [x, y]")
+    if not np.isfinite(config.ee_orientation):
+        raise ValueError("ee_orientation must be finite")
+    if config.control_mode not in {"clf", "clbf"}:
+        raise ValueError("control_mode must be 'clf' or 'clbf'")
     if config.qp.R.shape != (config.dof, config.dof) or config.qp.Q.shape != (1, 1):
         raise ValueError("QP_ctrl must contain a dof-by-dof R and 1-by-1 Q")
-    if not 0.0 < config.qp.d < 1.0:
-        raise ValueError("QP_ctrl.d must satisfy 0 < d < 1")
+    if not 0.0 < config.qp.d <= 1.0:
+        raise ValueError("QP_ctrl.d must satisfy 0 < d <= 1")
     if config.safety.representation not in {"capsule", "bernstein"}:
         raise ValueError("safety representation must be 'capsule' or 'bernstein'")
+    if config.control_mode == "clbf" and not config.safety.enabled:
+        raise ValueError("control_mode 'clbf' requires safety.enabled")
+    if config.clbf.gamma <= 0.0:
+        raise ValueError("clbf gamma must be positive")
+    if config.clbf.end_effector_radius <= 0.0:
+        raise ValueError("clbf end_effector_radius must be positive")
+    active_obstacle_indices = {
+        index for index, obstacle in enumerate(config.obstacles, start=1) if obstacle.enabled
+    }
+    configured_indices = tuple(barrier.obstacle_index for barrier in config.clbf.barriers)
+    if config.control_mode == "clbf" and set(configured_indices) != active_obstacle_indices:
+        raise ValueError("clbf.barriers must contain each active obstacle exactly once")
+    if len(configured_indices) != len(set(configured_indices)):
+        raise ValueError("clbf.barriers must not repeat an obstacle_index")
+    if config.control_mode == "clbf" and not config.clbf.barriers:
+        raise ValueError("clbf.barriers must not be empty in clbf mode")
+    for index, barrier in enumerate(config.clbf.barriers):
+        values = (barrier.epsilon, barrier.lambda_, barrier.kappa)
+        if barrier.auto_from_previous:
+            if index == 0:
+                raise ValueError("the first CLBF barrier cannot be auto_from_previous")
+            if any(value is not None for value in values):
+                raise ValueError("an automatic CLBF barrier must not set epsilon, lambda, or kappa")
+        elif any(value is None for value in values):
+            raise ValueError("a manual CLBF barrier needs epsilon, lambda, and kappa")
+        elif barrier.epsilon <= 0.0 or barrier.lambda_ <= 0.0 or not np.isfinite(barrier.kappa):
+            raise ValueError("manual CLBF epsilon/lambda must be positive and kappa finite")
     return config
 
 
@@ -147,6 +222,14 @@ def _mujoco_obstacle_geometry(path: str | Path):
     return [result[index] for index in sorted(result)]
 
 
+def _mujoco_end_effector_radius(path: str | Path):
+    root = ET.parse(path).getroot()
+    geom = root.find(".//geom[@name='ee_geom']")
+    if geom is None or geom.get("type") != "sphere":
+        raise ValueError("MuJoCo must contain a sphere geom named ee_geom")
+    return float(geom.attrib["size"].split()[0])
+
+
 def validate_geometry_consistency(
     config: ControllerConfig,
     urdf_path: str | Path,
@@ -188,3 +271,10 @@ def validate_geometry_consistency(
             raise ValueError(
                 f"geometry mismatch for obstacle{index}: MuJoCo={actual}, controller.yaml={expected}"
             )
+
+    ee_radius = _mujoco_end_effector_radius(mujoco_path)
+    if not np.isclose(ee_radius, config.clbf.end_effector_radius, atol=tolerance, rtol=0.0):
+        raise ValueError(
+            "geometry mismatch for end effector radius: "
+            f"MuJoCo={ee_radius}, controller.yaml={config.clbf.end_effector_radius}"
+        )

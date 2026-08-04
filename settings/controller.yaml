@@ -1,10 +1,17 @@
 dof: 3
-ee_obj: [1.0, 1.3]
+ee_obj: [-1.0, 1.3]
+# End-effector 목표 yaw [rad]. 0은 world x축을 향하는 자세다.
+ee_orientation: 1.3
+# 목표 수렴 constraint 선택: clf | clbf
+control_mode: clbf
 
 obstacle:
   - radius: 0.2
-    pos: [1, 0.8]
+    pos: [-0.6, 1.6]
     # false이면 CBF 제약과 MuJoCo/RDF 시각화에서 모두 제외한다.
+    enabled: True
+  - radius: 0.2
+    pos: [0.6, 1.6]
     enabled: True
 
 # Exact capsule-SDF CBF.  link_lengths/radius must match settings/urdf.xml
@@ -24,13 +31,27 @@ safety:
   # 에서 사용하며, h >= 0이면 충돌 반경을 포함한 이 여유를 만족한다.
   safe_distance: 0.08
   # CBF class-K 이득. 각 barrier에 대해 h_dot + alpha * h >= 0을 강제한다.
-  # 클수록 h가 음수 영역으로 더 빠르게 접근하지 못하게 한다.
-  alpha: 20
+  alpha: 1
   # QP가 출력하는 각 관절 속도의 절댓값 상한 [rad/s]. -limit <= q_dot_i <= limit.
   velocity_limit: 4.0
   # CLF 수렴 이득. V_dot <= -clf_rate * V + delta에서 사용한다.
   # 클수록 slack(delta)이 없을 때 목표점으로의 수렴을 더 강하게 요구한다.
   clf_rate: 1.0
+
+# CLBF-QP. end-effector--장애물 barrier 두 개만 순서대로 누적한다.
+# b_i = r_i + r_ee + safe_distance - ||p_ee - p_obs,i||,
+# B_i = max(b_i, 0)^2 - epsilon_i,
+# W_k = W_(k-1) + lambda_k * B_k + kappa_k. 마지막 W_2만 QP에 넣는다.
+clbf:
+  gamma: 1.0
+  # MuJoCo ee_geom sphere radius와 반드시 같아야 한다.
+  end_effector_radius: 0.06
+  barriers:
+    # 첫 번째 barrier의 epsilon, lambda, kappa만 직접 선택한다.
+    - {obstacle_index: 1, epsilon: 0.01, lambda: 400.0, kappa: 0.1}
+    # epsilon_2는 epsilon_1을 그대로 쓰며, c_{2,3}는 장애물/목표 기하에서 계산한다.
+    # 논문의 재귀식으로 lambda_2, kappa_2를 자동 생성한다.
+    - {obstacle_index: 2, auto_from_previous: true}
 
 QP_ctrl:
   R:
@@ -38,5 +59,5 @@ QP_ctrl:
     - [0, 1, 0]
     - [0, 0, 1]
   Q:
-    - [2]
-  d: 0.7 # CLF slack: 0 <= delta <= d * V; 클수록 완화가 허용됨
+    - [3]
+  d: 1 # CLF slack: 0 <= delta <= d * V; 클수록 완화가 허용됨

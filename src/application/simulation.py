@@ -130,17 +130,30 @@ def run_simulation(
         q = mj_data.qpos.copy()
         dq = mj_data.qvel.copy()
         p_ee, J = robot.update_kinematics(q)
-        safety = controller.safety_diagnostics(q)
-        u = controller.get_velocity(q, J, p_ee)
+        ee_yaw = robot.end_effector_yaw()
+        safety = controller.safety_diagnostics(q, J, p_ee, ee_yaw)
+        u = controller.get_velocity(q, J, p_ee, ee_yaw)
 
         mj_data.ctrl[:] = u
         if recorder is not None:
-            recorder.record(SimulationStep(mj_data.time, q, dq, p_ee, u, safety))
+            recorder.record(
+                SimulationStep(
+                    mj_data.time,
+                    q,
+                    dq,
+                    p_ee,
+                    u,
+                    safety,
+                    end_effector_yaw=ee_yaw,
+                )
+            )
         mujoco.mj_step(mj_model, mj_data)
 
-        return p_ee
+        return p_ee, ee_yaw
 
     p_ee = mj_data.xpos[ee_body_id].copy()
+    robot.update_kinematics(mj_data.qpos.copy())
+    ee_yaw = robot.end_effector_yaw()
     if visualize:
         with mujoco.viewer.launch_passive(mj_model, mj_data) as viewer:
             _use_fixed_camera_if_available(viewer, mj_model, camera_name)
@@ -148,7 +161,7 @@ def run_simulation(
             start = time.time()
             step = 0
             while viewer.is_running() and step < steps:
-                p_ee = step_once()
+                p_ee, ee_yaw = step_once()
                 viewer.sync()
 
                 next_time = start + (step + 1) * dt
@@ -158,12 +171,13 @@ def run_simulation(
                 step += 1
     else:
         for _ in range(steps):
-            p_ee = step_once()
+            p_ee, ee_yaw = step_once()
 
     print(f"Final time: {mj_data.time:.3f}")
     print(f"Final qpos: {mj_data.qpos}")
     print(f"Final qvel: {mj_data.qvel}")
     print(f"Final ee position: {p_ee}")
+    print(f"Final ee yaw: {ee_yaw:.6f} rad")
 
     if recorder is not None:
         recorder.save_npz(data_path)
