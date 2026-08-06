@@ -3,12 +3,13 @@ import pinocchio as pin
 
 
 class RobotInterface:
-    def __init__(self, urdf_path, ee_frame_name):
+    def __init__(self, urdf_path, ee_frame_names):
         """Pinocchio 로봇 모델과 end-effector frame을 초기화한다.
 
         Args:
             urdf_path: Pinocchio가 읽을 URDF 파일 경로.
-            ee_frame_name: 위치와 Jacobian을 계산할 end-effector frame 이름.
+            ee_frame_names: 위치와 Jacobian을 계산할 end-effector frame 이름 또는
+                root에서 먼 순서의 frame 이름들.
 
         Notes:
             로봇공학용 Pinocchio 패키지가 설치되어 있어야 한다. 현재 프로젝트는
@@ -16,9 +17,25 @@ class RobotInterface:
         """
         self.model = pin.buildModelFromUrdf(urdf_path)
         self.data = self.model.createData()
-        self.ee_frame_id = self.model.getFrameId(ee_frame_name)
+        if isinstance(ee_frame_names, str):
+            ee_frame_names = (ee_frame_names,)
+        self.ee_frame_names = tuple(ee_frame_names)
+        if not self.ee_frame_names:
+            raise ValueError("at least one end-effector frame is required")
+        self.ee_frame_ids = tuple(
+            self.model.getFrameId(frame_name) for frame_name in self.ee_frame_names
+        )
+        if any(frame_id >= self.model.nframes for frame_id in self.ee_frame_ids):
+            raise ValueError("an end-effector frame name was not found in the URDF")
+        self._end_effector_index = len(self.ee_frame_ids) - 1
         self.nv = self.model.nv
         self._ee_yaw = 0.0
+
+    def set_end_effector(self, link_index: int):
+        """Select the 1-based link-end frame used for the next task Jacobian."""
+        if not 1 <= link_index <= len(self.ee_frame_ids):
+            raise ValueError(f"end-effector link index must be in [1, {len(self.ee_frame_ids)}]")
+        self._end_effector_index = link_index - 1
 
     def update_kinematics(self, q):
         """현재 관절 위치 q에서 end-effector 위치와 Jacobian을 계산한다.
@@ -40,14 +57,15 @@ class RobotInterface:
         pin.updateFramePlacements(self.model, self.data)
 
         # End-effector 위치 및 자코비안
-        p_ee = self.data.oMf[self.ee_frame_id].translation
-        rotation = self.data.oMf[self.ee_frame_id].rotation
+        ee_frame_id = self.ee_frame_ids[self._end_effector_index]
+        p_ee = self.data.oMf[ee_frame_id].translation
+        rotation = self.data.oMf[ee_frame_id].rotation
         self._ee_yaw = float(np.arctan2(rotation[1, 0], rotation[0, 0]))
         J = pin.computeFrameJacobian(
             self.model,
             self.data,
             q,
-            self.ee_frame_id,
+            ee_frame_id,
             pin.ReferenceFrame.LOCAL_WORLD_ALIGNED,
         )
 

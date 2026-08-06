@@ -17,7 +17,8 @@ if __name__ == "__main__":
     config = load_controller_config(ctrl_path)
     validate_geometry_consistency(config, urdf_path, mjc_path)
     controller = QPController(config, OSQPSolver())
-    robot = RobotInterface(urdf_path, "ee_joint")
+    frame_names = config.sequential_end_effector.frame_names or ("ee_joint",)
+    robot = RobotInterface(urdf_path, frame_names)
     recorder = Recorder()
     run_simulation(
         mjc_path,
@@ -26,5 +27,6 @@ if __name__ == "__main__":
         target_position=config.ee_target,
         obstacle_enabled=[obstacle.enabled for obstacle in config.obstacles],
         recorder=recorder,
-        duration=20,
+        duration=25,
+        viewer_sync_interval_steps=10,
     )

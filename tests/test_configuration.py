@@ -2,6 +2,7 @@ from dataclasses import replace
 from pathlib import Path
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 import numpy as np
 
@@ -23,6 +24,16 @@ class ConfigurationTest(unittest.TestCase):
 
     def test_current_robot_descriptions_are_consistent(self):
         validate_geometry_consistency(self.config, self.urdf, self.mujoco)
+
+    def test_first_joint_has_no_position_limits_in_urdf_or_mujoco(self):
+        urdf_joint = ET.parse(self.urdf).find("./joint[@name='joint1']")
+        mujoco_joint = ET.parse(self.mujoco).find(".//joint[@name='joint1']")
+
+        self.assertEqual(urdf_joint.get("type"), "revolute")
+        self.assertIsNone(urdf_joint.find("limit").get("lower"))
+        self.assertIsNone(urdf_joint.find("limit").get("upper"))
+        self.assertEqual(mujoco_joint.get("limited"), "false")
+        self.assertIsNone(mujoco_joint.get("range"))
 
     def test_clf_slack_ratio_is_loaded(self):
         self.assertGreater(self.config.qp.d, 0.0)
@@ -48,6 +59,22 @@ class ConfigurationTest(unittest.TestCase):
             sum(obstacle.enabled for obstacle in self.config.obstacles),
         )
         self.assertTrue(self.config.clbf.barriers[1].auto_from_previous)
+
+    def test_sequential_end_effector_configuration_uses_each_link_tip(self):
+        sequence = self.config.sequential_end_effector
+        self.assertTrue(sequence.enabled)
+        self.assertEqual(sequence.frame_names, ("joint2", "joint3", "ee_joint"))
+        self.assertGreater(sequence.goal_tolerance, 0.0)
+
+    def test_sequential_end_effector_requires_one_frame_per_link(self):
+        text = (ROOT / "settings/controller.yaml").read_text().replace(
+            "frame_names: [joint2, joint3, ee_joint]", "frame_names: [joint2, ee_joint]"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "controller.yaml"
+            path.write_text(text)
+            with self.assertRaisesRegex(ValueError, "one frame for each link"):
+                load_controller_config(path)
 
     def test_clf_mode_is_selectable_from_yaml(self):
         text = (ROOT / "settings/controller.yaml").read_text().replace(

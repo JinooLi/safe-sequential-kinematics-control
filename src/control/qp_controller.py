@@ -84,9 +84,21 @@ class QPController:
             for link_index in range(self.dof)
         ]
         self.clbf_gamma = config.clbf.gamma
+        self.clbf_slack_alpha = config.clbf.slack_alpha
         self.clbf_end_effector_radius = config.clbf.end_effector_radius
         self.clbf_modules = self._resolve_clbf_modules(config)
         self.clbf_labels = tuple(f"W_obs{module.obstacle_index}" for module in self.clbf_modules)
+        self.clbf_goal_values = self._clbf_goal_values()
+        sequence = config.sequential_end_effector
+        self.sequential_end_effector_enabled = sequence.enabled
+        self.end_effector_index = 1 if sequence.enabled else self.dof
+        self.goal_tolerance = sequence.goal_tolerance
+        self.velocity_tolerance = sequence.velocity_tolerance
+        self.barrier_tolerance = sequence.barrier_tolerance
+        self.last_end_effector_switch_reason = None
+        # In sequential mode, even the final link first approaches by
+        # position only.  Its yaw term is enabled after entering the goal ball.
+        self.final_orientation_control_active = not sequence.enabled
 
     def get_velocity(self, q, J, p_ee, ee_yaw):
         """작업공간 명령을 관절 속도로 바꾸기 위한 자리.
@@ -99,12 +111,16 @@ class QPController:
             아직 구현되지 않았다. 보통 pseudo-inverse나 QP를 사용해
             q_dot을 계산하는 함수로 채우면 된다.
         """
+        if self._goal_reached(p_ee):
+            self._advance_end_effector("goal reached")
+            return np.zeros(self.dof)
+        self._activate_final_orientation_if_position_converged(p_ee)
+
         task_jacobian = planar_task_jacobian(J)
         task_state = np.array([p_ee[0], p_ee[1], ee_yaw], dtype=float)
 
         # Decision variable: [q_dot (dof), relaxation].
-        clf_value = self.clf(task_state)
-        clf_gradient_q = self.dclf(task_state) @ task_jacobian
+        clf_value, clf_gradient_q = self._task_clf_terms(task_state, task_jacobian)
         cbf_A, cbf_lower, _ = self._cbf_constraints(q)
         if self.control_mode == "clf":
             # Vdot - relaxation <= -clf_rate * V
@@ -112,11 +128,16 @@ class QPController:
             lower = [-np.inf]
             upper = [-self.clf_rate * clf_value]
         else:
-            # Use only the final cumulative CLBF: W_M_dot <= -gamma * W_M.
+            # Relax the final cumulative CLBF with the same non-negative
+            # convergence slack used by CLF mode.  Safety CBF rows below
+            # remain hard constraints.
             clbf = self._clbf_results(clf_value, clf_gradient_q, p_ee, task_jacobian)[-1]
-            rows = [np.concatenate((clbf.gradient_q, [0.0]))]
+            shifted_clbf_value = clbf.value - self.clbf_goal_values[-1]
+            # W_tilde_dot - relaxation <= -gamma * W_tilde, where
+            # W_tilde = W - W(goal).  Its derivative is identical to W_dot.
+            rows = [np.concatenate((clbf.gradient_q, [-1.0]))]
             lower = [-np.inf]
-            upper = [-clbf.gamma * clbf.value]
+            upper = [-clbf.gamma * shifted_clbf_value]
 
         if self.safety_enabled and self.safety_model is not None:
             for row, bound in zip(cbf_A, cbf_lower):
@@ -132,16 +153,22 @@ class QPController:
             lower.append(-self.velocity_limit)
             upper.append(self.velocity_limit)
 
-        # CLBF rows are never relaxed. The legacy CLF uses its configured slack.
+        # CLF uses d*V.  CLBF uses d*alpha(W_tilde), with the configured
+        # linear class-K alpha(s) = clbf_slack_alpha*s.
         slack_row = np.zeros(self.dof + 1)
         slack_row[-1] = 1.0
         rows.append(slack_row)
+        lower.append(0.0)
         if self.control_mode == "clf":
-            lower.append(0.0)
-            upper.append(self.clf_slack_ratio * clf_value)
+            slack_upper = self.clf_slack_ratio * clf_value
         else:
-            lower.append(0.0)
-            upper.append(0.0)
+            # W_tilde is non-negative by construction for a safe goal.  Clip
+            # tiny numerical underflow so delta's [0, upper] interval remains
+            # feasible with learned RDF barrier evaluations.
+            slack_upper = self.clf_slack_ratio * self.clbf_slack_alpha * max(
+                shifted_clbf_value, 0.0
+            )
+        upper.append(slack_upper)
 
         A = np.vstack(rows)
         l = np.asarray(lower)
@@ -151,11 +178,78 @@ class QPController:
         )
         if result is not None:
             input = result[: self.dof]
+            if self._stopped_by_barrier(q, input):
+                self._advance_end_effector("stopped at CBF boundary")
         else:
-            print("QP failed")
+            self._advance_end_effector("QP infeasible")
             input = np.zeros(self.dof)
 
         return input
+
+    def _goal_reached(self, p_ee):
+        return (
+            self.sequential_end_effector_enabled
+            and self.end_effector_index < self.dof
+            and np.linalg.norm(np.asarray(p_ee, dtype=float)[:2] - self.ee_obj)
+            <= self.goal_tolerance
+        )
+
+    def _uses_end_effector_orientation(self):
+        """Use yaw after the final task point has reached the goal position."""
+        return (
+            not self.sequential_end_effector_enabled
+            or (
+                self.end_effector_index >= self.dof
+                and self.final_orientation_control_active
+            )
+        )
+
+    def _activate_final_orientation_if_position_converged(self, p_ee):
+        """Start final-link yaw control once its position enters the goal ball."""
+        if (
+            self.sequential_end_effector_enabled
+            and self.end_effector_index >= self.dof
+            and not self.final_orientation_control_active
+            and np.linalg.norm(np.asarray(p_ee, dtype=float)[:2] - self.ee_obj)
+            <= self.goal_tolerance
+        ):
+            self.final_orientation_control_active = True
+            print("Final task end-effector reached position goal; enabling orientation control")
+
+    def _task_clf_terms(self, task_state, task_jacobian):
+        """Return CLF value and joint gradient for the active link endpoint."""
+        task_state = np.asarray(task_state, dtype=float)
+        position_error = task_state[:2] - self.ee_obj
+        if not self._uses_end_effector_orientation():
+            # All sequential task points use position-only control until the
+            # final endpoint reaches the goal-position tolerance.
+            return (
+                float(2.0 * (position_error @ position_error)),
+                4.0 * position_error @ task_jacobian[:2],
+            )
+        return self.clf(task_state), self.dclf(task_state) @ task_jacobian
+
+    def _stopped_by_barrier(self, q, input):
+        """Detect a near-zero command caused at an active hard CBF boundary."""
+        if not self.sequential_end_effector_enabled:
+            return False
+        if np.linalg.norm(input) > self.velocity_tolerance:
+            return False
+        barrier_values = self._cbf_constraints(q)[2]
+        return len(barrier_values) > 0 and np.min(barrier_values) <= self.barrier_tolerance
+
+    def _advance_end_effector(self, reason):
+        """Advance once, unless the final link is already the active task point."""
+        if not self.sequential_end_effector_enabled or self.end_effector_index >= self.dof:
+            return False
+        previous = self.end_effector_index
+        self.end_effector_index += 1
+        self.last_end_effector_switch_reason = reason
+        print(
+            f"Switching task end-effector: link {previous} -> link "
+            f"{self.end_effector_index} ({reason})"
+        )
+        return True
 
     def _cbf_constraints(self, q):
         """Return CBF rows, lower bounds, and barrier values for the current q."""
@@ -210,6 +304,39 @@ class QPController:
             modules.append(module)
         return tuple(modules)
 
+    def _clbf_goal_values(self):
+        """Return cumulative CLBF values at the desired task-space goal.
+
+        The shifted CLBF ``W_tilde = W - W(goal)`` has a zero reference at
+        the goal instead of at a parameter-dependent offset in free space.
+        """
+        if self.control_mode != "clbf":
+            return np.empty(0)
+        zero_jacobian = np.zeros((2, self.dof))
+        barriers = tuple(
+            end_effector_barrier(
+                self.ee_obj,
+                zero_jacobian,
+                self.obstacles_by_index[module.obstacle_index],
+                self.clbf_end_effector_radius,
+                self.safe_distance,
+                module.epsilon,
+            )
+            for module in self.clbf_modules
+        )
+        return np.asarray(
+            [
+                result.value
+                for result in build_cumulative_clbfs(
+                    0.0,
+                    np.zeros(self.dof),
+                    barriers,
+                    self.clbf_gamma,
+                    self.clbf_modules,
+                )
+            ]
+        )
+
     def _clbf_results(self, clf_value, clf_gradient_q, p_ee, task_jacobian):
         if self.control_mode != "clbf":
             return ()
@@ -249,15 +376,16 @@ class QPController:
         if J is None or p_ee is None or ee_yaw is None:
             return SafetyDiagnostics(tuple(self.barrier_labels), barrier_values)
         task_state = np.array([p_ee[0], p_ee[1], ee_yaw], dtype=float)
-        clf_value = self.clf(task_state)
-        clf_gradient_q = self.dclf(task_state) @ planar_task_jacobian(J)
-        clbfs = self._clbf_results(clf_value, clf_gradient_q, p_ee, planar_task_jacobian(J))
+        task_jacobian = planar_task_jacobian(J)
+        clf_value, clf_gradient_q = self._task_clf_terms(task_state, task_jacobian)
+        clbfs = self._clbf_results(clf_value, clf_gradient_q, p_ee, task_jacobian)
         return SafetyDiagnostics(
             tuple(self.barrier_labels),
             barrier_values,
             clf_value=clf_value,
-            clbf_labels=tuple(module.label for module in clbfs),
-            clbf_values=np.asarray([module.value for module in clbfs]),
+            clbf_labels=tuple(f"W_tilde_{module.label}" for module in clbfs),
+            clbf_values=np.asarray([module.value for module in clbfs])
+            - self.clbf_goal_values,
         )
 
     def zero_input(self):

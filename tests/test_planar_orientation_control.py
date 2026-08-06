@@ -38,6 +38,21 @@ class PlanarOrientationControlTest(unittest.TestCase):
     def test_yaw_error_wraps_across_pi_boundary(self):
         self.assertAlmostEqual(wrap_to_pi(-np.pi + 0.01 - (np.pi - 0.01)), 0.02)
 
+    def test_can_select_successive_link_tip_frames(self):
+        robot = RobotInterface(ROOT / "settings/urdf.xml", ("joint2", "joint3", "ee_joint"))
+        q = np.zeros(3)
+
+        robot.set_end_effector(1)
+        first_tip, _ = robot.update_kinematics(q)
+        robot.set_end_effector(2)
+        second_tip, _ = robot.update_kinematics(q)
+        robot.set_end_effector(3)
+        final_tip, _ = robot.update_kinematics(q)
+
+        np.testing.assert_allclose(first_tip, [1.0, 0.0, 0.0])
+        np.testing.assert_allclose(second_tip, [2.0, 0.0, 0.0])
+        np.testing.assert_allclose(final_tip, [3.0, 0.0, 0.0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -33,6 +33,7 @@ class SafetyConfig:
 @dataclass(frozen=True)
 class CLBFConfig:
     gamma: float
+    slack_alpha: float
     end_effector_radius: float
     barriers: tuple[CLBFBarrierConfig, ...]
 
@@ -61,6 +62,17 @@ class QPConfig:
 
 
 @dataclass(frozen=True)
+class SequentialEndEffectorConfig:
+    """Settings for progressing the task point from link 1 to the final tip."""
+
+    enabled: bool
+    frame_names: tuple[str, ...]
+    goal_tolerance: float
+    velocity_tolerance: float
+    barrier_tolerance: float
+
+
+@dataclass(frozen=True)
 class ControllerConfig:
     dof: int
     ee_target: np.ndarray
@@ -70,6 +82,7 @@ class ControllerConfig:
     safety: SafetyConfig
     clbf: CLBFConfig
     qp: QPConfig
+    sequential_end_effector: SequentialEndEffectorConfig
 
 
 def load_controller_config(path: str | Path) -> ControllerConfig:
@@ -79,6 +92,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     safety_data = data["safety"]
     clbf_data = data["clbf"]
     qp_data = data["QP_ctrl"]
+    sequential_data = data.get("sequential_end_effector", {})
     obstacles = tuple(
         ObstacleConfig(
             tuple(map(float, entry["pos"])),
@@ -100,6 +114,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     )
     clbf = CLBFConfig(
         gamma=float(clbf_data["gamma"]),
+        slack_alpha=float(clbf_data.get("slack_alpha", 1.0)),
         end_effector_radius=float(clbf_data["end_effector_radius"]),
         barriers=tuple(
             CLBFBarrierConfig(
@@ -125,6 +140,13 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             np.asarray(qp_data["Q"], dtype=float),
             float(qp_data["d"]),
         ),
+        sequential_end_effector=SequentialEndEffectorConfig(
+            enabled=bool(sequential_data.get("enabled", False)),
+            frame_names=tuple(map(str, sequential_data.get("frame_names", ()))),
+            goal_tolerance=float(sequential_data.get("goal_tolerance", 0.03)),
+            velocity_tolerance=float(sequential_data.get("velocity_tolerance", 1e-3)),
+            barrier_tolerance=float(sequential_data.get("barrier_tolerance", 1e-3)),
+        ),
     )
     if config.dof != len(config.safety.link_lengths):
         raise ValueError("dof and safety.link_lengths must have the same length")
@@ -138,12 +160,27 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         raise ValueError("QP_ctrl must contain a dof-by-dof R and 1-by-1 Q")
     if not 0.0 < config.qp.d <= 1.0:
         raise ValueError("QP_ctrl.d must satisfy 0 < d <= 1")
+    sequence = config.sequential_end_effector
+    if sequence.enabled and len(sequence.frame_names) != config.dof:
+        raise ValueError(
+            "sequential_end_effector.frame_names must contain one frame for each link"
+        )
+    if len(set(sequence.frame_names)) != len(sequence.frame_names):
+        raise ValueError("sequential_end_effector.frame_names must not repeat a frame")
+    if (
+        sequence.goal_tolerance <= 0.0
+        or sequence.velocity_tolerance < 0.0
+        or sequence.barrier_tolerance < 0.0
+    ):
+        raise ValueError("sequential end-effector tolerances must be non-negative")
     if config.safety.representation not in {"capsule", "bernstein"}:
         raise ValueError("safety representation must be 'capsule' or 'bernstein'")
     if config.control_mode == "clbf" and not config.safety.enabled:
         raise ValueError("control_mode 'clbf' requires safety.enabled")
     if config.clbf.gamma <= 0.0:
         raise ValueError("clbf gamma must be positive")
+    if config.clbf.slack_alpha <= 0.0:
+        raise ValueError("clbf slack_alpha must be positive")
     if config.clbf.end_effector_radius <= 0.0:
         raise ValueError("clbf end_effector_radius must be positive")
     active_obstacle_indices = {

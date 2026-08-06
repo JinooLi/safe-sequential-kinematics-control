@@ -6,6 +6,7 @@ import numpy as np
 
 from src.application.simulation import (
     load_mujoco_model,
+    run_simulation,
     set_goal_marker_position,
     set_obstacle_visibility,
 )
@@ -33,6 +34,17 @@ class GoalMarkerTest(unittest.TestCase):
         set_obstacle_visibility(model, [False])
 
         self.assertEqual(model.geom_rgba[obstacle_id, 3], 0.0)
+
+    def test_viewer_sync_interval_must_be_positive(self):
+        with self.assertRaisesRegex(ValueError, "at least 1"):
+            run_simulation(
+                ROOT / "settings/mujoco.xml",
+                controller=None,
+                robot=None,
+                duration=0.0,
+                visualize=False,
+                viewer_sync_interval_steps=0,
+            )
 
 
 if __name__ == "__main__":

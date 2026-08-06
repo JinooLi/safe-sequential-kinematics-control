@@ -76,6 +76,7 @@ def run_simulation(
     duration=20.0,
     visualize=True,
     camera_name="top_down",
+    viewer_sync_interval_steps=10,
     recorder: SimulationRecorder | None = None,
     data_path="outputs/sim_data.npz",
     csv_path="outputs/sim_data.csv",
@@ -96,6 +97,8 @@ def run_simulation(
         visualize: True이면 MuJoCo viewer 창을 띄워 실시간에 가깝게 보여준다.
         camera_name: viewer에서 사용할 MuJoCo fixed camera 이름. 없으면 기본 viewer
             camera를 그대로 사용한다.
+        viewer_sync_interval_steps: viewer 화면을 갱신할 physics step 간격. 10이면
+            timestep 0.002 s에서 약 50 FPS로 보이며, QP/physics는 매 step 수행한다.
         recorder: 지정하면 t, q, dq, ee, u, barrier를 기록한다. None이면 기록하지
             않는다.
         data_path: recorder가 있을 때 저장할 NPZ 파일 경로.
@@ -112,6 +115,9 @@ def run_simulation(
             visualize=True,
         )
     """
+    if viewer_sync_interval_steps < 1:
+        raise ValueError("viewer_sync_interval_steps must be at least 1")
+
     mj_model = load_mujoco_model(mujoco_xml_path)
     if target_position is not None:
         set_goal_marker_position(mj_model, target_position)
@@ -121,7 +127,6 @@ def run_simulation(
     dt = mj_model.opt.timestep
     mujoco.mj_forward(mj_model, mj_data)
 
-    ee_body_id = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_BODY, "ee_link")
     steps = math.ceil(duration / dt)
     print(f"MuJoCo timestep: {dt}")
     print(f"Running for {duration:.3f} s ({steps} steps)")
@@ -129,10 +134,20 @@ def run_simulation(
     def step_once():
         q = mj_data.qpos.copy()
         dq = mj_data.qvel.copy()
-        p_ee, J = robot.update_kinematics(q)
-        ee_yaw = robot.end_effector_yaw()
+        # A switch is evaluated at the same robot state, then the QP is solved
+        # again for the next link endpoint.  At most dof-1 switches can occur.
+        for _ in range(getattr(controller, "dof", 1)):
+            if hasattr(robot, "set_end_effector") and getattr(
+                controller, "sequential_end_effector_enabled", False
+            ):
+                robot.set_end_effector(controller.end_effector_index)
+            p_ee, J = robot.update_kinematics(q)
+            ee_yaw = robot.end_effector_yaw()
+            active_index = getattr(controller, "end_effector_index", None)
+            u = controller.get_velocity(q, J, p_ee, ee_yaw)
+            if active_index == getattr(controller, "end_effector_index", None):
+                break
         safety = controller.safety_diagnostics(q, J, p_ee, ee_yaw)
-        u = controller.get_velocity(q, J, p_ee, ee_yaw)
 
         mj_data.ctrl[:] = u
         if recorder is not None:
@@ -151,8 +166,11 @@ def run_simulation(
 
         return p_ee, ee_yaw
 
-    p_ee = mj_data.xpos[ee_body_id].copy()
-    robot.update_kinematics(mj_data.qpos.copy())
+    if hasattr(robot, "set_end_effector") and getattr(
+        controller, "sequential_end_effector_enabled", False
+    ):
+        robot.set_end_effector(controller.end_effector_index)
+    p_ee, _ = robot.update_kinematics(mj_data.qpos.copy())
     ee_yaw = robot.end_effector_yaw()
     if visualize:
         with mujoco.viewer.launch_passive(mj_model, mj_data) as viewer:
@@ -162,7 +180,8 @@ def run_simulation(
             step = 0
             while viewer.is_running() and step < steps:
                 p_ee, ee_yaw = step_once()
-                viewer.sync()
+                if step % viewer_sync_interval_steps == 0 or step + 1 == steps:
+                    viewer.sync()
 
                 next_time = start + (step + 1) * dt
                 sleep_time = next_time - time.time()
