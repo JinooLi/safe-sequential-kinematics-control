@@ -30,5 +30,8 @@ visualize-clf: ## Render a CLF q-space level surface (use ARGS="--show ...")
 visualize-clbf: ## Render x-y, x-yaw, y-yaw CLBF surfaces (use ARGS="--show ...")
 	$(UV) run python -m src.application.visualize_clbf $(ARGS)
 
-compare-sequential: ## Run randomized sequential on/off comparison (pass ARGS="run --cases 20")
+compare-sequential-run: ## Run randomized sequential on/off comparison (pass ARGS="--cases 20")
+	$(UV) run python -m src.application.compare_sequential run $(ARGS)
+
+compare-sequential-visualize: ## Run visualizer (pass ARGS="--results-dir outputs/<...> --case-id 20")
 	$(UV) run python -m src.application.compare_sequential $(ARGS)
