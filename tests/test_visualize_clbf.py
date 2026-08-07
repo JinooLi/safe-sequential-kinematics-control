@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 import unittest
 
@@ -15,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class VisualizeCLBFTest(unittest.TestCase):
     def test_task_space_evaluation_accepts_scalar_and_grid_states(self):
         config = load_controller_config(ROOT / "settings/controller.yaml")
+        config = replace(config, control_mode="clbf")
         controller = QPController(config, OSQPSolver())
         target = np.array([*config.ee_target, config.ee_orientation])
         scalar = evaluate_final_clbf_in_task_space(target, controller)

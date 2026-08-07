@@ -52,7 +52,7 @@ class ConfigurationTest(unittest.TestCase):
         self.assertTrue(np.isfinite(self.config.ee_orientation))
 
     def test_control_mode_and_clbf_parameters_are_loaded(self):
-        self.assertEqual(self.config.control_mode, "clbf")
+        self.assertIn(self.config.control_mode, {"clf", "clbf"})
         self.assertGreater(self.config.clbf.gamma, 0.0)
         self.assertEqual(
             len(self.config.clbf.barriers),
@@ -65,6 +65,15 @@ class ConfigurationTest(unittest.TestCase):
         self.assertTrue(sequence.enabled)
         self.assertEqual(sequence.frame_names, ("joint2", "joint3", "ee_joint"))
         self.assertGreater(sequence.goal_tolerance, 0.0)
+
+    def test_sequential_experiment_configuration_is_loaded(self):
+        experiment = self.config.sequential_experiment
+        self.assertGreaterEqual(experiment.cases, 1)
+        self.assertGreaterEqual(experiment.workers, 1)
+        self.assertGreater(experiment.duration, 0.0)
+        self.assertEqual(len(experiment.initial_q), self.config.dof)
+        self.assertEqual(len(experiment.target_radius_range), 2)
+        self.assertEqual(len(experiment.obstacle_radius_range), 2)
 
     def test_sequential_end_effector_requires_one_frame_per_link(self):
         text = (ROOT / "settings/controller.yaml").read_text().replace(

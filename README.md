@@ -57,6 +57,45 @@ make visualize-clbf  # end-effector CLBF 3D 단면 PNG
 make visualize-clbf ARGS="--show --resolution 160"
 ```
 
+### Sequential end-effector randomized comparison
+
+The following command samples one shared target and two shared circular
+obstacles per case, then runs the same case with sequential end-effector
+control disabled and enabled.  The runs are headless; no MuJoCo viewer opens.
+
+Configure every batch constant in `settings/controller.yaml` under
+`sequential_experiment`, then run:
+
+```bash
+make compare-sequential ARGS="run"
+```
+
+`sequential_experiment.workers` controls process-level case parallelism. Each
+worker runs one paired sequential-off/on case serially; use a value no larger
+than the available CPU cores (the checked-in default is `4`).
+
+Results are saved under `outputs/sequential_comparison/<run-name>/`:
+
+- `summary.csv` / `summary.json`: four outcome groups and final metrics.
+- `case_###_sequential_off.npz`, `case_###_sequential_on.npz`: compact
+  trajectories for later inspection.
+
+The experiment-only success tolerance is independent from the controller's
+link-switch tolerance.  `sequential_experiment` also contains the random seed,
+run duration, initial joint posture, target/obstacle sampling ranges, collision
+exclusion margins, controller-mode override, and output path. Target position
+and target yaw are sampled independently. Success also
+requires the configured yaw tolerance and barrier tolerance.
+
+Render a saved case without a GUI to compare both final end-effector paths,
+the obstacles, target, and final arm poses:
+
+```bash
+make compare-sequential ARGS="visualize \
+  --results-dir outputs/sequential_comparison/run_YYYYMMDD_HHMMSS \
+  --case-id 17"
+```
+
 ## 거리장 기반 CBF 안전 제약
 
 `src/domain/safety.py`는 각 링크를 capsule로 외접하는 2D signed distance

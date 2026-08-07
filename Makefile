@@ -7,7 +7,7 @@ MPLCONFIGDIR ?= /tmp/safe-inv-clbf-matplotlib
 export UV_CACHE_DIR MPLCONFIGDIR
 
 .DEFAULT_GOAL := help
-.PHONY: help run test train-rdf visualize-rdf visualize-clf visualize-clbf
+.PHONY: help run test train-rdf visualize-rdf visualize-clf visualize-clbf compare-sequential
 
 help: ## Show available command aliases
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -29,3 +29,6 @@ visualize-clf: ## Render a CLF q-space level surface (use ARGS="--show ...")
 
 visualize-clbf: ## Render x-y, x-yaw, y-yaw CLBF surfaces (use ARGS="--show ...")
 	$(UV) run python -m src.application.visualize_clbf $(ARGS)
+
+compare-sequential: ## Run randomized sequential on/off comparison (pass ARGS="run --cases 20")
+	$(UV) run python -m src.application.compare_sequential $(ARGS)

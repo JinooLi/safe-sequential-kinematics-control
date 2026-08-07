@@ -33,9 +33,10 @@ def planar_task_jacobian(spatial_jacobian):
 
 
 class QPController:
-    def __init__(self, config: ControllerConfig, solver: QPSolver):
+    def __init__(self, config: ControllerConfig, solver: QPSolver, verbose=True):
         """Initialize control logic from an already validated typed config."""
         self._solver = solver
+        self.verbose = bool(verbose)
         self.dof = config.dof
         self.ee_obj = config.ee_target
         self.ee_orientation = config.ee_orientation
@@ -214,7 +215,8 @@ class QPController:
             <= self.goal_tolerance
         ):
             self.final_orientation_control_active = True
-            print("Final task end-effector reached position goal; enabling orientation control")
+            if self.verbose:
+                print("Final task end-effector reached position goal; enabling orientation control")
 
     def _task_clf_terms(self, task_state, task_jacobian):
         """Return CLF value and joint gradient for the active link endpoint."""
@@ -245,10 +247,11 @@ class QPController:
         previous = self.end_effector_index
         self.end_effector_index += 1
         self.last_end_effector_switch_reason = reason
-        print(
-            f"Switching task end-effector: link {previous} -> link "
-            f"{self.end_effector_index} ({reason})"
-        )
+        if self.verbose:
+            print(
+                f"Switching task end-effector: link {previous} -> link "
+                f"{self.end_effector_index} ({reason})"
+            )
         return True
 
     def _cbf_constraints(self, q):

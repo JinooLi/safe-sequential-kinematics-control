@@ -82,6 +82,9 @@ def run_simulation(
     csv_path="outputs/sim_data.csv",
     plot_path="outputs/sim_plot.png",
     show_recording_gui=True,
+    verbose=True,
+    save_recording=True,
+    initial_q=None,
 ):
     """MuJoCo 시뮬레이션을 지정한 시간 동안 실행한다.
 
@@ -105,6 +108,10 @@ def run_simulation(
         csv_path: recorder가 있을 때 저장할 CSV 파일 경로.
         plot_path: recorder가 있을 때 저장할 matplotlib plot 이미지 경로.
         show_recording_gui: True이면 종료 후 Recorder GUI를 연다.
+        verbose: False이면 batch experiment용 console output을 생략한다.
+        save_recording: False이면 recorder에는 기록하되 NPZ/CSV/plot 파일은 저장하지
+            않는다. Batch experiment가 자체 compact trajectory를 저장할 때 사용한다.
+        initial_q: 지정하면 시뮬레이션을 이 관절 자세에서 시작한다.
 
     Usage:
         run_simulation(
@@ -124,12 +131,18 @@ def run_simulation(
     if obstacle_enabled is not None:
         set_obstacle_visibility(mj_model, obstacle_enabled)
     mj_data = mujoco.MjData(mj_model)
+    if initial_q is not None:
+        initial_q = np.asarray(initial_q, dtype=float)
+        if initial_q.shape != (mj_model.nq,):
+            raise ValueError(f"initial_q must have shape ({mj_model.nq},)")
+        mj_data.qpos[:] = initial_q
     dt = mj_model.opt.timestep
     mujoco.mj_forward(mj_model, mj_data)
 
     steps = math.ceil(duration / dt)
-    print(f"MuJoCo timestep: {dt}")
-    print(f"Running for {duration:.3f} s ({steps} steps)")
+    if verbose:
+        print(f"MuJoCo timestep: {dt}")
+        print(f"Running for {duration:.3f} s ({steps} steps)")
 
     def step_once():
         q = mj_data.qpos.copy()
@@ -192,18 +205,20 @@ def run_simulation(
         for _ in range(steps):
             p_ee, ee_yaw = step_once()
 
-    print(f"Final time: {mj_data.time:.3f}")
-    print(f"Final qpos: {mj_data.qpos}")
-    print(f"Final qvel: {mj_data.qvel}")
-    print(f"Final ee position: {p_ee}")
-    print(f"Final ee yaw: {ee_yaw:.6f} rad")
+    if verbose:
+        print(f"Final time: {mj_data.time:.3f}")
+        print(f"Final qpos: {mj_data.qpos}")
+        print(f"Final qvel: {mj_data.qvel}")
+        print(f"Final ee position: {p_ee}")
+        print(f"Final ee yaw: {ee_yaw:.6f} rad")
 
-    if recorder is not None:
+    if recorder is not None and save_recording:
         recorder.save_npz(data_path)
         recorder.save_csv(csv_path)
         recorder.plot(plot_path)
-        print(f"Saved data: {data_path}")
-        print(f"Saved CSV: {csv_path}")
-        print(f"Saved plot: {plot_path}")
+        if verbose:
+            print(f"Saved data: {data_path}")
+            print(f"Saved CSV: {csv_path}")
+            print(f"Saved plot: {plot_path}")
         if show_recording_gui:
             recorder.show_gui()

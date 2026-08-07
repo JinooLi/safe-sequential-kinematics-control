@@ -73,6 +73,31 @@ class SequentialEndEffectorConfig:
 
 
 @dataclass(frozen=True)
+class SequentialExperimentConfig:
+    """All randomized sequential-control comparison settings."""
+
+    cases: int
+    workers: int
+    seed: int
+    duration: float
+    goal_tolerance: float
+    yaw_tolerance: float
+    barrier_tolerance: float
+    control_mode: str | None
+    initial_q: tuple[float, ...]
+    output_dir: str
+    target_radius_range: tuple[float, float]
+    target_angle_range: tuple[float, float]
+    target_orientation_range: tuple[float, float]
+    obstacle_position_range: tuple[float, float]
+    obstacle_radius_range: tuple[float, float]
+    initial_clearance_margin: float
+    target_clearance_margin: float
+    max_case_attempts: int
+    max_obstacle_attempts: int
+
+
+@dataclass(frozen=True)
 class ControllerConfig:
     dof: int
     ee_target: np.ndarray
@@ -83,6 +108,7 @@ class ControllerConfig:
     clbf: CLBFConfig
     qp: QPConfig
     sequential_end_effector: SequentialEndEffectorConfig
+    sequential_experiment: SequentialExperimentConfig
 
 
 def load_controller_config(path: str | Path) -> ControllerConfig:
@@ -93,6 +119,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     clbf_data = data["clbf"]
     qp_data = data["QP_ctrl"]
     sequential_data = data.get("sequential_end_effector", {})
+    experiment_data = data.get("sequential_experiment", {})
     obstacles = tuple(
         ObstacleConfig(
             tuple(map(float, entry["pos"])),
@@ -147,6 +174,31 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             velocity_tolerance=float(sequential_data.get("velocity_tolerance", 1e-3)),
             barrier_tolerance=float(sequential_data.get("barrier_tolerance", 1e-3)),
         ),
+        sequential_experiment=SequentialExperimentConfig(
+            cases=int(experiment_data.get("cases", 100)),
+            workers=int(experiment_data.get("workers", 1)),
+            seed=int(experiment_data.get("seed", 0)),
+            duration=float(experiment_data.get("duration", 25.0)),
+            goal_tolerance=float(experiment_data.get("goal_tolerance", 0.10)),
+            yaw_tolerance=float(experiment_data.get("yaw_tolerance", 0.10)),
+            barrier_tolerance=float(experiment_data.get("barrier_tolerance", -1e-3)),
+            control_mode=(
+                str(experiment_data["control_mode"])
+                if experiment_data.get("control_mode") is not None
+                else None
+            ),
+            initial_q=tuple(map(float, experiment_data.get("initial_q", [0.0] * int(data["dof"])))),
+            output_dir=str(experiment_data.get("output_dir", "outputs/sequential_comparison")),
+            target_radius_range=tuple(map(float, experiment_data.get("target_radius_range", (0.6, 2.7)))),
+            target_angle_range=tuple(map(float, experiment_data.get("target_angle_range", (-np.pi, np.pi)))),
+            target_orientation_range=tuple(map(float, experiment_data.get("target_orientation_range", (-np.pi, np.pi)))),
+            obstacle_position_range=tuple(map(float, experiment_data.get("obstacle_position_range", (-2.2, 2.2)))),
+            obstacle_radius_range=tuple(map(float, experiment_data.get("obstacle_radius_range", (0.2, 0.35)))),
+            initial_clearance_margin=float(experiment_data.get("initial_clearance_margin", 0.03)),
+            target_clearance_margin=float(experiment_data.get("target_clearance_margin", 0.10)),
+            max_case_attempts=int(experiment_data.get("max_case_attempts", 10_000)),
+            max_obstacle_attempts=int(experiment_data.get("max_obstacle_attempts", 1_000)),
+        ),
     )
     if config.dof != len(config.safety.link_lengths):
         raise ValueError("dof and safety.link_lengths must have the same length")
@@ -173,6 +225,34 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         or sequence.barrier_tolerance < 0.0
     ):
         raise ValueError("sequential end-effector tolerances must be non-negative")
+    experiment = config.sequential_experiment
+    if len(experiment.initial_q) != config.dof or not np.all(np.isfinite(experiment.initial_q)):
+        raise ValueError("sequential_experiment.initial_q must contain one finite value per dof")
+    if (
+        experiment.cases < 1
+        or experiment.workers < 1
+        or experiment.duration <= 0.0
+        or experiment.goal_tolerance <= 0.0
+        or experiment.yaw_tolerance <= 0.0
+        or experiment.initial_clearance_margin < 0.0
+        or experiment.target_clearance_margin < 0.0
+        or experiment.max_case_attempts < 1
+        or experiment.max_obstacle_attempts < 1
+    ):
+        raise ValueError("sequential experiment counts, duration, and tolerances are invalid")
+    for name, value_range in (
+        ("target_radius_range", experiment.target_radius_range),
+        ("target_angle_range", experiment.target_angle_range),
+        ("target_orientation_range", experiment.target_orientation_range),
+        ("obstacle_position_range", experiment.obstacle_position_range),
+        ("obstacle_radius_range", experiment.obstacle_radius_range),
+    ):
+        if len(value_range) != 2 or not value_range[0] < value_range[1]:
+            raise ValueError(f"sequential_experiment.{name} must be an increasing two-value range")
+    if experiment.target_radius_range[0] <= 0.0 or experiment.obstacle_radius_range[0] <= 0.0:
+        raise ValueError("sequential experiment radii must be positive")
+    if experiment.control_mode not in {None, "clf", "clbf"}:
+        raise ValueError("sequential_experiment.control_mode must be clf, clbf, or null")
     if config.safety.representation not in {"capsule", "bernstein"}:
         raise ValueError("safety representation must be 'capsule' or 'bernstein'")
     if config.control_mode == "clbf" and not config.safety.enabled:

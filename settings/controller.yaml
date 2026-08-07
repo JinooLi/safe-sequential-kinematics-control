@@ -17,6 +17,32 @@ sequential_end_effector:
   velocity_tolerance: 0.001 # 정지 판정 관절 속도 norm [rad/s]
   barrier_tolerance: 0.001 # CBF h 경계 근접 판정 [m]
 
+# Headless randomized comparison.  These values do not change the controller
+# itself; they apply only to `make compare-sequential ARGS="run"`.
+sequential_experiment:
+  cases: 72
+  # Parallel processes. Each process runs one sequential-off/on case pair.
+  workers: 12
+  seed: 23
+  duration: 30.0
+  # Success criterion, independent from sequential_end_effector.goal_tolerance.
+  goal_tolerance: 0.05
+  yaw_tolerance: 0.10
+  barrier_tolerance: -0.001
+  # null uses control_mode above; set clf or clbf to override it for the batch.
+  control_mode: null
+  initial_q: [0.0, 0.0, 0.0]
+  output_dir: outputs/sequential_comparison
+  target_radius_range: [0.6, 2.7]
+  target_angle_range: [-3.141592653589793, 3.141592653589793]
+  target_orientation_range: [-3.141592653589793, 3.141592653589793]
+  obstacle_position_range: [-2.2, 2.2]
+  obstacle_radius_range: [0.2, 0.35]
+  initial_clearance_margin: 0.03
+  target_clearance_margin: 0.10
+  max_case_attempts: 10000
+  max_obstacle_attempts: 1000
+
 obstacle:
   - radius: 0.3
     pos: [-0.5, 1.4]
