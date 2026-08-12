@@ -8,6 +8,11 @@ Render any saved case without starting a MuJoCo viewer:
 
     python -m src.application.compare_sequential visualize \
         --results-dir outputs/sequential_comparison/<run> --case-id 17
+
+Render every saved case:
+
+    python -m src.application.compare_sequential visualize-all \
+        --results-dir outputs/sequential_comparison/<run>
 """
 
 from __future__ import annotations
@@ -465,6 +470,21 @@ def visualize_case(results_dir: Path, case_id: int, output_path: Path | None = N
     print(f"Saved visualization: {output_path}")
 
 
+def visualize_all_cases(results_dir: Path, output_dir: Path | None = None):
+    """Render one comparison PNG for every case in a completed experiment."""
+    summary = json.loads((results_dir / "summary.json").read_text(encoding="utf-8"))
+    output_dir = output_dir or results_dir / "images"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for record in summary["cases"]:
+        case_id = record["case_id"]
+        visualize_case(
+            results_dir,
+            case_id,
+            output_dir / f"case_{case_id:03d}_comparison.png",
+        )
+    print(f"Saved {len(summary['cases'])} visualizations: {output_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -480,6 +500,10 @@ def main():
     visualize.add_argument("--case-id", type=int, required=True)
     visualize.add_argument("--output", type=Path)
     visualize.set_defaults(func=lambda args: visualize_case(args.results_dir, args.case_id, args.output))
+    visualize_all = subparsers.add_parser("visualize-all", help="render every saved comparison case")
+    visualize_all.add_argument("--results-dir", type=Path, required=True)
+    visualize_all.add_argument("--output-dir", type=Path)
+    visualize_all.set_defaults(func=lambda args: visualize_all_cases(args.results_dir, args.output_dir))
     args = parser.parse_args()
     args.func(args)
 

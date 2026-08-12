@@ -35,3 +35,6 @@ compare-sequential-run: ## Run randomized sequential on/off comparison (pass ARG
 
 compare-sequential-visualize: ## Run visualizer (pass ARGS="--results-dir outputs/<...> --case-id 20")
 	$(UV) run python -m src.application.compare_sequential $(ARGS)
+
+compare-sequential-visualize-all: ## Render one comparison image for every completed case
+	$(UV) run python -m src.application.compare_sequential visualize-all $(ARGS)
