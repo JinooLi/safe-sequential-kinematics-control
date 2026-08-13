@@ -100,7 +100,7 @@ class CLBFTest(unittest.TestCase):
         clbf_problem = clbf_solver.problem
         active_obstacles = sum(obstacle.enabled for obstacle in config.obstacles)
         self.assertEqual(
-            clbf_problem.A.shape[0], 1 + active_obstacles * config.dof + config.dof + 1
+            clbf_problem.A.shape[0], 1 + active_obstacles * config.dof + 4 + config.dof + 1
         )
         self.assertEqual(clbf_problem.A[0, -1], -1.0)
         self.assertGreater(clbf_problem.upper[-1], 0.0)

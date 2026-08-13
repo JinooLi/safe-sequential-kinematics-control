@@ -269,3 +269,15 @@ h = f_link(obstacle_center, q) - obstacle_radius - safe_distance
 양수는 안전 여유가 남았음을, `0`은 CBF 경계를, 음수는 여유 침범을 뜻한다.
 생성되는 CSV에는 위 이름으로 각각의 열이 생기고, PNG plot 및 `show_gui()`의
 `barrier` 항목에는 `h=0` 점선이 함께 표시된다.
+
+관절 범위도 `safety.joint_limits`에서 동일한 zeroing-CBF로 제약한다. 각 유한
+범위 `[q_min, q_max]`에 대해 `q_i-q_min`과 `q_max-q_i`를 barrier로 두므로,
+QP는 각각 하한 밖과 상한 밖으로 향하는 속도를 제한한다. 범위가 없는 관절은
+`null`로 지정하며, CBF 이득은 `safety.joint_limit_alpha`로 조정한다.
+
+### Kinematic CBF simulation
+
+기본 시뮬레이션은 QP의 결정변수 `u = q_dot`를 직접 적분한다. 따라서 CBF
+제약을 평가한 속도와 실제 시뮬레이션 속도가 동일하며, velocity actuator의
+추종 지연으로 barrier가 침범하는 문제를 피한다. actuator 동역학을 포함한
+실험이 필요하면 `run_simulation(..., kinematic=False)`를 사용한다.

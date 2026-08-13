@@ -70,6 +70,10 @@ safety:
   safe_distance: 0.08
   # CBF class-K 이득. 각 barrier에 대해 h_dot + alpha * h >= 0을 강제한다.
   alpha: 1
+  # Joint-limit zeroing CBF. null means an unbounded joint (joint1).
+  # Each finite [lower, upper] pair enforces q_min <= q_i <= q_max.
+  joint_limits: [null, [-3.14, 3.14], [-3.14, 3.14]]
+  joint_limit_alpha: 1.0
   # QP가 출력하는 각 관절 속도의 절댓값 상한 [rad/s]. -limit <= q_dot_i <= limit.
   velocity_limit: 4.0
   # CLF 수렴 이득. V_dot <= -clf_rate * V + delta에서 사용한다.

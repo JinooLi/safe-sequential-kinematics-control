@@ -251,6 +251,9 @@ def _execute_case(
         verbose=False,
         save_recording=False,
         initial_q=initial_q,
+        # The QP directly optimizes q_dot, so use the matching kinematic
+        # simulator rather than the lagged MuJoCo velocity-servo dynamics.
+        kinematic=True,
     )
     arrays, final_xy, final_yaw = _save_trajectory(
         trajectory_path, recorder, config.safety.link_lengths

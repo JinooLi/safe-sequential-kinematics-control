@@ -85,6 +85,7 @@ def run_simulation(
     verbose=True,
     save_recording=True,
     initial_q=None,
+    kinematic=True,
 ):
     """MuJoCo 시뮬레이션을 지정한 시간 동안 실행한다.
 
@@ -112,6 +113,10 @@ def run_simulation(
         save_recording: False이면 recorder에는 기록하되 NPZ/CSV/plot 파일은 저장하지
             않는다. Batch experiment가 자체 compact trajectory를 저장할 때 사용한다.
         initial_q: 지정하면 시뮬레이션을 이 관절 자세에서 시작한다.
+        kinematic: True이면 QP 출력 ``u``를 실제 관절 속도로 간주해
+            ``q ← integrate(q, u * dt)``로 직접 적분한다. 따라서 CBF가
+            가정하는 ``q_dot = u``와 시뮬레이션이 일치한다. False이면
+            기존 MuJoCo velocity actuator 동역학을 사용한다.
 
     Usage:
         run_simulation(
@@ -162,7 +167,9 @@ def run_simulation(
                 break
         safety = controller.safety_diagnostics(q, J, p_ee, ee_yaw)
 
-        mj_data.ctrl[:] = u
+        u = np.asarray(u, dtype=float)
+        if u.shape != (mj_model.nv,):
+            raise ValueError(f"controller velocity must have shape ({mj_model.nv},)")
         if recorder is not None:
             recorder.record(
                 SimulationStep(
@@ -175,7 +182,17 @@ def run_simulation(
                     end_effector_yaw=ee_yaw,
                 )
             )
-        mujoco.mj_step(mj_model, mj_data)
+        if kinematic:
+            # The CBF-QP is a kinematic controller: its decision variable is
+            # q_dot itself.  Bypassing the velocity-servo actuator prevents
+            # tracking lag from violating a constraint that the QP satisfied.
+            mj_data.qvel[:] = u
+            mujoco.mj_integratePos(mj_model, mj_data.qpos, mj_data.qvel, dt)
+            mj_data.time += dt
+            mujoco.mj_forward(mj_model, mj_data)
+        else:
+            mj_data.ctrl[:] = u
+            mujoco.mj_step(mj_model, mj_data)
 
         return p_ee, ee_yaw
 

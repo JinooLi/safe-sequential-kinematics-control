@@ -76,6 +76,8 @@ class QPController:
                 raise ValueError("safety link count must match controller dof")
         self.safe_distance = safety_config.safe_distance
         self.cbf_alpha = safety_config.alpha
+        self.joint_limits = safety_config.joint_limits
+        self.joint_limit_alpha = safety_config.joint_limit_alpha
         self.velocity_limit = safety_config.velocity_limit
         self.clf_rate = safety_config.clf_rate
         self.barrier_labels = [
@@ -123,6 +125,7 @@ class QPController:
         # Decision variable: [q_dot (dof), relaxation].
         clf_value, clf_gradient_q = self._task_clf_terms(task_state, task_jacobian)
         cbf_A, cbf_lower, _ = self._cbf_constraints(q)
+        joint_limit_A, joint_limit_lower = self._joint_limit_cbf_constraints(q)
         if self.control_mode == "clf":
             # Vdot - relaxation <= -clf_rate * V
             rows = [np.concatenate((clf_gradient_q, [-1.0]))]
@@ -145,6 +148,14 @@ class QPController:
                 rows.append(np.concatenate((row, [0.0])))
                 lower.append(bound)
                 upper.append(np.inf)
+
+        # Keep q_i inside [q_min, q_max] with two zeroing CBFs per bounded
+        # joint: h_lower = q_i-q_min and h_upper = q_max-q_i.  joint1 has a
+        # null limit entry, so it deliberately contributes no constraint.
+        for row, bound in zip(joint_limit_A, joint_limit_lower):
+            rows.append(np.concatenate((row, [0.0])))
+            lower.append(bound)
+            upper.append(np.inf)
 
         # Bounded commanded joint velocity makes the safety QP well posed.
         for joint in range(self.dof):
@@ -264,6 +275,34 @@ class QPController:
             self.safe_distance,
             self.cbf_alpha,
         )
+
+    def _joint_limit_cbf_constraints(self, q):
+        """Return hard zeroing-CBF rows for every finite joint range.
+
+        For ``h_lower = q_i-q_min`` and ``h_upper = q_max-q_i``, enforce
+        ``h_dot + alpha*h >= 0``.  The returned rows have the common form
+        ``A q_dot >= lower`` and remain active even if obstacle safety is off.
+        """
+        q = np.asarray(q, dtype=float)
+        if q.shape != (self.dof,):
+            raise ValueError(f"q must have shape ({self.dof},)")
+        rows, lower = [], []
+        for joint, limit in enumerate(self.joint_limits):
+            if limit is None:
+                continue
+            q_min, q_max = limit
+            lower_row = np.zeros(self.dof)
+            lower_row[joint] = 1.0
+            rows.append(lower_row)
+            lower.append(-self.joint_limit_alpha * (q[joint] - q_min))
+
+            upper_row = np.zeros(self.dof)
+            upper_row[joint] = -1.0
+            rows.append(upper_row)
+            lower.append(-self.joint_limit_alpha * (q_max - q[joint]))
+        if not rows:
+            return np.empty((0, self.dof)), np.empty(0)
+        return np.vstack(rows), np.asarray(lower)
 
     def _resolve_clbf_modules(self, config):
         """Resolve recursive CLBF parameters in obstacle priority order."""

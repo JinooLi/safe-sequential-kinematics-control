@@ -4,6 +4,8 @@ import unittest
 import mujoco
 import numpy as np
 
+from src.domain.types import SafetyDiagnostics
+from src.logging.recorder import Recorder
 from src.application.simulation import (
     load_mujoco_model,
     run_simulation,
@@ -13,6 +15,25 @@ from src.application.simulation import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+class _ConstantVelocityController:
+    dof = 3
+    sequential_end_effector_enabled = False
+
+    def get_velocity(self, q, J, p_ee, ee_yaw):
+        return np.array([0.5, -1.0, 0.25])
+
+    def safety_diagnostics(self, q, J, p_ee, ee_yaw):
+        return SafetyDiagnostics((), np.empty(0))
+
+
+class _StaticRobot:
+    def update_kinematics(self, q):
+        return np.zeros(3), np.zeros((6, 3))
+
+    def end_effector_yaw(self):
+        return 0.0
 
 
 class GoalMarkerTest(unittest.TestCase):
@@ -45,6 +66,28 @@ class GoalMarkerTest(unittest.TestCase):
                 visualize=False,
                 viewer_sync_interval_steps=0,
             )
+
+    def test_kinematic_mode_integrates_the_qp_velocity_directly(self):
+        recorder = Recorder()
+        run_simulation(
+            ROOT / "settings/mujoco.xml",
+            controller=_ConstantVelocityController(),
+            robot=_StaticRobot(),
+            duration=0.004,
+            visualize=False,
+            recorder=recorder,
+            save_recording=False,
+            kinematic=True,
+            verbose=False,
+        )
+        arrays = recorder.arrays()
+        self.assertEqual(len(arrays["q"]), 2)
+        np.testing.assert_allclose(
+            arrays["q"][1],
+            np.array([0.5, -1.0, 0.25]) * 0.002,
+            atol=1e-12,
+        )
+        np.testing.assert_allclose(arrays["dq"][1], [0.5, -1.0, 0.25])
 
 
 if __name__ == "__main__":

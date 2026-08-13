@@ -34,6 +34,20 @@ class ConfigurationTest(unittest.TestCase):
         self.assertIsNone(urdf_joint.find("limit").get("upper"))
         self.assertEqual(mujoco_joint.get("limited"), "false")
         self.assertIsNone(mujoco_joint.get("range"))
+        self.assertIsNone(self.config.safety.joint_limits[0])
+        self.assertEqual(self.config.safety.joint_limits[1:], ((-3.14, 3.14), (-3.14, 3.14)))
+
+    def test_joint_limit_cbfs_exclude_joint1_and_push_inward_at_each_bound(self):
+        controller = QPController(self.config, solver=None)
+        rows, lower = controller._joint_limit_cbf_constraints(
+            np.array([0.0, 3.0, -3.0])
+        )
+
+        np.testing.assert_allclose(
+            rows,
+            [[0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]],
+        )
+        np.testing.assert_allclose(lower, [-6.14, -0.14, -0.14, -6.14])
 
     def test_clf_slack_ratio_is_loaded(self):
         self.assertGreater(self.config.qp.d, 0.0)

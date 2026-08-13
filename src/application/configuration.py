@@ -26,6 +26,8 @@ class SafetyConfig:
     link_radius: float
     safe_distance: float
     alpha: float
+    joint_limits: tuple[tuple[float, float] | None, ...]
+    joint_limit_alpha: float
     velocity_limit: float
     clf_rate: float
 
@@ -116,6 +118,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     with open(path, "r") as file:
         data = yaml.safe_load(file)
     safety_data = data["safety"]
+    dof = int(data["dof"])
     clbf_data = data["clbf"]
     qp_data = data["QP_ctrl"]
     sequential_data = data.get("sequential_end_effector", {})
@@ -128,6 +131,10 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         )
         for entry in data.get("obstacle", [])
     )
+    joint_limits = tuple(
+        None if limit is None else tuple(map(float, limit))
+        for limit in safety_data.get("joint_limits", [None] * dof)
+    )
     safety = SafetyConfig(
         enabled=bool(safety_data["enabled"]),
         representation=str(safety_data["representation"]),
@@ -136,6 +143,8 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         link_radius=float(safety_data["link_radius"]),
         safe_distance=float(safety_data["safe_distance"]),
         alpha=float(safety_data["alpha"]),
+        joint_limits=joint_limits,
+        joint_limit_alpha=float(safety_data.get("joint_limit_alpha", safety_data["alpha"])),
         velocity_limit=float(safety_data["velocity_limit"]),
         clf_rate=float(safety_data["clf_rate"]),
     )
@@ -155,7 +164,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         ),
     )
     config = ControllerConfig(
-        dof=int(data["dof"]),
+        dof=dof,
         ee_target=np.asarray(data["ee_obj"], dtype=float),
         ee_orientation=float(data.get("ee_orientation", 0.0)),
         control_mode=str(data.get("control_mode", "clf")),
@@ -202,6 +211,17 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     )
     if config.dof != len(config.safety.link_lengths):
         raise ValueError("dof and safety.link_lengths must have the same length")
+    if len(config.safety.joint_limits) != config.dof:
+        raise ValueError("safety.joint_limits must contain one entry per dof")
+    for index, limit in enumerate(config.safety.joint_limits, start=1):
+        if limit is None:
+            continue
+        if len(limit) != 2 or not np.all(np.isfinite(limit)) or limit[0] >= limit[1]:
+            raise ValueError(
+                f"safety.joint_limits[{index}] must be null or an increasing finite [lower, upper] pair"
+            )
+    if config.safety.joint_limit_alpha <= 0.0:
+        raise ValueError("safety.joint_limit_alpha must be positive")
     if config.ee_target.shape != (2,):
         raise ValueError("ee_obj must contain exactly [x, y]")
     if not np.isfinite(config.ee_orientation):
