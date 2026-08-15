@@ -29,4 +29,5 @@ if __name__ == "__main__":
         recorder=recorder,
         duration=25,
         viewer_sync_interval_steps=10,
+        kinematic=config.simulation.kinematic,
     )

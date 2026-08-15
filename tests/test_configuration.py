@@ -53,6 +53,17 @@ class ConfigurationTest(unittest.TestCase):
         self.assertGreater(self.config.qp.d, 0.0)
         self.assertLessEqual(self.config.qp.d, 1.0)
 
+    def test_simulation_kinematic_mode_is_loaded_from_yaml(self):
+        self.assertTrue(self.config.simulation.kinematic)
+        text = (ROOT / "settings/controller.yaml").read_text().replace(
+            "kinematic: true", "kinematic: false"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "controller.yaml"
+            path.write_text(text)
+            config = load_controller_config(path)
+        self.assertFalse(config.simulation.kinematic)
+
     def test_clf_slack_ratio_one_is_valid(self):
         config_path = ROOT / "settings/controller.yaml"
         text = config_path.read_text().replace(f"d: {self.config.qp.d}", "d: 1.0")
@@ -76,7 +87,6 @@ class ConfigurationTest(unittest.TestCase):
 
     def test_sequential_end_effector_configuration_uses_each_link_tip(self):
         sequence = self.config.sequential_end_effector
-        self.assertTrue(sequence.enabled)
         self.assertEqual(sequence.frame_names, ("joint2", "joint3", "ee_joint"))
         self.assertGreater(sequence.goal_tolerance, 0.0)
 
@@ -93,6 +103,7 @@ class ConfigurationTest(unittest.TestCase):
         text = (ROOT / "settings/controller.yaml").read_text().replace(
             "frame_names: [joint2, joint3, ee_joint]", "frame_names: [joint2, ee_joint]"
         )
+        text = text.replace("enabled: false", "enabled: true", 1)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "controller.yaml"
             path.write_text(text)

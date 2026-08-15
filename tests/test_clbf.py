@@ -48,6 +48,13 @@ class CLBFTest(unittest.TestCase):
             CLBFModule(2, epsilon=0.02, lambda_=0.8, kappa=0.1),
         )
 
+    @staticmethod
+    def _with_sequential_enabled(config):
+        return replace(
+            config,
+            sequential_end_effector=replace(config.sequential_end_effector, enabled=True),
+        )
+
     def evaluate_clbf(self, q):
         p, task_jacobian = planar_end_effector(q)
         barriers = tuple(
@@ -134,7 +141,9 @@ class CLBFTest(unittest.TestCase):
         self.assertLess(controller.clbf_goal_values[-1], 0.0)
 
     def test_goal_and_infeasibility_advance_task_endpoint_but_final_endpoint_stays(self):
-        config = load_controller_config(ROOT / "settings/controller.yaml")
+        config = self._with_sequential_enabled(
+            load_controller_config(ROOT / "settings/controller.yaml")
+        )
         q = np.zeros(config.dof)
         J = np.zeros((6, config.dof))
         goal = np.array([*config.ee_target, 0.0])
@@ -153,7 +162,9 @@ class CLBFTest(unittest.TestCase):
         self.assertEqual(controller.end_effector_index, config.dof)
 
     def test_cbf_boundary_stall_advances_task_endpoint(self):
-        config = load_controller_config(ROOT / "settings/controller.yaml")
+        config = self._with_sequential_enabled(
+            load_controller_config(ROOT / "settings/controller.yaml")
+        )
         # link 2/3 lie through obstacle 1, so a zero QP command is a CBF-boundary
         # stall rather than a free-space zero command.
         q = np.array([np.arctan2(1.6, -0.6), 0.0, 0.0])
@@ -166,7 +177,10 @@ class CLBFTest(unittest.TestCase):
         self.assertEqual(controller.last_end_effector_switch_reason, "stopped at CBF boundary")
 
     def test_sequential_links_ignore_yaw_until_final_position_converges(self):
-        config = replace(load_controller_config(ROOT / "settings/controller.yaml"), control_mode="clf")
+        config = replace(
+            self._with_sequential_enabled(load_controller_config(ROOT / "settings/controller.yaml")),
+            control_mode="clf",
+        )
         q = np.zeros(config.dof)
         J = np.zeros((6, config.dof))
         J[5] = 1.0
@@ -187,7 +201,10 @@ class CLBFTest(unittest.TestCase):
         np.testing.assert_allclose(final_solver.problem.A[0, : config.dof], 0.0)
 
     def test_final_link_keeps_controlling_yaw_after_reaching_target_position(self):
-        config = replace(load_controller_config(ROOT / "settings/controller.yaml"), control_mode="clf")
+        config = replace(
+            self._with_sequential_enabled(load_controller_config(ROOT / "settings/controller.yaml")),
+            control_mode="clf",
+        )
         q = np.zeros(config.dof)
         J = np.zeros((6, config.dof))
         J[5] = 1.0

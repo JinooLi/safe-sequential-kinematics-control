@@ -64,6 +64,13 @@ class QPConfig:
 
 
 @dataclass(frozen=True)
+class SimulationConfig:
+    """Execution model shared by interactive and batch simulations."""
+
+    kinematic: bool
+
+
+@dataclass(frozen=True)
 class SequentialEndEffectorConfig:
     """Settings for progressing the task point from link 1 to the final tip."""
 
@@ -109,6 +116,7 @@ class ControllerConfig:
     safety: SafetyConfig
     clbf: CLBFConfig
     qp: QPConfig
+    simulation: SimulationConfig
     sequential_end_effector: SequentialEndEffectorConfig
     sequential_experiment: SequentialExperimentConfig
 
@@ -123,6 +131,7 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     qp_data = data["QP_ctrl"]
     sequential_data = data.get("sequential_end_effector", {})
     experiment_data = data.get("sequential_experiment", {})
+    simulation_data = data.get("simulation", {})
     obstacles = tuple(
         ObstacleConfig(
             tuple(map(float, entry["pos"])),
@@ -176,6 +185,9 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             np.asarray(qp_data["Q"], dtype=float),
             float(qp_data["d"]),
         ),
+        simulation=SimulationConfig(
+            kinematic=bool(simulation_data.get("kinematic", True)),
+        ),
         sequential_end_effector=SequentialEndEffectorConfig(
             enabled=bool(sequential_data.get("enabled", False)),
             frame_names=tuple(map(str, sequential_data.get("frame_names", ()))),
@@ -211,6 +223,8 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
     )
     if config.dof != len(config.safety.link_lengths):
         raise ValueError("dof and safety.link_lengths must have the same length")
+    if not isinstance(simulation_data.get("kinematic", True), bool):
+        raise ValueError("simulation.kinematic must be true or false")
     if len(config.safety.joint_limits) != config.dof:
         raise ValueError("safety.joint_limits must contain one entry per dof")
     for index, limit in enumerate(config.safety.joint_limits, start=1):

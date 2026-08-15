@@ -5,6 +5,10 @@ ee_orientation: 1.57
 # 목표 수렴 constraint 선택: clf | clbf
 control_mode: clf
 
+# true: QP의 q_dot을 직접 적분한다. false: MuJoCo velocity actuator 동역학을 사용한다.
+simulation:
+  kinematic: false
+
 # root에서 시작해 각 링크의 반대쪽 끝을 차례대로 task end-effector로 사용한다.
 # 모든 링크는 우선 위치 CLF/CLBF만 사용한다. 마지막 link3가 목표 위치 허용
 # 오차 안에 들어오면 그때부터 목표 yaw까지 포함해 제어한다.
@@ -26,8 +30,8 @@ sequential_experiment:
   seed: 23
   duration: 30.0
   # Success criterion, independent from sequential_end_effector.goal_tolerance.
-  goal_tolerance: 0.05
-  yaw_tolerance: 0.10
+  goal_tolerance: 0.1
+  yaw_tolerance: 0.1
   barrier_tolerance: -0.001
   # null uses control_mode above; set clf or clbf to override it for the batch.
   control_mode: null

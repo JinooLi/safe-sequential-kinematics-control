@@ -251,9 +251,7 @@ def _execute_case(
         verbose=False,
         save_recording=False,
         initial_q=initial_q,
-        # The QP directly optimizes q_dot, so use the matching kinematic
-        # simulator rather than the lagged MuJoCo velocity-servo dynamics.
-        kinematic=True,
+        kinematic=config.simulation.kinematic,
     )
     arrays, final_xy, final_yaw = _save_trajectory(
         trajectory_path, recorder, config.safety.link_lengths
@@ -383,6 +381,7 @@ def _write_summary(output_dir: Path, records, experiment, config):
         "settings": {
             **asdict(experiment),
             "resolved_control_mode": config.control_mode,
+            "kinematic": config.simulation.kinematic,
             "link_lengths": list(config.safety.link_lengths),
         },
         "cases": records,
