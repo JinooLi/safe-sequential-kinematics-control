@@ -76,14 +76,8 @@ class ConfigurationTest(unittest.TestCase):
     def test_end_effector_orientation_is_loaded(self):
         self.assertTrue(np.isfinite(self.config.ee_orientation))
 
-    def test_control_mode_and_clbf_parameters_are_loaded(self):
-        self.assertIn(self.config.control_mode, {"clf", "clbf"})
-        self.assertGreater(self.config.clbf.gamma, 0.0)
-        self.assertEqual(
-            len(self.config.clbf.barriers),
-            sum(obstacle.enabled for obstacle in self.config.obstacles),
-        )
-        self.assertTrue(self.config.clbf.barriers[1].auto_from_previous)
+    def test_clf_mode_is_loaded(self):
+        self.assertEqual(self.config.control_mode, "clf")
 
     def test_sequential_end_effector_configuration_uses_each_link_tip(self):
         sequence = self.config.sequential_end_effector
@@ -112,13 +106,13 @@ class ConfigurationTest(unittest.TestCase):
 
     def test_clf_mode_is_selectable_from_yaml(self):
         text = (ROOT / "settings/controller.yaml").read_text().replace(
-            "control_mode: clbf", "control_mode: clf"
+            "control_mode: clf", "control_mode: invalid"
         )
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "controller.yaml"
             path.write_text(text)
-            config = load_controller_config(path)
-        self.assertEqual(config.control_mode, "clf")
+            with self.assertRaisesRegex(ValueError, "control_mode"):
+                load_controller_config(path)
 
     def test_controller_geometry_mismatch_fails_fast(self):
         wrong_safety = replace(self.config.safety, link_radius=0.06)

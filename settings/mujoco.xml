@@ -16,7 +16,7 @@
 
     <geom name="floor" type="plane" pos="0 0 -0.1" size="3 3 0.1" rgba="0.9 0.9 0.9 1"/>
     <geom name="obstacle_geom1" type="cylinder" pos="-0.5 1.4 0" size="0.3 0.05" rgba="1 0 0 0.8" contype="0" conaffinity="0"/>
-     <geom name="obstacle_geom2" type="cylinder" pos="-1.45 1.1 0" size="0.3 0.05" rgba="1 0 0 0.8" contype="0" conaffinity="0"/>
+    <geom name="obstacle_geom2" type="cylinder" pos="-1.6 1.1 0" size="0.3 0.05" rgba="1 0 0 0.8" contype="0" conaffinity="0"/>
     <!-- Visual-only goal marker. Its x/y position is set from controller.yaml's
          ee_obj by application/simulation.py before the simulation begins. -->
     <geom name="goal_marker" type="sphere" pos="0 0 0.06" size="0.07" rgba="0.1 0.8 0.2 0.9" contype="0" conaffinity="0"/>

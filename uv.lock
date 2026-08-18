@@ -1282,7 +1282,7 @@ wheels = [
 ]
 
 [[package]]
-name = "safe-inv-clbf-robot-arm"
+name = "safe-inv-clf-robot-arm"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
