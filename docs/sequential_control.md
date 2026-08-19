@@ -3,8 +3,8 @@
 ## 목적
 
 이 제어기는 최종 목표 관절 자세 `q*`를 직접 추종하지 않는다. 대신 목표 pose에서
-계산한 안전한 IK configuration의 각 링크 끝점 위치를 순서대로 추종한다. 3-DOF
-평면 로봇에서는 다음 세 task를 수행한다.
+계산한 안전한 IK configuration의 각 링크 끝점 위치를 task 목표로 사용한다. 3-DOF
+평면 로봇에서는 다음 세 목표를 만든다.
 
 ```text
 목표 pose (p*, yaw*)
@@ -37,6 +37,8 @@ base--elbow--wrist의 2-link 기하로 elbow-up 및 elbow-down 두 해를 계산
 - finite joint limit을 만족한다.
 - 모든 링크 capsule이 활성 장애물과 `safe_distance`를 포함한 안전 여유를
   만족한다.
+- 비인접 링크인 link1과 link3의 중심선이 교차하지 않는다. 이 검사는 목표 IK
+  후보를 제외하기 위한 binary geometry test이며, 실행 중 CBF 제약은 아니다.
 
 둘 이상의 안전한 해가 있으면 제어 시작 시 현재 관절 자세와 wrapped joint-angle
 거리가 가장 가까운 해를 선택한다. 안전한 해가 하나도 없으면 controller 생성이
@@ -45,7 +47,7 @@ base--elbow--wrist의 2-link 기하로 elbow-up 및 elbow-down 두 해를 계산
 선택된 해의 누적 forward kinematics로 링크 끝점 위치
 `[p1*, p2*, p3*]`를 계산한다. 이것이 각 sequential 단계의 position 목표다.
 
-## 2. 단계별 CLF
+## 2. CLF 구성
 
 활성 frame의 현재 position을 `p`, planar Jacobian을
 `J_task = [Jx; Jy; Jyaw]`라 하자. 모든 CLF에는 전역 계수
@@ -105,7 +107,8 @@ RDF를 사용한다.
 
 ## 4. 단계 전환
 
-마지막 링크 이전 단계에서는 아래 중 하나가 발생하면 다음 링크 frame으로 전환한다.
+이 절은 `staged` 모드에만 적용된다. 마지막 링크 이전 단계에서는 아래 중 하나가
+발생하면 다음 링크 frame으로 전환한다.
 
 1. 활성 frame이 자신의 목표점에서 `goal_tolerance` 이내에 도달
 2. QP infeasible
@@ -113,6 +116,29 @@ RDF를 사용한다.
    `barrier_tolerance` 이하인 CBF 경계 정지
 
 마지막 `ee_joint`에서는 더 이상 전환하지 않는다.
+
+### Stage 1의 CBF 정지 복구
+
+stage 1에서 최소 barrier가 `barrier_tolerance` 이내이고, 관절 속도가
+`velocity_tolerance` 이하인 정지가 `link1_stuck_cycles`회 연속 발생하면, 제어기는
+즉시 stage 2로 전환하지 않는다. 먼저 선택된 IK 해의 첫 관절 목표를 같은 물리 자세의
+반대 winding으로 바꾼다.
+
+$$
+q_{1,\mathrm{reverse}}^* = q_{1,\mathrm{normal}}^* \mp 2\pi
+$$
+
+복구 중에는 link1 endpoint position CLF 대신 다음 관절각 CLF를 사용하며, CBF와
+joint-limit 제약은 그대로 hard constraint로 유지한다.
+
+$$
+V_{\mathrm{reverse}} = w_{clf}w_{\mathrm{reverse}}
+\left(q_1-q_{1,\mathrm{reverse}}^*\right)^2
+$$
+
+반대 경로에서도 첫 관절이 CBF 경계에서 정지하거나, QP가 infeasible이거나,
+`link1_reverse_max_steps` 안에 도달하지 못하면 stage 1을 포기하고 stage 2로
+전환한다. 각 전환 사유는 실험 결과의 `switch_reason`에 기록된다.
 
 시뮬레이션 루프는 frame 전환이 발생한 동일 상태에서 새 frame의 kinematics와 QP를
 다시 계산한다. 따라서 다음 timestep까지 기다리지 않고 새 단계의 명령을 구한다.
@@ -130,7 +156,9 @@ $$
 
 즉 `final_yaw_weight`는 sequential on의 마지막 단계에만 적용되며, off에서는 yaw
 가중치가 `1`이다. 두 비교 조건은 동일한 목표 pose, 장애물, 초기 관절 자세 및 hard
-CBF/joint-limit 제약을 사용한다.
+CBF/joint-limit 제약을 사용한다. 비교 case는 안전한 IK branch가 하나 이상 존재할
+때만 채택하므로, IK 해가 없거나 모든 해가 충돌/교차로 제외되는 목표는 재샘플하며
+실험 결과에 포함하지 않는다.
 
 ## 관련 설정
 
@@ -142,6 +170,10 @@ sequential_end_effector:
   velocity_tolerance: 0.001
   barrier_tolerance: 0.001
   final_yaw_weight: 0.5
+  link1_reverse_enabled: true
+  link1_stuck_cycles: 10
+  link1_reverse_max_steps: 500
+  link1_reverse_weight: 1.0
 
 safety:
   clf_rate: 1.0

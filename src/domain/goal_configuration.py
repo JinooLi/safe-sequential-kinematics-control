@@ -31,6 +31,34 @@ def joint_positions(q, link_lengths):
     )
 
 
+def link1_link3_crosses(positions, tolerance: float = 1e-10) -> bool:
+    """Return whether the non-adjacent link1 and link3 centerlines cross.
+
+    Adjacent links intentionally meet at a joint, but link1 and link3 must not
+    intersect in their interiors.  This is a binary geometric goal-screening
+    test, not a distance-field or differentiable CBF constraint.
+    """
+    positions = np.asarray(positions, dtype=float)
+    if positions.shape != (3, 2):
+        raise ValueError("positions must have shape (3, 2)")
+    base = np.zeros(2)
+    link1_end, link3_start, link3_end = positions
+
+    def orientation(start, end, point):
+        edge = end - start
+        offset = point - start
+        return float(edge[0] * offset[1] - edge[1] * offset[0])
+
+    first_start = orientation(base, link1_end, link3_start)
+    first_end = orientation(base, link1_end, link3_end)
+    third_start = orientation(link3_start, link3_end, base)
+    third_end = orientation(link3_start, link3_end, link1_end)
+    return (
+        first_start * first_end < -tolerance
+        and third_start * third_end < -tolerance
+    )
+
+
 def solve_goal_configurations(
     target_position,
     target_yaw: float,
@@ -77,7 +105,9 @@ def solve_goal_configurations(
             limit is not None and not (limit[0] <= angle <= limit[1])
             for angle, limit in zip(q, joint_limits or (None,) * 3)
         )
-        colliding = violates_limit
+        # link1/link3 are non-adjacent.  Reject only a geometric crossing;
+        # clearance is still governed separately by the obstacle CBF model.
+        colliding = violates_limit or link1_link3_crosses(positions)
         if obstacles:
             from .safety import PlanarCapsuleRobot
 

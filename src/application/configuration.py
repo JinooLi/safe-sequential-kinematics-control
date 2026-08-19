@@ -57,6 +57,10 @@ class SequentialEndEffectorConfig:
     velocity_tolerance: float
     barrier_tolerance: float
     final_yaw_weight: float
+    link1_reverse_enabled: bool
+    link1_stuck_cycles: int
+    link1_reverse_max_steps: int
+    link1_reverse_weight: float
 
 
 @dataclass(frozen=True)
@@ -156,6 +160,10 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             velocity_tolerance=float(sequential_data.get("velocity_tolerance", 1e-3)),
             barrier_tolerance=float(sequential_data.get("barrier_tolerance", 1e-3)),
             final_yaw_weight=float(sequential_data.get("final_yaw_weight", 1.0)),
+            link1_reverse_enabled=bool(sequential_data.get("link1_reverse_enabled", True)),
+            link1_stuck_cycles=int(sequential_data.get("link1_stuck_cycles", 10)),
+            link1_reverse_max_steps=int(sequential_data.get("link1_reverse_max_steps", 500)),
+            link1_reverse_weight=float(sequential_data.get("link1_reverse_weight", 1.0)),
         ),
         sequential_experiment=SequentialExperimentConfig(
             cases=int(experiment_data.get("cases", 100)),
@@ -223,6 +231,10 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         or sequence.barrier_tolerance < 0.0
         or not np.isfinite(sequence.final_yaw_weight)
         or sequence.final_yaw_weight <= 0.0
+        or sequence.link1_stuck_cycles < 1
+        or sequence.link1_reverse_max_steps < 1
+        or not np.isfinite(sequence.link1_reverse_weight)
+        or sequence.link1_reverse_weight <= 0.0
     ):
         raise ValueError("sequential end-effector tolerances must be non-negative")
     experiment = config.sequential_experiment

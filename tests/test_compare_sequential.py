@@ -1,9 +1,14 @@
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
-from src.application.compare_sequential import classify_outcome, sample_case
+from src.application.compare_sequential import (
+    classify_outcome,
+    has_feasible_goal_configuration,
+    sample_case,
+)
 from src.application.configuration import load_controller_config
 
 
@@ -28,3 +33,14 @@ class CompareSequentialTest(unittest.TestCase):
         self.assertGreaterEqual(np.linalg.norm(first.target), 0.6)
         self.assertGreaterEqual(first.target_yaw, -np.pi)
         self.assertLessEqual(first.target_yaw, np.pi)
+
+    def test_missing_ik_solution_is_not_feasible_for_comparison_sampling(self):
+        config = load_controller_config(ROOT / "settings/controller.yaml")
+        with patch("src.application.compare_sequential.solve_goal_configurations", return_value=()):
+            feasible = has_feasible_goal_configuration(
+                np.array([1.0, 1.0]),
+                0.0,
+                tuple(config.obstacles),
+                config,
+            )
+        self.assertFalse(feasible)
