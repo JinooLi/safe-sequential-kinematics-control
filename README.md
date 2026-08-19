@@ -60,6 +60,9 @@ make visualize-clf ARGS="--show --resolution 60"
 
 Sequential controller의 IK branch 선택, 단계별 CLF, CBF 제약 및 on/off 비교 기준은
 [Sequential control algorithm](docs/sequential_control.md)에 정리되어 있다.
+실험 결과를 어떻게 해석하고 비교할지는
+[Sequential CLF performance analysis](docs/sequential_performance_analysis.md)에
+정리되어 있다.
 
 The following command samples one shared target and two shared circular
 obstacles per case, then runs the same case with sequential end-effector

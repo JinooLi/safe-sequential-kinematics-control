@@ -166,14 +166,18 @@ CBF/joint-limit 제약을 사용한다. 비교 case는 안전한 IK branch가 �
 sequential_end_effector:
   enabled: true
   frame_names: [joint2, joint3, ee_joint]
-  goal_tolerance: 0.1
-  velocity_tolerance: 0.001
-  barrier_tolerance: 0.001
-  final_yaw_weight: 0.5
+  goal_tolerance: 0.2 # 목표 위치 허용 오차 [m]
+  velocity_tolerance: 0.001 # 정지 판정 관절 속도 norm [rad/s]
+  barrier_tolerance: 0.001 # CBF h 경계 근접 판정 [m]
+  # 마지막 link3의 position+yaw CLF에서 yaw 오차항에만 곱하는 가중치.
+  # 1보다 작게 두면 position보다 yaw의 영향력이 작아진다.
+  final_yaw_weight: 0.4
+  # link1이 CBF 경계에서 정지하면 q1의 반대 winding(q1* ± 2π)을 시도한다.
+  # 이 복구 제어에도 obstacle/joint-limit CBF는 hard constraint로 유지된다.
   link1_reverse_enabled: true
-  link1_stuck_cycles: 10
-  link1_reverse_max_steps: 500
-  link1_reverse_weight: 1.0
+  link1_stuck_cycles: 10 # 연속 정지 횟수 후 반대 방향 회전 시작
+  link1_reverse_max_steps: 500 # 반대 방향 회전 실패로 판단할 최대 제어 step 수
+  link1_reverse_weight: 1.0 # q1 반대 winding CLF 가중치
 
 safety:
   clf_rate: 1.0
