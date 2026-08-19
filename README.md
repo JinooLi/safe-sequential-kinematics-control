@@ -1,4 +1,4 @@
-# safe inverse kinematics CLBF(?)
+# Safe inverse-kinematics CLF robot arm
 
 
 ## 주의점
@@ -47,17 +47,19 @@ make test            # 전체 테스트
 make train-rdf       # RDF 학습
 make visualize-rdf   # 거리장 PNG
 make visualize-clf   # CLF q-space 등고면 PNG
-make visualize-clbf  # end-effector CLBF 3D 단면 PNG
 ```
 
-각 시각화의 추가 인자는 `ARGS`로 전달한다. 예를 들어 창을 열고 CLBF 해상도를
+각 시각화의 추가 인자는 `ARGS`로 전달한다. 예를 들어 CLF 해상도를
 높이려면 다음처럼 실행한다.
 
 ```bash
-make visualize-clbf ARGS="--show --resolution 160"
+make visualize-clf ARGS="--show --resolution 60"
 ```
 
 ### Sequential end-effector randomized comparison
+
+Sequential controller의 IK branch 선택, 단계별 CLF, CBF 제약 및 on/off 비교 기준은
+[Sequential control algorithm](docs/sequential_control.md)에 정리되어 있다.
 
 The following command samples one shared target and two shared circular
 obstacles per case, then runs the same case with sequential end-effector
@@ -131,45 +133,16 @@ spatial Jacobian에서는 `[J_x, J_y, J_angular_z] = J[[0, 1, 5], :]`를 사용�
 특히 `J[2, :]`는 linear z 속도이므로 yaw 제어에 사용하면 안 된다. yaw 오차는
 `[-pi, pi)`로 wrap하여 ±pi 경계에서 짧은 회전 방향을 택한다.
 
-### CLF / CLBF QP 선택
+### CLF QP
 
-`settings/controller.yaml`의 `control_mode`로 목표 수렴 constraint를 선택한다.
-
-```yaml
-control_mode: clf   # 기존 CLF-QP
-# 또는
-control_mode: clbf  # 최종 누적 CLBF-QP
-```
-
-`clf` 모드에서는 기존 제약
+목표 수렴에는 단일 CLF-QP 제약
 
 \[
 \dot V - \delta \le -k_V V
 \]
 
-을 사용한다. `clbf` 모드에서는 **end-effector와 활성 장애물 사이의** barrier만
-설정 순서대로 하나씩 누적한다. 링크별 CBF의 \(h\)와 혼동하지 않도록, 여기서는
-unsafe 영역에서 양수가 되는 다음 barrier를 사용한다.
-
-\[
-b_i=r_i+r_{ee}+d_{safe}-\lVert p_{ee}-p_{obs,i}\rVert,
-\qquad B_i=\max(b_i,0)^2-\epsilon_i,
-\qquad W_0=V,\qquad W_k=W_{k-1}+\lambda_kB_k+\kappa_k
-\]
-
-두 장애물이 활성화된 기본 설정에서는 \(W_1,W_2\)를 만들며, 중간 \(W_1\)은
-기록용이고 마지막 \(W_2\)만으로 단 하나의 CLBF QP 행을 추가한다.
-
-\[
-\nabla_qW_M\dot q\le-\gamma W_M
-\]
-
-CLBF 행에는 slack을 허용하지 않는다. 기존 링크별 CBF는 CLBF mode에서도 그대로
-hard constraint로 유지한다. `clbf.barriers`의 첫 항은 \(\epsilon_1,\lambda_1,\kappa_1\)를
-직접 지정한다. \(B_i\)는 구성상 항상 \(B_i\ge-\epsilon_i\)를 만족한다. 이후
-`auto_from_previous: true` 항은 \(\epsilon_i=\epsilon_1\)로 두고, 논문의 재귀식과 해당
-장애물의 \(c_{i,3}\)로 \(\lambda_i,\kappa_i\)를 자동 계산한다. recorder는 `clf`와
-`clbf` 항목으로 각각 \(V\), \(W_1,\ldots,W_M\)를 기록한다.
+을 사용한다. 링크별 CBF와 joint-limit CBF는 hard constraint로 유지되며
+CLF slack으로 완화되지 않는다.
 
 기준 구현의 검증은 다음으로 실행한다.
 
@@ -227,19 +200,6 @@ uv run python -m src.application.visualize_clf \
 원하는 CLF 값을 바꿀 수 있다. 이 CLF는 controller와 동일하게
 `V=2(||p_ee(q)-p_goal||^2 + wrap(yaw(q)-yaw_goal)^2)`를 사용한다.
 `--show`를 더하면 회전 가능한 matplotlib 창으로도 확인할 수 있다.
-
-### End-effector CLBF 단면 시각화
-
-다음 명령은 최종 CLBF \(W_2\)를 task state \([x,y,\mathrm{yaw}]\)의 세 가지
-2차원 조합 \((x,y)\), \((x,\mathrm{yaw})\), \((y,\mathrm{yaw})\)에 대해 3D surface로
-그린다. 각 패널에서 표시하지 않는 한 축은 목표값에 고정된다. 빨간 선은 \(W_2=0\),
-점은 목표 task state다.
-
-```bash
-uv run python -m src.application.visualize_clbf --show
-```
-
-기본 출력 경로는 `outputs/clbf_task_slices.png`다.
 
 ### 시뮬레이션 목표 표시
 

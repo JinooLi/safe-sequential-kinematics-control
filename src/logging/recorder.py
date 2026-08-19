@@ -20,7 +20,6 @@ class Recorder:
 
     def __init__(self):
         self.barrier_labels: tuple[str, ...] = ()
-        self.clbf_labels: tuple[str, ...] = ()
         self._data = {
             "t": [],
             "q": [],
@@ -30,7 +29,6 @@ class Recorder:
             "u": [],
             "clf": [],
             "barrier": [],
-            "clbf": [],
         }
 
     def record(self, step: SimulationStep):
@@ -39,10 +37,6 @@ class Recorder:
         if self.barrier_labels and self.barrier_labels != labels:
             raise ValueError("barrier label order changed during recording")
         self.barrier_labels = labels
-        clbf_labels = step.safety.clbf_labels
-        if self.clbf_labels and self.clbf_labels != clbf_labels:
-            raise ValueError("CLBF module label order changed during recording")
-        self.clbf_labels = clbf_labels
         self._data["t"].append(float(step.time))
         self._data["q"].append(np.asarray(step.q, dtype=float).copy())
         self._data["dq"].append(np.asarray(step.dq, dtype=float).copy())
@@ -51,9 +45,6 @@ class Recorder:
         self._data["u"].append(np.asarray(step.command, dtype=float).copy())
         self._data["clf"].append(step.safety.clf_value)
         self._data["barrier"].append(step.safety.barrier_values.copy())
-        self._data["clbf"].append(
-            step.safety.clbf_values.copy() if clbf_labels else None
-        )
 
     def arrays(self):
         """기록된 데이터를 numpy array dictionary로 반환한다."""
@@ -82,8 +73,6 @@ class Recorder:
         loaded = np.load(path)
         if "barrier_labels" in loaded:
             recorder.barrier_labels = tuple(str(label) for label in loaded["barrier_labels"])
-        if "clbf_labels" in loaded:
-            recorder.clbf_labels = tuple(str(label) for label in loaded["clbf_labels"])
         for key in recorder._data:
             recorder._data[key] = []
             if key not in loaded:
@@ -102,7 +91,6 @@ class Recorder:
             path,
             **self.arrays(),
             barrier_labels=np.asarray(self.barrier_labels, dtype=str),
-            clbf_labels=np.asarray(self.clbf_labels, dtype=str),
         )
 
     def save_csv(self, path):
@@ -118,7 +106,7 @@ class Recorder:
         headers = ["t"]
         vector_keys = [
             key
-            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier", "clbf")
+            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
             if key in arrays
         ]
         for key in vector_keys:
@@ -152,7 +140,7 @@ class Recorder:
 
         plot_keys = [
             key
-            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier", "clbf")
+            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
             if key in arrays
         ]
         if show:
@@ -182,8 +170,6 @@ class Recorder:
                     ax.plot(t, values[:, i], label=self._component_label(key, i))
             if key == "barrier":
                 ax.axhline(0.0, color="black", linestyle="--", linewidth=1, label="boundary")
-            if key == "clbf":
-                ax.axhline(0.0, color="black", linestyle="--", linewidth=1, label="W=0")
             ax.set_ylabel(key)
             ax.grid(True)
             ax.legend(loc="best")
@@ -223,7 +209,7 @@ class Recorder:
 
         plot_keys = [
             key
-            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier", "clbf")
+            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
             if key in arrays
         ]
         if not plot_keys:
@@ -274,8 +260,6 @@ class Recorder:
 
             if key == "barrier":
                 ax_plot.axhline(0.0, color="black", linestyle="--", linewidth=1, label="boundary")
-            if key == "clbf":
-                ax_plot.axhline(0.0, color="black", linestyle="--", linewidth=1, label="W=0")
 
             cursor = ax_plot.axvline(slider.val, color="black", linestyle="--", linewidth=1)
             lines[:] = [*line, cursor]
@@ -370,6 +354,4 @@ class Recorder:
             return "ee_yaw [rad]"
         if key == "barrier" and index < len(self.barrier_labels):
             return self.barrier_labels[index]
-        if key == "clbf" and index < len(self.clbf_labels):
-            return self.clbf_labels[index]
         return f"{key}_{index}"

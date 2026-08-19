@@ -30,6 +30,8 @@ import numpy as np
 from ..adapters.osqp_solver import OSQPSolver
 from ..adapters.pinocchio_kinematics import RobotInterface
 from ..control.qp_controller import QPController, wrap_to_pi
+from ..domain.goal_configuration import solve_goal_configurations
+from ..domain.safety import obstacles_from_config
 from ..logging.recorder import Recorder
 from .configuration import (
     ControllerConfig,
@@ -60,7 +62,6 @@ class RunResult:
     yaw_error: float
     min_barrier: float
     active_link: int
-    orientation_phase: bool
     switch_reason: str | None
     trajectory_file: str
 
@@ -114,6 +115,27 @@ def _initial_robot_clearance(point, initial_q, link_lengths):
     return float(clearance)
 
 
+def has_feasible_goal_configuration(
+    target,
+    target_yaw: float,
+    obstacles: tuple[ObstacleConfig, ...],
+    config: ControllerConfig,
+) -> bool:
+    """Return whether at least one safe IK branch exists for a sampled case."""
+    candidates = solve_goal_configurations(
+        target,
+        target_yaw,
+        config.safety.link_lengths,
+        obstacles_from_config(
+            [{"pos": obstacle.position, "radius": obstacle.radius} for obstacle in obstacles]
+        ),
+        link_radius=config.safety.link_radius,
+        safe_distance=config.safety.safe_distance,
+        joint_limits=config.safety.joint_limits,
+    )
+    return any(not candidate.colliding for candidate in candidates)
+
+
 def sample_case(
     case_id: int,
     rng: np.random.Generator,
@@ -145,7 +167,7 @@ def sample_case(
                     continue
                 if np.linalg.norm(position - target) <= (
                     radius
-                    + base_config.clbf.end_effector_radius
+                    + base_config.safety.link_radius
                     + base_config.safety.safe_distance
                     + experiment.target_clearance_margin
                 ):
@@ -163,6 +185,10 @@ def sample_case(
             else:
                 break
         if len(obstacles) == obstacle_count:
+            if not has_feasible_goal_configuration(
+                target, target_yaw, tuple(obstacles), base_config
+            ):
+                continue
             return ExperimentCase(
                 case_id,
                 (float(target[0]), float(target[1])),
@@ -272,7 +298,6 @@ def _execute_case(
         yaw_error=yaw_error,
         min_barrier=min_barrier,
         active_link=controller.end_effector_index,
-        orientation_phase=controller.final_orientation_control_active,
         switch_reason=controller.last_end_effector_switch_reason,
         trajectory_file=trajectory_path.name,
     )
@@ -316,17 +341,9 @@ def run_comparison(args):
     rng = np.random.default_rng(experiment.seed)
     worker_inputs = []
     for case_id in range(experiment.cases):
-        # Re-sample only configurations that cannot construct their CLBF
-        # parameters (for example, an obstacle too close to the target).
-        for _ in range(experiment.max_case_attempts):
-            case = sample_case(case_id, rng, base_config, experiment)
-            try:
-                _ = QPController(_case_config(base_config, case, False), solver=None)
-                break
-            except ValueError:
-                continue
-        else:
-            raise RuntimeError(f"unable to construct a valid controller for case {case_id}")
+        # sample_case re-samples until a collision-free IK branch exists, so
+        # impossible targets never enter either side of the comparison.
+        case = sample_case(case_id, rng, base_config, experiment)
 
         worker_inputs.append(
             ComparisonWorkerInput(

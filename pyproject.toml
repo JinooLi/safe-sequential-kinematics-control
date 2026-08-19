@@ -1,5 +1,5 @@
 [project]
-name = "safe-inv-clbf-robot-arm"
+name = "safe-inv-clf-robot-arm"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
