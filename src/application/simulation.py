@@ -180,6 +180,9 @@ def run_simulation(
                     u,
                     safety,
                     end_effector_yaw=ee_yaw,
+                    active_link=getattr(controller, "end_effector_index", None),
+                    clf_slack=getattr(controller, "last_clf_slack", None),
+                    qp_solve_time=getattr(controller, "last_qp_solve_time", None),
                 )
             )
         if kinematic:

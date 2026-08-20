@@ -42,3 +42,6 @@ class SimulationStep:
     command: np.ndarray
     safety: SafetyDiagnostics
     end_effector_yaw: float = 0.0
+    active_link: int | None = None
+    clf_slack: float | None = None
+    qp_solve_time: float | None = None

@@ -29,6 +29,9 @@ class Recorder:
             "u": [],
             "clf": [],
             "barrier": [],
+            "active_link": [],
+            "clf_slack": [],
+            "qp_solve_time": [],
         }
 
     def record(self, step: SimulationStep):
@@ -45,6 +48,9 @@ class Recorder:
         self._data["u"].append(np.asarray(step.command, dtype=float).copy())
         self._data["clf"].append(step.safety.clf_value)
         self._data["barrier"].append(step.safety.barrier_values.copy())
+        self._data["active_link"].append(step.active_link)
+        self._data["clf_slack"].append(step.clf_slack)
+        self._data["qp_solve_time"].append(step.qp_solve_time)
 
     def arrays(self):
         """기록된 데이터를 numpy array dictionary로 반환한다."""
@@ -106,7 +112,10 @@ class Recorder:
         headers = ["t"]
         vector_keys = [
             key
-            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
+            for key in (
+                "q", "dq", "ee", "ee_yaw", "u", "clf", "barrier",
+                "active_link", "clf_slack", "qp_solve_time",
+            )
             if key in arrays
         ]
         for key in vector_keys:
@@ -140,7 +149,10 @@ class Recorder:
 
         plot_keys = [
             key
-            for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
+            for key in (
+                "q", "dq", "ee", "ee_yaw", "u", "clf", "barrier",
+                "active_link", "clf_slack", "qp_solve_time",
+            )
             if key in arrays
         ]
         if show:

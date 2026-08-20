@@ -52,6 +52,11 @@ $$
 특히 **최소 barrier**와 **수렴 시간**은 함께 제시한다. 더 빠른 방법이 안전 여유를
 더 많이 소모했는지 분리해서 해석할 수 있다.
 
+구현은 각 run directory에 `summary.csv`, `summary.json`, `analysis.json`,
+`paired_metrics.png`를 만든다. trajectory NPZ에는 command, CLF slack, QP solve time,
+active stage도 저장한다. `analysis.json`의 paired difference는 두 방법이 모두 성공한
+case에 대해서만 계산한다.
+
 ## 3. 비교 방법과 ablation
 
 동일한 초기 관절 자세, 목표 pose, 장애물 배치를 공유하는 paired experiment로
@@ -60,14 +65,11 @@ $$
 | 방법 | 목적 |
 |---|---|
 | Direct end-effector CLF | 중간 링크 목표가 없는 기본 기준선 |
-| Direct end-effector CLF + CBF | 안전 제약만 추가했을 때의 기준선 |
-| Sequential CLF, CBF 없음 | 순차 task 분해 자체의 수렴 특성 |
-| Sequential CLF + CBF | 현재 제안 방법 |
-| Configuration `q*` 직접 CLF + CBF | `q*`를 직접 추종하지 않는 설계의 효과 |
+| Direct end-effector CLF + CBF | 순차 task 분해가 없는 기준선 |
+| Sequential CLF + CBF | 순차 task 분해의 효과 |
 
-가장 중요한 비교는 `Direct end-effector CLF + CBF`와 `Sequential CLF + CBF`다.
-전자는 현재의 sequential-off 조건이고, 후자는 sequential-on 조건이다. 이 둘의
-paired success 결과로 다음을 구한다.
+두 방법은 동일한 yaw 가중치와 같은 case를 공유한다. `Direct` 대 `Sequential`의
+paired comparison으로 순차 task 분해의 효과를 평가한다.
 
 $$
 \Delta T=T_{\mathrm{sequential}}-T_{\mathrm{direct}},
@@ -111,6 +113,11 @@ $$
 이 분류는 장애물 배치가 어려운 것인지, 순차 목표가 부적절한 것인지, 혹은 QP
 제약의 tuning 문제인지를 구분하게 해 준다.
 
+현재 paired 실험은 공정한 on/off 비교를 위해 collision-free IK 해가 하나 이상 있는
+목표만 실행한다. 따라서 `IK infeasible`은 실행 실패로 섞지 않고, 목표 재표본화 중
+제외된 횟수를 `summary.json`의 `sampling.ik_rejections_before_acceptance`에 별도로
+기록한다.
+
 ## 6. 파라미터 민감도
 
 현재 알고리즘에서 아래 값은 서로 다른 trade-off를 만든다.
@@ -119,7 +126,7 @@ $$
 |---|---|
 | `safety.clf_rate` | CLF 감소 요구량과 수렴 속도 |
 | `safety.clf_weight` | CLF 항의 상대적 영향과 control effort |
-| `sequential_end_effector.final_yaw_weight` | 마지막 단계 position--yaw trade-off |
+| `sequential_end_effector.final_yaw_weight` | direct 및 마지막 단계 position--yaw trade-off |
 | `safety.alpha` | barrier 접근 시 회피 반응의 강도 |
 | `safety.safe_distance` | 안전 여유와 feasibility trade-off |
 | `safety.velocity_limit` | 물리적 속도 제한이 수렴 시간에 미치는 영향 |

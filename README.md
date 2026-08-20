@@ -65,25 +65,29 @@ Sequential controller의 IK branch 선택, 단계별 CLF, CBF 제약 및 on/off 
 정리되어 있다.
 
 The following command samples one shared target and two shared circular
-obstacles per case, then runs the same case with sequential end-effector
-control disabled and enabled.  The runs are headless; no MuJoCo viewer opens.
+obstacles per case, then runs direct and sequential control. The runs are
+headless; no MuJoCo viewer opens.
 
 Configure every batch constant in `settings/controller.yaml` under
 `sequential_experiment`, then run:
 
 ```bash
-make compare-sequential ARGS="run"
+make compare-sequential-run
 ```
 
 `sequential_experiment.workers` controls process-level case parallelism. Each
-worker runs one paired sequential-off/on case serially; use a value no larger
-than the available CPU cores (the checked-in default is `4`).
+worker runs both methods for one shared case serially; use a value no larger
+than the available CPU cores.
 
 Results are saved under `outputs/sequential_comparison/<run-name>/`:
 
-- `summary.csv` / `summary.json`: four outcome groups and final metrics.
-- `case_###_sequential_off.npz`, `case_###_sequential_on.npz`: compact
-  trajectories for later inspection.
+- `summary.csv` / `summary.json`: direct와 sequential의 case별 진단 및
+  aggregate analysis.
+- `analysis.json`: method-wise success/failure taxonomy and paired metric
+  differences for cases where both methods succeeded.
+- `paired_metrics.png`: task decomposition의 paired scatter plots.
+- `case_###_direct.npz`, `case_###_sequential.npz`: command, CLF slack, QP
+  solve time, active stage를 포함한 trajectory.
 
 The experiment-only success tolerance is independent from the controller's
 link-switch tolerance.  `sequential_experiment` also contains the random seed,
@@ -92,11 +96,20 @@ exclusion margins, controller-mode override, and output path. Target position
 and target yaw are sampled independently. Success also
 requires the configured yaw tolerance and barrier tolerance.
 
+The checked-in experiment is the selected 72-case kinematic comparison:
+`Direct EE CLF + CBF` versus `Sequential CLF + CBF`. Both use the same
+configured yaw weight. To smoke-test the output pipeline without changing YAML,
+temporarily override the batch size and run duration:
+
+```bash
+make compare-sequential-run ARGS="--run-name smoke --cases 1 --workers 1 --duration 0.1"
+```
+
 Render a saved case without a GUI to compare both final end-effector paths,
 the obstacles, target, and final arm poses:
 
 ```bash
-make compare-sequential ARGS="visualize \
+make compare-sequential-visualize ARGS="visualize \
   --results-dir outputs/sequential_comparison/run_YYYYMMDD_HHMMSS \
   --case-id 17"
 ```
