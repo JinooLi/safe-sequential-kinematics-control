@@ -78,7 +78,8 @@ V_3 = w_{clf}\,2\left(
 $$
 
 여기서 `w_yaw`는 `sequential_end_effector.final_yaw_weight`이다. `1`보다
-작게 설정하면 마지막 단계에서 position에 비해 yaw의 영향력을 낮춘다.
+작게 설정하면 마지막 단계에서 position에 비해 yaw의 영향력을 낮춘다. 비교
+실험의 direct end-effector CLF도 동일한 `w_yaw`를 사용한다.
 
 ## 3. CLF-CBF QP
 
@@ -117,45 +118,21 @@ RDF를 사용한다.
 
 마지막 `ee_joint`에서는 더 이상 전환하지 않는다.
 
-### Stage 1의 CBF 정지 복구
-
-stage 1에서 최소 barrier가 `barrier_tolerance` 이내이고, 관절 속도가
-`velocity_tolerance` 이하인 정지가 `link1_stuck_cycles`회 연속 발생하면, 제어기는
-즉시 stage 2로 전환하지 않는다. 먼저 선택된 IK 해의 첫 관절 목표를 같은 물리 자세의
-반대 winding으로 바꾼다.
-
-$$
-q_{1,\mathrm{reverse}}^* = q_{1,\mathrm{normal}}^* \mp 2\pi
-$$
-
-복구 중에는 link1 endpoint position CLF 대신 다음 관절각 CLF를 사용하며, CBF와
-joint-limit 제약은 그대로 hard constraint로 유지한다.
-
-$$
-V_{\mathrm{reverse}} = w_{clf}w_{\mathrm{reverse}}
-\left(q_1-q_{1,\mathrm{reverse}}^*\right)^2
-$$
-
-반대 경로에서도 첫 관절이 CBF 경계에서 정지하거나, QP가 infeasible이거나,
-`link1_reverse_max_steps` 안에 도달하지 못하면 stage 1을 포기하고 stage 2로
-전환한다. 각 전환 사유는 실험 결과의 `switch_reason`에 기록된다.
-
 시뮬레이션 루프는 frame 전환이 발생한 동일 상태에서 새 frame의 kinematics와 QP를
 다시 계산한다. 따라서 다음 timestep까지 기다리지 않고 새 단계의 명령을 구한다.
 
-## Sequential off 비교 기준
+## Direct 및 sequential ablation 비교 기준
 
-비교 실험에서 sequential off는 중간 목표점과 IK branch 선택을 제어에 사용하지
-않는다. 처음부터 최종 end-effector를 대상으로 다음 CLF를 사용한다.
+Direct baseline은 중간 목표점과 IK branch 선택을 제어에 사용하지 않는다. 처음부터
+최종 end-effector를 대상으로 다음 CLF를 사용한다.
 
 $$
-V_{off} = w_{clf}\,2\left(
-  \lVert p-p^*\rVert^2 + \operatorname{wrap}(yaw-yaw^*)^2
+V_{direct} = w_{clf}\,2\left(
+  \lVert p-p^*\rVert^2 + w_{yaw}\operatorname{wrap}(yaw-yaw^*)^2
 \right)
 $$
 
-즉 `final_yaw_weight`는 sequential on의 마지막 단계에만 적용되며, off에서는 yaw
-가중치가 `1`이다. 두 비교 조건은 동일한 목표 pose, 장애물, 초기 관절 자세 및 hard
+두 방법은 동일한 `final_yaw_weight`, 목표 pose, 장애물, 초기 관절 자세 및 hard
 CBF/joint-limit 제약을 사용한다. 비교 case는 안전한 IK branch가 하나 이상 존재할
 때만 채택하므로, IK 해가 없거나 모든 해가 충돌/교차로 제외되는 목표는 재샘플하며
 실험 결과에 포함하지 않는다.
@@ -172,12 +149,6 @@ sequential_end_effector:
   # 마지막 link3의 position+yaw CLF에서 yaw 오차항에만 곱하는 가중치.
   # 1보다 작게 두면 position보다 yaw의 영향력이 작아진다.
   final_yaw_weight: 0.4
-  # link1이 CBF 경계에서 정지하면 q1의 반대 winding(q1* ± 2π)을 시도한다.
-  # 이 복구 제어에도 obstacle/joint-limit CBF는 hard constraint로 유지된다.
-  link1_reverse_enabled: true
-  link1_stuck_cycles: 10 # 연속 정지 횟수 후 반대 방향 회전 시작
-  link1_reverse_max_steps: 500 # 반대 방향 회전 실패로 판단할 최대 제어 step 수
-  link1_reverse_weight: 1.0 # q1 반대 winding CLF 가중치
 
 safety:
   clf_rate: 1.0

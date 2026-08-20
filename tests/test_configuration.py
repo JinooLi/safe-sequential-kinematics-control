@@ -83,10 +83,6 @@ class ConfigurationTest(unittest.TestCase):
         sequence = self.config.sequential_end_effector
         self.assertEqual(sequence.frame_names, ("joint2", "joint3", "ee_joint"))
         self.assertGreater(sequence.goal_tolerance, 0.0)
-        self.assertTrue(sequence.link1_reverse_enabled)
-        self.assertGreaterEqual(sequence.link1_stuck_cycles, 1)
-        self.assertGreaterEqual(sequence.link1_reverse_max_steps, 1)
-        self.assertGreater(sequence.link1_reverse_weight, 0.0)
 
     def test_sequential_experiment_configuration_is_loaded(self):
         experiment = self.config.sequential_experiment

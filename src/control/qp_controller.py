@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.linalg import block_diag
+from time import perf_counter
 
 from ..application.configuration import ControllerConfig
 from ..domain.goal_configuration import GoalConfiguration, solve_goal_configurations
@@ -83,15 +84,11 @@ class QPController:
         self.velocity_tolerance = sequence.velocity_tolerance
         self.barrier_tolerance = sequence.barrier_tolerance
         self.final_yaw_weight = sequence.final_yaw_weight
-        self.link1_reverse_enabled = sequence.link1_reverse_enabled
-        self.link1_stuck_cycles = sequence.link1_stuck_cycles
-        self.link1_reverse_max_steps = sequence.link1_reverse_max_steps
-        self.link1_reverse_weight = sequence.link1_reverse_weight
-        self.link1_stuck_count = 0
-        self.link1_reverse_active = False
-        self.link1_reverse_target: float | None = None
-        self.link1_reverse_steps = 0
         self.last_end_effector_switch_reason = None
+        self.stage_switch_reasons: list[str] = []
+        self.qp_infeasible_count = 0
+        self.last_clf_slack = 0.0
+        self.last_qp_solve_time = 0.0
         self.goal_configurations: tuple[GoalConfiguration, ...] = ()
         self.feasible_goal_configurations: tuple[GoalConfiguration, ...] = ()
         self.selected_goal_configuration: GoalConfiguration | None = None
@@ -124,16 +121,13 @@ class QPController:
         """
         self._select_goal_configuration(q)
         if self._goal_reached(p_ee):
-            reason = "link1 reverse target reached" if self.link1_reverse_active else "goal reached"
-            self._clear_link1_reverse()
-            self._advance_end_effector(reason)
+            self._advance_end_effector("goal reached")
+            self.last_clf_slack = 0.0
+            self.last_qp_solve_time = 0.0
             return np.zeros(self.dof)
         task_jacobian = planar_task_jacobian(J)
         task_state = np.array([p_ee[0], p_ee[1], ee_yaw], dtype=float)
-        if self.link1_reverse_active:
-            clf_value, clf_gradient_q = self._link1_reverse_clf_terms(q)
-        else:
-            clf_value, clf_gradient_q = self._task_clf_terms(task_state, task_jacobian)
+        clf_value, clf_gradient_q = self._task_clf_terms(task_state, task_jacobian)
         cbf_A, cbf_lower, _ = self._cbf_constraints(q)
         joint_limit_A, joint_limit_lower = self._joint_limit_cbf_constraints(q)
         # Vdot - relaxation <= -clf_rate * V
@@ -172,18 +166,19 @@ class QPController:
         A = np.vstack(rows)
         l = np.asarray(lower)
         u = np.asarray(upper)
+        solve_start = perf_counter()
         result = self._solver.solve(
             QPProblem(self.P, np.zeros(self.dof + 1), A, l, u)
         )
+        self.last_qp_solve_time = perf_counter() - solve_start
         if result is not None:
             input = result[: self.dof]
+            self.last_clf_slack = float(result[-1])
             self._handle_barrier_stop(q, input)
         else:
-            if self.link1_reverse_active:
-                self._clear_link1_reverse()
-                self._advance_end_effector("link1 reverse QP infeasible")
-            else:
-                self._advance_end_effector("QP infeasible")
+            self.qp_infeasible_count += 1
+            self.last_clf_slack = np.nan
+            self._advance_end_effector("QP infeasible")
             input = np.zeros(self.dof)
 
         return input
@@ -219,7 +214,7 @@ class QPController:
         )
 
     def _uses_end_effector_orientation(self):
-        """Use yaw throughout the final end-effector stage."""
+        """Use yaw only for the direct task and final end-effector stage."""
         return not self.sequential_end_effector_enabled or self.end_effector_index >= self.dof
 
     def _task_clf_terms(self, task_state, task_jacobian):
@@ -227,84 +222,21 @@ class QPController:
         task_state = np.asarray(task_state, dtype=float)
         position_error = task_state[:2] - self.active_target_position()
         if not self._uses_end_effector_orientation():
-            # Intermediate sequential task points use position-only control.
             value = float(2.0 * (position_error @ position_error))
             gradient = 4.0 * position_error @ task_jacobian[:2]
         else:
             yaw_error = wrap_to_pi(task_state[2] - self.ee_orientation)
-            yaw_weight = (
-                self.final_yaw_weight if self.sequential_end_effector_enabled else 1.0
-            )
+            yaw_weight = self.final_yaw_weight
             value = float(2.0 * (position_error @ position_error + yaw_weight * yaw_error**2))
             gradient = 4.0 * np.array(
                 [position_error[0], position_error[1], yaw_weight * yaw_error]
             ) @ task_jacobian
         return self.clf_weight * value, self.clf_weight * gradient
 
-    def _link1_reverse_clf_terms(self, q):
-        """Return a lifted-angle CLF that drives joint1 around the other way."""
-        if self.link1_reverse_target is None:
-            raise RuntimeError("link1 reverse target has not been initialized")
-        error = float(np.asarray(q, dtype=float)[0] - self.link1_reverse_target)
-        value = self.clf_weight * self.link1_reverse_weight * error**2
-        gradient = np.zeros(self.dof)
-        gradient[0] = 2.0 * self.clf_weight * self.link1_reverse_weight * error
-        return value, gradient
-
-    def _start_link1_reverse(self, q):
-        """Use the q1* ± 2π representation that starts in the opposite direction."""
-        if self.selected_goal_configuration is None:
-            raise RuntimeError("goal configuration has not been selected")
-        q1 = float(np.asarray(q, dtype=float)[0])
-        goal_q1 = float(self.selected_goal_configuration.q[0])
-        normal_target = goal_q1 + 2.0 * np.pi * round((q1 - goal_q1) / (2.0 * np.pi))
-        normal_direction = np.sign(normal_target - q1)
-        if normal_direction == 0.0:
-            normal_direction = 1.0
-        self.link1_reverse_target = normal_target - 2.0 * np.pi * normal_direction
-        self.link1_reverse_active = True
-        self.link1_reverse_steps = 0
-        self.link1_stuck_count = 0
-        if self.verbose:
-            print(f"Trying reverse link1 winding toward q1={self.link1_reverse_target:.3f}")
-
-    def _clear_link1_reverse(self):
-        self.link1_reverse_active = False
-        self.link1_reverse_target = None
-        self.link1_reverse_steps = 0
-        self.link1_stuck_count = 0
-
     def _handle_barrier_stop(self, q, input):
-        """Start or abandon the link1 reverse path while retaining hard CBFs."""
-        if self.link1_reverse_active:
-            self.link1_reverse_steps += 1
-            if self._link1_joint_stopped_by_barrier(q, input):
-                self._clear_link1_reverse()
-                self._advance_end_effector("link1 reverse blocked by CBF")
-            elif self.link1_reverse_steps >= self.link1_reverse_max_steps:
-                self._clear_link1_reverse()
-                self._advance_end_effector("link1 reverse timeout")
-            return
-        stopped = (
-            self._link1_joint_stopped_by_barrier(q, input)
-            if self.end_effector_index == 1 and self.link1_reverse_enabled
-            else self._stopped_by_barrier(q, input)
-        )
-        if not stopped:
-            self.link1_stuck_count = 0
-            return
-        if self.end_effector_index != 1 or not self.link1_reverse_enabled:
+        """Advance the active task point when hard CBF constraints cause a stop."""
+        if self._stopped_by_barrier(q, input):
             self._advance_end_effector("stopped at CBF boundary")
-            return
-        self.link1_stuck_count += 1
-        if self.link1_stuck_count >= self.link1_stuck_cycles:
-            self._start_link1_reverse(q)
-
-    def _link1_joint_stopped_by_barrier(self, q, input):
-        return (
-            abs(float(np.asarray(input, dtype=float)[0])) <= self.velocity_tolerance
-            and self._barrier_is_active(q)
-        )
 
     def _barrier_is_active(self, q):
         barrier_values = self._cbf_constraints(q)[2]
@@ -325,6 +257,7 @@ class QPController:
         previous = self.end_effector_index
         self.end_effector_index += 1
         self.last_end_effector_switch_reason = reason
+        self.stage_switch_reasons.append(reason)
         if self.verbose:
             print(
                 f"Switching task end-effector: link {previous} -> link "
@@ -384,10 +317,7 @@ class QPController:
         self._select_goal_configuration(q)
         task_state = np.array([p_ee[0], p_ee[1], ee_yaw], dtype=float)
         task_jacobian = planar_task_jacobian(J)
-        if self.link1_reverse_active:
-            clf_value, _ = self._link1_reverse_clf_terms(q)
-        else:
-            clf_value, _ = self._task_clf_terms(task_state, task_jacobian)
+        clf_value, _ = self._task_clf_terms(task_state, task_jacobian)
         return SafetyDiagnostics(
             tuple(self.barrier_labels),
             barrier_values,
