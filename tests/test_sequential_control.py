@@ -55,5 +55,19 @@ class SequentialControlTest(unittest.TestCase):
         self.assertAlmostEqual(value, 2.0 * position_error**2 * weight)
         np.testing.assert_allclose(gradient, 0.0)
 
+    def test_clf_slack_has_no_upper_bound(self):
+        solver = CaptureSolver()
+        controller = QPController(self.config, solver, verbose=False)
+
+        controller.get_velocity(
+            self.q,
+            np.zeros((6, self.config.dof)),
+            np.zeros(3),
+            0.0,
+        )
+
+        self.assertEqual(solver.problem.lower[-1], 0.0)
+        self.assertTrue(np.isposinf(solver.problem.upper[-1]))
+
 if __name__ == "__main__":
     unittest.main()

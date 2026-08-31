@@ -130,7 +130,7 @@ $$
 | `safety.alpha` | barrier 접근 시 회피 반응의 강도 |
 | `safety.safe_distance` | 안전 여유와 feasibility trade-off |
 | `safety.velocity_limit` | 물리적 속도 제한이 수렴 시간에 미치는 영향 |
-| `QP_ctrl.d` | 안전 제약과 충돌할 때 CLF 완화 정도 |
+| `QP_ctrl.Q` | CLF slack 사용에 대한 비용과 목표 추종--feasibility trade-off |
 
 한 번에 하나의 파라미터만 바꾸고 나머지는 고정한다. 각 값에 대해 여러 seed를
 실행하여 중앙값과 사분위 범위, 또는 평균과 신뢰구간을 보고한다. 성공한 case만의

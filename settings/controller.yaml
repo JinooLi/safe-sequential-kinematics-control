@@ -96,6 +96,5 @@ QP_ctrl:
     - [0, 0, 1]
   Q:
     - [3]
-  # CLF convergence slack: 0 <= delta <= d * V.
+  # CLF slack delta는 0 이상이며 Q 비용으로만 억제한다.
   # 안전 CBF 제약은 delta로 완화하지 않는다.
-  d: 0.9

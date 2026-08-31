@@ -38,7 +38,6 @@ class QPController:
         self.ee_orientation = config.ee_orientation
         self.control_mode = config.control_mode
         self.P = np.array(block_diag(config.qp.R, config.qp.Q))
-        self.clf_slack_ratio = config.qp.d
         safety_config = config.safety
         self.safety_enabled = safety_config.enabled
         self.obstacles = obstacles_from_config(
@@ -161,7 +160,7 @@ class QPController:
         slack_row[-1] = 1.0
         rows.append(slack_row)
         lower.append(0.0)
-        upper.append(self.clf_slack_ratio * clf_value)
+        upper.append(np.inf)
 
         A = np.vstack(rows)
         l = np.asarray(lower)

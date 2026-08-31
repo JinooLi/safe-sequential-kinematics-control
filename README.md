@@ -139,9 +139,8 @@ Bernstein RDF에서는 검증 데이터의 최악 근사오차보다 큰 값을 
 포함해 보수성을 유지한다. `link_lengths`와 `link_radius`는 현재 반드시
 URDF/MuJoCo와 동일하게 유지해야 한다.
 
-`QP_ctrl.d`는 CLF relaxation의 허용 비율이다. QP에는
-`0 <= delta <= d * V` 제약이 추가되며, 값이 클수록 목표 추종 CLF를 더 많이
-완화할 수 있다. CBF 안전 제약은 이 slack으로 완화되지 않는다.
+CLF relaxation slack은 `delta >= 0`만 제약하며, `QP_ctrl.Q`의 비용 가중치로
+크기를 억제한다. CBF 안전 제약은 이 slack으로 완화되지 않는다.
 
 `ee_obj: [x, y]`와 `ee_orientation: yaw`는 각각 end-effector의 목표 위치와
 목표 yaw[rad]를 정의한다. 평면 CLF task는 `[x, y, yaw]`이며 Pinocchio 6D

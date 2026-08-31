@@ -49,10 +49,6 @@ class ConfigurationTest(unittest.TestCase):
         )
         np.testing.assert_allclose(lower, [-6.14, -0.14, -0.14, -6.14])
 
-    def test_clf_slack_ratio_is_loaded(self):
-        self.assertGreater(self.config.qp.d, 0.0)
-        self.assertLessEqual(self.config.qp.d, 1.0)
-
     def test_simulation_kinematic_mode_is_loaded_from_yaml(self):
         self.assertTrue(self.config.simulation.kinematic)
         text = (ROOT / "settings/controller.yaml").read_text().replace(
@@ -63,15 +59,6 @@ class ConfigurationTest(unittest.TestCase):
             path.write_text(text)
             config = load_controller_config(path)
         self.assertFalse(config.simulation.kinematic)
-
-    def test_clf_slack_ratio_one_is_valid(self):
-        config_path = ROOT / "settings/controller.yaml"
-        text = config_path.read_text().replace(f"d: {self.config.qp.d}", "d: 1.0")
-        with tempfile.TemporaryDirectory() as directory:
-            temporary_path = Path(directory) / "controller.yaml"
-            temporary_path.write_text(text)
-            loaded = load_controller_config(temporary_path)
-        self.assertEqual(loaded.qp.d, 1.0)
 
     def test_end_effector_orientation_is_loaded(self):
         self.assertTrue(np.isfinite(self.config.ee_orientation))

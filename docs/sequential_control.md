@@ -93,10 +93,11 @@ CLF 제약은 다음과 같다.
 
 $$
 \nabla_q V\dot q-\delta \le -k_VV,
-\qquad 0\le\delta\le dV
+\qquad \delta\ge0
 $$
 
-안전 제약은 slack으로 완화되지 않는 hard CBF다.
+slack의 크기는 QP 비용의 slack 가중치 `QP_ctrl.Q`로 억제한다. 안전 제약은
+slack으로 완화되지 않는 hard CBF다.
 
 - 모든 활성 장애물--링크 쌍:
   \(\nabla_qh\dot q\ge-\alpha h\)

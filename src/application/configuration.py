@@ -37,7 +37,6 @@ class SafetyConfig:
 class QPConfig:
     R: np.ndarray
     Q: np.ndarray
-    d: float
 
 
 @dataclass(frozen=True)
@@ -144,7 +143,6 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         qp=QPConfig(
             np.asarray(qp_data["R"], dtype=float),
             np.asarray(qp_data["Q"], dtype=float),
-            float(qp_data["d"]),
         ),
         simulation=SimulationConfig(
             kinematic=bool(simulation_data.get("kinematic", True)),
@@ -208,8 +206,6 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         raise ValueError("control_mode must be 'clf'")
     if config.qp.R.shape != (config.dof, config.dof) or config.qp.Q.shape != (1, 1):
         raise ValueError("QP_ctrl must contain a dof-by-dof R and 1-by-1 Q")
-    if not 0.0 < config.qp.d <= 1.0:
-        raise ValueError("QP_ctrl.d must satisfy 0 < d <= 1")
     sequence = config.sequential_end_effector
     if sequence.enabled and len(sequence.frame_names) != config.dof:
         raise ValueError(
