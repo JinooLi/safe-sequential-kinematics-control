@@ -46,14 +46,6 @@ make run             # MuJoCo 시뮬레이션
 make test            # 전체 테스트
 make train-rdf       # RDF 학습
 make visualize-rdf   # 거리장 PNG
-make visualize-clf   # CLF q-space 등고면 PNG
-```
-
-각 시각화의 추가 인자는 `ARGS`로 전달한다. 예를 들어 CLF 해상도를
-높이려면 다음처럼 실행한다.
-
-```bash
-make visualize-clf ARGS="--show --resolution 60"
 ```
 
 ### Sequential end-effector randomized comparison
@@ -199,22 +191,6 @@ uv run python -m src.application.visualize_rdf \
 기준 capsule과 학습된 RDF를 비교하려면 `--representation capsule` 또는
 `--representation bernstein`을 지정한다. 화면에 바로 표시하려면 `--show`를
 추가한다.
-
-### q-space CLF 등고면 시각화
-
-3자유도 로봇에서는 CLF를 forward kinematics로 관절 공간에 직접 대입한
-`V(q1, q2, q3)`를 만들 수 있다. 아래 명령은 기본 관절 범위
-`[-pi, pi]^3`에서 `V(q)=1`인 2차원 등고면을 3D PNG로 저장한다.
-
-```bash
-uv run python -m src.application.visualize_clf \
-  --level 1 --resolution 36 --output outputs/clf_level_set.png
-```
-
-`--q-min`, `--q-max`으로 세 관절에 공통으로 적용할 표시 범위, `--level`로
-원하는 CLF 값을 바꿀 수 있다. 이 CLF는 controller와 동일하게
-`V=2(||p_ee(q)-p_goal||^2 + wrap(yaw(q)-yaw_goal)^2)`를 사용한다.
-`--show`를 더하면 회전 가능한 matplotlib 창으로도 확인할 수 있다.
 
 ### 시뮬레이션 목표 표시
 
