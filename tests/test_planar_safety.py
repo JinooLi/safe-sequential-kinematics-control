@@ -37,6 +37,44 @@ class PlanarSafetyTest(unittest.TestCase):
         self.assertLess(h[0], 0.0)
         self.assertGreater(lower[0], 0.0)
 
+    def test_self_collision_gradient_includes_moving_end_effector(self):
+        q = np.array([0.2, 1.1, -2.0])
+        analytic, _, _ = self.robot.self_collision_cbf_constraint(
+            q, minimum_distance=0.13, alpha=2.0
+        )
+        epsilon = 1e-7
+        numerical = np.zeros(3)
+        for index in range(3):
+            dq = np.zeros(3)
+            dq[index] = epsilon
+            plus = self.robot.self_collision_cbf_constraint(
+                q + dq, minimum_distance=0.13, alpha=2.0
+            )[2]
+            minus = self.robot.self_collision_cbf_constraint(
+                q - dq, minimum_distance=0.13, alpha=2.0
+            )[2]
+            numerical[index] = (plus - minus) / (2.0 * epsilon)
+        np.testing.assert_allclose(analytic, numerical, atol=1e-6)
+
+    def test_base_to_link_gradient_matches_finite_difference(self):
+        q = np.array([0.2, 1.1, -2.0])
+        analytic, _, _ = self.robot.base_to_link_cbf_constraint(
+            q, link_index=2, minimum_distance=0.13, alpha=2.0
+        )
+        epsilon = 1e-7
+        numerical = np.zeros(3)
+        for index in range(3):
+            dq = np.zeros(3)
+            dq[index] = epsilon
+            plus = self.robot.base_to_link_cbf_constraint(
+                q + dq, link_index=2, minimum_distance=0.13, alpha=2.0
+            )[2]
+            minus = self.robot.base_to_link_cbf_constraint(
+                q - dq, link_index=2, minimum_distance=0.13, alpha=2.0
+            )[2]
+            numerical[index] = (plus - minus) / (2.0 * epsilon)
+        np.testing.assert_allclose(analytic, numerical, atol=1e-6)
+
 
 if __name__ == "__main__":
     unittest.main()

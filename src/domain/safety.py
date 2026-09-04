@@ -70,8 +70,8 @@ class PlanarCapsuleRobot:
         )
         return origin, rotation, origin_jacobian
 
-    def link_sdf_and_gradient(self, point, q, link_index: int):
-        """Return capsule signed distance and analytic derivative w.r.t. q."""
+    def _link_sdf_gradients(self, point, q, link_index: int):
+        """Return SDF derivatives for a fixed query point and its position."""
         point = np.asarray(point, dtype=float)
         if point.shape != (2,):
             raise ValueError("point must have shape (2,)")
@@ -100,7 +100,70 @@ class PlanarCapsuleRobot:
             -_SKEW @ local_point
         ).reshape(2, 1)
         gradient_q = grad_local @ local_point_jacobian
-        return float(sdf), gradient_q
+        gradient_point = rotation @ grad_local
+        return float(sdf), gradient_q, gradient_point
+
+    def link_sdf_and_gradient(self, point, q, link_index: int):
+        """Return capsule signed distance and analytic derivative w.r.t. q.
+
+        ``point`` is treated as fixed.  Use ``self_collision_cbf_constraint``
+        when the query point itself is attached to the robot.
+        """
+        sdf, gradient_q, _ = self._link_sdf_gradients(point, q, link_index)
+        return sdf, gradient_q
+
+    def end_effector_position_and_jacobian(self, q):
+        """Return the final link-tip position and its planar Jacobian."""
+        q = np.asarray(q, dtype=float)
+        if q.shape != (self.dof,):
+            raise ValueError(f"q must have shape ({self.dof},)")
+        angles = np.cumsum(q)
+        directions = np.column_stack((np.cos(angles), np.sin(angles)))
+        position = self.link_lengths @ directions
+        jacobian = np.zeros((2, self.dof))
+        for joint in range(self.dof):
+            downstream = self.link_lengths[joint:] @ directions[joint:]
+            jacobian[:, joint] = _SKEW @ downstream
+        return position, jacobian
+
+    def self_collision_cbf_constraint(
+        self, q, minimum_distance: float, alpha: float
+    ):
+        """Return a hard CBF keeping the final tip away from link 1.
+
+        The barrier is ``h = f_link1(p_ee(q), q) - minimum_distance``.
+        Its derivative includes both link-1 motion and the motion of the
+        end-effector query point, so it can be used directly as
+        ``gradient @ q_dot >= -alpha * h``.
+        """
+        if self.dof < 2:
+            raise ValueError("self-collision CBF requires at least two links")
+        if minimum_distance < 0.0 or alpha <= 0.0:
+            raise ValueError("minimum_distance must be >= 0 and alpha must be > 0")
+        q = np.asarray(q, dtype=float)
+        position, position_jacobian = self.end_effector_position_and_jacobian(q)
+        sdf, fixed_point_gradient, point_gradient = self._link_sdf_gradients(
+            position, q, link_index=0
+        )
+        h = sdf - minimum_distance
+        gradient = fixed_point_gradient + point_gradient @ position_jacobian
+        return gradient, float(-alpha * h), float(h)
+
+    def base_to_link_cbf_constraint(
+        self, q, link_index: int, minimum_distance: float, alpha: float
+    ):
+        """Return a CBF keeping a fixed base point away from one link.
+
+        The base point is fixed at the planar origin, so the derivative is
+        simply the configuration derivative of that link's capsule SDF.
+        """
+        if minimum_distance < 0.0 or alpha <= 0.0:
+            raise ValueError("minimum_distance must be >= 0 and alpha must be > 0")
+        sdf, gradient = self.link_sdf_and_gradient(
+            np.zeros(2), q, link_index=link_index
+        )
+        h = sdf - minimum_distance
+        return gradient, float(-alpha * h), float(h)
 
     def cbf_constraints(self, q, obstacles, safe_distance: float, alpha: float):
         """Construct ``A q_dot >= lower`` for all link--circle pairs.

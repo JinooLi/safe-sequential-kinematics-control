@@ -21,12 +21,12 @@ sequential_end_effector:
   # Direct 및 마지막 link3의 position+yaw CLF에서 yaw 오차항에 곱하는 가중치.
   # 비교 실험의 모든 방법이 이 값을 공유한다. 1보다 작게 두면 position보다
   # yaw의 영향력이 작아진다.
-  final_yaw_weight: 0.4
+  final_yaw_weight: 0.5
 
 # Headless randomized comparison.  These values do not change the controller
 # itself; they apply only to `make compare-sequential ARGS="run"`.
 sequential_experiment:
-  cases: 300
+  cases: 12
   # Parallel processes. Each process runs one sequential-off/on case pair.
   workers: 12
   seed: 2332
@@ -74,6 +74,9 @@ safety:
   # CBF 여유 거리 [m]. h = f_link(p_obs, q) - obstacle_radius - safe_distance
   # 에서 사용하며, h >= 0이면 충돌 반경을 포함한 이 여유를 만족한다.
   safe_distance: 0.08
+  # End-effector--link1 및 base--link3 capsule signed-distance 경계 [m].
+  # link3 반지름(0.05) + obstacle CBF 여유(0.08)로, 두 self CBF에서 h >= 0을 강제한다.
+  self_collision_distance: 0.13
   # CBF class-K 이득. 각 barrier에 대해 h_dot + alpha * h >= 0을 강제한다.
   alpha: 1
   # Joint-limit zeroing CBF. null means an unbounded joint (joint1).

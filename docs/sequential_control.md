@@ -37,6 +37,10 @@ base--elbow--wrist의 2-link 기하로 elbow-up 및 elbow-down 두 해를 계산
 - finite joint limit을 만족한다.
 - 모든 링크 capsule이 활성 장애물과 `safe_distance`를 포함한 안전 여유를
   만족한다.
+- end-effector 중심점이 link1 capsule에서 `self_collision_distance` 이상
+  떨어져 있다.
+- base 원점이 link3 capsule에서 같은 `self_collision_distance` 이상 떨어져
+  있다.
 - 비인접 링크인 link1과 link3의 중심선이 교차하지 않는다. 이 검사는 목표 IK
   후보를 제외하기 위한 binary geometry test이며, 실행 중 CBF 제약은 아니다.
 
@@ -73,13 +77,14 @@ $$
 $$
 V_3 = w_{clf}\,2\left(
   \lVert p-p_3^*\rVert^2 + w_{yaw}\,
-  \operatorname{wrap}(yaw-yaw^*)^2
+  \left(1-\cos(yaw-yaw^*)\right)
 \right)
 $$
 
 여기서 `w_yaw`는 `sequential_end_effector.final_yaw_weight`이다. `1`보다
 작게 설정하면 마지막 단계에서 position에 비해 yaw의 영향력을 낮춘다. 비교
-실험의 direct end-effector CLF도 동일한 `w_yaw`를 사용한다.
+실험의 direct end-effector CLF도 동일한 `w_yaw`를 사용한다. yaw 항의 gradient는
+$2w_{clf}w_{yaw}\sin(yaw-yaw^*)J_{yaw}$이므로, wrap의 $\pm\pi$ 불연속이 없다.
 
 ## 3. CLF-CBF QP
 
@@ -101,6 +106,13 @@ slack으로 완화되지 않는 hard CBF다.
 
 - 모든 활성 장애물--링크 쌍:
   \(\nabla_qh\dot q\ge-\alpha h\)
+- end-effector--link1 self-collision:
+  \(h_{self}=f_{link1}(p_{ee}(q),q)-d_{self}\),
+  \(\nabla_qh_{self}\dot q\ge-\alpha h_{self}\). 이 미분에는 link1의 운동과
+  end-effector query point의 운동이 모두 포함된다.
+- base--link3 self-collision:
+  \(h_{base}=f_{link3}([0,0]^T,q)-d_{self}\),
+  \(\nabla_qh_{base}\dot q\ge-\alpha h_{base}\).
 - finite joint limit의 상한/하한 zeroing CBF
 - 관절별 속도 상한 `velocity_limit`
 
@@ -129,7 +141,7 @@ Direct baseline은 중간 목표점과 IK branch 선택을 제어에 사용하�
 
 $$
 V_{direct} = w_{clf}\,2\left(
-  \lVert p-p^*\rVert^2 + w_{yaw}\operatorname{wrap}(yaw-yaw^*)^2
+  \lVert p-p^*\rVert^2 + w_{yaw}\left(1-\cos(yaw-yaw^*)\right)
 \right)
 $$
 
@@ -154,6 +166,8 @@ sequential_end_effector:
 safety:
   clf_rate: 1.0
   clf_weight: 5.0
+  # End-effector centre-to-link1 capsule signed-distance boundary [m]
+  self_collision_distance: 0.13
   velocity_limit: 4.0
 ```
 

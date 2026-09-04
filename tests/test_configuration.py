@@ -120,7 +120,11 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(len(controller.obstacles), len(self.config.obstacles) - 1)
         self.assertEqual(
             controller.barrier_labels,
-            [f"obs2_link{index}" for index in range(1, self.config.dof + 1)],
+            [
+                *[f"obs2_link{index}" for index in range(1, self.config.dof + 1)],
+                "self_ee_link1",
+                "self_base_link3",
+            ],
         )
 
     def test_multiple_obstacles_create_a_barrier_for_each_link(self):
@@ -129,9 +133,9 @@ class ConfigurationTest(unittest.TestCase):
 
         _, _, barrier_values = controller._cbf_constraints(np.zeros(self.config.dof))
 
-        self.assertEqual(len(barrier_values), active_obstacle_count * self.config.dof)
+        self.assertEqual(len(barrier_values), active_obstacle_count * self.config.dof + 2)
         self.assertEqual(
-            len(controller.barrier_labels), active_obstacle_count * self.config.dof
+            len(controller.barrier_labels), active_obstacle_count * self.config.dof + 2
         )
 
 

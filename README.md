@@ -138,7 +138,9 @@ CLF relaxation slack은 `delta >= 0`만 제약하며, `QP_ctrl.Q`의 비용 가�
 목표 yaw[rad]를 정의한다. 평면 CLF task는 `[x, y, yaw]`이며 Pinocchio 6D
 spatial Jacobian에서는 `[J_x, J_y, J_angular_z] = J[[0, 1, 5], :]`를 사용한다.
 특히 `J[2, :]`는 linear z 속도이므로 yaw 제어에 사용하면 안 된다. yaw 오차는
-`[-pi, pi)`로 wrap하여 ±pi 경계에서 짧은 회전 방향을 택한다.
+실험 성공 판정과 IK branch 거리에서는 shortest-angle wrap을 사용한다. CLF의 yaw
+항은 wrap 대신 `1 - cos(yaw - yaw_target)`를 사용해 ±pi에서 미분 불가능한 점을
+피한다.
 
 ### CLF QP
 

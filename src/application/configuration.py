@@ -25,6 +25,7 @@ class SafetyConfig:
     link_lengths: tuple[float, ...]
     link_radius: float
     safe_distance: float
+    self_collision_distance: float
     alpha: float
     joint_limits: tuple[tuple[float, float] | None, ...]
     joint_limit_alpha: float
@@ -126,6 +127,12 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         link_lengths=tuple(map(float, safety_data["link_lengths"])),
         link_radius=float(safety_data["link_radius"]),
         safe_distance=float(safety_data["safe_distance"]),
+        self_collision_distance=float(
+            safety_data.get(
+                "self_collision_distance",
+                float(safety_data["link_radius"]) + float(safety_data["safe_distance"]),
+            )
+        ),
         alpha=float(safety_data["alpha"]),
         joint_limits=joint_limits,
         joint_limit_alpha=float(safety_data.get("joint_limit_alpha", safety_data["alpha"])),
@@ -196,6 +203,11 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             )
     if config.safety.joint_limit_alpha <= 0.0:
         raise ValueError("safety.joint_limit_alpha must be positive")
+    if (
+        not np.isfinite(config.safety.self_collision_distance)
+        or config.safety.self_collision_distance < 0.0
+    ):
+        raise ValueError("safety.self_collision_distance must be non-negative")
     if not np.isfinite(config.safety.clf_weight) or config.safety.clf_weight <= 0.0:
         raise ValueError("safety.clf_weight must be positive")
     if config.ee_target.shape != (2,):

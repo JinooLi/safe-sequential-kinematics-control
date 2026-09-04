@@ -44,8 +44,15 @@ class SequentialControlTest(unittest.TestCase):
 
         weight = self.config.safety.clf_weight
         yaw_weight = self.config.sequential_end_effector.final_yaw_weight
-        self.assertAlmostEqual(value, 2.0 * (0.2**2 + yaw_weight) * weight)
-        np.testing.assert_allclose(gradient, 4.0 * yaw_weight * weight)
+        self.assertAlmostEqual(
+            value, 2.0 * (0.2**2 + yaw_weight * (1.0 - np.cos(1.0))) * weight
+        )
+        np.testing.assert_allclose(gradient, 2.0 * yaw_weight * np.sin(1.0) * weight)
+
+        task_state = np.array([target[0], target[1], self.config.ee_orientation + np.pi])
+        value, gradient = controller._task_clf_terms(task_state, task_jacobian)
+        self.assertAlmostEqual(value, 4.0 * yaw_weight * weight)
+        np.testing.assert_allclose(gradient, 0.0, atol=1e-12)
 
         controller.end_effector_index = 1
         target = controller.active_target_position()

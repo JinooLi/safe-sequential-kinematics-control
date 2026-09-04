@@ -48,6 +48,7 @@ class QPController:
             ]
         )
         self.safety_model = None
+        self.self_collision_model = None
         if self.safety_enabled:
             lengths = safety_config.link_lengths
             representation = safety_config.representation
@@ -65,7 +66,14 @@ class QPController:
                 )
             if self.safety_model.dof != self.dof:
                 raise ValueError("safety link count must match controller dof")
+            # The Bernstein RDF models obstacle-centre queries.  The moving
+            # end-effector query required for self collision instead uses the
+            # exact capsule model and its analytic chain-rule derivative.
+            self.self_collision_model = PlanarCapsuleRobot(
+                lengths, safety_config.link_radius
+            )
         self.safe_distance = safety_config.safe_distance
+        self.self_collision_distance = safety_config.self_collision_distance
         self.cbf_alpha = safety_config.alpha
         self.joint_limits = safety_config.joint_limits
         self.joint_limit_alpha = safety_config.joint_limit_alpha
@@ -78,6 +86,9 @@ class QPController:
             if obstacle.enabled
             for link_index in range(self.dof)
         ]
+        if self.safety_enabled:
+            self.barrier_labels.append("self_ee_link1")
+            self.barrier_labels.append("self_base_link3")
         sequence = config.sequential_end_effector
         self.sequential_end_effector_enabled = sequence.enabled
         self.end_effector_index = 1 if sequence.enabled else self.dof
@@ -140,7 +151,7 @@ class QPController:
         lower = [-np.inf]
         upper = [-self.clf_rate * clf_value]
 
-        if self.safety_enabled and self.safety_model is not None:
+        if self.safety_enabled:
             for row, bound in zip(cbf_A, cbf_lower):
                 rows.append(np.concatenate((row, [0.0])))
                 lower.append(bound)
@@ -245,15 +256,22 @@ class QPController:
             value = float(2.0 * (position_error @ position_error))
             gradient = 4.0 * position_error @ task_jacobian[:2]
         else:
-            yaw_error = wrap_to_pi(task_state[2] - self.ee_orientation)
+            yaw_difference = task_state[2] - self.ee_orientation
             yaw_weight = self.final_yaw_weight
             value = float(
-                2.0 * (position_error @ position_error + yaw_weight * yaw_error**2)
+                2.0
+                * (
+                    position_error @ position_error
+                    + yaw_weight * (1.0 - np.cos(yaw_difference))
+                )
             )
             gradient = (
-                4.0
-                * np.array(
-                    [position_error[0], position_error[1], yaw_weight * yaw_error]
+                np.array(
+                    [
+                        4.0 * position_error[0],
+                        4.0 * position_error[1],
+                        2.0 * yaw_weight * np.sin(yaw_difference),
+                    ]
                 )
                 @ task_jacobian
             )
@@ -300,11 +318,29 @@ class QPController:
         """Return CBF rows, lower bounds, and barrier values for the current q."""
         if not self.safety_enabled or self.safety_model is None:
             return np.empty((0, self.dof)), np.empty(0), np.empty(0)
-        return self.safety_model.cbf_constraints(
+        obstacle_rows, obstacle_lower, obstacle_values = self.safety_model.cbf_constraints(
             np.asarray(q, dtype=float),
             self.obstacles,
             self.safe_distance,
             self.cbf_alpha,
+        )
+        self_row, self_lower, self_value = (
+            self.self_collision_model.self_collision_cbf_constraint(
+                q, self.self_collision_distance, self.cbf_alpha
+            )
+        )
+        base_row, base_lower, base_value = (
+            self.self_collision_model.base_to_link_cbf_constraint(
+                q,
+                link_index=self.dof - 1,
+                minimum_distance=self.self_collision_distance,
+                alpha=self.cbf_alpha,
+            )
+        )
+        return (
+            np.vstack((obstacle_rows, self_row, base_row)),
+            np.concatenate((obstacle_lower, [self_lower, base_lower])),
+            np.concatenate((obstacle_values, [self_value, base_value])),
         )
 
     def _joint_limit_cbf_constraints(self, q):
@@ -340,9 +376,11 @@ class QPController:
     ) -> SafetyDiagnostics:
         """Return current named barrier values for recording and display.
 
-        Each value is ``h = f_link(p_obstacle, q) - r_obstacle -
-        safe_distance``.  Positive values are safe; zero is the configured
-        safety boundary; negative values mean that the margin is violated.
+        Obstacle values are ``h = f_link(p_obstacle, q) - r_obstacle -
+        safe_distance``; the final two values are the end-effector--link1 and
+        base--link3 self-collision barriers. Positive values are safe; zero is
+        the configured safety boundary; negative values mean that the margin
+        is violated.
         """
         barrier_values = self._cbf_constraints(q)[2]
         if J is None or p_ee is None or ee_yaw is None:
@@ -372,10 +410,16 @@ class QPController:
 
     def clf(self, task_state):
         position_error = np.asarray(task_state[:2], dtype=float) - self.ee_obj
-        yaw_error = wrap_to_pi(task_state[2] - self.ee_orientation)
-        return float(2 * (position_error @ position_error + yaw_error * yaw_error))
+        yaw_difference = task_state[2] - self.ee_orientation
+        return float(2 * (position_error @ position_error + 1.0 - np.cos(yaw_difference)))
 
     def dclf(self, task_state):
         position_error = np.asarray(task_state[:2], dtype=float) - self.ee_obj
-        yaw_error = wrap_to_pi(task_state[2] - self.ee_orientation)
-        return 4 * np.array([position_error[0], position_error[1], yaw_error])
+        yaw_difference = task_state[2] - self.ee_orientation
+        return np.array(
+            [
+                4.0 * position_error[0],
+                4.0 * position_error[1],
+                2.0 * np.sin(yaw_difference),
+            ]
+        )
