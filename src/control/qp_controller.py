@@ -11,8 +11,8 @@ from .solver import QPSolver
 
 
 def wrap_to_pi(angle):
-    """Wrap an angle to [-pi, pi) so the CLF uses the shortest yaw error."""
-    return (float(angle) + np.pi) % (2.0 * np.pi) - np.pi
+    """Wrap an angle to (-pi, pi] so the CLF uses the shortest yaw error."""
+    return np.atan2(np.sin(angle), np.cos(angle))
 
 
 def planar_task_jacobian(spatial_jacobian):
@@ -60,7 +60,9 @@ class QPController:
                     safety_config.rdf_model_path
                 )
             else:
-                raise ValueError("safety representation must be 'capsule' or 'bernstein'")
+                raise ValueError(
+                    "safety representation must be 'capsule' or 'bernstein'"
+                )
             if self.safety_model.dof != self.dof:
                 raise ValueError("safety link count must match controller dof")
         self.safe_distance = safety_config.safe_distance
@@ -102,10 +104,14 @@ class QPController:
                 joint_limits=self.joint_limits,
             )
             self.feasible_goal_configurations = tuple(
-                candidate for candidate in self.goal_configurations if not candidate.colliding
+                candidate
+                for candidate in self.goal_configurations
+                if not candidate.colliding
             )
             if not self.feasible_goal_configurations:
-                raise ValueError("goal is infeasible: no collision-free IK configuration")
+                raise ValueError(
+                    "goal is infeasible: no collision-free IK configuration"
+                )
 
     def get_velocity(self, q, J, p_ee, ee_yaw):
         """작업공간 명령을 관절 속도로 바꾸기 위한 자리.
@@ -166,9 +172,7 @@ class QPController:
         l = np.asarray(lower)
         u = np.asarray(upper)
         solve_start = perf_counter()
-        result = self._solver.solve(
-            QPProblem(self.P, np.zeros(self.dof + 1), A, l, u)
-        )
+        result = self._solver.solve(QPProblem(self.P, np.zeros(self.dof + 1), A, l, u))
         self.last_qp_solve_time = perf_counter() - solve_start
         if result is not None:
             input = result[: self.dof]
@@ -184,17 +188,27 @@ class QPController:
 
     def _select_goal_configuration(self, q):
         """Choose the safe IK branch nearest the initial configuration once."""
-        if self.selected_goal_configuration is not None or not self.sequential_end_effector_enabled:
+        if (
+            self.selected_goal_configuration is not None
+            or not self.sequential_end_effector_enabled
+        ):
             return
         q = np.asarray(q, dtype=float)
         self.selected_goal_configuration = min(
             self.feasible_goal_configurations,
             key=lambda candidate: np.linalg.norm(
-                np.array([wrap_to_pi(angle - target) for angle, target in zip(q, candidate.q)])
+                np.array(
+                    [
+                        wrap_to_pi(angle - target)
+                        for angle, target in zip(q, candidate.q)
+                    ]
+                )
             ),
         )
         if self.verbose:
-            print(f"Selected sequential goal configuration: {self.selected_goal_configuration.name}")
+            print(
+                f"Selected sequential goal configuration: {self.selected_goal_configuration.name}"
+            )
 
     def active_target_position(self):
         """Return the position target for the currently active task endpoint."""
@@ -202,19 +216,26 @@ class QPController:
             return self.ee_obj
         if self.selected_goal_configuration is None:
             raise RuntimeError("goal configuration has not been selected")
-        return self.selected_goal_configuration.joint_positions[self.end_effector_index - 1]
+        return self.selected_goal_configuration.joint_positions[
+            self.end_effector_index - 1
+        ]
 
     def _goal_reached(self, p_ee):
         return (
             self.sequential_end_effector_enabled
             and self.end_effector_index < self.dof
-            and np.linalg.norm(np.asarray(p_ee, dtype=float)[:2] - self.active_target_position())
+            and np.linalg.norm(
+                np.asarray(p_ee, dtype=float)[:2] - self.active_target_position()
+            )
             <= self.goal_tolerance
         )
 
     def _uses_end_effector_orientation(self):
         """Use yaw only for the direct task and final end-effector stage."""
-        return not self.sequential_end_effector_enabled or self.end_effector_index >= self.dof
+        return (
+            not self.sequential_end_effector_enabled
+            or self.end_effector_index >= self.dof
+        )
 
     def _task_clf_terms(self, task_state, task_jacobian):
         """Return CLF value and joint gradient for the active link endpoint."""
@@ -226,10 +247,16 @@ class QPController:
         else:
             yaw_error = wrap_to_pi(task_state[2] - self.ee_orientation)
             yaw_weight = self.final_yaw_weight
-            value = float(2.0 * (position_error @ position_error + yaw_weight * yaw_error**2))
-            gradient = 4.0 * np.array(
-                [position_error[0], position_error[1], yaw_weight * yaw_error]
-            ) @ task_jacobian
+            value = float(
+                2.0 * (position_error @ position_error + yaw_weight * yaw_error**2)
+            )
+            gradient = (
+                4.0
+                * np.array(
+                    [position_error[0], position_error[1], yaw_weight * yaw_error]
+                )
+                @ task_jacobian
+            )
         return self.clf_weight * value, self.clf_weight * gradient
 
     def _handle_barrier_stop(self, q, input):
@@ -239,7 +266,9 @@ class QPController:
 
     def _barrier_is_active(self, q):
         barrier_values = self._cbf_constraints(q)[2]
-        return len(barrier_values) > 0 and np.min(barrier_values) <= self.barrier_tolerance
+        return (
+            len(barrier_values) > 0 and np.min(barrier_values) <= self.barrier_tolerance
+        )
 
     def _stopped_by_barrier(self, q, input):
         """Detect a near-zero command caused at an active hard CBF boundary."""
@@ -251,7 +280,10 @@ class QPController:
 
     def _advance_end_effector(self, reason):
         """Advance once, unless the final link is already the active task point."""
-        if not self.sequential_end_effector_enabled or self.end_effector_index >= self.dof:
+        if (
+            not self.sequential_end_effector_enabled
+            or self.end_effector_index >= self.dof
+        ):
             return False
         previous = self.end_effector_index
         self.end_effector_index += 1
@@ -303,7 +335,9 @@ class QPController:
             return np.empty((0, self.dof)), np.empty(0)
         return np.vstack(rows), np.asarray(lower)
 
-    def safety_diagnostics(self, q, J=None, p_ee=None, ee_yaw=None) -> SafetyDiagnostics:
+    def safety_diagnostics(
+        self, q, J=None, p_ee=None, ee_yaw=None
+    ) -> SafetyDiagnostics:
         """Return current named barrier values for recording and display.
 
         Each value is ``h = f_link(p_obstacle, q) - r_obstacle -

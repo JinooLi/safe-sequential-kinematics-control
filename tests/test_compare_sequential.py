@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -6,6 +7,7 @@ import numpy as np
 
 from src.application.compare_sequential import (
     _failure_reason,
+    _json_default,
     _paired_analysis,
     classify_outcome,
     has_feasible_goal_configuration,
@@ -23,6 +25,10 @@ class CompareSequentialTest(unittest.TestCase):
         self.assertEqual(classify_outcome(False, True), "candidate_only_success")
         self.assertEqual(classify_outcome(True, False), "baseline_only_success")
         self.assertEqual(classify_outcome(True, True), "both_succeeded")
+
+    def test_json_default_converts_numpy_boolean(self):
+        payload = json.dumps({"success": np.bool_(True)}, default=_json_default)
+        self.assertEqual(payload, '{"success": true}')
 
     def test_sampling_is_seeded_and_target_is_reachable(self):
         config = load_controller_config(ROOT / "settings/controller.yaml")

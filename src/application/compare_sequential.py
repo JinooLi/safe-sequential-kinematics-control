@@ -115,6 +115,13 @@ def classify_outcome(nonsequential_success: bool, sequential_success: bool) -> s
     return OUTCOME_LABELS[(bool(nonsequential_success), bool(sequential_success))]
 
 
+def _json_default(value):
+    """Convert NumPy scalar diagnostics to JSON-native scalar values."""
+    if isinstance(value, np.generic):
+        return value.item()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 def _distance_to_segment(point, start, end):
     segment = end - start
     length_squared = float(segment @ segment)
@@ -345,7 +352,7 @@ def _execute_case(
     yaw_error = abs(wrap_to_pi(final_yaw[-1] - config.ee_orientation))
     barrier = np.asarray(arrays["barrier"], dtype=float)
     min_barrier = float(np.min(barrier)) if barrier.size else float("inf")
-    success = (
+    success = bool(
         position_error <= experiment_goal_tolerance
         and yaw_error <= yaw_tolerance
         and min_barrier >= barrier_tolerance
@@ -606,8 +613,12 @@ def _write_summary(output_dir: Path, records, experiment, config):
             "note": "Only cases with at least one collision-free IK branch are executed in both methods.",
         },
     }
-    (output_dir / "summary.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    (output_dir / "analysis.json").write_text(json.dumps(analysis, indent=2), encoding="utf-8")
+    (output_dir / "summary.json").write_text(
+        json.dumps(payload, indent=2, default=_json_default), encoding="utf-8"
+    )
+    (output_dir / "analysis.json").write_text(
+        json.dumps(analysis, indent=2, default=_json_default), encoding="utf-8"
+    )
     _write_paired_plot(output_dir, records)
     scalar_fields = ("success", "position_error", "yaw_error", "min_barrier", "active_link", "failure_reason", "completion_time", "control_effort", "max_joint_velocity", "mean_clf_slack", "total_qp_solve_time", "qp_infeasible_count")
     columns = ["case_id", "target_x", "target_y", "target_yaw"] + [f"{method}_{field}" for method in METHODS for field in scalar_fields]
