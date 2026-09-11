@@ -35,6 +35,9 @@ sequential_experiment:
   goal_tolerance: 0.1
   yaw_tolerance: 0.1
   barrier_tolerance: -0.01
+  # 목표 도달 전 slack 활성 비율에서 delta > 이 값을 active로 판정한다.
+  # QP 제약이나 실제 slack 값은 바꾸지 않고, 실험 지표의 분류 기준만 바꾼다.
+  slack_active_threshold: 0.01
   # null uses control_mode above; set clf to override it for the batch.
   control_mode: null
   initial_q: [0.0, 0.0, 0.0]

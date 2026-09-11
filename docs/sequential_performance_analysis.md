@@ -49,8 +49,10 @@ $$
 | 순차 구조 | 단계별 체류 시간, 전환 횟수·전환 사유 | 어떤 단계에서 막히는가 |
 | IK | 선택된 branch, 안전 IK 해 개수 | 초기 자세와 기하가 branch 선택에 미치는 영향 |
 
-특히 **최소 barrier**, **수렴 시간**, **최대 CLF slack**을 함께 제시한다. 더 빠른
-방법이 안전 여유를 더 많이 소모했는지, 또는 CLF 감소 제약을 더 많이 완화했는지를
+특히 **최소 barrier**, **수렴 시간**, **최대 CLF slack**, **목표 도달 전 nonzero
+slack 비율**을 함께 제시한다. 마지막 지표는 목표 도달까지 기록된 제어 sample 중
+`slack > sequential_experiment.slack_active_threshold`인 sample의 비율이다. 더 빠른
+방법이 안전 여유를 더 많이 소모했는지, 또는 CLF 감소 제약을 더 자주 완화했는지를
 분리해서 해석할 수 있다.
 
 구현은 각 run directory에 `summary.csv`, `summary.json`, `analysis.json`,

@@ -70,6 +70,7 @@ class RunResult:
     max_joint_velocity: float
     mean_clf_slack: float | None
     max_clf_slack: float | None
+    nonzero_clf_slack_ratio_to_goal: float | None
     total_qp_solve_time: float
     mean_qp_solve_time: float | None
     qp_infeasible_count: int
@@ -90,6 +91,7 @@ class ComparisonWorkerInput:
     goal_tolerance: float
     yaw_tolerance: float
     barrier_tolerance: float
+    slack_active_threshold: float
     initial_q: tuple[float, ...]
     output_dir: str
 
@@ -105,6 +107,7 @@ METHODS = (
     "direct",
     "sequential",
 )
+
 COMPARISONS = {
     "task_decomposition": ("direct", "sequential"),
 }
@@ -287,6 +290,23 @@ def _sample_interval(times: np.ndarray) -> float:
     return float(np.median(np.diff(times)))
 
 
+def _nonzero_slack_ratio_to_goal(
+    slack, goal_reached, active_threshold: float
+) -> float | None:
+    """Return active-slack samples divided by control samples to first goal hit."""
+    slack = np.asarray(slack, dtype=float)
+    reached_indices = np.flatnonzero(goal_reached)
+    if not slack.size or not len(reached_indices):
+        return None
+    # The goal-reaching state is included: it has one control/QP sample at
+    # the same simulation timestep, matching the recorded control period.
+    until_goal = slack[: reached_indices[0] + 1]
+    finite = until_goal[np.isfinite(until_goal)]
+    if not finite.size:
+        return None
+    return float(np.mean(finite > active_threshold))
+
+
 def _stage_durations(active_link: np.ndarray, dt: float, dof: int, sequential: bool) -> tuple[float, ...]:
     """Measure time spent with each sequential task endpoint active."""
     if not sequential or active_link.size == 0:
@@ -320,6 +340,7 @@ def _execute_case(
     experiment_goal_tolerance: float,
     yaw_tolerance: float,
     barrier_tolerance: float,
+    slack_active_threshold: float,
     initial_q: tuple[float, ...],
     output_dir: Path,
 ) -> RunResult:
@@ -366,6 +387,9 @@ def _execute_case(
     ) & (np.abs(np.asarray([wrap_to_pi(yaw - config.ee_orientation) for yaw in final_yaw])) <= yaw_tolerance)
     completion_time = float(arrays["t"][np.flatnonzero(goal_reached)[0]]) if np.any(goal_reached) else None
     slack = np.asarray(arrays.get("clf_slack", ()), dtype=float)
+    nonzero_slack_ratio_to_goal = _nonzero_slack_ratio_to_goal(
+        slack, goal_reached, slack_active_threshold
+    )
     qp_time = np.asarray(arrays.get("qp_solve_time", ()), dtype=float)
     active_link_values = np.asarray(arrays.get("active_link", ()), dtype=int)
     switch_reasons = tuple(controller.stage_switch_reasons)
@@ -388,6 +412,7 @@ def _execute_case(
         max_joint_velocity=float(np.max(command_norm)) if command_norm.size else 0.0,
         mean_clf_slack=float(np.nanmean(slack)) if slack.size else None,
         max_clf_slack=float(np.nanmax(slack)) if slack.size else None,
+        nonzero_clf_slack_ratio_to_goal=nonzero_slack_ratio_to_goal,
         total_qp_solve_time=float(np.nansum(qp_time)),
         mean_qp_solve_time=float(np.nanmean(qp_time)) if qp_time.size else None,
         qp_infeasible_count=controller.qp_infeasible_count,
@@ -406,6 +431,7 @@ def run_case_pair(worker_input: ComparisonWorkerInput):
         "experiment_goal_tolerance": worker_input.goal_tolerance,
         "yaw_tolerance": worker_input.yaw_tolerance,
         "barrier_tolerance": worker_input.barrier_tolerance,
+        "slack_active_threshold": worker_input.slack_active_threshold,
         "initial_q": worker_input.initial_q,
         "output_dir": Path(worker_input.output_dir),
     }
@@ -458,6 +484,7 @@ def run_comparison(args):
                 goal_tolerance=experiment.goal_tolerance,
                 yaw_tolerance=experiment.yaw_tolerance,
                 barrier_tolerance=experiment.barrier_tolerance,
+                slack_active_threshold=experiment.slack_active_threshold,
                 initial_q=experiment.initial_q,
                 output_dir=str(output_dir),
             )
@@ -528,7 +555,7 @@ def _paired_analysis(records):
     metrics = (
         "position_error", "yaw_error", "min_barrier", "control_effort",
         "max_joint_velocity", "total_qp_solve_time", "mean_qp_solve_time",
-        "mean_clf_slack", "max_clf_slack",
+        "mean_clf_slack", "max_clf_slack", "nonzero_clf_slack_ratio_to_goal",
     )
     for method in METHODS:
         runs = [record[method] for record in records]
@@ -556,6 +583,7 @@ def _paired_analysis(records):
             "control_effort",
             "min_barrier",
             "max_clf_slack",
+            "nonzero_clf_slack_ratio_to_goal",
             "position_error",
             "yaw_error",
         ):
@@ -574,14 +602,15 @@ def _write_paired_plot(output_dir: Path, records):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
 
-    figure = Figure(figsize=(16, 3.6), constrained_layout=True)
+    figure = Figure(figsize=(20, 3.6), constrained_layout=True)
     FigureCanvasAgg(figure)
-    axes = figure.subplots(1, 4)
+    axes = figure.subplots(1, 5)
     metrics = (
         ("completion_time", "Time to goal [s]"),
         ("control_effort", "Control effort [rad]"),
         ("min_barrier", "Minimum barrier [m]"),
         ("max_clf_slack", "Maximum CLF slack"),
+        ("nonzero_clf_slack_ratio_to_goal", "Nonzero CLF slack ratio to goal"),
     )
     baseline, candidate = COMPARISONS["task_decomposition"]
     for axis, (metric, title) in zip(axes, metrics):
@@ -629,7 +658,7 @@ def _write_summary(output_dir: Path, records, experiment, config):
         json.dumps(analysis, indent=2, default=_json_default), encoding="utf-8"
     )
     _write_paired_plot(output_dir, records)
-    scalar_fields = ("success", "position_error", "yaw_error", "min_barrier", "active_link", "failure_reason", "completion_time", "control_effort", "max_joint_velocity", "mean_clf_slack", "max_clf_slack", "total_qp_solve_time", "qp_infeasible_count")
+    scalar_fields = ("success", "position_error", "yaw_error", "min_barrier", "active_link", "failure_reason", "completion_time", "control_effort", "max_joint_velocity", "mean_clf_slack", "max_clf_slack", "nonzero_clf_slack_ratio_to_goal", "total_qp_solve_time", "qp_infeasible_count")
     columns = ["case_id", "target_x", "target_y", "target_yaw"] + [f"{method}_{field}" for method in METHODS for field in scalar_fields]
     with (output_dir / "summary.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)

@@ -70,6 +70,7 @@ class SequentialExperimentConfig:
     goal_tolerance: float
     yaw_tolerance: float
     barrier_tolerance: float
+    slack_active_threshold: float
     control_mode: str | None
     initial_q: tuple[float, ...]
     output_dir: str
@@ -170,6 +171,9 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
             goal_tolerance=float(experiment_data.get("goal_tolerance", 0.10)),
             yaw_tolerance=float(experiment_data.get("yaw_tolerance", 0.10)),
             barrier_tolerance=float(experiment_data.get("barrier_tolerance", -1e-3)),
+            slack_active_threshold=float(
+                experiment_data.get("slack_active_threshold", 1e-3)
+            ),
             control_mode=(
                 str(experiment_data["control_mode"])
                 if experiment_data.get("control_mode") is not None
@@ -242,6 +246,8 @@ def load_controller_config(path: str | Path) -> ControllerConfig:
         or experiment.duration <= 0.0
         or experiment.goal_tolerance <= 0.0
         or experiment.yaw_tolerance <= 0.0
+        or not np.isfinite(experiment.slack_active_threshold)
+        or experiment.slack_active_threshold < 0.0
         or experiment.initial_clearance_margin < 0.0
         or experiment.target_clearance_margin < 0.0
         or experiment.max_case_attempts < 1

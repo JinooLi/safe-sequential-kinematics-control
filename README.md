@@ -78,7 +78,7 @@ Results are saved under `outputs/sequential_comparison/<run-name>/`:
 - `analysis.json`: method-wise success/failure taxonomy and paired metric
   differences for cases where both methods succeeded.
 - `paired_metrics.png`: 수렴 시간, control effort, 최소 barrier, 최대 CLF
-  slack의 task-decomposition paired scatter plots.
+  slack, 목표 도달 전 nonzero slack 비율의 task-decomposition paired scatter plots.
 - `case_###_direct.npz`, `case_###_sequential.npz`: command, CLF slack, QP
   solve time, active stage를 포함한 trajectory.
 

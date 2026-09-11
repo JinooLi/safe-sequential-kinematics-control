@@ -8,6 +8,7 @@ import numpy as np
 from src.application.compare_sequential import (
     _failure_reason,
     _json_default,
+    _nonzero_slack_ratio_to_goal,
     _paired_analysis,
     classify_outcome,
     has_feasible_goal_configuration,
@@ -79,6 +80,7 @@ class CompareSequentialTest(unittest.TestCase):
                 "min_barrier": 0.1, "position_error": 0.01, "yaw_error": 0.02,
                 "max_joint_velocity": 1.0, "total_qp_solve_time": 0.01,
                 "mean_qp_solve_time": 0.001, "mean_clf_slack": 0.0, "max_clf_slack": 0.0,
+                "nonzero_clf_slack_ratio_to_goal": 0.25,
             }
 
         analysis = _paired_analysis([
@@ -98,3 +100,18 @@ class CompareSequentialTest(unittest.TestCase):
         self.assertEqual(delta["mean"], 1.0)
         slack_delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_max_clf_slack"]
         self.assertEqual(slack_delta["count"], 1)
+        slack_ratio_delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_nonzero_clf_slack_ratio_to_goal"]
+        self.assertEqual(slack_ratio_delta["count"], 1)
+
+    def test_nonzero_slack_ratio_counts_samples_through_first_goal_hit(self):
+        ratio = _nonzero_slack_ratio_to_goal(
+            np.array([0.0, 2e-9, 0.1, 0.3]),
+            np.array([False, False, True, True]),
+            active_threshold=1e-9,
+        )
+        self.assertAlmostEqual(ratio, 2.0 / 3.0)
+        self.assertIsNone(
+            _nonzero_slack_ratio_to_goal(
+                np.array([0.1]), np.array([False]), active_threshold=1e-9
+            )
+        )
