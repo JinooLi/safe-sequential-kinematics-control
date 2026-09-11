@@ -25,6 +25,19 @@ class GoalConfigurationTest(unittest.TestCase):
         self.assertTrue(link1_link3_crosses(elbow_down.joint_positions))
         self.assertTrue(elbow_down.colliding)
 
+    def test_goal_ik_rejects_base_to_link3_self_collision(self):
+        candidates = solve_goal_configurations(
+            target_position=[0.0, 0.0],
+            target_yaw=0.0,
+            link_lengths=[1.0, 1.0, 1.0],
+            link_radius=0.05,
+            self_collision_distance=0.13,
+            joint_limits=(None, None, None),
+        )
+
+        self.assertEqual(len(candidates), 2)
+        self.assertTrue(all(candidate.colliding for candidate in candidates))
+
 
 if __name__ == "__main__":
     unittest.main()

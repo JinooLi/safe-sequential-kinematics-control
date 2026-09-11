@@ -158,6 +158,7 @@ def has_feasible_goal_configuration(
         ),
         link_radius=config.safety.link_radius,
         safe_distance=config.safety.safe_distance,
+        self_collision_distance=config.safety.self_collision_distance,
         joint_limits=config.safety.joint_limits,
     )
     return any(not candidate.colliding for candidate in candidates)
@@ -550,7 +551,14 @@ def _paired_analysis(records):
             if record[baseline]["success"] and record[candidate]["success"]
         ]
         deltas = {}
-        for metric in ("completion_time", "control_effort", "min_barrier", "position_error", "yaw_error"):
+        for metric in (
+            "completion_time",
+            "control_effort",
+            "min_barrier",
+            "max_clf_slack",
+            "position_error",
+            "yaw_error",
+        ):
             values = [
                 record[candidate][metric] - record[baseline][metric]
                 for record in successful_pairs
@@ -566,13 +574,14 @@ def _write_paired_plot(output_dir: Path, records):
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
 
-    figure = Figure(figsize=(12, 3.6), constrained_layout=True)
+    figure = Figure(figsize=(16, 3.6), constrained_layout=True)
     FigureCanvasAgg(figure)
-    axes = figure.subplots(1, 3)
+    axes = figure.subplots(1, 4)
     metrics = (
         ("completion_time", "Time to goal [s]"),
         ("control_effort", "Control effort [rad]"),
         ("min_barrier", "Minimum barrier [m]"),
+        ("max_clf_slack", "Maximum CLF slack"),
     )
     baseline, candidate = COMPARISONS["task_decomposition"]
     for axis, (metric, title) in zip(axes, metrics):
@@ -620,7 +629,7 @@ def _write_summary(output_dir: Path, records, experiment, config):
         json.dumps(analysis, indent=2, default=_json_default), encoding="utf-8"
     )
     _write_paired_plot(output_dir, records)
-    scalar_fields = ("success", "position_error", "yaw_error", "min_barrier", "active_link", "failure_reason", "completion_time", "control_effort", "max_joint_velocity", "mean_clf_slack", "total_qp_solve_time", "qp_infeasible_count")
+    scalar_fields = ("success", "position_error", "yaw_error", "min_barrier", "active_link", "failure_reason", "completion_time", "control_effort", "max_joint_velocity", "mean_clf_slack", "max_clf_slack", "total_qp_solve_time", "qp_infeasible_count")
     columns = ["case_id", "target_x", "target_y", "target_yaw"] + [f"{method}_{field}" for method in METHODS for field in scalar_fields]
     with (output_dir / "summary.csv").open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=columns)

@@ -26,15 +26,15 @@ sequential_end_effector:
 # Headless randomized comparison.  These values do not change the controller
 # itself; they apply only to `make compare-sequential ARGS="run"`.
 sequential_experiment:
-  cases: 12
+  cases: 300
   # Parallel processes. Each process runs one sequential-off/on case pair.
   workers: 12
   seed: 2332
-  duration: 30.0
+  duration: 35.0
   # Success criterion, independent from sequential_end_effector.goal_tolerance.
   goal_tolerance: 0.1
   yaw_tolerance: 0.1
-  barrier_tolerance: -0.001
+  barrier_tolerance: -0.01
   # null uses control_mode above; set clf to override it for the batch.
   control_mode: null
   initial_q: [0.0, 0.0, 0.0]

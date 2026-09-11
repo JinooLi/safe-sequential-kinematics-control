@@ -67,6 +67,7 @@ def solve_goal_configurations(
     *,
     link_radius: float = 0.0,
     safe_distance: float = 0.0,
+    self_collision_distance: float = 0.0,
     joint_limits=(),
 ):
     """Solve both elbow branches and retain whether each endpoint pose is safe."""
@@ -76,6 +77,8 @@ def solve_goal_configurations(
     target = np.asarray(target_position, dtype=float)
     if target.shape != (2,):
         raise ValueError("target_position must have shape (2,)")
+    if self_collision_distance < 0.0:
+        raise ValueError("self_collision_distance must be non-negative")
 
     wrist = target - lengths[2] * np.array([np.cos(target_yaw), np.sin(target_yaw)])
     wrist_distance = float(np.linalg.norm(wrist))
@@ -105,15 +108,29 @@ def solve_goal_configurations(
             limit is not None and not (limit[0] <= angle <= limit[1])
             for angle, limit in zip(q, joint_limits or (None,) * 3)
         )
-        # link1/link3 are non-adjacent.  Reject only a geometric crossing;
-        # clearance is still governed separately by the obstacle CBF model.
+        # link1/link3 are non-adjacent.  Keep the binary crossing test as an
+        # additional screen, then apply the same self-clearance barriers that
+        # the runtime QP enforces.
         colliding = violates_limit or link1_link3_crosses(positions)
-        if obstacles:
+        if obstacles or self_collision_distance > 0.0:
             from .safety import PlanarCapsuleRobot
 
-            values = PlanarCapsuleRobot(lengths, link_radius).cbf_constraints(
+            safety_robot = PlanarCapsuleRobot(lengths, link_radius)
+        if obstacles:
+            values = safety_robot.cbf_constraints(
                 q, obstacles, safe_distance, alpha=1.0
             )[2]
             colliding = colliding or bool(np.any(values < 0.0))
+        if self_collision_distance > 0.0:
+            ee_link1_value = safety_robot.self_collision_cbf_constraint(
+                q, self_collision_distance, alpha=1.0
+            )[2]
+            base_link3_value = safety_robot.base_to_link_cbf_constraint(
+                q,
+                link_index=len(lengths) - 1,
+                minimum_distance=self_collision_distance,
+                alpha=1.0,
+            )[2]
+            colliding = colliding or ee_link1_value < 0.0 or base_link3_value < 0.0
         candidates.append(GoalConfiguration(name, q, positions, colliding))
     return tuple(candidates)

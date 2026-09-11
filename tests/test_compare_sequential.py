@@ -96,3 +96,5 @@ class CompareSequentialTest(unittest.TestCase):
         delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_completion_time"]
         self.assertEqual(delta["count"], 1)
         self.assertEqual(delta["mean"], 1.0)
+        slack_delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_max_clf_slack"]
+        self.assertEqual(slack_delta["count"], 1)

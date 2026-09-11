@@ -112,6 +112,7 @@ class QPController:
                 self.obstacles,
                 link_radius=safety_config.link_radius,
                 safe_distance=safety_config.safe_distance,
+                self_collision_distance=safety_config.self_collision_distance,
                 joint_limits=self.joint_limits,
             )
             self.feasible_goal_configurations = tuple(
