@@ -1,20 +1,70 @@
 # Safe inverse-kinematics CLF robot arm
 
+## Panda branch: safe pose IK and trajectory control
 
-## 주의점
+The default entry point now controls a fixed-gripper, 7-DoF Franka Emika
+Panda. It first searches the target 6D pose with damped resolved-rate IK while
+projecting a soft-min capsule-safety gradient into the Moore--Penrose null
+space. Pose-converged candidates are retained only when every obstacle and
+self-collision barrier is nonnegative. The nearest candidate supplies the
+link-endpoint targets for sequential task-space CLFs; the final stage uses an
+end-effector position-and-orientation CLF. Hard CBF constraints apply at every
+stage.
+
+`trajectory.mode: direct` bypasses safe pose-IK completely and starts the
+end-effector pose CLF immediately. This keeps the direct baseline independent
+of IK search cost for later comparisons.
+
+In sequential mode, each safe-IK seed ends after a candidate keeps both pose
+tolerances and all safety barriers satisfied for the configured hold duration
+(3 seconds by default). All configured seeds are evaluated, and the candidate
+nearest the initial joint configuration is selected afterward. The first seed
+starts at that initial configuration and the remaining seeds are uniform random
+joint-limit samples.
+
+```bash
+make run        # headless
+make panda-view # MuJoCo viewer
+```
+
+Panda settings live in `settings/panda_controller.yaml`. Defaults use
+`0.01 s` integration and `10 s` per random IK seed, followed by a `30 s`,
+`20 Hz` trajectory budget. The fixed-gripper model at `settings/panda.xml` is
+derived from MuJoCo Menagerie's Apache-2.0 `franka_emika_panda`; unchanged
+source assets, license, and provenance are retained under
+`vendor/franka_emika_panda/`.
+
+The MuJoCo viewer shows a world-frame triad at the robot base: **red = +x**,
+**green = +y**, and **blue = +z**.
+
+Every Panda run records the CLF value, CLF slack, and all CBF values. It saves
+`outputs/panda_run_summary_control.png` and the corresponding compressed
+`outputs/panda_run_summary_control_trace.npz` by default. `make panda-view`
+opens the PNG in a Matplotlib window after its MuJoCo viewer is closed.
+
+The Panda `qp` section exposes OSQP's `max_iterations`, `absolute_tolerance`,
+and `relative_tolerance`. The run summary distinguishes actual infeasibility
+(`qp_infeasible_count`) from an unsolved numerical/iteration-limit termination
+(`qp_solver_failure_count`).
+
+The original planar 3-DoF implementation and comparison utilities remain for
+regression and reference, but are no longer the default `main.py` path.
+
+
+## Legacy planar implementation notes
 
 ### 모델 일관성 검사
 
 모델 정보는 Pinocchio용 `settings/urdf.xml`, 시뮬레이션용
 `settings/mujoco.xml`, 안전 제약용 `settings/controller.yaml`에 각각 필요하다.
-중복을 숨기지 않고, `main.py` 시작 시 세 파일의 링크 길이·반지름과 원형
+중복을 숨기지 않고, legacy planar 실행을 조립할 때 세 파일의 링크 길이·반지름과 원형
 장애물 위치·반지름이 일치하는지 검사한다. 하나라도 다르면 제어를 시작하지
 않고 오류를 낸다. 검사는 `src/application/configuration.py`의
 `validate_geometry_consistency()`이 담당한다.
 
 ### 구성과 의존성 경계
 
-`main.py`만 YAML 설정을 읽고 QP controller, OSQP solver, Pinocchio
+legacy application layer가 YAML 설정을 읽고 QP controller, OSQP solver, Pinocchio
 kinematics, recorder를 조립한다. simulation loop는 이 구현체들을 직접 만들지
 않고 controller/kinematics/recorder 인터페이스를 인자로 받는다. 따라서
 테스트나 실제 로봇 연결에서 MuJoCo·Pinocchio 구현체를 교체할 수 있다.
@@ -42,7 +92,8 @@ src/
 
 ```bash
 make help            # 가능한 별칭 확인
-make run             # MuJoCo 시뮬레이션
+make run             # Panda headless safe-IK + trajectory
+make panda-view      # Panda MuJoCo viewer
 make test            # 전체 테스트
 make train-rdf       # RDF 학습
 make visualize-rdf   # 거리장 PNG

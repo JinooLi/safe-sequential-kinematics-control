@@ -10,9 +10,19 @@ from ..domain.types import QPProblem
 
 
 class OSQPSolver:
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        max_iterations: int = 4_000,
+        absolute_tolerance: float = 1e-3,
+        relative_tolerance: float = 1e-3,
+    ):
         self._solver = osqp.OSQP()
         self._initialized = False
+        self.max_iterations = int(max_iterations)
+        self.absolute_tolerance = float(absolute_tolerance)
+        self.relative_tolerance = float(relative_tolerance)
+        self.last_status: str | None = None
 
     @staticmethod
     def _full_pattern_csc(matrix: np.ndarray):
@@ -36,13 +46,23 @@ class OSQPSolver:
         try:
             if not self._initialized:
                 self._solver.setup(
-                    P=sparse.csc_matrix(problem.P), q=q, A=A, l=lower, u=upper, verbose=False
+                    P=sparse.csc_matrix(problem.P),
+                    q=q,
+                    A=A,
+                    l=lower,
+                    u=upper,
+                    verbose=False,
+                    max_iter=self.max_iterations,
+                    eps_abs=self.absolute_tolerance,
+                    eps_rel=self.relative_tolerance,
                 )
                 self._initialized = True
             else:
                 self._solver.update(q=q, l=lower, u=upper, Ax=A.data)
         except Exception as error:
-            print(f"QP setup/update failed: {error}")
+            self.last_status = f"setup/update failed: {error}"
+            print(f"QP {self.last_status}")
             return None
         result = self._solver.solve()
-        return result.x if result.info.status == "solved" else None
+        self.last_status = str(result.info.status)
+        return result.x if self.last_status == "solved" else None

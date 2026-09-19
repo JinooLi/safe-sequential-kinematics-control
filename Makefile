@@ -6,13 +6,16 @@ MPLCONFIGDIR ?= /tmp/safe-inv-clf-matplotlib
 export UV_CACHE_DIR MPLCONFIGDIR
 
 .DEFAULT_GOAL := help
-.PHONY: help run test train-rdf visualize-rdf compare-sequential
+.PHONY: help run panda-view test train-rdf visualize-rdf compare-sequential
 
 help: ## Show available command aliases
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-run: ## Run the MuJoCo simulation
+run: ## Run Panda safe-IK and headless CLF-CBF trajectory control
 	$(UV) run python main.py
+
+panda-view: ## Run Panda safe-IK and show the MuJoCo trajectory
+	$(UV) run python main.py --visualize --show-plot
 
 test: ## Run all unit tests
 	$(UV) run python -m unittest discover -s tests -v
