@@ -14,7 +14,7 @@ simulation:
 # 목표 position과 yaw를 함께 제어한다.
 sequential_end_effector:
   enabled: true
-  frame_names: [joint2, joint3, ee_joint]
+  frame_names: [joint2, joint5, ee_joint]
   goal_tolerance: 0.2 # 목표 위치 허용 오차 [m]
   velocity_tolerance: 0.001 # 정지 판정 관절 속도 norm [rad/s]
   barrier_tolerance: 0.001 # CBF h 경계 근접 판정 [m]

@@ -20,7 +20,7 @@ safe_ik:
   # Accept a candidate only after pose and safety conditions remain satisfied
   # continuously for this duration.
   convergence_hold_duration: 3.0
-  workers: 4 # 독립 프로세스 수; 1이면 직렬 실행. seed 수보다 많이 만들지 않음.
+  workers: 5 # 독립 프로세스 수; 1이면 직렬 실행. seed 수보다 많이 만들지 않음.
   max_restarts: 10 # 첫번째 seed는 현재 위치에서 시작함.
   random_seed: 0 # 랜덤 seed를 만들기 위한 seed.
   damping: 0.001 # damped pseudo inverse 사용
@@ -137,7 +137,7 @@ trajectory:
   # sequential: link endpoint position stages, then final EE pose.
   # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
   mode: sequential
-  stage_frames: [link3, hand] #[link2, link3, link4, link5, link6, link7, hand]
+  stage_frames: [link4, hand] # [link2, link3, link4, link5, link6, link7, hand]
   stage_position_tolerance: 0.05
   orientation_weight: 1.0
   stop_window: 0.5 # stop_window동안 계속 stop_velocity_tolerance를 넘지 못하면 정지로 판별한다.
