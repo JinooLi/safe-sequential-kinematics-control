@@ -1,11 +1,10 @@
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import numpy as np
 
-from src.adapters.pinocchio_kinematics import RobotInterface
-from src.control.qp_controller import planar_task_jacobian, wrap_to_pi
-
+from safe_ik.adapters.planar_kinematics import RobotInterface
+from safe_ik.control.planar_controller import planar_task_jacobian, wrap_to_pi
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,7 +20,7 @@ class PlanarOrientationControlTest(unittest.TestCase):
         self.assertFalse(np.array_equal(task_jacobian[2], spatial_jacobian[2]))
 
     def test_angular_z_jacobian_matches_yaw_finite_difference(self):
-        robot = RobotInterface(ROOT / "settings/urdf.xml", "ee_joint")
+        robot = RobotInterface(ROOT / "assets/robots/planar.urdf", "ee_joint")
         q = np.array([0.2, -0.4, 0.3])
         direction = np.array([0.6, -0.2, 0.5])
         epsilon = 1e-7
@@ -39,7 +38,9 @@ class PlanarOrientationControlTest(unittest.TestCase):
         self.assertAlmostEqual(wrap_to_pi(-np.pi + 0.01 - (np.pi - 0.01)), 0.02)
 
     def test_can_select_successive_link_tip_frames(self):
-        robot = RobotInterface(ROOT / "settings/urdf.xml", ("joint2", "joint3", "ee_joint"))
+        robot = RobotInterface(
+            ROOT / "assets/robots/planar.urdf", ("joint2", "joint3", "ee_joint")
+        )
         q = np.zeros(3)
 
         robot.set_end_effector(1)

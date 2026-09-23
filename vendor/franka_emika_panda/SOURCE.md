@@ -6,5 +6,5 @@ This directory is copied from MuJoCo Menagerie, model
 Upstream: <https://github.com/google-deepmind/mujoco_menagerie/tree/main/franka_emika_panda>
 
 The upstream model is licensed under Apache-2.0; see `LICENSE`. The project
-uses an adapted copy of `panda.xml` at `settings/panda.xml` with fixed gripper
+uses an adapted copy of `panda.xml` at `assets/robots/panda.xml` with fixed gripper
 fingers and project-specific sites and obstacles.

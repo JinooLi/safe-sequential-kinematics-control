@@ -1,18 +1,17 @@
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 import mujoco
 import numpy as np
 
-from src.domain.types import SafetyDiagnostics
-from src.logging.recorder import Recorder
-from src.application.simulation import (
+from safe_ik.application.planar_simulation import (
     load_mujoco_model,
     run_simulation,
     set_goal_marker_position,
     set_obstacle_visibility,
 )
-
+from safe_ik.domain.types import SafetyDiagnostics
+from safe_ik.logging.recorder import Recorder
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -38,7 +37,7 @@ class _StaticRobot:
 
 class GoalMarkerTest(unittest.TestCase):
     def test_goal_marker_is_visual_only_and_tracks_target_position(self):
-        model = load_mujoco_model(ROOT / "settings/mujoco.xml")
+        model = load_mujoco_model(ROOT / "assets/robots/planar.xml")
         marker_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "goal_marker")
 
         self.assertNotEqual(marker_id, -1)
@@ -49,8 +48,10 @@ class GoalMarkerTest(unittest.TestCase):
         np.testing.assert_allclose(model.geom_pos[marker_id], [1.0, 1.3, 0.06])
 
     def test_disabled_obstacle_is_hidden(self):
-        model = load_mujoco_model(ROOT / "settings/mujoco.xml")
-        obstacle_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "obstacle_geom1")
+        model = load_mujoco_model(ROOT / "assets/robots/planar.xml")
+        obstacle_id = mujoco.mj_name2id(
+            model, mujoco.mjtObj.mjOBJ_GEOM, "obstacle_geom1"
+        )
 
         set_obstacle_visibility(model, [False])
 
@@ -59,7 +60,7 @@ class GoalMarkerTest(unittest.TestCase):
     def test_viewer_sync_interval_must_be_positive(self):
         with self.assertRaisesRegex(ValueError, "at least 1"):
             run_simulation(
-                ROOT / "settings/mujoco.xml",
+                ROOT / "assets/robots/planar.xml",
                 controller=None,
                 robot=None,
                 duration=0.0,
@@ -70,7 +71,7 @@ class GoalMarkerTest(unittest.TestCase):
     def test_kinematic_mode_integrates_the_qp_velocity_directly(self):
         recorder = Recorder()
         run_simulation(
-            ROOT / "settings/mujoco.xml",
+            ROOT / "assets/robots/planar.xml",
             controller=_ConstantVelocityController(),
             robot=_StaticRobot(),
             duration=0.004,

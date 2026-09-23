@@ -1,21 +1,19 @@
 import json
-from pathlib import Path
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
 
-from src.application.compare_sequential import (
+from safe_ik.application.planar_configuration import load_controller_config
+from safe_ik.experiments.analysis import (
     _failure_reason,
-    _json_default,
     _nonzero_slack_ratio_to_goal,
     _paired_analysis,
     classify_outcome,
-    has_feasible_goal_configuration,
-    sample_case,
 )
-from src.application.configuration import load_controller_config
-
+from safe_ik.experiments.reporting import _json_default
+from safe_ik.experiments.sampling import has_feasible_goal_configuration, sample_case
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,9 +30,13 @@ class CompareSequentialTest(unittest.TestCase):
         self.assertEqual(payload, '{"success": true}')
 
     def test_sampling_is_seeded_and_target_is_reachable(self):
-        config = load_controller_config(ROOT / "settings/controller.yaml")
-        first = sample_case(7, np.random.default_rng(11), config, config.sequential_experiment)
-        second = sample_case(7, np.random.default_rng(11), config, config.sequential_experiment)
+        config = load_controller_config(ROOT / "tests/fixtures/planar.yaml")
+        first = sample_case(
+            7, np.random.default_rng(11), config, config.sequential_experiment
+        )
+        second = sample_case(
+            7, np.random.default_rng(11), config, config.sequential_experiment
+        )
 
         self.assertEqual(first, second)
         self.assertEqual(len(first.obstacles), 2)
@@ -44,8 +46,10 @@ class CompareSequentialTest(unittest.TestCase):
         self.assertLessEqual(first.target_yaw, np.pi)
 
     def test_missing_ik_solution_is_not_feasible_for_comparison_sampling(self):
-        config = load_controller_config(ROOT / "settings/controller.yaml")
-        with patch("src.application.compare_sequential.solve_goal_configurations", return_value=()):
+        config = load_controller_config(ROOT / "tests/fixtures/planar.yaml")
+        with patch(
+            "safe_ik.experiments.sampling.solve_goal_configurations", return_value=()
+        ):
             feasible = has_feasible_goal_configuration(
                 np.array([1.0, 1.0]),
                 0.0,
@@ -64,7 +68,9 @@ class CompareSequentialTest(unittest.TestCase):
             "qp_infeasible",
         )
         self.assertEqual(
-            _failure_reason(False, 0.02, -0.001, 0, True, 1, 3, ("stopped at CBF boundary",)),
+            _failure_reason(
+                False, 0.02, -0.001, 0, True, 1, 3, ("stopped at CBF boundary",)
+            ),
             "cbf_boundary_stall",
         )
         self.assertEqual(
@@ -75,32 +81,47 @@ class CompareSequentialTest(unittest.TestCase):
     def test_paired_analysis_uses_only_jointly_successful_cases_for_deltas(self):
         def run(success, completion_time):
             return {
-                "success": success, "failure_reason": None if success else "timeout",
-                "completion_time": completion_time, "control_effort": 1.0,
-                "min_barrier": 0.1, "position_error": 0.01, "yaw_error": 0.02,
-                "max_joint_velocity": 1.0, "total_qp_solve_time": 0.01,
-                "mean_qp_solve_time": 0.001, "mean_clf_slack": 0.0, "max_clf_slack": 0.0,
+                "success": success,
+                "failure_reason": None if success else "timeout",
+                "completion_time": completion_time,
+                "control_effort": 1.0,
+                "min_barrier": 0.1,
+                "position_error": 0.01,
+                "yaw_error": 0.02,
+                "max_joint_velocity": 1.0,
+                "total_qp_solve_time": 0.01,
+                "mean_qp_solve_time": 0.001,
+                "mean_clf_slack": 0.0,
+                "max_clf_slack": 0.0,
                 "nonzero_clf_slack_ratio_to_goal": 0.25,
             }
 
-        analysis = _paired_analysis([
-            {
-                "direct": run(True, 2.0),
-                "sequential": run(True, 3.0),
-                "comparisons": {"task_decomposition": "both_succeeded"},
-            },
-            {
-                "direct": run(False, None),
-                "sequential": run(True, 1.0),
-                "comparisons": {"task_decomposition": "candidate_only_success"},
-            },
-        ])
-        delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_completion_time"]
+        analysis = _paired_analysis(
+            [
+                {
+                    "direct": run(True, 2.0),
+                    "sequential": run(True, 3.0),
+                    "comparisons": {"task_decomposition": "both_succeeded"},
+                },
+                {
+                    "direct": run(False, None),
+                    "sequential": run(True, 1.0),
+                    "comparisons": {"task_decomposition": "candidate_only_success"},
+                },
+            ]
+        )
+        delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"][
+            "sequential_minus_direct_completion_time"
+        ]
         self.assertEqual(delta["count"], 1)
         self.assertEqual(delta["mean"], 1.0)
-        slack_delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_max_clf_slack"]
+        slack_delta = analysis["comparisons"]["task_decomposition"][
+            "paired_both_success"
+        ]["sequential_minus_direct_max_clf_slack"]
         self.assertEqual(slack_delta["count"], 1)
-        slack_ratio_delta = analysis["comparisons"]["task_decomposition"]["paired_both_success"]["sequential_minus_direct_nonzero_clf_slack_ratio_to_goal"]
+        slack_ratio_delta = analysis["comparisons"]["task_decomposition"][
+            "paired_both_success"
+        ]["sequential_minus_direct_nonzero_clf_slack_ratio_to_goal"]
         self.assertEqual(slack_ratio_delta["count"], 1)
 
     def test_nonzero_slack_ratio_counts_samples_through_first_goal_hit(self):

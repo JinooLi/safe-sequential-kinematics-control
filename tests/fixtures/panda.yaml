@@ -1,0 +1,157 @@
+robot:
+  model_path: ../../assets/robots/panda.xml
+  ee_frame: gripper_tip
+  dof: 7
+  initial_q: [0.0, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]
+
+target:
+  # Base/world-frame target. Vector magnitudes are ignored. The gripper tip's
+  # local +z axis follows approach and its local +y axis follows up.
+  position: [0.45, 0.45, 0.45]
+  orientation:
+    approach: [0.0, 1.0, 0.0] # gripper_tip local +z
+    up: [1.0, 0.0, 0.0] # gripper_tip local +y
+  position_tolerance: 0.01
+  orientation_tolerance: 0.01
+
+safe_ik:
+  integration_period: 0.01 #(s)
+  duration_per_seed: 10.0 # 하나의 seed에서 IK 찾는데 시간 이정도만 투자해줌
+  # Accept a candidate only after pose and safety conditions remain satisfied
+  # continuously for this duration.
+  convergence_hold_duration: 3.0 
+  max_restarts: 10 # 첫번째 seed는 현재 위치에서 시작함.
+  random_seed: 0 # 랜덤 seed를 만들기 위한 seed.
+  damping: 0.001 # damped pseudo inverse 사용
+  pose_gain: 100.0 # 
+  softmin_temperature: 1.0 # log-sum-exp에 있는 그 상수
+  safety_gradient_gain: 10.0 # null space control부의 gain. 이걸로 safety 제어함. 
+
+safety:
+  margin: 0.05
+  alpha: 1.0
+  # Fixed hand assembly members cannot collide with each other.
+  self_collision_exclusions: [[link7, gripper]]
+  # Endpoints are expressed in each named frame's local coordinates. Adjacent
+  # capsules are omitted from self-collision pairs; all others are checked.
+  capsules:
+    - {
+        name: base,
+        start_frame: link0,
+        end_frame: link0,
+        start_offset: [0.0667, -0.0037, 0.1167],
+        end_offset: [-0.1561, 0.0013, 0.0040],
+        radius: 0.04,
+      }
+    - {
+        name: link1,
+        start_frame: link1,
+        end_frame: link1,
+        start_offset: [-0.0072, 0.0447, -0.1985],
+        end_offset: [0.0017, -0.1113, 0.0439],
+        radius: 0.025,
+      }
+    - {
+        name: link2,
+        start_frame: link2,
+        end_frame: link2,
+        start_offset: [-0.0006, 0.0447, 0.1101],
+        end_offset: [0.0015, -0.2024, -0.0413],
+        radius: 0.025,
+      }
+    - {
+        name: link3,
+        start_frame: link3,
+        end_frame: link3,
+        start_offset: [0.1167, 0.0923, 0.0309],
+        end_offset: [-0.0549, -0.0402, -0.0994],
+        radius: 0.025,
+      }
+    - {
+        name: link4,
+        start_frame: link4,
+        end_frame: link4,
+        start_offset: [0.0345, -0.0304, 0.0932],
+        end_offset: [-0.1367, 0.1036, -0.0406],
+        radius: 0.025,
+      }
+    - {
+        name: link5,
+        start_frame: link5,
+        end_frame: link5,
+        start_offset: [0.0050, -0.0043, -0.2769],
+        end_offset: [0.0031, 0.1165, 0.0423],
+        radius: 0.025,
+      }
+    - {
+        name: link6,
+        start_frame: link6,
+        end_frame: link6,
+        start_offset: [-0.0444, -0.0152, 0.0313],
+        end_offset: [0.1291, 0.0458, -0.0076],
+        radius: 0.025,
+      }
+    - {
+        name: link7,
+        start_frame: link7,
+        end_frame: link7,
+        start_offset: [-0.0363, -0.0395, 0.0796],
+        end_offset: [0.0613, 0.0633, 0.0858],
+        radius: 0.02,
+      }
+    - {
+        name: hand,
+        start_frame: hand,
+        end_frame: hand,
+        start_offset: [-0.0003, -0.1044, 0.0204],
+        end_offset: [0.0009, 0.1011, 0.0250],
+        radius: 0.02,
+      }
+    - {
+        name: gripper,
+        start_frame: hand,
+        end_frame: gripper_tip,
+        start_offset: [0.0, 0.0, 0.04],
+        end_offset: [0.0, 0.0, 0.0],
+        radius: 0.02,
+      }
+
+obstacles:
+  - {
+      name: obstacle1,
+      position: [0.25, 0.0, 0.55],
+      radius: 0.10,
+      enabled: true,
+    }
+  - {
+      name: obstacle2,
+      position: [0.25, -0.35, 0.45],
+      radius: 0.12,
+      enabled: true,
+    }
+
+trajectory:
+  duration: 60.0
+  integration_period: 0.05
+  # sequential: link endpoint position stages, then final EE pose.
+  # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
+  mode: sequential
+  stage_frames: [link2, link3, link4, link5, link6, link7, hand]
+  stage_position_tolerance: 0.05
+  orientation_weight: 1.0
+  stop_window: 0.5 # stop_window동안 계속 stop_velocity_tolerance를 넘지 못하면 정지로 판별한다.
+  stop_velocity_tolerance: 0.001
+  clf_rate: 10.0
+  clf_slack_weight: 1000.0
+  # One third of Panda's configured nominal limits.
+  velocity_limits: [0.0725, 0.0725, 0.0725, 0.0725, 0.087, 0.087, 0.087]
+  acceleration_limits:
+    [5.0, 2.5, 3.33333333, 4.16666667, 5.0, 6.66666667, 6.66666667]
+
+qp:
+  joint_velocity_weight: 1.0
+  # OSQP stops at this iteration limit. A larger value avoids treating a
+  # slow-to-converge, slack-feasible first step as an infeasible QP.
+  max_iterations: 20000
+  absolute_tolerance: 0.001
+  relative_tolerance: 0.001

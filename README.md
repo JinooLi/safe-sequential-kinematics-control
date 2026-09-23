@@ -1,5 +1,11 @@
 # Safe inverse-kinematics CLF robot arm
 
+[아키텍처·파일 구조 개선 설명과 마이그레이션 가이드](docs/architecture.md) · [전체 Make 명령 안내](docs/make_commands.md)
+
+```bash
+uv sync --locked  # 패키지와 개발 도구 설치
+```
+
 ## Panda branch: safe pose IK and trajectory control
 
 The default entry point now controls a fixed-gripper, 7-DoF Franka Emika
@@ -22,14 +28,20 @@ nearest the initial joint configuration is selected afterward. The first seed
 starts at that initial configuration and the remaining seeds are uniform random
 joint-limit samples.
 
+IK 초기값 탐색은 `safe_ik.workers`로 병렬화합니다. 현재 기본 설정은 **4개 프로세스**이며,
+`1`이면 직렬 실행합니다. 전체 seed 수는 `max_restarts: 10`으로 유지됩니다.
+각 프로세스는 독립적인 기구학·안전 모델을 사용하며, 모든 탐색이 끝난 후 기존과 같은
+기준으로 후보를 선택합니다. `trajectory.mode: direct`에서는 IK 프로세스를 만들지 않습니다.
+자세한 동작은 [병렬 IK 설명](docs/panda_safe_pose_ik.md#parallel-seed-search)에 있습니다.
+
 ```bash
-make run        # headless
+make panda-run  # 설정된 모드로 headless
 make panda-view # MuJoCo viewer
 ```
 
-Panda settings live in `settings/panda_controller.yaml`. Defaults use
+Panda settings live in `configs/panda.yaml`. Defaults use
 `0.01 s` integration and `10 s` per random IK seed, followed by a `30 s`,
-`20 Hz` trajectory budget. The fixed-gripper model at `settings/panda.xml` is
+`20 Hz` trajectory budget. The fixed-gripper model at `assets/robots/panda.xml` is
 derived from MuJoCo Menagerie's Apache-2.0 `franka_emika_panda`; unchanged
 source assets, license, and provenance are retained under
 `vendor/franka_emika_panda/`.
@@ -37,10 +49,11 @@ source assets, license, and provenance are retained under
 The MuJoCo viewer shows a world-frame triad at the robot base: **red = +x**,
 **green = +y**, and **blue = +z**.
 
-Every Panda run records the CLF value, CLF slack, and all CBF values. It saves
-`outputs/panda_run_summary_control.png` and the corresponding compressed
-`outputs/panda_run_summary_control_trace.npz` by default. `make panda-view`
-opens the PNG in a Matplotlib window after its MuJoCo viewer is closed.
+Every Panda run saves its applied configuration, environment/code/model metadata,
+summary, joint/control/CLF/CBF trace, and plot in a new
+`outputs/panda/<run-id>/` directory. Existing run names are never overwritten.
+`make panda-view` opens `plots/control.png` after its MuJoCo viewer is closed.
+Use `make panda-run ARGS="--mode direct --duration 0.1"` for a short pipeline smoke test.
 
 The Panda `qp` section exposes OSQP's `max_iterations`, `absolute_tolerance`,
 and `relative_tolerance`. The run summary distinguishes actual infeasibility
@@ -55,11 +68,11 @@ regression and reference, but are no longer the default `main.py` path.
 
 ### 모델 일관성 검사
 
-모델 정보는 Pinocchio용 `settings/urdf.xml`, 시뮬레이션용
-`settings/mujoco.xml`, 안전 제약용 `settings/controller.yaml`에 각각 필요하다.
+모델 정보는 Pinocchio용 `assets/robots/planar.urdf`, 시뮬레이션용
+`assets/robots/planar.xml`, 안전 제약용 `configs/planar.yaml`에 각각 필요하다.
 중복을 숨기지 않고, legacy planar 실행을 조립할 때 세 파일의 링크 길이·반지름과 원형
 장애물 위치·반지름이 일치하는지 검사한다. 하나라도 다르면 제어를 시작하지
-않고 오류를 낸다. 검사는 `src/application/configuration.py`의
+않고 오류를 낸다. 검사는 `src/safe_ik/application/planar_configuration.py`의
 `validate_geometry_consistency()`이 담당한다.
 
 ### 구성과 의존성 경계
@@ -70,12 +83,17 @@ kinematics, recorder를 조립한다. simulation loop는 이 구현체들을 직
 테스트나 실제 로봇 연결에서 MuJoCo·Pinocchio 구현체를 교체할 수 있다.
 
 ```text
-src/
-  domain/        SDF/RDF, CBF 기하, typed state·diagnostics·interfaces
-  control/       CLF-CBF QP 구성과 solver interface
-  adapters/      OSQP, Pinocchio 등 외부 라이브러리 구현체
-  application/   설정 검증, RDF 학습, MuJoCo simulation orchestration
-  logging/       SimulationStep 저장·CSV·plot·GUI
+src/safe_ik/
+  domain/        수학·기하·IK·설정 값·공통 계약
+  control/       planar/Panda CLF-CBF QP와 solver 계약
+  adapters/      OSQP·Pinocchio·MuJoCo 구현
+  application/   설정 파싱·조립·실행·CLI·재현 정보
+  experiments/   비교 시나리오·병렬 실행·분석·저장
+  logging/       SimulationStep 기록·NPZ·CSV
+  visualization/ 그래프·거리장·GUI
+configs/         실험 YAML
+assets/robots/   프로젝트 로봇 XML/URDF
+tests/fixtures/ 고정 회귀 시나리오
 ```
 
 ### 생성 파일 정책
@@ -84,19 +102,22 @@ src/
 제외한다. 반대로 `models/planar_bernstein_rdf.npz`는 현재 controller 설정이
 직접 참조하는 재현 가능한 RDF artifact이므로 버전 관리 대상이다. 루트의
 이전 중복 MuJoCo 모델 `mjmodel.xml`은 사용 경로가 없고
-`settings/mujoco.xml`과 중복되어 제거했다.
+`assets/robots/planar.xml`과 중복되어 제거했다.
 
 ### 명령 별칭
 
 반복해서 입력할 필요 없이 아래 Makefile 별칭을 사용할 수 있다.
 
 ```bash
-make help            # 가능한 별칭 확인
-make run             # Panda headless safe-IK + trajectory
-make panda-view      # Panda MuJoCo viewer
-make test            # 전체 테스트
-make train-rdf       # RDF 학습
-make visualize-rdf   # 거리장 PNG
+make help                    # Panda / Planar별 전체 목록
+make panda-sequential-view   # Panda safe IK + 순차 제어 + viewer
+make panda-direct            # Panda direct headless
+make planar-run              # Planar 단일 실행
+make planar-view             # Planar 단일 실행 + viewer
+make planar-compare          # Planar direct/sequential 무작위 비교
+make planar-train-rdf        # Planar RDF 학습
+make planar-rdf-view         # Planar 거리장 표시
+make check                   # 포맷 검사 + 전체 테스트
 ```
 
 ### Sequential end-effector randomized comparison
@@ -111,18 +132,23 @@ The following command samples one shared target and two shared circular
 obstacles per case, then runs direct and sequential control. The runs are
 headless; no MuJoCo viewer opens.
 
-Configure every batch constant in `settings/controller.yaml` under
+Configure every batch constant in `configs/planar.yaml` under
 `sequential_experiment`, then run:
 
 ```bash
-make compare-sequential-run
+make planar-compare
 ```
+
+현재 작업 설정의 `joint5`는 기본 planar 모델에 없는 프레임입니다. 사용자 변경값은
+보존했으며, 모델에 맞는 프레임을 선택하거나 아래 smoke test의 고정 fixture를 사용하세요.
 
 `sequential_experiment.workers` controls process-level case parallelism. Each
 worker runs both methods for one shared case serially; use a value no larger
 than the available CPU cores.
 
 Results are saved under `outputs/sequential_comparison/<run-name>/`:
+
+- `config.yaml`, `resolved_config.json`, `metadata.json`: 전체 적용 설정, Git 상태, 환경·소스·모델 해시.
 
 - `summary.csv` / `summary.json`: direct와 sequential의 case별 진단 및
   aggregate analysis.
@@ -140,32 +166,32 @@ exclusion margins, controller-mode override, and output path. Target position
 and target yaw are sampled independently. Success also
 requires the configured yaw tolerance and barrier tolerance.
 
-The checked-in experiment is the selected 72-case kinematic comparison:
+The configured batch compares:
 `Direct EE CLF + CBF` versus `Sequential CLF + CBF`. Both use the same
 configured yaw weight. To smoke-test the output pipeline without changing YAML,
 temporarily override the batch size and run duration:
 
 ```bash
-make compare-sequential-run ARGS="--run-name smoke --cases 1 --workers 1 --duration 0.1"
+make planar-compare ARGS="--config tests/fixtures/planar.yaml --cases 1 --workers 1 --duration 0.1"
 ```
 
 Render a saved case without a GUI to compare both final end-effector paths,
 the obstacles, target, and final arm poses:
 
 ```bash
-make compare-sequential-visualize ARGS="visualize \
+make planar-compare-plot ARGS="\
   --results-dir outputs/sequential_comparison/run_YYYYMMDD_HHMMSS \
   --case-id 17"
 ```
 
 ## 거리장 기반 CBF 안전 제약
 
-`src/domain/safety.py`는 각 링크를 capsule로 외접하는 2D signed distance
+`src/safe_ik/domain/safety.py`는 각 링크를 capsule로 외접하는 2D signed distance
 field(SDF)를 제공한다. 현재 URDF/MuJoCo 링크는 원통이므로 평면 투영의 끝은
 평평하지만, capsule은 그 형상을 포함한다. 즉, 실제 기하보다 보수적인 안전
 모델이다.
 
-제어기는 `settings/controller.yaml`의 `safety`와 `obstacle`을 읽어 각
+제어기는 `configs/planar.yaml`의 `safety`와 `obstacle`을 읽어 각
 링크--원형 장애물 쌍에 대해 다음 CBF 제약을 QP에 추가한다.
 
 $$
@@ -217,7 +243,7 @@ uv run python -m unittest discover -s tests -v
 `models/planar_bernstein_rdf.npz`에 저장한다.
 
 ```bash
-uv run python -m src.application.train_rdf \
+uv run python -m safe_ik.application.train_rdf \
   --degree 12 --samples 12000 --seed 0
 ```
 
@@ -238,7 +264,7 @@ uv run python -m src.application.train_rdf \
 (`f=safe_distance` 점선), 장애물을 하나의 PNG로 렌더링한다.
 
 ```bash
-uv run python -m src.application.visualize_rdf \
+uv run python -m safe_ik.application.visualize_rdf \
   --q 0.2 -0.4 0.1 --output outputs/distance_field.png
 ```
 
@@ -249,13 +275,13 @@ uv run python -m src.application.visualize_rdf \
 ### 시뮬레이션 목표 표시
 
 MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구체 `goal_marker`가
-표시된다. 위치는 별도 XML 값이 아니라 `settings/controller.yaml`의
+표시된다. 위치는 별도 XML 값이 아니라 `configs/planar.yaml`의
 `ee_obj: [x, y]`를 실행 시 직접 사용하므로, 목표를 바꾸려면 이 설정만 수정하면
 된다.
 
 ### 장애물 비활성화 비교
 
-`settings/controller.yaml`의 각 `obstacle` 항목에 있는 `enabled`를 `false`로
+`configs/planar.yaml`의 각 `obstacle` 항목에 있는 `enabled`를 `false`로
 바꾸면 해당 장애물은 CBF 제약, MuJoCo 장면, 거리장 PNG에서 모두 제외된다.
 초기 자세와 목표를 유지한 채 장애물이 있을 때와 없을 때를 비교할 수 있다.
 

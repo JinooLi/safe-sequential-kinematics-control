@@ -1284,10 +1284,8 @@ wheels = [
 [[package]]
 name = "safe-inv-clf-robot-arm"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
-    { name = "black" },
-    { name = "isort" },
     { name = "matplotlib" },
     { name = "mujoco" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -1299,10 +1297,14 @@ dependencies = [
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "black" },
+    { name = "isort" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "black", specifier = ">=26.5.1" },
-    { name = "isort", specifier = ">=8.0.1" },
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "mujoco", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=2.4.6" },
@@ -1310,6 +1312,12 @@ requires-dist = [
     { name = "pin", specifier = ">=4.1.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "scipy", specifier = ">=1.17.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "black", specifier = ">=26.5.1" },
+    { name = "isort", specifier = ">=8.0.1" },
 ]
 
 [[package]]

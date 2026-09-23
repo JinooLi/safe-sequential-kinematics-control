@@ -4,14 +4,17 @@ from pathlib import Path
 
 import numpy as np
 
-from src.domain.rdf import PlanarBernsteinRobot, capsule_sdf_local
+from safe_ik.domain.rdf import PlanarBernsteinRobot, capsule_sdf_local
 
 
 class BernsteinRDFTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.robot = PlanarBernsteinRobot.train_from_capsules(
-            [1.0, 1.0, 1.0], 0.05, degree=10, sample_count=5000,
+            [1.0, 1.0, 1.0],
+            0.05,
+            degree=10,
+            sample_count=5000,
             rng=np.random.default_rng(7),
         )
 

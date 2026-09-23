@@ -2,7 +2,10 @@ import unittest
 
 import numpy as np
 
-from src.domain.goal_configuration import link1_link3_crosses, solve_goal_configurations
+from safe_ik.domain.goal_configuration import (
+    link1_link3_crosses,
+    solve_goal_configurations,
+)
 
 
 class GoalConfigurationTest(unittest.TestCase):
@@ -21,7 +24,9 @@ class GoalConfigurationTest(unittest.TestCase):
             joint_limits=(None, None, None),
         )
 
-        elbow_down = next(candidate for candidate in candidates if candidate.name == "elbow_down")
+        elbow_down = next(
+            candidate for candidate in candidates if candidate.name == "elbow_down"
+        )
         self.assertTrue(link1_link3_crosses(elbow_down.joint_positions))
         self.assertTrue(elbow_down.colliding)
 

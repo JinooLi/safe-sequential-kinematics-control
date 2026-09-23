@@ -1,12 +1,10 @@
 [project]
 name = "safe-inv-clf-robot-arm"
 version = "0.1.0"
-description = "Add your description here"
+description = "Safe inverse kinematics and CLF-CBF robot-arm experiments"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "black>=26.5.1",
-    "isort>=8.0.1",
     "matplotlib>=3.10.8",
     "mujoco>=3.10.0",
     "numpy>=2.4.6",
@@ -15,3 +13,27 @@ dependencies = [
     "pyyaml>=6.0.3",
     "scipy>=1.17.1",
 ]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["safe_ik*"]
+namespaces = false
+
+[dependency-groups]
+dev = ["black>=26.5.1", "isort>=8.0.1"]
+
+[project.scripts]
+safe-ik = "safe_ik.application.panda_run:main"
+safe-ik-compare = "safe_ik.application.compare_sequential:main"
+safe-ik-train-rdf = "safe_ik.application.train_rdf:main"
+safe-ik-visualize-rdf = "safe_ik.application.visualize_rdf:main"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+target-version = ["py311"]

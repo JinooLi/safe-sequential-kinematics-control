@@ -6,17 +6,27 @@ from unittest.mock import patch
 
 import numpy as np
 
-from src.adapters.osqp_solver import OSQPSolver
-from src.adapters.panda_kinematics import (PandaKinematics,
-                                           quaternion_orientation_error)
-from src.application.panda_configuration import (load_panda_config,
-                                                  orientation_vectors_to_wxyz)
-from src.application.panda_run import (PandaControlTrace, build_panda_components,
-                                       run_panda, save_panda_control_plot,
-                                       save_panda_control_trace)
-from src.control.panda_controller import PandaTrajectoryController
-from src.domain.safe_pose_ik import (SafeIKCandidate, SafePoseIKSolver,
-                                     damped_pseudoinverse)
+from safe_ik.adapters.osqp_solver import OSQPSolver
+from safe_ik.adapters.panda_kinematics import PandaKinematics
+from safe_ik.application.panda_configuration import (
+    load_panda_config,
+    orientation_vectors_to_wxyz,
+)
+from safe_ik.application.panda_results import (
+    PandaControlTrace,
+    save_panda_control_trace,
+)
+from safe_ik.application.panda_rollout import run_panda
+from safe_ik.application.panda_setup import build_panda_components, build_panda_runtime
+from safe_ik.control.panda_controller import PandaTrajectoryController
+from safe_ik.domain.rotations import quaternion_orientation_error
+from safe_ik.domain.safe_pose_ik import (
+    SafeIKCandidate,
+    SafePoseIKSolver,
+    damped_pseudoinverse,
+)
+from safe_ik.domain.types import QPSolution, QPStatus
+from safe_ik.visualization.panda import save_panda_control_plot
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,7 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class PandaPipelineTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.config = load_panda_config(ROOT / "settings/panda_controller.yaml")
+        cls.config = load_panda_config(ROOT / "tests/fixtures/panda.yaml")
         cls.kinematics, cls.safety = build_panda_components(cls.config)
 
     def test_fixed_gripper_model_has_seven_arm_dofs_and_tip_frame(self):
@@ -63,9 +73,7 @@ class PandaPipelineTest(unittest.TestCase):
         np.testing.assert_allclose(
             self.config.target.approach, [0.0, 1.0, 0.0], atol=1e-12
         )
-        np.testing.assert_allclose(
-            self.config.target.up, [1.0, 0.0, 0.0], atol=1e-12
-        )
+        np.testing.assert_allclose(self.config.target.up, [1.0, 0.0, 0.0], atol=1e-12)
 
     def test_control_trace_exports_plot_and_named_data(self):
         trace = PandaControlTrace(
@@ -103,9 +111,7 @@ class PandaPipelineTest(unittest.TestCase):
                 max_restarts=2,
             ),
         )
-        candidate = SafeIKCandidate(
-            config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1
-        )
+        candidate = SafeIKCandidate(config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1)
         solver = SafePoseIKSolver(config, self.kinematics, self.safety)
         with patch.object(solver, "_candidate", return_value=candidate) as check:
             result = solver.solve(config.initial_q, require_safe=True)
@@ -122,9 +128,7 @@ class PandaPipelineTest(unittest.TestCase):
                 max_restarts=1,
             ),
         )
-        candidate = SafeIKCandidate(
-            config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1
-        )
+        candidate = SafeIKCandidate(config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1)
         solver = SafePoseIKSolver(config, self.kinematics, self.safety)
         sequence = [candidate, None, candidate, candidate, candidate]
         with patch.object(solver, "_candidate", side_effect=sequence) as check:
@@ -141,12 +145,8 @@ class PandaPipelineTest(unittest.TestCase):
                 max_restarts=2,
             ),
         )
-        far = SafeIKCandidate(
-            config.initial_q + 0.5, 0, 1, 0.0, 0.0, 0.1
-        )
-        near = SafeIKCandidate(
-            config.initial_q + 0.1, 1, 1, 0.0, 0.0, 0.1
-        )
+        far = SafeIKCandidate(config.initial_q + 0.5, 0, 1, 0.0, 0.0, 0.1)
+        near = SafeIKCandidate(config.initial_q + 0.1, 1, 1, 0.0, 0.0, 0.1)
         solver = SafePoseIKSolver(config, self.kinematics, self.safety)
 
         def candidate_for_seed(_q, seed_index, _iteration, _require_safe):
@@ -166,9 +166,7 @@ class PandaPipelineTest(unittest.TestCase):
                 max_restarts=1,
             ),
         )
-        candidate = SafeIKCandidate(
-            config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1
-        )
+        candidate = SafeIKCandidate(config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1)
         first_checked_q = []
 
         def capture_first_q(q, _seed_index, _iteration, _require_safe):
@@ -258,8 +256,8 @@ class PandaPipelineTest(unittest.TestCase):
             ),
             trajectory=replace(self.config.trajectory, mode="direct"),
         )
-        with patch("src.application.panda_run.SafePoseIKSolver") as ik_solver:
-            result = run_panda(config, visualize=False)
+        with patch("safe_ik.application.panda_rollout.SafePoseIKSolver") as ik_solver:
+            result = run_panda(config, build_panda_runtime(config))
         ik_solver.assert_not_called()
         self.assertTrue(result.ik_skipped)
         self.assertEqual(result.safe_ik_wall_time, 0.0)
@@ -267,7 +265,9 @@ class PandaPipelineTest(unittest.TestCase):
         self.assertTrue(result.status.success)
 
     def test_sequential_clf_uses_link_endpoint_target_from_candidate(self):
-        config = replace(self.config, trajectory=replace(self.config.trajectory, mode="sequential"))
+        config = replace(
+            self.config, trajectory=replace(self.config.trajectory, mode="sequential")
+        )
         target_q = self.config.initial_q + np.array(
             [0.2, -0.1, 0.1, 0.0, 0.0, 0.0, 0.0]
         )
@@ -281,26 +281,27 @@ class PandaPipelineTest(unittest.TestCase):
         self.assertAlmostEqual(error_at_target, 0.0, places=12)
 
     def test_reached_stage_emits_named_transition_event(self):
-        config = replace(self.config, trajectory=replace(self.config.trajectory, mode="sequential"))
-        candidate = SafeIKCandidate(
-            self.config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1
+        config = replace(
+            self.config, trajectory=replace(self.config.trajectory, mode="sequential")
         )
+        candidate = SafeIKCandidate(self.config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1)
         controller = PandaTrajectoryController(
             config, self.kinematics, self.safety, (candidate,), OSQPSolver()
         )
         controller._advance_reached_stages(self.config.initial_q)
         events = controller.consume_stage_transition_events()
         self.assertGreaterEqual(len(events), 1)
-        self.assertEqual(events[0], ("link2_position", "link3_position", "target_reached"))
+        self.assertEqual(
+            events[0], ("link2_position", "link3_position", "target_reached")
+        )
         self.assertEqual(controller.consume_stage_transition_events(), ())
 
     def test_maximum_iteration_failure_is_not_reported_as_infeasible(self):
         class MaximumIterationSolver:
-            last_status = "maximum iterations reached"
 
             @staticmethod
             def solve(_problem):
-                return None
+                return QPSolution(QPStatus.ITERATION_LIMIT, None, 0.0)
 
         barrier = self.safety.evaluate(self.config.initial_q)
         target = self.config.initial_q + 0.1

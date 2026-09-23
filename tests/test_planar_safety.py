@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.domain.safety import CircleObstacle, PlanarCapsuleRobot
+from safe_ik.domain.safety import CircleObstacle, PlanarCapsuleRobot
 
 
 class PlanarSafetyTest(unittest.TestCase):

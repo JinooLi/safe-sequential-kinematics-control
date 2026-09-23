@@ -171,6 +171,6 @@ safety:
   velocity_limit: 4.0
 ```
 
-`settings/controller.yaml`이 실제 실행 설정의 기준이다. 값 변경 후에는 sequential
+`configs/planar.yaml`이 실제 실행 설정의 기준이다. 값 변경 후에는 sequential
 on/off 비교 실험으로 수렴 시간, 최종 position/yaw 오차, 최소 barrier를 함께
 확인한다.

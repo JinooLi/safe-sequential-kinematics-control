@@ -54,6 +54,54 @@ angle distance from the initial configuration is selected. Seed 0 starts at
 the initial configuration itself; the remaining seeds are sampled uniformly
 inside the Panda joint limits.
 
+## Parallel seed search
+
+```yaml
+safe_ik:
+  max_restarts: 10
+  workers: 4  # 1: serial; >1: independent spawned processes
+```
+
+`application/parallel_ik.py` owns the process pool. Each worker constructs its own
+Pinocchio model/Data/cache and capsule safety evaluator once and reuses them for
+assigned seeds. Live kinematics, MuJoCo state and the viewer are never serialized.
+The `spawn` start method avoids inheriting the main process's native/viewer threads.
+The pool uses at most `min(workers, max_restarts)` processes and closes before
+trajectory control. If safe IK finds no candidate, the same pool evaluates the
+pose-only diagnostic search. Worker errors propagate rather than being classified
+as an unreachable pose. Direct mode skips both IK and pool creation.
+
+`domain/safe_pose_ik.py` keeps the numerical iteration in `solve_seed()`. The parent
+generates every starting configuration in the original RNG order: seed 0 is the
+requested initial configuration, followed by uniform joint-limit samples. Results
+are sorted by seed index before nearest-candidate selection, preserving the serial
+tie rule regardless of scheduling. Hold duration and per-seed iteration budget are
+unchanged. A seed's internal iterations remain sequential.
+
+Missing `workers` defaults to 1 for existing YAML files; the editable default config
+explicitly selects 4. `workers` must be a positive integer. Applied worker settings
+are included in archived YAML and resolved configuration. `safe_ik.wall_time`
+includes worker startup during the safe search but, as before, excludes the optional
+pose-only diagnostic pass; pool shutdown is also outside that metric.
+
+Use a worker count appropriate to the available CPU cores. Short searches may be
+slower because of process startup. If a BLAS runtime starts many native threads per
+worker, limiting `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, and `OMP_NUM_THREADS` to 1
+before starting the command can avoid oversubscription. Exact speedup is machine-
+and workload-dependent; mathematical equivalence is checked with numerical tolerance,
+not promised as bitwise identity across different machines or BLAS implementations.
+
+Python scripts that start parallel search must call it under
+`if __name__ == "__main__":`. The provided CLI already has this guard.
+Custom injected runtimes can supply `ik_search_factory`; without it the domain solver
+runs locally, preserving support for in-memory test backends.
+
+On the development machine (2026-09-23), the current 10-seed configuration took
+34.38 s serially and 12.97 s with 4 workers (about 2.65x faster), including pool
+startup/shutdown in this benchmark. Both runs found and selected seed 4; candidate
+iterations matched and joint values agreed within 1e-11 absolute tolerance. This
+is one workload measurement, not a guaranteed speedup.
+
 ## Collision model
 
 `PandaCapsuleSafety` evaluates sphere--capsule obstacle barriers and all

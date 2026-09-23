@@ -1,26 +1,26 @@
-from dataclasses import replace
-from pathlib import Path
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
+import yaml
 
-from src.application.configuration import (
+from safe_ik.application.planar_configuration import (
     load_controller_config,
     validate_geometry_consistency,
 )
-from src.control.qp_controller import QPController
-
+from safe_ik.control.planar_controller import QPController
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ConfigurationTest(unittest.TestCase):
     def setUp(self):
-        self.config = load_controller_config(ROOT / "settings/controller.yaml")
-        self.urdf = ROOT / "settings/urdf.xml"
-        self.mujoco = ROOT / "settings/mujoco.xml"
+        self.config = load_controller_config(ROOT / "tests/fixtures/planar.yaml")
+        self.urdf = ROOT / "assets/robots/planar.urdf"
+        self.mujoco = ROOT / "assets/robots/planar.xml"
 
     def test_current_robot_descriptions_are_consistent(self):
         validate_geometry_consistency(self.config, self.urdf, self.mujoco)
@@ -35,7 +35,9 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(mujoco_joint.get("limited"), "false")
         self.assertIsNone(mujoco_joint.get("range"))
         self.assertIsNone(self.config.safety.joint_limits[0])
-        self.assertEqual(self.config.safety.joint_limits[1:], ((-3.14, 3.14), (-3.14, 3.14)))
+        self.assertEqual(
+            self.config.safety.joint_limits[1:], ((-3.14, 3.14), (-3.14, 3.14))
+        )
 
     def test_joint_limit_cbfs_exclude_joint1_and_push_inward_at_each_bound(self):
         controller = QPController(self.config, solver=None)
@@ -51,12 +53,11 @@ class ConfigurationTest(unittest.TestCase):
 
     def test_simulation_kinematic_mode_is_loaded_from_yaml(self):
         self.assertTrue(self.config.simulation.kinematic)
-        text = (ROOT / "settings/controller.yaml").read_text().replace(
-            "kinematic: true", "kinematic: false"
-        )
+        data = yaml.safe_load((ROOT / "tests/fixtures/planar.yaml").read_text())
+        data["simulation"]["kinematic"] = False
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "controller.yaml"
-            path.write_text(text)
+            path.write_text(yaml.safe_dump(data))
             config = load_controller_config(path)
         self.assertFalse(config.simulation.kinematic)
 
@@ -81,23 +82,21 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(len(experiment.obstacle_radius_range), 2)
 
     def test_sequential_end_effector_requires_one_frame_per_link(self):
-        text = (ROOT / "settings/controller.yaml").read_text().replace(
-            "frame_names: [joint2, joint3, ee_joint]", "frame_names: [joint2, ee_joint]"
-        )
-        text = text.replace("enabled: false", "enabled: true", 1)
+        data = yaml.safe_load((ROOT / "tests/fixtures/planar.yaml").read_text())
+        data["sequential_end_effector"]["enabled"] = True
+        data["sequential_end_effector"]["frame_names"] = ["joint2", "ee_joint"]
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "controller.yaml"
-            path.write_text(text)
+            path.write_text(yaml.safe_dump(data))
             with self.assertRaisesRegex(ValueError, "one frame for each link"):
                 load_controller_config(path)
 
     def test_clf_mode_is_selectable_from_yaml(self):
-        text = (ROOT / "settings/controller.yaml").read_text().replace(
-            "control_mode: clf", "control_mode: invalid"
-        )
+        data = yaml.safe_load((ROOT / "tests/fixtures/planar.yaml").read_text())
+        data["control_mode"] = "invalid"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "controller.yaml"
-            path.write_text(text)
+            path.write_text(yaml.safe_dump(data))
             with self.assertRaisesRegex(ValueError, "control_mode"):
                 load_controller_config(path)
 
@@ -129,11 +128,15 @@ class ConfigurationTest(unittest.TestCase):
 
     def test_multiple_obstacles_create_a_barrier_for_each_link(self):
         controller = QPController(self.config, solver=None)
-        active_obstacle_count = sum(obstacle.enabled for obstacle in self.config.obstacles)
+        active_obstacle_count = sum(
+            obstacle.enabled for obstacle in self.config.obstacles
+        )
 
         _, _, barrier_values = controller._cbf_constraints(np.zeros(self.config.dof))
 
-        self.assertEqual(len(barrier_values), active_obstacle_count * self.config.dof + 2)
+        self.assertEqual(
+            len(barrier_values), active_obstacle_count * self.config.dof + 2
+        )
         self.assertEqual(
             len(controller.barrier_labels), active_obstacle_count * self.config.dof + 2
         )

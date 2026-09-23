@@ -1,12 +1,12 @@
+import unittest
 from dataclasses import replace
 from pathlib import Path
-import unittest
 
 import numpy as np
 
-from src.application.configuration import load_controller_config
-from src.control.qp_controller import QPController
-
+from safe_ik.application.planar_configuration import load_controller_config
+from safe_ik.control.planar_controller import QPController
+from safe_ik.domain.types import QPSolution, QPStatus
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -14,12 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 class CaptureSolver:
     def solve(self, problem):
         self.problem = problem
-        return np.zeros(len(problem.q))
+        return QPSolution(QPStatus.SOLVED, np.zeros(len(problem.q)), 0.0)
 
 
 class SequentialControlTest(unittest.TestCase):
     def setUp(self):
-        self.config = load_controller_config(ROOT / "settings/controller.yaml")
+        self.config = load_controller_config(ROOT / "tests/fixtures/planar.yaml")
         self.q = np.zeros(self.config.dof)
 
     def test_targets_are_link_endpoints_of_selected_goal_configuration(self):
@@ -36,7 +36,9 @@ class SequentialControlTest(unittest.TestCase):
         controller.end_effector_index = self.config.dof
         controller._select_goal_configuration(self.q)
         target = controller.active_target_position()
-        task_state = np.array([target[0] + 0.2, target[1], self.config.ee_orientation + 1.0])
+        task_state = np.array(
+            [target[0] + 0.2, target[1], self.config.ee_orientation + 1.0]
+        )
         task_jacobian = np.zeros((3, self.config.dof))
         task_jacobian[2] = 1.0
 
@@ -49,7 +51,9 @@ class SequentialControlTest(unittest.TestCase):
         )
         np.testing.assert_allclose(gradient, 2.0 * yaw_weight * np.sin(1.0) * weight)
 
-        task_state = np.array([target[0], target[1], self.config.ee_orientation + np.pi])
+        task_state = np.array(
+            [target[0], target[1], self.config.ee_orientation + np.pi]
+        )
         value, gradient = controller._task_clf_terms(task_state, task_jacobian)
         self.assertAlmostEqual(value, 4.0 * yaw_weight * weight)
         np.testing.assert_allclose(gradient, 0.0, atol=1e-12)
@@ -75,6 +79,7 @@ class SequentialControlTest(unittest.TestCase):
 
         self.assertEqual(solver.problem.lower[-1], 0.0)
         self.assertTrue(np.isposinf(solver.problem.upper[-1]))
+
 
 if __name__ == "__main__":
     unittest.main()

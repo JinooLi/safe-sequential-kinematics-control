@@ -4,3 +4,7 @@ __pycache__/
 MJDATA.TXT
 .matplotlib/
 outputs/
+.venv/
+*.egg-info/
+build/
+dist/

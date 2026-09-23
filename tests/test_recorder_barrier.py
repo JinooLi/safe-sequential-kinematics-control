@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 
-from src.domain.types import SafetyDiagnostics, SimulationStep
-from src.logging.recorder import Recorder
+from safe_ik.domain.types import SafetyDiagnostics, SimulationStep
+from safe_ik.logging.recorder import Recorder
 
 
 class RecorderBarrierTest(unittest.TestCase):
