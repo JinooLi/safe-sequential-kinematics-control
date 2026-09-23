@@ -12,6 +12,7 @@ from ..domain.panda_config import (
     CapsuleConfig,
     PandaControllerConfig,
     PandaQPConfig,
+    PandaRDFConfig,
     PandaSafetyConfig,
     PandaTargetConfig,
     PandaTrajectoryConfig,
@@ -80,6 +81,14 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
     target = data["target"]
     ik = data["safe_ik"]
     safety = data["safety"]
+    self_model = str(safety.get("self_collision_model", "rdf"))
+    if self_model not in {"rdf", "capsule"}:
+        raise ValueError("safety.self_collision_model must be rdf or capsule")
+    rdf_options = dict(safety.get("rdf", {}))
+    rdf_options["artifact"] = (
+        path.parent / rdf_options.get("artifact", "../models/panda_rdf.npz")
+    ).resolve()
+    rdf_config = PandaRDFConfig(**rdf_options)
     trajectory = data["trajectory"]
     trajectory_mode = str(trajectory.get("mode", "sequential")).lower()
     if trajectory_mode not in {"sequential", "direct"}:
@@ -203,6 +212,8 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
             alpha=_positive("safety.alpha", safety["alpha"]),
             capsules=capsules,
             self_collision_exclusions=exclusions,
+            self_collision_model=self_model,
+            rdf=rdf_config,
         ),
         obstacles=obstacles,
         trajectory=PandaTrajectoryConfig(

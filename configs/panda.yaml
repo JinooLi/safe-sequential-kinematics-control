@@ -29,6 +29,17 @@ safe_ik:
   safety_gradient_gain: 10.0 # null space control부의 gain. 이걸로 safety 제어함.
 
 safety:
+  self_collision_model: rdf
+  rdf:
+    artifact: ../models/panda_rdf.npz
+    query_density: 500.0 # m^-2; changing this regenerates query points offline
+    top_k: 10 # null uses all query points
+    softmin_error: 0.005 # m; not subtracted from barrier again
+    physical_margin: 0.030
+    error_margin: 0.005
+    transition_ratio: 0.5
+    cbf_gain: 1.0
+    seed: 0
   margin: 0.05
   alpha: 1.0
   # Fixed hand assembly members cannot collide with each other.

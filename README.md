@@ -1,4 +1,4 @@
-# Safe inverse-kinematics CLF robot arm
+# 안전 역기구학 기반 CLF 로봇 팔
 
 [아키텍처·파일 구조 개선 설명과 마이그레이션 가이드](docs/architecture.md) · [전체 Make 명령 안내](docs/make_commands.md)
 
@@ -6,65 +6,77 @@
 uv sync --locked  # 패키지와 개발 도구 설치
 ```
 
-## Panda branch: safe pose IK and trajectory control
+## Panda: 안전 자세 IK와 궤적 제어
 
-The default entry point now controls a fixed-gripper, 7-DoF Franka Emika
-Panda. It first searches the target 6D pose with damped resolved-rate IK while
-projecting a soft-min capsule-safety gradient into the Moore--Penrose null
-space. Pose-converged candidates are retained only when every obstacle and
-self-collision barrier is nonnegative. The nearest candidate supplies the
-link-endpoint targets for sequential task-space CLFs; the final stage uses an
-end-effector position-and-orientation CLF. Hard CBF constraints apply at every
-stage.
+기본 진입점은 그리퍼가 고정된 7자유도 Franka Emika Panda를 제어한다.
+먼저 감쇠된 속도 기반 IK로 목표 6차원 자세를 탐색하면서,
+soft-min 안전 기울기를 Moore–Penrose 영공간에 투영한다.
+자세가 수렴해도 모든 장애물·자기 충돌 장벽이 음수가 아니어야 후보로 유지한다.
+가장 가까운 후보에서 순차 작업 공간 CLF의 링크 끝점 목표를 만들고,
+마지막 단계에서는 말단 장치 위치·방향 CLF를 사용한다.
+모든 단계에 완화 불가능한 CBF 제약을 적용한다.
 
-`trajectory.mode: direct` bypasses safe pose-IK completely and starts the
-end-effector pose CLF immediately. This keeps the direct baseline independent
-of IK search cost for later comparisons.
-
-In sequential mode, each safe-IK seed ends after a candidate keeps both pose
-tolerances and all safety barriers satisfied for the configured hold duration
-(3 seconds by default). All configured seeds are evaluated, and the candidate
-nearest the initial joint configuration is selected afterward. The first seed
-starts at that initial configuration and the remaining seeds are uniform random
-joint-limit samples.
-
-IK 초기값 탐색은 `safe_ik.workers`로 병렬화합니다. 현재 기본 설정은 **4개 프로세스**이며,
-`1`이면 직렬 실행합니다. 전체 seed 수는 `max_restarts: 10`으로 유지됩니다.
-각 프로세스는 독립적인 기구학·안전 모델을 사용하며, 모든 탐색이 끝난 후 기존과 같은
-기준으로 후보를 선택합니다. `trajectory.mode: direct`에서는 IK 프로세스를 만들지 않습니다.
-자세한 동작은 [병렬 IK 설명](docs/panda_safe_pose_ik.md#parallel-seed-search)에 있습니다.
+자기 충돌 기본값은 시각화 메시 기반 RDF(`safety.self_collision_model: rdf`)이며,
+닫힌 손가락은 손 형상에 합친다. 외부 장애물은 기존 캡슐–구 모델을 유지한다.
+호환되는 학습 산출물이 독립적인 표면 근처 오차 5 mm 검증을 통과해야
+IK나 궤적 제어에 사용할 수 있다. 산출물이 없거나 검증에 실패했거나
+설정과 호환되지 않으면 실행을 중단한다. 캡슐 자기 충돌을 사용하려면
+`safety.self_collision_model: capsule`을 명시해야 한다.
+현재 학습 후보는 검증에 실패하여 **제어에 사용할 수 없다**.
+[구현 진행 상황](docs/panda_rdf_implementation_status.md)과
+[구현 상세](docs/panda_rdf_implementation.md)를 참조한다.
 
 ```bash
-make panda-run  # 설정된 모드로 headless
-make panda-view # MuJoCo viewer
+make panda-train-rdf                         # 오프라인 학습·보고서 생성; 실패 시 종료 코드 2
+make panda-validate-rdf                      # 계수 재사용, 오프라인 검증 재실행
+make panda-validate-rdf ARGS="--refresh-queries" # 재학습 없이 질의 밀도·시드 변경 반영
 ```
 
-Panda settings live in `configs/panda.yaml`. Defaults use
-`0.01 s` integration and `10 s` per random IK seed, followed by a `30 s`,
-`20 Hz` trajectory budget. The fixed-gripper model at `assets/robots/panda.xml` is
-derived from MuJoCo Menagerie's Apache-2.0 `franka_emika_panda`; unchanged
-source assets, license, and provenance are retained under
-`vendor/franka_emika_panda/`.
+`trajectory.mode: direct`는 안전 자세 IK를 생략하고 말단 장치 자세 CLF를
+바로 시작한다. 이후 비교에서 직접 제어 기준선에 IK 탐색 비용이 섞이지 않게 한다.
+RDF 산출물 검증과 궤적 초기 안전 검사는 직접 제어 모드에도 적용한다.
 
-The MuJoCo viewer shows a world-frame triad at the robot base: **red = +x**,
-**green = +y**, and **blue = +z**.
+순차 모드에서는 후보가 자세 허용오차와 모든 안전 장벽 조건을 설정된 유지
+시간(기본 3초) 동안 만족하면 해당 시드의 탐색을 끝낸다. 모든 설정 시드를
+평가한 뒤 초기 관절 자세와 가장 가까운 후보를 선택한다. 첫 시드는 초기
+자세 자체에서 시작하고 나머지는 관절 한계 안에서 균일하게 뽑는다.
 
-Every Panda run saves its applied configuration, environment/code/model metadata,
-summary, joint/control/CLF/CBF trace, and plot in a new
-`outputs/panda/<run-id>/` directory. Existing run names are never overwritten.
-`make panda-view` opens `plots/control.png` after its MuJoCo viewer is closed.
-Use `make panda-run ARGS="--mode direct --duration 0.1"` for a short pipeline smoke test.
+IK 초기값 탐색은 `safe_ik.workers`로 병렬화한다. 현재 기본 설정은
+**5개 프로세스**이며, 1이면 직렬 실행한다. 전체 시드 수는
+`max_restarts: 10`이다. 각 프로세스는 독립적인 기구학·안전 모델을 사용하며,
+탐색 완료 후 동일한 기준으로 후보를 선택한다. 직접 제어 모드에서는 IK
+프로세스를 만들지 않는다. [병렬 IK 설명](docs/panda_safe_pose_ik.md#parallel-seed-search)을 참조한다.
 
-The Panda `qp` section exposes OSQP's `max_iterations`, `absolute_tolerance`,
-and `relative_tolerance`. The run summary distinguishes actual infeasibility
-(`qp_infeasible_count`) from an unsolved numerical/iteration-limit termination
-(`qp_solver_failure_count`).
+```bash
+make panda-run  # 설정된 모드로 화면 없이 실행
+make panda-view # MuJoCo 뷰어 실행
+```
 
-The original planar 3-DoF implementation and comparison utilities remain for
-regression and reference, but are no longer the default `main.py` path.
+Panda 설정은 `configs/panda.yaml`에 있다. 현재 IK 기본값은 적분 주기
+0.01초와 시드당 10초이며, 이후 궤적 예산은 60초, 제어 주파수는 20 Hz다.
+`assets/robots/panda.xml`의 고정 그리퍼 모델은 MuJoCo Menagerie의
+Apache-2.0 `franka_emika_panda`에서 가져왔다. 원본 자료, 라이선스, 출처는
+`vendor/franka_emika_panda/`에 유지한다.
 
+MuJoCo 뷰어는 로봇 베이스에 월드 좌표축을 표시한다.
+**빨강은 +x, 초록은 +y, 파랑은 +z**다.
 
-## Legacy planar implementation notes
+각 Panda 실행은 적용 설정, 환경·코드·모델 메타데이터, 요약,
+관절·제어·CLF·CBF 이력, 그래프를 새로운 `outputs/panda/<run-id>/`에
+저장한다. 기존 실행 이름을 덮어쓰지 않는다. `make panda-view`는 MuJoCo
+뷰어를 닫은 뒤 `plots/control.png`를 연다.
+짧은 동작 확인에는 `make panda-run ARGS="--mode direct --duration 0.1"`을
+사용한다. RDF 기본 설정에서는 검증을 통과한 산출물이 필요하다.
+
+Panda의 `qp` 설정은 OSQP의 `max_iterations`, `absolute_tolerance`,
+`relative_tolerance`를 제공한다. 실행 요약은 실제 실행 불가능한 QP
+(`qp_infeasible_count`)와 수치 오류·반복 한도 때문에 해를 구하지 못한 종료
+(`qp_solver_failure_count`)를 구분한다.
+
+기존 평면 3자유도 구현과 비교 도구는 회귀 검증·참고용으로 유지하지만,
+기본 `main.py` 실행 경로는 아니다.
+
+## 기존 평면 로봇 구현 안내
 
 ### 모델 일관성 검사
 
@@ -120,20 +132,19 @@ make planar-rdf-view         # Planar 거리장 표시
 make check                   # 포맷 검사 + 전체 테스트
 ```
 
-### Sequential end-effector randomized comparison
+### 순차 말단 장치 제어의 무작위 비교
 
 Sequential controller의 IK branch 선택, 단계별 CLF, CBF 제약 및 on/off 비교 기준은
-[Sequential control algorithm](docs/sequential_control.md)에 정리되어 있다.
+[순차 제어 알고리즘](docs/sequential_control.md)에 정리되어 있다.
 실험 결과를 어떻게 해석하고 비교할지는
-[Sequential CLF performance analysis](docs/sequential_performance_analysis.md)에
+[순차 CLF 성능 해석](docs/sequential_performance_analysis.md)에
 정리되어 있다.
 
-The following command samples one shared target and two shared circular
-obstacles per case, then runs direct and sequential control. The runs are
-headless; no MuJoCo viewer opens.
+다음 명령은 사례마다 공유 목표 하나와 원형 장애물 두 개를 뽑고,
+직접 제어와 순차 제어를 실행한다. 화면 없이 실행하며 MuJoCo 뷰어는 열지 않는다.
 
-Configure every batch constant in `configs/planar.yaml` under
-`sequential_experiment`, then run:
+`configs/planar.yaml`의 `sequential_experiment`에 일괄 실험 상수를
+설정한 뒤 실행한다:
 
 ```bash
 make planar-compare
@@ -142,41 +153,40 @@ make planar-compare
 현재 작업 설정의 `joint5`는 기본 planar 모델에 없는 프레임입니다. 사용자 변경값은
 보존했으며, 모델에 맞는 프레임을 선택하거나 아래 smoke test의 고정 fixture를 사용하세요.
 
-`sequential_experiment.workers` controls process-level case parallelism. Each
-worker runs both methods for one shared case serially; use a value no larger
-than the available CPU cores.
+`sequential_experiment.workers`는 사례별 프로세스 병렬 실행 수를 정한다.
+각 작업자는 공유 사례 하나의 두 방법을 직렬로 실행한다.
+사용 가능한 CPU 코어 수 이하로 설정한다.
 
-Results are saved under `outputs/sequential_comparison/<run-name>/`:
+결과는 `outputs/sequential_comparison/<run-name>/`에 저장한다:
 
 - `config.yaml`, `resolved_config.json`, `metadata.json`: 전체 적용 설정, Git 상태, 환경·소스·모델 해시.
 
 - `summary.csv` / `summary.json`: direct와 sequential의 case별 진단 및
-  aggregate analysis.
-- `analysis.json`: method-wise success/failure taxonomy and paired metric
-  differences for cases where both methods succeeded.
-- `paired_metrics.png`: 수렴 시간, control effort, 최소 barrier, 최대 CLF
-  slack, 목표 도달 전 nonzero slack 비율의 task-decomposition paired scatter plots.
-- `case_###_direct.npz`, `case_###_sequential.npz`: command, CLF slack, QP
-  solve time, active stage를 포함한 trajectory.
+  집계 분석.
+- `analysis.json`: 방법별 성공·실패 분류와 두 방법이 모두 성공한 사례의
+  지표 차이.
+- `paired_metrics.png`: 수렴 시간, 제어 노력, 최소 장벽, 최대 CLF 완화량,
+  목표 도달 전 완화 변수가 0이 아닌 비율을 사례별로 짝지어 비교한 산점도.
+- `case_###_direct.npz`, `case_###_sequential.npz`: 제어 명령, CLF 완화량,
+  QP 풀이 시간, 활성 단계를 포함한 궤적.
 
-The experiment-only success tolerance is independent from the controller's
-link-switch tolerance.  `sequential_experiment` also contains the random seed,
-run duration, initial joint posture, target/obstacle sampling ranges, collision
-exclusion margins, controller-mode override, and output path. Target position
-and target yaw are sampled independently. Success also
-requires the configured yaw tolerance and barrier tolerance.
+실험 성공 판정용 허용오차는 제어기의 링크 전환 허용오차와 별개다.
+`sequential_experiment`에는 난수 시드, 실행 시간, 초기 관절 자세,
+목표·장애물 표본 범위, 충돌 제외 여유, 제어 모드 재정의, 출력 경로도 들어 있다.
+목표 위치와 목표 요각은 독립적으로 뽑는다. 성공하려면 설정한 요각 및
+장벽 허용오차도 만족해야 한다.
 
-The configured batch compares:
-`Direct EE CLF + CBF` versus `Sequential CLF + CBF`. Both use the same
-configured yaw weight. To smoke-test the output pipeline without changing YAML,
-temporarily override the batch size and run duration:
+설정된 실험은 직접 말단 장치 CLF + CBF(`Direct EE CLF + CBF`)와
+순차 CLF + CBF(`Sequential CLF + CBF`)를 비교한다. 두 방법은 같은
+요각 가중치를 사용한다. YAML을 바꾸지 않고 출력 파이프라인을 간단히
+검사하려면 사례 수와 실행 시간을 임시로 지정한다:
 
 ```bash
 make planar-compare ARGS="--config tests/fixtures/planar.yaml --cases 1 --workers 1 --duration 0.1"
 ```
 
-Render a saved case without a GUI to compare both final end-effector paths,
-the obstacles, target, and final arm poses:
+저장된 사례를 GUI 없이 그려 두 방법의 최종 말단 장치 경로, 장애물,
+목표, 최종 팔 자세를 비교할 수 있다:
 
 ```bash
 make planar-compare-plot ARGS="\
@@ -285,7 +295,7 @@ MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구�
 바꾸면 해당 장애물은 CBF 제약, MuJoCo 장면, 거리장 PNG에서 모두 제외된다.
 초기 자세와 목표를 유지한 채 장애물이 있을 때와 없을 때를 비교할 수 있다.
 
-### Barrier 기록과 시각화
+### 장벽값 기록과 시각화
 
 `run_simulation(..., recorder=Recorder())`은 매 제어 step을 typed
 `SimulationStep`으로 기록한다. end-effector 위치 `ee`와 world-frame yaw
@@ -306,7 +316,7 @@ h = f_link(obstacle_center, q) - obstacle_radius - safe_distance
 QP는 각각 하한 밖과 상한 밖으로 향하는 속도를 제한한다. 범위가 없는 관절은
 `null`로 지정하며, CBF 이득은 `safety.joint_limit_alpha`로 조정한다.
 
-### Kinematic CBF simulation
+### 기구학 기반 CBF 시뮬레이션
 
 기본 시뮬레이션은 QP의 결정변수 `u = q_dot`를 직접 적분한다. 따라서 CBF
 제약을 평가한 속도와 실제 시뮬레이션 속도가 동일하며, velocity actuator의

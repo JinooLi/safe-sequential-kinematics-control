@@ -103,6 +103,12 @@ def save_run_provenance(
         raw["robot"]["model_path"] = str(config.model_path)
     if "safety" in raw and "rdf_model_path" in raw["safety"]:
         raw["safety"]["rdf_model_path"] = str(config.safety.rdf_model_path)
+    if getattr(config.safety, "self_collision_model", None) == "rdf":
+        raw["safety"].setdefault("rdf", {})["artifact"] = str(
+            config.safety.rdf.artifact
+        )
+        if config.safety.rdf.artifact.is_file():
+            resources = [*resources, config.safety.rdf.artifact]
     (directory / "config.yaml").write_text(
         yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
     )

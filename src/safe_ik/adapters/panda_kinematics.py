@@ -92,3 +92,17 @@ class PandaKinematics:
         )
         point_jacobian = jacobian[:3] - skew @ jacobian[3:]
         return np.asarray(placement.translation) + world_offset, point_jacobian
+
+    def frame_pose_and_jacobian(self, frame_name, q):
+        """Local-to-world placement and world-aligned spatial Jacobian."""
+        self.update(q)
+        frame_id = self.frame_ids[frame_name]
+        placement = self.data.oMf[frame_id]
+        jacobian = pin.getFrameJacobian(
+            self.model, self.data, frame_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED
+        )
+        return (
+            np.asarray(placement.rotation).copy(),
+            np.asarray(placement.translation).copy(),
+            np.asarray(jacobian).copy(),
+        )

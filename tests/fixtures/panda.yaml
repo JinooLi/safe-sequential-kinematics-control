@@ -28,6 +28,7 @@ safe_ik:
   safety_gradient_gain: 10.0 # null space control부의 gain. 이걸로 safety 제어함. 
 
 safety:
+  self_collision_model: capsule
   margin: 0.05
   alpha: 1.0
   # Fixed hand assembly members cannot collide with each other.

@@ -36,14 +36,45 @@ def _solve_seed(task: tuple[IKSeed, bool]) -> SafeIKCandidate | None:
     return _worker_solver.solve_seed(seed, require_safe=require_safe)
 
 
+def _solve_seed_with_metrics(task):
+    before = dict(getattr(_worker_solver.safety, "total_timings", {}))
+    candidate = _solve_seed(task)
+    safety = _worker_solver.safety
+    return candidate, {
+        "timings": {
+            key: value - before.get(key, 0.0)
+            for key, value in getattr(safety, "total_timings", {}).items()
+        },
+        "minimum_self_barrier": getattr(safety, "minimum_self_barrier", None),
+        "minimum_self_pair": getattr(safety, "minimum_self_pair", None),
+    }
+
+
 class _ProcessIKSearch:
     def __init__(self, local: SafePoseIKSolver, executor: ProcessPoolExecutor):
         self.local = local
         self.executor = executor
+        self.rdf_metrics = {
+            "timings": {},
+            "minimum_self_barrier": None,
+            "minimum_self_pair": None,
+        }
 
     def _map_seeds(self, seeds: list[IKSeed], require_safe: bool):
         # map retains input order; each worker takes another seed when available.
-        return self.executor.map(_solve_seed, ((seed, require_safe) for seed in seeds))
+        for candidate, metrics in self.executor.map(
+            _solve_seed_with_metrics, ((seed, require_safe) for seed in seeds)
+        ):
+            for key, value in metrics["timings"].items():
+                self.rdf_metrics["timings"][key] = (
+                    self.rdf_metrics["timings"].get(key, 0.0) + value
+                )
+            minimum = metrics["minimum_self_barrier"]
+            previous = self.rdf_metrics["minimum_self_barrier"]
+            if minimum is not None and (previous is None or minimum < previous):
+                self.rdf_metrics["minimum_self_barrier"] = minimum
+                self.rdf_metrics["minimum_self_pair"] = metrics["minimum_self_pair"]
+            yield candidate
 
     def solve(self, initial_q=None, *, require_safe: bool = True) -> SafeIKResult:
         return self.local.solve(

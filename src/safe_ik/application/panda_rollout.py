@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+from dataclasses import asdict
 from time import perf_counter
 from typing import Callable
 
@@ -27,6 +28,69 @@ def run_panda(
     kinematics, safety, plant = runtime.kinematics, runtime.safety, runtime.plant
     start_time = plant.time
     ik_skipped = config.trajectory.mode == "direct"
+    rdf_enabled = config.safety.self_collision_model == "rdf"
+    metadata = {
+        "model": config.safety.self_collision_model,
+        "artifact_id": getattr(safety, "artifact_id", None),
+        "rdf_config": (
+            dict(asdict(config.safety.rdf), artifact=str(config.safety.rdf.artifact))
+            if rdf_enabled
+            else None
+        ),
+        "safe_ik_qp_time": None,
+    }
+    initial_barrier = safety.evaluate(plant.q)
+    metadata["initial_rdf_timings"] = (
+        dict(getattr(safety, "last_timings", {})) if rdf_enabled else None
+    )
+
+    def self_minimum(evaluation):
+        indices = [
+            i for i, label in enumerate(evaluation.labels) if label.startswith("self_")
+        ]
+        if not indices:
+            return None, None
+        index = min(indices, key=lambda i: evaluation.values[i])
+        return float(evaluation.values[index]), evaluation.labels[index]
+
+    metadata["minimum_self_barrier"], metadata["minimum_self_pair"] = self_minimum(
+        initial_barrier
+    )
+    if rdf_enabled and np.any(initial_barrier.values < 0):
+        failure = {
+            "reason": "unsafe_initial_state",
+            "time": float(plant.time),
+            "q": plant.q.tolist(),
+            "solver_status": "not_run",
+            "barriers": dict(
+                zip(initial_barrier.labels, initial_barrier.values.tolist())
+            ),
+            "violations": {
+                label: float(value)
+                for label, value in zip(initial_barrier.labels, initial_barrier.values)
+                if value < 0
+            },
+        }
+        return PandaRunResult(
+            SafeIKResult((), None, "unsafe_initial_state"),
+            ik_skipped,
+            None,
+            0.0,
+            0,
+            plant.q,
+            0.0,
+            0.0,
+            initial_barrier.minimum,
+            0.0,
+            0.0,
+            0,
+            0,
+            0,
+            0,
+            None,
+            metadata,
+            failure,
+        )
     if ik_skipped:
         ik_result = SafeIKResult((), None, None)
         safe_ik_wall_time = 0.0
@@ -38,11 +102,28 @@ def run_panda(
             else nullcontext(SafePoseIKSolver(config, kinematics, safety))
         )
         with search as ik_solver:
+            timing_before = dict(getattr(safety, "total_timings", {}))
             ik_start = perf_counter()
             ik_result = ik_solver.solve(config.initial_q, require_safe=True)
             safe_ik_wall_time = perf_counter() - ik_start
+
+            def record_ik_metrics():
+                if rdf_enabled:
+                    metadata["safe_ik_rdf"] = getattr(
+                        ik_solver, "rdf_metrics", None
+                    ) or {
+                        "timings": {
+                            k: v - timing_before.get(k, 0.0)
+                            for k, v in safety.total_timings.items()
+                        },
+                        "minimum_self_barrier": safety.minimum_self_barrier,
+                        "minimum_self_pair": safety.minimum_self_pair,
+                    }
+
+            record_ik_metrics()
             if ik_result.selected is None:
                 diagnostic = ik_solver.solve(config.initial_q, require_safe=False)
+                record_ik_metrics()
                 failure = (
                     "pose_ik_unreachable"
                     if diagnostic.selected is None
@@ -66,6 +147,7 @@ def run_panda(
                     0,
                     0,
                     None,
+                    safety_metadata=metadata,
                 )
 
         candidates = tuple(
@@ -94,11 +176,37 @@ def run_panda(
     trace_clf_slack: list[float] = []
     trace_stage_index: list[int] = []
     trace_barrier_values: list[np.ndarray] = []
+    trace_rdf_times, trace_qp_times, trace_qp_status = [], [], []
+    trace_self_minimum, trace_self_pair = [], []
+    failure = None
 
     def step():
         nonlocal control_effort, minimum_barrier, total_qp_solve_time, maximum_clf_slack
+        nonlocal failure
         q = plant.q
-        velocity = controller.get_velocity(q)
+        try:
+            velocity = controller.get_velocity(q)
+        except (
+            ValueError,
+            RuntimeError,
+            FloatingPointError,
+            np.linalg.LinAlgError,
+        ) as exc:
+            failure = {
+                "reason": "numerical_failure",
+                "time": float(plant.time),
+                "q": q.tolist(),
+                "solver_status": controller.last_qp_status,
+                "detail": str(exc),
+                "barrier_q": controller.last_barrier_q.tolist(),
+                "barriers": dict(
+                    zip(
+                        controller.last_barrier.labels,
+                        controller.last_barrier.values.tolist(),
+                    )
+                ),
+            }
+            return False
         for (
             previous_stage,
             next_stage,
@@ -114,6 +222,25 @@ def run_panda(
         trace_clf_slack.append(float(controller.last_clf_slack))
         trace_stage_index.append(controller.stage_index)
         trace_barrier_values.append(diagnostics.barrier_values)
+        trace_rdf_times.append(
+            [
+                getattr(safety, "last_timings", {}).get(k, 0.0)
+                for k in ("distance", "selection", "gradient")
+            ]
+        )
+        trace_qp_times.append(controller.last_qp_solve_time)
+        trace_qp_status.append(controller.last_qp_status)
+        self_value, self_pair = self_minimum(controller.last_barrier)
+        trace_self_minimum.append(float("nan") if self_value is None else self_value)
+        trace_self_pair.append(self_pair or "")
+        if self_value is not None and (
+            metadata["minimum_self_barrier"] is None
+            or self_value < metadata["minimum_self_barrier"]
+        ):
+            metadata["minimum_self_barrier"], metadata["minimum_self_pair"] = (
+                self_value,
+                self_pair,
+            )
         control_effort += float(np.linalg.norm(velocity)) * period
         if diagnostics.barrier_values.size:
             minimum_barrier = min(
@@ -126,6 +253,15 @@ def run_panda(
             controller.last_status.qp_infeasible
             or controller.last_status.qp_solver_failed
         ):
+            failure = {
+                "reason": "qp_failure",
+                "time": float(plant.time),
+                "q": q.tolist(),
+                "solver_status": controller.last_qp_status,
+                "barriers": dict(
+                    zip(diagnostics.barrier_labels, diagnostics.barrier_values.tolist())
+                ),
+            }
             return False
         plant.advance(velocity, period)
         status = controller.last_status
@@ -161,6 +297,16 @@ def run_panda(
         ),
         barrier_labels=controller.barrier_labels,
         barrier_values=np.asarray(trace_barrier_values, dtype=float),
+        rdf_timings=(
+            np.asarray(trace_rdf_times, dtype=float).reshape(-1, 3)
+            if rdf_enabled
+            else None
+        ),
+        qp_time=np.asarray(trace_qp_times),
+        qp_status=tuple(trace_qp_status),
+        safety_metadata=metadata,
+        minimum_self_barrier=np.asarray(trace_self_minimum),
+        minimum_self_pair=tuple(trace_self_pair),
     )
     return PandaRunResult(
         ik_result,
@@ -179,4 +325,6 @@ def run_panda(
         controller.candidate_switch_count,
         controller.stage_transition_count,
         trace,
+        metadata,
+        failure,
     )

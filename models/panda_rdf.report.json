@@ -1,0 +1,3126 @@
+{
+  "array_hashes": {
+    "hand_center": "8219930f18bbd85fbbff1efb5f26a2051f5e8f8f93aa619c5786ecb128f9cd64",
+    "hand_queries": "14b2ccf620ca19fa6b2c0053c908096f04fe36e5c9c2c50c9630dddc551a2e2e",
+    "hand_radii_max": "5d9f292823bdf39b96331b31bcdc05a2e1e5ad3881a58d9ad7faf9ffd53aec6b",
+    "hand_weights": "760795d4fff90ac4da3360f4114ca59bcfc3c566278b3e5e4a2ed2ec3376d024",
+    "link0_center": "a6a1c90aedd6b4e9bea4c98277e1cc359fffdc414c5b7d67a471b58d81ab2785",
+    "link0_queries": "9abcfdbb3f8dea020764f0bc06491e132d1369a8211a049101d49936f68024a3",
+    "link0_radii_max": "2066dda552da869f266abfc8d1e8090f94e2dc4d1ef8ad16d50c2a13dac0860c",
+    "link0_weights": "c6319f6917121bc6ad9cb8792e28bcbdb60714ee1528673ce7c3806bb25ecbf2",
+    "link1_center": "ea41742d9a6985e2c022ecf30857e115c5f27fb5b7ab13c2f4c301578367149d",
+    "link1_queries": "9429e0de13f872606d39b78955f947378743b2c075883b85573b5a7f6e7ae27e",
+    "link1_radii_max": "f7b438372873f102ce71fc00285673e8ec3a67b6c2f6adb9a460064d81788319",
+    "link1_weights": "c2a2727f20f4dda13bae07b722e2121c97bb81464f10721ef8805a9276029d2a",
+    "link2_center": "2b69930af5033effff4d69cd21496f72d827cbd7cc3c842fc4dc94b67a47c733",
+    "link2_queries": "fc10dd5ffc398c3fa8da0739714a78971302f50464f88be9ff27b1e5c20b7559",
+    "link2_radii_max": "85cd0754d252696e9762489a13cbc37d573f504e18d665c7d20a06b54a3f7e2f",
+    "link2_weights": "19334959bd80f0dc557df43df1da3e3ee725299b8a859fc326ba7c15d8142989",
+    "link3_center": "ebddb80f966b893556cecdc6b3a59a968628a0c15ff842fa1a9780b25662a094",
+    "link3_queries": "5ffb9e2acaf070664816bfedc976d834d0115cb1bfed3fd684197e70591ca4cb",
+    "link3_radii_max": "6cd85881d5dcd0632de94e2258eff6f8452794f7a443316f8b8b22207ab99dc9",
+    "link3_weights": "23bd1cd01f206ac31fb2566e057d466af6fbc89891f234c3c5c09899b9cdbe95",
+    "link4_center": "1b98dd2a0625cebb5fbdce0071dca32fc22af7556554b4a5628e47154941393d",
+    "link4_queries": "182d4280b6cf9a5e86592b56aee4bc490448f5f128bb3e599a78db7809ff798a",
+    "link4_radii_max": "a8ff127a4331989562582fb2087733d17778a0fab70330662d587efb466dbd3b",
+    "link4_weights": "afbe81e04a0a7cba0e88d8bdb92654db7ed498f480111cb5b0c2bd8da5b42f7b",
+    "link5_center": "66f8301d40f8bc0db434d81a8eec63e514c7f086d1065500b0fa7e54a325fc51",
+    "link5_queries": "b2395dd08bf8cb50dd9720306741c8929c56e3b5536fb9e97d04de146600a093",
+    "link5_radii_max": "035d4adfebbfcbfad9db62a67786d0b9194e9d8eb07dfc2f564df953105a6282",
+    "link5_weights": "5e3545d489229b868c1d737130d94833c6cd891526acf5259b0c5b17cd3b041b",
+    "link6_center": "d5da7f973aa74d92791017b4e4207f76be2edc3a3142ee0ef3c096f91446313c",
+    "link6_queries": "ecc90cb50c2bd4b8e7e77288900e78140406599296ebfa1b3fb37afa5fab14e6",
+    "link6_radii_max": "7abbf5bb30fa1a8568fe9669499f3f6d213f88e75a84c904e7183e3860a4d12b",
+    "link6_weights": "e81de12096f02ae5d4b47d81880cae952cb411118d54e6a9c91133c280c14a8a",
+    "link7_center": "677ef31e29032bcf41852b7bdc8189e57eb556253ac5890563c954a25ff72210",
+    "link7_queries": "4f2802f79ee10f5f8b2614e6b264f0540ce911750eb300f30378c9df98dc28fb",
+    "link7_radii_max": "d110aff0b231b797e740547fc4be90528dbbbfb0e07d7a122ae411ffdeef2037",
+    "link7_weights": "1347bb5db8fc2b97ff2adcdfa4094583f2d80c1f104fca93b6b3093ddf49f1ec"
+  },
+  "complete": true,
+  "geometry": {
+    "coordinates": "body-local; local-to-world R p + t",
+    "fingers": {
+      "left_finger": {
+        "closed_joint_value": 0.0,
+        "position": [
+          0.0,
+          0.0,
+          0.0584
+        ],
+        "quaternion_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "right_finger": {
+        "closed_joint_value": 0.0,
+        "position": [
+          0.0,
+          0.0,
+          0.0584
+        ],
+        "quaternion_wxyz": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      }
+    },
+    "frames": [
+      "link0",
+      "link1",
+      "link2",
+      "link3",
+      "link4",
+      "link5",
+      "link6",
+      "link7",
+      "hand"
+    ],
+    "kinematics": {
+      "body_parentid": [
+        0,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        9
+      ],
+      "body_pos": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.333
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.316,
+          0.0
+        ],
+        [
+          0.0825,
+          0.0,
+          0.0
+        ],
+        [
+          -0.0825,
+          0.384,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.088,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.107
+        ],
+        [
+          0.0,
+          0.0,
+          0.0584
+        ],
+        [
+          0.0,
+          0.0,
+          0.0584
+        ]
+      ],
+      "body_quat": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          -0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          -0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.7071067811865475,
+          0.7071067811865475,
+          0.0,
+          0.0
+        ],
+        [
+          0.9238795391929064,
+          0.0,
+          0.0,
+          -0.38268341623423263
+        ],
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "jnt_axis": [
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "jnt_bodyid": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "jnt_pos": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "jnt_range": [
+        [
+          -2.8973,
+          2.8973
+        ],
+        [
+          -1.7628,
+          1.7628
+        ],
+        [
+          -2.8973,
+          2.8973
+        ],
+        [
+          -3.0718,
+          -0.0698
+        ],
+        [
+          -2.8973,
+          2.8973
+        ],
+        [
+          -0.0175,
+          3.7525
+        ],
+        [
+          -2.8973,
+          2.8973
+        ]
+      ],
+      "jnt_type": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    "pairs": [
+      [
+        "link0",
+        "link2"
+      ],
+      [
+        "link0",
+        "link3"
+      ],
+      [
+        "link0",
+        "link4"
+      ],
+      [
+        "link0",
+        "link5"
+      ],
+      [
+        "link0",
+        "link6"
+      ],
+      [
+        "link0",
+        "link7"
+      ],
+      [
+        "link0",
+        "hand"
+      ],
+      [
+        "link1",
+        "link3"
+      ],
+      [
+        "link1",
+        "link4"
+      ],
+      [
+        "link1",
+        "link5"
+      ],
+      [
+        "link1",
+        "link6"
+      ],
+      [
+        "link1",
+        "link7"
+      ],
+      [
+        "link1",
+        "hand"
+      ],
+      [
+        "link2",
+        "link4"
+      ],
+      [
+        "link2",
+        "link5"
+      ],
+      [
+        "link2",
+        "link6"
+      ],
+      [
+        "link2",
+        "link7"
+      ],
+      [
+        "link2",
+        "hand"
+      ],
+      [
+        "link3",
+        "link5"
+      ],
+      [
+        "link3",
+        "link6"
+      ],
+      [
+        "link3",
+        "link7"
+      ],
+      [
+        "link3",
+        "hand"
+      ],
+      [
+        "link4",
+        "link6"
+      ],
+      [
+        "link4",
+        "link7"
+      ],
+      [
+        "link4",
+        "hand"
+      ],
+      [
+        "link5",
+        "link7"
+      ],
+      [
+        "link5",
+        "hand"
+      ],
+      [
+        "link6",
+        "hand"
+      ]
+    ],
+    "units": "m, rad, s",
+    "visual_meshes": [
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_0",
+        "mesh_path": "link0_0"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_1",
+        "mesh_path": "link0_1"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_2",
+        "mesh_path": "link0_2"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_3",
+        "mesh_path": "link0_3"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_4",
+        "mesh_path": "link0_4"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_5",
+        "mesh_path": "link0_5"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_7",
+        "mesh_path": "link0_7"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_8",
+        "mesh_path": "link0_8"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_9",
+        "mesh_path": "link0_9"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_10",
+        "mesh_path": "link0_10"
+      },
+      {
+        "body": "link0",
+        "link": "link0",
+        "mesh": "link0_11",
+        "mesh_path": "link0_11"
+      },
+      {
+        "body": "link1",
+        "link": "link1",
+        "mesh": "link1",
+        "mesh_path": "link1"
+      },
+      {
+        "body": "link2",
+        "link": "link2",
+        "mesh": "link2",
+        "mesh_path": "link2"
+      },
+      {
+        "body": "link3",
+        "link": "link3",
+        "mesh": "link3_0",
+        "mesh_path": "link3_0"
+      },
+      {
+        "body": "link3",
+        "link": "link3",
+        "mesh": "link3_1",
+        "mesh_path": "link3_1"
+      },
+      {
+        "body": "link3",
+        "link": "link3",
+        "mesh": "link3_2",
+        "mesh_path": "link3_2"
+      },
+      {
+        "body": "link3",
+        "link": "link3",
+        "mesh": "link3_3",
+        "mesh_path": "link3_3"
+      },
+      {
+        "body": "link4",
+        "link": "link4",
+        "mesh": "link4_0",
+        "mesh_path": "link4_0"
+      },
+      {
+        "body": "link4",
+        "link": "link4",
+        "mesh": "link4_1",
+        "mesh_path": "link4_1"
+      },
+      {
+        "body": "link4",
+        "link": "link4",
+        "mesh": "link4_2",
+        "mesh_path": "link4_2"
+      },
+      {
+        "body": "link4",
+        "link": "link4",
+        "mesh": "link4_3",
+        "mesh_path": "link4_3"
+      },
+      {
+        "body": "link5",
+        "link": "link5",
+        "mesh": "link5_0",
+        "mesh_path": "link5_0"
+      },
+      {
+        "body": "link5",
+        "link": "link5",
+        "mesh": "link5_1",
+        "mesh_path": "link5_1"
+      },
+      {
+        "body": "link5",
+        "link": "link5",
+        "mesh": "link5_2",
+        "mesh_path": "link5_2"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_0",
+        "mesh_path": "link6_0"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_1",
+        "mesh_path": "link6_1"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_2",
+        "mesh_path": "link6_2"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_3",
+        "mesh_path": "link6_3"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_4",
+        "mesh_path": "link6_4"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_5",
+        "mesh_path": "link6_5"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_6",
+        "mesh_path": "link6_6"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_7",
+        "mesh_path": "link6_7"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_8",
+        "mesh_path": "link6_8"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_9",
+        "mesh_path": "link6_9"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_10",
+        "mesh_path": "link6_10"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_11",
+        "mesh_path": "link6_11"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_12",
+        "mesh_path": "link6_12"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_13",
+        "mesh_path": "link6_13"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_14",
+        "mesh_path": "link6_14"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_15",
+        "mesh_path": "link6_15"
+      },
+      {
+        "body": "link6",
+        "link": "link6",
+        "mesh": "link6_16",
+        "mesh_path": "link6_16"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_0",
+        "mesh_path": "link7_0"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_1",
+        "mesh_path": "link7_1"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_2",
+        "mesh_path": "link7_2"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_3",
+        "mesh_path": "link7_3"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_4",
+        "mesh_path": "link7_4"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_5",
+        "mesh_path": "link7_5"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_6",
+        "mesh_path": "link7_6"
+      },
+      {
+        "body": "link7",
+        "link": "link7",
+        "mesh": "link7_7",
+        "mesh_path": "link7_7"
+      },
+      {
+        "body": "hand",
+        "link": "hand",
+        "mesh": "hand_0",
+        "mesh_path": "hand_0"
+      },
+      {
+        "body": "hand",
+        "link": "hand",
+        "mesh": "hand_1",
+        "mesh_path": "hand_1"
+      },
+      {
+        "body": "hand",
+        "link": "hand",
+        "mesh": "hand_2",
+        "mesh_path": "hand_2"
+      },
+      {
+        "body": "hand",
+        "link": "hand",
+        "mesh": "hand_3",
+        "mesh_path": "hand_3"
+      },
+      {
+        "body": "hand",
+        "link": "hand",
+        "mesh": "hand_4",
+        "mesh_path": "hand_4"
+      },
+      {
+        "body": "left_finger",
+        "link": "hand",
+        "mesh": "finger_0",
+        "mesh_path": "finger_0"
+      },
+      {
+        "body": "left_finger",
+        "link": "hand",
+        "mesh": "finger_1",
+        "mesh_path": "finger_1"
+      },
+      {
+        "body": "right_finger",
+        "link": "hand",
+        "mesh": "finger_0",
+        "mesh_path": "finger_0"
+      },
+      {
+        "body": "right_finger",
+        "link": "hand",
+        "mesh": "finger_1",
+        "mesh_path": "finger_1"
+      }
+    ]
+  },
+  "geometry_fingerprint": "341ff8c80e64539936ef5260a1ebf74c1029a44912621a09d3af3b723d19c670",
+  "joint_validation": {
+    "top_k": 10,
+    "softmin_error": 0.005,
+    "passed": true,
+    "joint_gradient_max_error": 3.6082251746946716e-10,
+    "relative_jacobian_max_error": 2.342285948531142e-10,
+    "switching_pairs_excluded": 0,
+    "configurations": 5,
+    "step": 1e-06,
+    "joint_tolerance": 0.0001,
+    "relative_tolerance": 1e-07,
+    "cpu_evaluation_seconds_mean": 0.028839036999852397
+  },
+  "links": [
+    "link0",
+    "link1",
+    "link2",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7",
+    "hand"
+  ],
+  "maxima": {
+    "hand": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.1221610416951516,
+      "maximum": 0.12218141076432423,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432408,
+          "iterations": 8
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381688,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381688,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432416,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1220170355638169,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381684,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432411,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432423,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381695,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432416,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432415,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381703,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432416,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381685,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432418,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381696,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432418,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1220170355638169,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12201703556381684,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12218141076432405,
+          "iterations": 15
+        }
+      ],
+      "global_certificate": false
+    },
+    "link0": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.10936654515309595,
+      "maximum": 0.10939669950143815,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950140479,
+          "iterations": 5
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1050242614171185,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1072239237423066,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1050242614171184,
+          "iterations": 21
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10722392374230655,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711849,
+          "iterations": 19
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711843,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10722392374230642,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711844,
+          "iterations": 21
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711844,
+          "iterations": 22
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10722392374230655,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1050242614171185,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711854,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950143807,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10502426141711842,
+          "iterations": 19
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950143815,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950143809,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950143813,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10939669950143814,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1050242614171184,
+          "iterations": 12
+        }
+      ],
+      "global_certificate": false
+    },
+    "link1": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.13713960290359267,
+      "maximum": 0.13714943653477132,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477113,
+          "iterations": 8
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12906706447735392,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13002239180161726,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13029623730968926,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13002239180161748,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13029623730968895,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477127,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477094,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13002239180161748,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13029623730968926,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1300223918016175,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13029623730968928,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477132,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477113,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1371494365347712,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13714943653477119,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13029623730968928,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13002239180161748,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12906706447735392,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1300223918016173,
+          "iterations": 12
+        }
+      ],
+      "global_certificate": false
+    },
+    "link2": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.1371202044237028,
+      "maximum": 0.13713541937592671,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13713541937592663,
+          "iterations": 9
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13043201740190707,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13133508841723257,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702504,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702498,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13133508841723254,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13713541937592671,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1371354193759265,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1313350884172327,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702498,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13133508841723263,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702498,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1371354193759266,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13133508841723252,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13133508841723263,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1371354193759266,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13713541937592663,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13713541937592655,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702495,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.13096732592702498,
+          "iterations": 13
+        }
+      ],
+      "global_certificate": false
+    },
+    "link3": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.11921283037847,
+      "maximum": 0.11922069705059074,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059063,
+          "iterations": 9
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11132819212226826,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11227648716493809,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059073,
+          "iterations": 17
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059059,
+          "iterations": 17
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059074,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059063,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11132819212226823,
+          "iterations": 9
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11227648716493813,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059064,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059066,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059066,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11227648716493813,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059068,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1192206970505906,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059062,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11227648716493811,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1192206970505907,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11922069705059062,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11227648716493807,
+          "iterations": 13
+        }
+      ],
+      "global_certificate": false
+    },
+    "link4": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.12160614794294332,
+      "maximum": 0.12164190513657669,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657666,
+          "iterations": 8
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11045004658012395,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11489340789512538,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657662,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1216419051365766,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657663,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1216419051365766,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11489340789512542,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657665,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11489340789512544,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657669,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1216419051365765,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657663,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11489340789512545,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657669,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1216419051365766,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.11489340789512548,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.110450046580124,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1148934078951255,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.12164190513657663,
+          "iterations": 14
+        }
+      ],
+      "global_certificate": false
+    },
+    "link5": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.19548625526492144,
+      "maximum": 0.19552742682085347,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085344,
+          "iterations": 8
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.17775481738261445,
+          "iterations": 25
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085328,
+          "iterations": 18
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085347,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085342,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.17775481738261456,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1955274268208534,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085342,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085322,
+          "iterations": 18
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1955274268208534,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085342,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.17775481738261437,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085308,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085342,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1955274268208532,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085344,
+          "iterations": 16
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.17775481738261437,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.19552742682085347,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1955274268208531,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.17775481738261367,
+          "iterations": 12
+        }
+      ],
+      "global_certificate": false
+    },
+    "link6": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.10325137700445149,
+      "maximum": 0.10326128387486279,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486279,
+          "iterations": 19
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316507,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1032612838748627,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316506,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.1032612838748627,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486268,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316504,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486265,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486264,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486276,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316506,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486269,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316507,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316508,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486261,
+          "iterations": 9
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486261,
+          "iterations": 11
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486255,
+          "iterations": 12
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.10326128387486261,
+          "iterations": 10
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08795860762316504,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.0879586076231651,
+          "iterations": 13
+        }
+      ],
+      "global_certificate": false
+    },
+    "link7": {
+      "method": "SLSQP equality constrained unit sphere",
+      "ftol": 1e-12,
+      "sample_count": 10000,
+      "starts": 20,
+      "sample_maximum": 0.0882740675420601,
+      "maximum": 0.08828320696965059,
+      "runs": [
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 9
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965054,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965056,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965056,
+          "iterations": 26
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965054,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965056,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.0882832069696505,
+          "iterations": 15
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965054,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965054,
+          "iterations": 17
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 19
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965056,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965053,
+          "iterations": 14
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965059,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965057,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.08828320696965056,
+          "iterations": 13
+        },
+        {
+          "success": true,
+          "message": "Optimization terminated successfully",
+          "value": 0.0882832069696504,
+          "iterations": 15
+        }
+      ],
+      "global_certificate": false
+    }
+  },
+  "pairs": [
+    [
+      "link0",
+      "link2"
+    ],
+    [
+      "link0",
+      "link3"
+    ],
+    [
+      "link0",
+      "link4"
+    ],
+    [
+      "link0",
+      "link5"
+    ],
+    [
+      "link0",
+      "link6"
+    ],
+    [
+      "link0",
+      "link7"
+    ],
+    [
+      "link0",
+      "hand"
+    ],
+    [
+      "link1",
+      "link3"
+    ],
+    [
+      "link1",
+      "link4"
+    ],
+    [
+      "link1",
+      "link5"
+    ],
+    [
+      "link1",
+      "link6"
+    ],
+    [
+      "link1",
+      "link7"
+    ],
+    [
+      "link1",
+      "hand"
+    ],
+    [
+      "link2",
+      "link4"
+    ],
+    [
+      "link2",
+      "link5"
+    ],
+    [
+      "link2",
+      "link6"
+    ],
+    [
+      "link2",
+      "link7"
+    ],
+    [
+      "link2",
+      "hand"
+    ],
+    [
+      "link3",
+      "link5"
+    ],
+    [
+      "link3",
+      "link6"
+    ],
+    [
+      "link3",
+      "link7"
+    ],
+    [
+      "link3",
+      "hand"
+    ],
+    [
+      "link4",
+      "link6"
+    ],
+    [
+      "link4",
+      "link7"
+    ],
+    [
+      "link4",
+      "hand"
+    ],
+    [
+      "link5",
+      "link7"
+    ],
+    [
+      "link5",
+      "hand"
+    ],
+    [
+      "link6",
+      "hand"
+    ]
+  ],
+  "schema": 1,
+  "seed_streams": "SeedSequence(seed, spawn_key=(link_index, purpose)); 0=train,1=validation,2=query,3=joint",
+  "settings": {
+    "error_margin": 0.005,
+    "physical_margin": 0.03,
+    "query_density": 500.0,
+    "seed": 0,
+    "transition_ratio": 0.5
+  },
+  "spheres": {
+    "hand": {
+      "center": [
+        9.572066204458483e-09,
+        -0.0011402248005741404,
+        0.023278942743488112
+      ],
+      "mesh_radius": 0.10743108990790687,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.14243108990790687,
+      "r1": 0.2136466348618603
+    },
+    "link0": {
+      "center": [
+        -0.04329770552016178,
+        6.997820325747124e-07,
+        0.057958333602081705
+      ],
+      "mesh_radius": 0.12803648576488413,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.16303648576488414,
+      "r1": 0.2445547286473262
+    },
+    "link1": {
+      "center": [
+        3.229891874103729e-05,
+        -0.02647568840604681,
+        -0.07303450000688584
+      ],
+      "mesh_radius": 0.14419209455007745,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.17919209455007745,
+      "r1": 0.2687881418251162
+    },
+    "link2": {
+      "center": [
+        -0.0002543275965578182,
+        -0.07400417163937383,
+        0.026432864465274437
+      ],
+      "mesh_radius": 0.14501974702076825,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.18001974702076826,
+      "r1": 0.27002962053115237
+    },
+    "link3": {
+      "center": [
+        0.03596948636942855,
+        0.02871867905103774,
+        -0.04390183337246105
+      ],
+      "mesh_radius": 0.1270756171597523,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.1620756171597523,
+      "r1": 0.24311342573962846
+    },
+    "link4": {
+      "center": [
+        -0.04657085720152544,
+        0.04646269464090717,
+        0.030058912914634993
+      ],
+      "mesh_radius": 0.12800048065624064,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.16300048065624065,
+      "r1": 0.244500720984361
+    },
+    "link5": {
+      "center": [
+        4.355986467624527e-05,
+        0.02140943753154293,
+        -0.10340249751119414
+      ],
+      "mesh_radius": 0.17334631653235003,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.20834631653235003,
+      "r1": 0.31251947479852504
+    },
+    "link6": {
+      "center": [
+        0.04855570272538082,
+        0.0002315655784953241,
+        0.005598730003305346
+      ],
+      "mesh_radius": 0.09836288561553223,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.13336288561553222,
+      "r1": 0.20004432842329833
+    },
+    "link7": {
+      "center": [
+        0.013349685121780868,
+        0.013427594035237139,
+        0.08574886996957778
+      ],
+      "mesh_radius": 0.07274115110228153,
+      "method": "convex hull + SLSQP, ftol=1e-12",
+      "r0": 0.10774115110228152,
+      "r1": 0.16161172665342227
+    }
+  },
+  "training": {
+    "algorithm": "Li ICRA 2024 Algorithm 1; w0=0, B0=I/1e-4; float64 CPU solves",
+    "normalization": "(p-c)/(2*r1)+0.5; targets/r1; metric weights",
+    "options": {
+      "basis_count": 8,
+      "maximum_samples": 10000,
+      "maximum_starts": 20,
+      "near_batch": 1024,
+      "normal_count": 100,
+      "optimizer_ftol": 1e-12,
+      "pool_size": 500000,
+      "random_batch": 256,
+      "regularization": 0.0001,
+      "scan_count": 100,
+      "scan_resolution": 400,
+      "updates": 200
+    },
+    "sampling_adaptation": "outer-sphere normalization; uniform random ball replaces cube; shared scan cloud; chunked normal labels",
+    "upstream_commit": "dc08da7ec78e7cfb002f5a118d06d9eebbf9c37d",
+    "versions": {
+      "mesh-to-sdf": "0.0.15",
+      "mujoco": "3.10.0",
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "trimesh": "5.1.0"
+    }
+  },
+  "validation": {
+    "hand": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2614,
+      "near_max_error": 0.02730629411008613,
+      "global_max_error": 0.02288174830384402,
+      "mean_error": 0.004153019698937435,
+      "sign_errors": 285,
+      "worst_near_points": [
+        {
+          "point": [
+            0.0049543936414935584,
+            -0.05695736065791063,
+            0.10566706047659072
+          ],
+          "truth": 0.040393561536958736,
+          "prediction": 0.013087267426872606,
+          "absolute_error": 0.02730629411008613
+        },
+        {
+          "point": [
+            -0.005111430964931004,
+            -0.05694363703481653,
+            0.10531986270076402
+          ],
+          "truth": 0.040025741647595765,
+          "prediction": 0.012952418466613132,
+          "absolute_error": 0.027073323180982635
+        },
+        {
+          "point": [
+            0.0006613818078755138,
+            0.059276139997274616,
+            0.11255506691644854
+          ],
+          "truth": 0.04494617454374441,
+          "prediction": 0.01792075502104197,
+          "absolute_error": 0.02702541952270244
+        },
+        {
+          "point": [
+            -0.005560174413676805,
+            0.062084863559303406,
+            0.11206557140267039
+          ],
+          "truth": 0.04640421776200974,
+          "prediction": 0.01939123682568096,
+          "absolute_error": 0.027012980936328777
+        },
+        {
+          "point": [
+            -0.007206747200273978,
+            0.05574959564964406,
+            0.10581972930956937
+          ],
+          "truth": 0.0402489134162228,
+          "prediction": 0.013367409010777282,
+          "absolute_error": 0.026881504405445514
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.48836673020949845,
+      "gradient_angle_mean_rad": 0.5319040592032339,
+      "ambiguous_gradient_count": 3359,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 6.956468734387045e-10,
+      "extension_fd_max": 6.103872962626156e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.6815439459204615e-08,
+          1.416640560192306e-06
+        ],
+        [
+          2.0000005679365884e-08,
+          1.0283099020069741e-06
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link0": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2786,
+      "near_max_error": 0.07119049277263217,
+      "global_max_error": 0.02608552428304502,
+      "mean_error": 0.005346561589758698,
+      "sign_errors": 218,
+      "worst_near_points": [
+        {
+          "point": [
+            -0.018946493728682928,
+            -0.008059699857136747,
+            0.05848368348208379
+          ],
+          "truth": 0.048525678843615555,
+          "prediction": -0.02266481392901662,
+          "absolute_error": 0.07119049277263217
+        },
+        {
+          "point": [
+            -0.01663085049977408,
+            -0.019209830533619555,
+            0.05540061067492927
+          ],
+          "truth": 0.03791267116892791,
+          "prediction": -0.020901305223586065,
+          "absolute_error": 0.05881397639251397
+        },
+        {
+          "point": [
+            -0.017622402980012983,
+            0.0029962598089530047,
+            0.07175548197993137
+          ],
+          "truth": -0.05854000636798878,
+          "prediction": -0.024078647883455366,
+          "absolute_error": 0.03446135848453341
+        },
+        {
+          "point": [
+            -0.04151213764528878,
+            0.004118469822013995,
+            0.05711145786182514
+          ],
+          "truth": -0.05487897445734182,
+          "prediction": -0.021295845255496,
+          "absolute_error": 0.03358312920184582
+        },
+        {
+          "point": [
+            -0.003409836917676913,
+            0.005324323808888261,
+            0.07520446176257727
+          ],
+          "truth": -0.05645360014229329,
+          "prediction": -0.023529340363960084,
+          "absolute_error": 0.0329242597783332
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.34547344883442216,
+      "gradient_angle_mean_rad": 0.3282281298610983,
+      "ambiguous_gradient_count": 2891,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 8.347331714730899e-10,
+      "extension_fd_max": 6.787839179622779e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.6866145988457824e-08,
+          8.797384345449188e-07
+        ],
+        [
+          2.0000003542186562e-08,
+          6.626662950592888e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link1": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2536,
+      "near_max_error": 0.03317857590807167,
+      "global_max_error": 0.030358794387642035,
+      "mean_error": 0.005144473966976625,
+      "sign_errors": 80,
+      "worst_near_points": [
+        {
+          "point": [
+            0.0027706428126030302,
+            0.0001691041082633165,
+            -0.14009492194268797
+          ],
+          "truth": -0.051905081586694136,
+          "prediction": -0.018726505678622468,
+          "absolute_error": 0.03317857590807167
+        },
+        {
+          "point": [
+            -0.001288651762572958,
+            -0.0013773179295087368,
+            -0.1404097963913214
+          ],
+          "truth": -0.05159020560094862,
+          "prediction": -0.01878712105006713,
+          "absolute_error": 0.03280308455088149
+        },
+        {
+          "point": [
+            0.0006426353050996078,
+            -0.05802460669383317,
+            0.0007569780725771927
+          ],
+          "truth": -0.0539643771410711,
+          "prediction": -0.021437620207865833,
+          "absolute_error": 0.03252675693320527
+        },
+        {
+          "point": [
+            0.0011021215402108459,
+            -0.054119102886846016,
+            -0.004048867173030539
+          ],
+          "truth": -0.053619103289001956,
+          "prediction": -0.02130793528975112,
+          "absolute_error": 0.03231116799925084
+        },
+        {
+          "point": [
+            -0.0025339334621238257,
+            0.003377648351912378,
+            -0.14049275921874588
+          ],
+          "truth": -0.05076418207346927,
+          "prediction": -0.01868225391107914,
+          "absolute_error": 0.03208192816239013
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.32401017681318434,
+      "gradient_angle_mean_rad": 0.2633568186242989,
+      "ambiguous_gradient_count": 2647,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": true,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 4.3252790238312855e-10,
+      "extension_fd_max": 2.6488822246761856e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.4723864747167035e-08,
+          9.354434775676879e-07
+        ],
+        [
+          2.0000003958520196e-08,
+          7.662539707187221e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link2": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2528,
+      "near_max_error": 0.0338615578054749,
+      "global_max_error": 0.03141809545108558,
+      "mean_error": 0.005077227146595239,
+      "sign_errors": 78,
+      "worst_near_points": [
+        {
+          "point": [
+            0.00014928756923510839,
+            -0.13918036535115283,
+            0.0002368611187200699
+          ],
+          "truth": -0.05266791544104294,
+          "prediction": -0.01880635763556804,
+          "absolute_error": 0.0338615578054749
+        },
+        {
+          "point": [
+            -0.0001595460415512827,
+            -0.14024135604622087,
+            -0.0019671558368262454
+          ],
+          "truth": -0.05254590859950018,
+          "prediction": -0.01885720797415772,
+          "absolute_error": 0.03368870062534246
+        },
+        {
+          "point": [
+            -0.0033622986524691895,
+            -0.13845731954465806,
+            -0.0002771864020822898
+          ],
+          "truth": -0.05150573926901914,
+          "prediction": -0.018664713538909024,
+          "absolute_error": 0.03284102573011012
+        },
+        {
+          "point": [
+            -0.0011754688018446868,
+            -0.001063980150628266,
+            0.05588449531192876
+          ],
+          "truth": -0.05373907286485592,
+          "prediction": -0.021271630391167282,
+          "absolute_error": 0.03246744247368864
+        },
+        {
+          "point": [
+            -0.004155487317547474,
+            -0.1389885819241144,
+            -0.0002532615078173414
+          ],
+          "truth": -0.05072324478567892,
+          "prediction": -0.018677805958640634,
+          "absolute_error": 0.03204543882703828
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.32439351996379195,
+      "gradient_angle_mean_rad": 0.250434349512551,
+      "ambiguous_gradient_count": 2645,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": true,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 4.706517398034293e-10,
+      "extension_fd_max": 5.642160072483193e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.561864222150323e-08,
+          9.284079069971085e-07
+        ],
+        [
+          2.0000004041786923e-08,
+          8.103604468567838e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link3": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2648,
+      "near_max_error": 0.06174245101718335,
+      "global_max_error": 0.02774794105981221,
+      "mean_error": 0.00550054590318898,
+      "sign_errors": 152,
+      "worst_near_points": [
+        {
+          "point": [
+            0.07870064042964893,
+            0.05183220391980393,
+            -0.005599217052489776
+          ],
+          "truth": 0.044915358859977404,
+          "prediction": -0.016827092157205945,
+          "absolute_error": 0.06174245101718335
+        },
+        {
+          "point": [
+            0.08869424478636032,
+            0.05249127433330669,
+            -0.002590806417695577
+          ],
+          "truth": 0.0441354189328061,
+          "prediction": -0.017373674398773173,
+          "absolute_error": 0.06150909333157927
+        },
+        {
+          "point": [
+            0.07098632072009456,
+            0.0558476682650034,
+            -0.005202592809730884
+          ],
+          "truth": 0.04208305384798049,
+          "prediction": -0.01611609681273265,
+          "absolute_error": 0.058199150660713135
+        },
+        {
+          "point": [
+            0.0725268997809671,
+            0.0552359831636975,
+            -0.006177215404759226
+          ],
+          "truth": 0.041931555657394426,
+          "prediction": -0.016231859526710187,
+          "absolute_error": 0.058163415184104617
+        },
+        {
+          "point": [
+            0.06943577475460509,
+            0.05622018004957208,
+            -0.004795575720283607
+          ],
+          "truth": 0.04174743615495004,
+          "prediction": -0.015911636942965192,
+          "absolute_error": 0.05765907309791523
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.40144124470922277,
+      "gradient_angle_mean_rad": 0.33238147712865473,
+      "ambiguous_gradient_count": 2784,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 3.8508829458550053e-10,
+      "extension_fd_max": 3.753517496818404e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.7041957978424236e-08,
+          8.685985666279095e-07
+        ],
+        [
+          2.0000003653208864e-08,
+          6.868160766781983e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link4": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2604,
+      "near_max_error": 0.06640477715855658,
+      "global_max_error": 0.030949715959713114,
+      "mean_error": 0.005453867359241251,
+      "sign_errors": 143,
+      "worst_near_points": [
+        {
+          "point": [
+            -0.0015732341787069604,
+            0.0012442152697004528,
+            0.05416969183683998
+          ],
+          "truth": 0.04906029123956017,
+          "prediction": -0.01734448591899641,
+          "absolute_error": 0.06640477715855658
+        },
+        {
+          "point": [
+            -0.0023803478036334997,
+            -4.3125502000661287e-05,
+            0.06409045848031304
+          ],
+          "truth": 0.046699894738906955,
+          "prediction": -0.01711418193526226,
+          "absolute_error": 0.06381407667416922
+        },
+        {
+          "point": [
+            -0.005842242614451189,
+            0.005439608949628999,
+            0.05476376763637681
+          ],
+          "truth": 0.04396135879040292,
+          "prediction": -0.016673966696712582,
+          "absolute_error": 0.060635325487115505
+        },
+        {
+          "point": [
+            5.3138645727826995e-05,
+            0.0011018390572475265,
+            0.069566867150148
+          ],
+          "truth": 0.04142007253336003,
+          "prediction": -0.01664241978458426,
+          "absolute_error": 0.05806249231794429
+        },
+        {
+          "point": [
+            -0.009399733995113617,
+            0.00842711923325755,
+            0.058306722583945245
+          ],
+          "truth": 0.039280491831890176,
+          "prediction": -0.015921034431141116,
+          "absolute_error": 0.05520152626303129
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.3948979697795714,
+      "gradient_angle_mean_rad": 0.31737163776986876,
+      "ambiguous_gradient_count": 2774,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 4.3797449000848587e-10,
+      "extension_fd_max": 4.462863412157958e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.7061701407538052e-08,
+          8.611465596164436e-07
+        ],
+        [
+          2.0000003791986742e-08,
+          6.701672327080743e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link5": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2384,
+      "near_max_error": 0.06027882268720132,
+      "global_max_error": 0.09603647106257089,
+      "mean_error": 0.008633156172623627,
+      "sign_errors": 181,
+      "worst_near_points": [
+        {
+          "point": [
+            0.0007505171319626691,
+            0.06792264675190426,
+            -0.0022422922093522438
+          ],
+          "truth": 0.04586346700594036,
+          "prediction": -0.014415355681260966,
+          "absolute_error": 0.06027882268720132
+        },
+        {
+          "point": [
+            0.0018199375597275514,
+            0.07185189413368254,
+            -0.00485116054956986
+          ],
+          "truth": 0.043555200156226354,
+          "prediction": -0.01431058564538854,
+          "absolute_error": 0.057865785801614895
+        },
+        {
+          "point": [
+            0.004694417889044081,
+            0.08246303799542504,
+            -0.0022936124613422496
+          ],
+          "truth": 0.042680784513466366,
+          "prediction": -0.013552626721919609,
+          "absolute_error": 0.05623341123538597
+        },
+        {
+          "point": [
+            0.0010812418503199535,
+            0.0873225097345545,
+            0.0008381948310512959
+          ],
+          "truth": 0.04238566628249677,
+          "prediction": -0.0129525812864091,
+          "absolute_error": 0.055338247568905874
+        },
+        {
+          "point": [
+            -0.0008842693155137332,
+            0.06413329021052003,
+            -0.007468157266742548
+          ],
+          "truth": 0.04048467015517516,
+          "prediction": -0.014097042310239982,
+          "absolute_error": 0.05458171246541514
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.43502914082422883,
+      "gradient_angle_mean_rad": 0.4069240116648364,
+      "ambiguous_gradient_count": 2946,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 3.511052559801442e-10,
+      "extension_fd_max": 2.304219037796429e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.6871438407738424e-08,
+          1.1154620851439034e-06
+        ],
+        [
+          2.000000487445419e-08,
+          9.73312121566039e-07
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link6": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2885,
+      "near_max_error": 0.04298803368140108,
+      "global_max_error": 0.025111284475689742,
+      "mean_error": 0.004324357466690726,
+      "sign_errors": 301,
+      "worst_near_points": [
+        {
+          "point": [
+            0.09626064787615533,
+            -0.01572559180334937,
+            0.005642527748507671
+          ],
+          "truth": 0.03106608458225778,
+          "prediction": -0.011921949099143306,
+          "absolute_error": 0.04298803368140108
+        },
+        {
+          "point": [
+            0.07055149750535021,
+            0.03848199058908289,
+            -0.0034375463983295114
+          ],
+          "truth": 0.027224217610086414,
+          "prediction": -0.011956251686769425,
+          "absolute_error": 0.03918046929685584
+        },
+        {
+          "point": [
+            0.09781234615603708,
+            -0.009228823372177791,
+            0.013098917958132821
+          ],
+          "truth": 0.02636514945337634,
+          "prediction": -0.011201594892384266,
+          "absolute_error": 0.03756674434576061
+        },
+        {
+          "point": [
+            0.083676649762734,
+            -0.0188179958456688,
+            0.012134946624388486
+          ],
+          "truth": 0.02542098457808316,
+          "prediction": -0.01125565858979405,
+          "absolute_error": 0.03667664316787721
+        },
+        {
+          "point": [
+            -0.002408172466170133,
+            0.00201685889272913,
+            0.02878201617368424
+          ],
+          "truth": 0.023630766629558438,
+          "prediction": -0.012262298753681492,
+          "absolute_error": 0.03589306538323993
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.3679597951389567,
+      "gradient_angle_mean_rad": 0.33172818292137896,
+      "ambiguous_gradient_count": 2871,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 7.764905385343468e-10,
+      "extension_fd_max": 1.0438416797597938e-09,
+      "boundary_value_gradient_jumps": [
+        [
+          2.6910388251089046e-08,
+          1.3599753212467647e-06
+        ],
+        [
+          2.000000576263261e-08,
+          1.1421465281324927e-06
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    },
+    "link7": {
+      "passed": false,
+      "sample_counts": [
+        3000,
+        2000
+      ],
+      "near_count": 2984,
+      "near_max_error": 0.015835038246369802,
+      "global_max_error": 0.013847876215734993,
+      "mean_error": 0.0028007470248322163,
+      "sign_errors": 233,
+      "worst_near_points": [
+        {
+          "point": [
+            0.027352344892528857,
+            0.051388544155446005,
+            0.08064167213193743
+          ],
+          "truth": 0.01189038854675694,
+          "prediction": -0.003944649699612864,
+          "absolute_error": 0.015835038246369802
+        },
+        {
+          "point": [
+            0.019828668055444334,
+            0.003592681419924833,
+            0.07487262731030382
+          ],
+          "truth": -0.02242737365222858,
+          "prediction": -0.007826105248671193,
+          "absolute_error": 0.014601268403557388
+        },
+        {
+          "point": [
+            0.041296920782590674,
+            0.0387941562105511,
+            0.07898480978941941
+          ],
+          "truth": 0.009929100495091436,
+          "prediction": -0.004622516966551346,
+          "absolute_error": 0.014551617461642782
+        },
+        {
+          "point": [
+            0.0056199786931716905,
+            -0.02022725567196983,
+            0.07523964646732181
+          ],
+          "truth": -0.022976580166192667,
+          "prediction": -0.00850887744814816,
+          "absolute_error": 0.014467702718044506
+        },
+        {
+          "point": [
+            0.004705693764154875,
+            0.0019424066787348173,
+            0.07533510066980191
+          ],
+          "truth": -0.023335100270480663,
+          "prediction": -0.009247943944736927,
+          "absolute_error": 0.014087156325743736
+        }
+      ],
+      "gradient_magnitude_mean_error": 0.4048299129062758,
+      "gradient_angle_mean_rad": 0.36681696743968223,
+      "ambiguous_gradient_count": 3200,
+      "mesh_watertight": false,
+      "welded_mesh_watertight": false,
+      "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+      "derivatives_passed": true,
+      "rdf_fd_max": 1.0537695716017481e-09,
+      "extension_fd_max": 9.250435972774085e-10,
+      "boundary_value_gradient_jumps": [
+        [
+          2.6252208289168077e-08,
+          1.530277154548898e-06
+        ],
+        [
+          2.0000006123455094e-08,
+          1.1933345620551705e-06
+        ]
+      ],
+      "fd_step": 1e-06,
+      "fd_tolerance": 1e-05,
+      "boundary_step": 1e-08,
+      "boundary_tolerances": [
+        1e-05,
+        0.0001
+      ],
+      "continuous_error_certificate": false
+    }
+  },
+  "wall_seconds": 64.53865109899925,
+  "training_seed": 0,
+  "training_wall_seconds": 957.8954449129997,
+  "runtime_benchmark": {
+    "configurations": 20,
+    "warmup": 1,
+    "control_period": 0.05,
+    "purpose": "CPU timing only, not a safety or trajectory comparison",
+    "rdf": {
+      "mean_seconds": 0.030880184249917876,
+      "p95_seconds": 0.0391142343498359,
+      "barrier_count": 48
+    },
+    "capsule": {
+      "mean_seconds": 0.001402599499988355,
+      "p95_seconds": 0.0014784965002490936,
+      "barrier_count": 55
+    },
+    "rdf_components_total_seconds": {
+      "distance": 0.17673054198803584,
+      "selection": 0.015724797989605577,
+      "gradient": 0.43574967598033254
+    }
+  }
+}

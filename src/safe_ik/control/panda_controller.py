@@ -83,8 +83,22 @@ class PandaTrajectoryController:
         self.qp_infeasible_stopped = False
         self.last_qp_solve_time = 0.0
         self.last_clf_slack = 0.0
+        self.last_qp_status = "not_run"
+        self.last_barrier = self.safety.evaluate(config.initial_q)
+        self.last_barrier_q = config.initial_q.copy()
+        if config.safety.self_collision_model == "rdf" and np.any(
+            self.last_barrier.values < 0
+        ):
+            violations = {
+                label: float(value)
+                for label, value in zip(
+                    self.last_barrier.labels, self.last_barrier.values
+                )
+                if value < 0
+            }
+            raise ValueError(f"unsafe initial trajectory state: {violations}")
         self.last_status: PandaControlStatus | None = None
-        self.barrier_labels = self.safety.evaluate(config.initial_q).labels
+        self.barrier_labels = self.last_barrier.labels
 
     @property
     def target_q(self) -> np.ndarray:
@@ -173,7 +187,11 @@ class PandaTrajectoryController:
         joint_error = (
             None if not self.candidates else float(np.linalg.norm(q - self.target_q))
         )
-        minimum_barrier = self.safety.evaluate(q).minimum
+        minimum_barrier = (
+            self.last_barrier.minimum
+            if self.config.safety.self_collision_model == "rdf"
+            else self.safety.evaluate(q).minimum
+        )
         success = (
             self.stage_index == len(self.stage_frames)
             and position_error <= self.config.target.position_tolerance
@@ -227,6 +245,10 @@ class PandaTrajectoryController:
         q = np.asarray(q, dtype=float)
         if self.qp_infeasible_stopped:
             return np.zeros(self.config.dof)
+        self.last_barrier = self.safety.evaluate(q)
+        self.last_barrier_q = q.copy()
+        self.last_qp_status = "not_run"
+        self.last_qp_solve_time = 0.0
         self._advance_reached_stages(q)
         self._switch_candidate_if_stalled(q)
         if self.last_status is not None and (
@@ -236,7 +258,7 @@ class PandaTrajectoryController:
 
         trajectory = self.config.trajectory
         clf_value, clf_gradient, _ = self._active_clf(q)
-        barrier = self.safety.evaluate(q)
+        barrier = self.last_barrier
         lower_limits, upper_limits = (
             self.kinematics.lower_limits,
             self.kinematics.upper_limits,
@@ -245,9 +267,17 @@ class PandaTrajectoryController:
         rows = [np.concatenate((clf_gradient, [-1.0]))]
         lower = [-np.inf]
         upper = [-trajectory.clf_rate * clf_value]
-        for gradient, value in zip(barrier.gradients, barrier.values):
+        for label, gradient, value in zip(
+            barrier.labels, barrier.gradients, barrier.values
+        ):
             rows.append(np.concatenate((gradient, [0.0])))
-            lower.append(-self.config.safety.alpha * value)
+            gain = (
+                self.config.safety.rdf.cbf_gain
+                if self.config.safety.self_collision_model == "rdf"
+                and label.startswith("self_")
+                else self.config.safety.alpha
+            )
+            lower.append(-gain * value)
             upper.append(np.inf)
         for joint in range(self.config.dof):
             row = np.zeros(self.config.dof + 1)
@@ -290,8 +320,15 @@ class PandaTrajectoryController:
         )
         result = self.solver.solve(problem)
         self.last_qp_solve_time = result.solve_time
-        if result.status != QPStatus.SOLVED:
-            qp_infeasible = result.status == QPStatus.INFEASIBLE
+        solver_status = result.status
+        if solver_status == QPStatus.SOLVED and (
+            np.asarray(result.x).shape != (self.config.dof + 1,)
+            or not np.isfinite(result.x).all()
+        ):
+            solver_status = QPStatus.FAILED
+        self.last_qp_status = solver_status.value
+        if solver_status != QPStatus.SOLVED:
+            qp_infeasible = solver_status == QPStatus.INFEASIBLE
             if qp_infeasible:
                 self.qp_infeasible_count += 1
             else:
@@ -315,7 +352,7 @@ class PandaTrajectoryController:
         return velocity
 
     def safety_diagnostics(self, q) -> SafetyDiagnostics:
-        barrier = self.safety.evaluate(q)
+        barrier = self.last_barrier
         clf_value, _, _ = self._active_clf(np.asarray(q, dtype=float))
         return SafetyDiagnostics(
             barrier.labels,

@@ -1,4 +1,4 @@
-# Sequential CLF 성능 해석 계획
+# 순차 CLF 성능 해석 계획
 
 ## 목적
 
@@ -10,7 +10,7 @@
 현재 제어기는 목표 pose에서 collision-free IK configuration `q*`를 선택하고, 그
 configuration의 링크 끝점 목표 `[p_1^*, p_2^*, p_3^*]`를 순서대로 추종한다.
 마지막 링크에서는 position과 yaw를 동시에 제어한다. 안전은 hard CBF와 joint-limit
-CBF로 유지한다. 알고리즘 상세는 [Sequential control algorithm](sequential_control.md)을
+CBF로 유지한다. 알고리즘 상세는 [순차 제어 알고리즘](sequential_control.md)을
 참조한다.
 
 ## 1. 먼저 정할 성공 기준
@@ -34,7 +34,7 @@ $$
 실험에서는 `sequential_experiment`의 position/yaw/barrier tolerance를 이 성공
 판정에 사용한다.
 
-## 2. case마다 저장할 지표
+## 2. 사례마다 저장할 지표
 
 성공률 하나만 비교하면 성능 차이의 원인을 알기 어렵다. 각 case에 아래 지표를
 기록한다.
@@ -60,16 +60,16 @@ slack 비율**을 함께 제시한다. 마지막 지표는 목표 도달까지 �
 active stage도 저장한다. `analysis.json`의 paired difference는 두 방법이 모두 성공한
 case에 대해서만 계산한다.
 
-## 3. 비교 방법과 ablation
+## 3. 비교 방법과 구성 요소별 효과 분석
 
 동일한 초기 관절 자세, 목표 pose, 장애물 배치를 공유하는 paired experiment로
 비교한다. 난수 seed도 고정한다.
 
 | 방법 | 목적 |
 |---|---|
-| Direct end-effector CLF | 중간 링크 목표가 없는 기본 기준선 |
-| Direct end-effector CLF + CBF | 순차 task 분해가 없는 기준선 |
-| Sequential CLF + CBF | 순차 task 분해의 효과 |
+| 직접 말단 장치 CLF | 중간 링크 목표가 없는 기본 기준선 |
+| 직접 말단 장치 CLF + CBF | 순차 작업 분해가 없는 기준선 |
+| 순차 CLF + CBF | 순차 작업 분해의 효과 |
 
 두 방법은 동일한 yaw 가중치와 같은 case를 공유한다. `Direct` 대 `Sequential`의
 paired comparison으로 순차 task 분해의 효과를 평가한다.
@@ -107,11 +107,11 @@ $$
 
 실패 case는 하나의 실패율로 합치지 말고 아래처럼 구분한다.
 
-- **IK infeasible**: 목표 pose에 대해 collision-free IK 해가 처음부터 없음
-- **CBF-boundary stall**: barrier 경계에서 속도가 작아져 다음 단계로 전환됨
-- **QP infeasible**: CLF, CBF, joint-limit, velocity 제약을 동시에 만족할 수 없음
-- **timeout**: 안전하지만 시간 제한 내 최종 tolerance에 도달하지 못함
-- **safety violation**: barrier가 음수가 됨
+- **IK 해 없음**: 목표 자세에 대해 충돌 없는 IK 해가 처음부터 없음
+- **CBF 경계 정지**: 장벽 경계에서 속도가 작아져 다음 단계로 전환됨
+- **QP 실행 불가능**: CLF, CBF, 관절 한계, 속도 제약을 동시에 만족할 수 없음
+- **시간 초과**: 안전하지만 시간 제한 내 최종 허용오차에 도달하지 못함
+- **안전 위반**: 장벽이 음수가 됨
 
 이 분류는 장애물 배치가 어려운 것인지, 순차 목표가 부적절한 것인지, 혹은 QP
 제약의 tuning 문제인지를 구분하게 해 준다.

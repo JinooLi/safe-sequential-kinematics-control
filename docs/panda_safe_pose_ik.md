@@ -1,34 +1,31 @@
-# Panda safe pose-IK and trajectory controller
+# Panda 안전 자세 IK와 궤적 제어기
 
-## Pipeline
+## 처리 흐름
 
 $$
-q_0 \rightarrow \text{safe pose-IK search}
-\rightarrow q^*_{safe} \rightarrow \text{CLF-CBF trajectory}
+q_0 \rightarrow \text{안전 자세 IK 탐색}
+\rightarrow q^*_{safe} \rightarrow \text{CLF-CBF 궤적}
 $$
 
-The target orientation is specified in YAML using two non-normalized,
-base/world-frame vectors: `orientation.approach` is the desired direction of
-the `gripper_tip` local +z axis, and `orientation.up` is the desired direction
-of its local +y axis. The up vector is projected orthogonally to approach, so
-the two vectors must not be parallel. They form a right-handed rotation matrix
-whose columns are the desired local +x, +y, and +z axes; this is converted
-internally to a scalar-first quaternion `[w, x, y, z]`. Position, orientation,
-capsule endpoints, obstacles, and Jacobians are represented in the base/world
-frame.
+목표 방향은 YAML에 정규화하지 않은 베이스·월드 좌표계 벡터 두 개로 지정한다.
+`orientation.approach`는 `gripper_tip`의 로컬 +z축이 향할 방향이고,
+`orientation.up`은 로컬 +y축이 향할 방향이다. up 벡터는 approach에
+수직인 평면으로 투영하므로 두 벡터는 평행하면 안 된다. 이들로 원하는 로컬
++x, +y, +z축을 열로 갖는 오른손 회전행렬을 만들고, 내부적으로 스칼라 성분이
+먼저 오는 쿼터니언 `[w, x, y, z]`로 변환한다. 위치, 방향, 변환된 캡슐 끝점,
+장애물, Jacobian은 베이스·월드 좌표계로 표현한다.
 
-## Safe pose-IK
+## 안전 자세 IK
 
-The orientation error is the vector part of the relative quaternion specified
-in `clarification.md`:
+방향 오차는 `clarification.md`에 명시한 상대 쿼터니언의 벡터 성분이다.
 
 $$
 e_O = \eta_e\varepsilon_d-\eta_d\varepsilon_e
 -\varepsilon_d\times\varepsilon_e.
 $$
 
-The primary inverse is damped while the null projector uses the Moore--Penrose
-inverse:
+주 작업의 역행렬에는 감쇠를 적용하고, 영공간 투영에는 Moore–Penrose
+의사역행렬을 사용한다.
 
 $$
 \dot q = J^\#_\lambda k_p
@@ -36,113 +33,122 @@ $$
 +\left(I-J^+J\right)k_s\nabla_q\Phi(q).
 $$
 
-All obstacle and enabled self-collision barriers are combined by
+모든 장애물 장벽과 활성 자기 충돌 장벽을 다음과 같이 결합한다.
 
 $$
 \Phi(q)=-\tau\log\sum_i\exp\left(-h_i(q)/\tau\right).
 $$
 
-The search intentionally has no velocity limit and no hard CBF. Each random
-seed gets its own integration and time budget. A candidate is accepted only
-when both pose tolerances are met and every margin-adjusted barrier satisfies
-$h_i\ge0$. A candidate is accepted only after all these conditions remain
-continuously satisfied for `safe_ik.convergence_hold_duration`. If any
-condition fails during the hold, its timer resets. The default hold is 3
-seconds. Completion ends only the current seed; every configured seed is still
-evaluated. After all seeds finish, the safe candidate with the smallest joint
-angle distance from the initial configuration is selected. Seed 0 starts at
-the initial configuration itself; the remaining seeds are sampled uniformly
-inside the Panda joint limits.
+이 탐색에는 의도적으로 속도 제한과 완화 불가능한 CBF 제약을 두지 않는다.
+각 무작위 초기 시드에 독립적인 적분 주기와 시간 예산을 부여한다.
+위치·방향 오차가 모두 허용 범위 이내이고 안전 여유를 반영한 모든 장벽이
+$h_i\ge0$일 때만 후보로 인정한다. 이 조건들은
+`safe_ik.convergence_hold_duration` 동안 연속해서 유지되어야 한다.
+도중에 하나라도 깨지면 유지 시간을 다시 센다. 기본 유지 시간은 3초다.
+완료되는 것은 해당 시드의 탐색뿐이며, 설정된 모든 시드는 계속 평가한다.
+모든 탐색이 끝나면 초기 관절 자세와 관절각 거리가 가장 가까운 안전 후보를
+선택한다. 0번 시드는 초기 자세 자체에서 시작하고, 나머지는 Panda 관절
+한계 안에서 균일하게 뽑는다.
 
-## Parallel seed search
+<a id="parallel-seed-search"></a>
+
+## 초기 시드 병렬 탐색
 
 ```yaml
 safe_ik:
   max_restarts: 10
-  workers: 4  # 1: serial; >1: independent spawned processes
+  workers: 4  # 예시: 1은 직렬, 2 이상은 독립적으로 생성한 프로세스
 ```
 
-`application/parallel_ik.py` owns the process pool. Each worker constructs its own
-Pinocchio model/Data/cache and capsule safety evaluator once and reuses them for
-assigned seeds. Live kinematics, MuJoCo state and the viewer are never serialized.
-The `spawn` start method avoids inheriting the main process's native/viewer threads.
-The pool uses at most `min(workers, max_restarts)` processes and closes before
-trajectory control. If safe IK finds no candidate, the same pool evaluates the
-pose-only diagnostic search. Worker errors propagate rather than being classified
-as an unreachable pose. Direct mode skips both IK and pool creation.
+`application/parallel_ik.py`가 프로세스 풀을 관리한다. 각 작업자는
+자체 Pinocchio 모델·Data·캐시와 설정된 안전 평가기를 한 번 생성하고
+배정된 시드에 재사용한다. RDF 모드에서는 각 작업자가 산출물을 직접
+로드하고 검증한다. 사용 중인 기구학 객체, MuJoCo 상태, 뷰어는 직렬화하지
+않는다. `spawn` 시작 방식으로 주 프로세스의 네이티브·뷰어 스레드가
+상속되는 것을 피한다. 최대 `min(workers, max_restarts)`개 프로세스를
+사용하고 궤적 제어 전에 풀을 닫는다. 안전 IK 후보를 찾지 못하면 같은 풀로
+자세만 검사하는 진단 탐색을 수행한다. 작업자 오류는 목표 자세 도달 불가로
+오분류하지 않고 호출자에게 전달한다. 직접 제어 모드는 IK와 풀 생성을 모두
+생략한다.
 
-`domain/safe_pose_ik.py` keeps the numerical iteration in `solve_seed()`. The parent
-generates every starting configuration in the original RNG order: seed 0 is the
-requested initial configuration, followed by uniform joint-limit samples. Results
-are sorted by seed index before nearest-candidate selection, preserving the serial
-tie rule regardless of scheduling. Hold duration and per-seed iteration budget are
-unchanged. A seed's internal iterations remain sequential.
+`domain/safe_pose_ik.py`의 `solve_seed()`가 수치 반복을 수행한다.
+부모 프로세스는 기존 난수 순서로 모든 시작 자세를 생성한다.
+0번은 요청한 초기 자세이고, 이후는 관절 한계 내 균일 표본이다.
+가장 가까운 후보를 고르기 전에 시드 인덱스로 결과를 정렬하므로,
+작업 배정 순서와 관계없이 직렬 실행의 동률 처리 규칙을 유지한다.
+유지 시간과 시드별 반복 예산은 바뀌지 않으며, 한 시드 내부의 반복은 직렬이다.
 
-Missing `workers` defaults to 1 for existing YAML files; the editable default config
-explicitly selects 4. `workers` must be a positive integer. Applied worker settings
-are included in archived YAML and resolved configuration. `safe_ik.wall_time`
-includes worker startup during the safe search but, as before, excludes the optional
-pose-only diagnostic pass; pool shutdown is also outside that metric.
+기존 YAML에서 `workers`가 빠지면 기본값은 1이다. 현재 편집 가능한
+`configs/panda.yaml`은 5를 명시한다. `workers`는 양의 정수여야 한다.
+적용한 작업자 설정은 보관 YAML과 해석된 설정에 포함된다.
+`safe_ik.wall_time`에는 안전 탐색 중 작업자 시작 시간이 포함되지만,
+선택적인 자세 전용 진단 탐색과 풀 종료 시간은 포함되지 않는다.
 
-Use a worker count appropriate to the available CPU cores. Short searches may be
-slower because of process startup. If a BLAS runtime starts many native threads per
-worker, limiting `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, and `OMP_NUM_THREADS` to 1
-before starting the command can avoid oversubscription. Exact speedup is machine-
-and workload-dependent; mathematical equivalence is checked with numerical tolerance,
-not promised as bitwise identity across different machines or BLAS implementations.
+사용 가능한 CPU 코어 수에 맞게 작업자 수를 선택한다. 짧은 탐색은 프로세스
+시작 비용 때문에 더 느릴 수 있다. BLAS가 작업자마다 많은 네이티브 스레드를
+생성하면, 명령 실행 전 `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`,
+`OMP_NUM_THREADS`를 1로 제한해 스레드 과다 생성을 피할 수 있다.
+실제 가속률은 장비와 작업량에 따라 달라진다. 수학적 동등성은 수치 허용오차로
+검사하며, 장비나 BLAS 구현이 달라도 비트 단위로 같다고 보장하지 않는다.
 
-Python scripts that start parallel search must call it under
-`if __name__ == "__main__":`. The provided CLI already has this guard.
-Custom injected runtimes can supply `ik_search_factory`; without it the domain solver
-runs locally, preserving support for in-memory test backends.
+병렬 탐색을 시작하는 Python 스크립트는 `if __name__ == "__main__":`
+아래에서 호출해야 한다. 제공 CLI에는 이미 이 보호 구문이 있다.
+사용자 정의 실행 환경은 `ik_search_factory`를 전달할 수 있다.
+없으면 도메인 해법이 현재 프로세스에서 실행되어 메모리 내 테스트 구현도
+계속 사용할 수 있다.
 
-On the development machine (2026-09-23), the current 10-seed configuration took
-34.38 s serially and 12.97 s with 4 workers (about 2.65x faster), including pool
-startup/shutdown in this benchmark. Both runs found and selected seed 4; candidate
-iterations matched and joint values agreed within 1e-11 absolute tolerance. This
-is one workload measurement, not a guaranteed speedup.
+개발 장비의 2026-09-23 측정에서 시드 10개의 탐색은 직렬로 34.38초,
+작업자 4개로 12.97초가 걸렸다(약 2.65배 가속).
+이 측정에는 풀 생성·종료 시간이 포함됐다. 두 실행 모두 4번 시드를
+찾고 선택했으며, 후보별 반복 횟수가 같고 관절값은 절대 허용오차 1e-11
+이내로 일치했다. 이는 당시 조건의 단일 측정이며 보장된 가속률이 아니다.
 
-## Collision model
+## 충돌 모델
 
-`PandaCapsuleSafety` evaluates sphere--capsule obstacle barriers and all
-non-adjacent capsule pairs. Adjacent chain members and configured fixed-body
-exclusions are omitted. Capsule endpoints are frame-local values derived from
-the checked-in collision meshes. The controller depends on the safety model's
-barrier/gradient interface so a learned distance field can replace it later.
+`PandaCapsuleSafety`는 구–캡슐 장애물 장벽과 비인접 캡슐 쌍을 평가한다.
+직접 인접한 연결 부재와 설정된 고정 본체 제외 쌍은 생략한다.
+캡슐 끝점은 저장소의 충돌 메시를 바탕으로 정한 프레임 로컬 좌표다.
 
-## Trajectory controller
+현재 자기 충돌의 기본값은 `PandaRDFSafety`이며, 외부 장애물에는
+기존 구–캡슐 계산을 유지한다. 제어기와 IK가 공통 장벽·기울기 인터페이스를
+사용하므로 같은 RDF가 안전 목적, 후보 검증, 궤적 CBF에 연결된다.
+기존 캡슐 자기 충돌은 명시적으로 선택할 수 있다.
+현재 생성된 RDF 산출물은 거리 검증에 실패했으므로 실행 시 거부된다.
+상세한 적용 범위는 [RDF 구현 상세](panda_rdf_implementation.md)를 참조한다.
 
-In sequential mode, the selected safe IK configuration supplies each link
-endpoint target. For every configured intermediate frame $i$,
+## 궤적 제어기
+
+순차 모드에서는 선택된 안전 IK 자세로 각 링크 끝점 목표를 정한다.
+설정된 중간 프레임 $i$마다 다음을 사용한다.
 
 $$
 V_i(q)=\frac12\lVert p_i(q)-p_i(q^*)\rVert^2.
 $$
 
-After each endpoint reaches the configured stage tolerance, control advances
-to the next frame. The final stage uses the requested end-effector pose:
+각 끝점이 설정된 단계 허용오차 안에 들어오면 다음 프레임으로 진행한다.
+마지막 단계는 요청한 말단 장치 위치·방향을 사용한다.
 
 $$
 V_{pose}(q)=\frac12\lVert p(q)-p_d\rVert^2
 +\frac{w_O}{2}\lVert e_O(q)\rVert^2.
 $$
 
-The orientation weight $w_O$ is `trajectory.orientation_weight` in YAML.
-Direct mode skips the endpoint stages and uses this same pose CLF from the
-start. It also skips safe pose-IK search and validation entirely, because its
-CLF is defined directly from the requested pose. Consequently, direct mode has
-no IK-candidate fallback. Panda trajectory control never uses a
-configuration-space CLF.
+방향 가중치 $w_O$는 YAML의 `trajectory.orientation_weight`다.
+직접 제어 모드는 끝점별 중간 단계를 생략하고 처음부터 같은 자세 CLF를
+사용한다. 목표 자세에서 CLF를 직접 정의하므로 안전 자세 IK 탐색과
+후보 검증도 생략한다. 따라서 IK 후보 전환은 없다.
+다만 RDF 산출물 검증과 궤적 초기 안전 검사까지 생략하는 것은 아니다.
+Panda 궤적 제어는 관절 구성 공간 CLF를 사용하지 않는다.
 
-For the quaternion error scalar/vector pair $(\eta,e_O)$ and the world angular
-Jacobian $J_\omega$, the final CLF gradient is
+쿼터니언 오차의 스칼라·벡터 쌍 $(\eta,e_O)$와 월드 좌표계 각속도
+Jacobian $J_\omega$에 대해 최종 CLF 기울기는 다음과 같다.
 
 $$
 \nabla_q V_{pose}=(p-p_d)^T J_v
 -\frac{w_O}{2}\eta e_O^T J_\omega.
 $$
 
-The QP applies
+QP에는 다음 제약을 적용한다.
 
 $$
 \nabla V\dot q-\delta\le-cV,
@@ -150,16 +156,19 @@ $$
 \nabla h_i\dot q\ge-\alpha h_i.
 $$
 
-Only the CLF is relaxed. CBF, joint-position, velocity, and command-rate
-(acceleration) constraints are hard. QP infeasibility commands zero velocity.
-If the moving average of $\lVert\dot q\rVert_2$ over the configured window is
-below the stop threshold before success, the next safe IK candidate is used.
+CLF만 완화한다. CBF, 관절 위치, 속도, 명령 변화율(가속도)은 완화할 수 없다.
+RDF 자기 충돌 행에는 `safety.rdf.cbf_gain`을 사용한다.
+QP에 가능한 해가 없으면 속도 0을 반환하고 실행을 중단한다.
+성공 전에 설정된 시간창의 관절 속도 2-노름 이동평균이 정지 임계값보다
+작아지면 다음 안전 IK 후보를 사용한다.
 
-## Failure meanings
+## 실패 사유
 
-- `pose_ik_unreachable`: obstacle-free diagnostic search did not reach the
-  requested pose within the configured multi-start budget.
-- `safe_pose_ik_not_found`: pose IK was found, but no candidate passed every
-  safety barrier.
-- QP infeasible: safe IK exists, but hard trajectory constraints cannot be
-  satisfied at the current state; the controller stops.
+- `pose_ik_unreachable`: 장애물 제약을 요구하지 않는 진단 탐색이 설정된
+  다중 시작 예산 안에 목표 자세에 도달하지 못했다.
+- `safe_pose_ik_not_found`: 자세 IK는 찾았지만 모든 안전 장벽을 통과하는
+  후보가 없었다.
+- `unsafe_initial_state`: RDF 모드에서 궤적 초기 상태의 장벽이 음수여서
+  제어 시작을 거부했다.
+- QP 실행 불가능: 안전 IK가 있어도 현재 상태에서 완화 불가능한 궤적
+  제약을 만족할 수 없어 제어기를 중단했다.

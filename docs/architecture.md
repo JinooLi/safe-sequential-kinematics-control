@@ -2,7 +2,7 @@
 
 이 문서는 2026-09-23 아키텍처 리뷰를 바탕으로 적용한 변경, 설계 이유,
 실행 방법과 검증 범위를 설명한다. 제어 알고리즘의 수식은
-[Panda 제어 문서](panda_safe_pose_ik.md)와 [planar sequential 문서](sequential_control.md)를 참고한다.
+[Panda 제어 문서](panda_safe_pose_ik.md)와 [평면 로봇 순차 제어 문서](sequential_control.md)를 참고한다.
 
 ## 1. 구조와 책임
 
@@ -70,7 +70,7 @@ flowchart TD
 `tests/test_architecture.py`가 이 방향을 검사한다. 순수 모듈을 import했을 때
 native backend나 Matplotlib pyplot이 로드되지 않는지도 별도 프로세스에서 확인한다.
 
-## 3. solver 결과를 명시적인 계약으로 변경
+## 3. 해법 실행 결과를 명시적인 계약으로 변경
 
 이전 `solve()`는 배열 또는 `None`을 반환했다. Panda는 선언되지 않은
 `solver.last_status` 문자열을 읽어 실패 원인을 추측했고, planar는 모든 실패를

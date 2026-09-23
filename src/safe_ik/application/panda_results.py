@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,6 +30,8 @@ class PandaRunResult:
     candidate_switch_count: int
     stage_transition_count: int
     trace: "PandaControlTrace | None"
+    safety_metadata: dict | None = None
+    failure: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -45,6 +48,12 @@ class PandaControlTrace:
 
     q: np.ndarray | None = None
     command: np.ndarray | None = None
+    rdf_timings: np.ndarray | None = None
+    qp_time: np.ndarray | None = None
+    qp_status: tuple[str, ...] = ()
+    safety_metadata: dict | None = None
+    minimum_self_barrier: np.ndarray | None = None
+    minimum_self_pair: tuple[str, ...] = ()
 
 
 def save_panda_control_trace(trace: PandaControlTrace | None, path: str | Path) -> bool:
@@ -64,6 +73,25 @@ def save_panda_control_trace(trace: PandaControlTrace | None, path: str | Path) 
         barrier_values=trace.barrier_values,
         **({"q": trace.q} if trace.q is not None else {}),
         **({"command": trace.command} if trace.command is not None else {}),
+        **(
+            {
+                "rdf_timings": trace.rdf_timings,
+                "rdf_timing_columns": np.array(["distance", "selection", "gradient"]),
+            }
+            if trace.rdf_timings is not None
+            else {}
+        ),
+        **({"qp_time": trace.qp_time} if trace.qp_time is not None else {}),
+        qp_status=np.asarray(trace.qp_status, dtype=str),
+        safety_metadata=np.array(json.dumps(trace.safety_metadata)),
+        **(
+            {
+                "minimum_self_barrier": trace.minimum_self_barrier,
+                "minimum_self_pair": np.asarray(trace.minimum_self_pair, dtype=str),
+            }
+            if trace.minimum_self_barrier is not None
+            else {}
+        ),
     )
     return True
 
@@ -72,6 +100,8 @@ def result_payload(result: PandaRunResult) -> dict:
     """Return a JSON-safe run summary for later experiment aggregation."""
     selected = result.ik.selected
     return {
+        "safety": result.safety_metadata,
+        "failure": result.failure,
         "safe_ik": {
             "skipped": result.ik_skipped,
             "success": None if result.ik_skipped else selected is not None,
@@ -91,7 +121,9 @@ def result_payload(result: PandaRunResult) -> dict:
             ),
         },
         "trajectory": {
-            "success": bool(result.status and result.status.success),
+            "success": bool(
+                not result.failure and result.status and result.status.success
+            ),
             "time": result.elapsed,
             "control_steps": result.steps,
             "control_effort": result.control_effort,

@@ -68,7 +68,20 @@ def main():
         workers = min(config.safe_ik.workers, config.safe_ik.max_restarts)
         execution = "serial" if workers == 1 else f"{workers} worker processes"
         print(f"safe IK: {config.safe_ik.max_restarts} seeds, {execution}", flush=True)
-    runtime = build_panda_runtime(config)
+    try:
+        runtime = build_panda_runtime(config)
+    except (ValueError, OSError) as exc:
+        failure = {
+            "failure": {
+                "reason": "runtime_initialization_failed",
+                "detail": str(exc),
+                "time": 0.0,
+                "q": config.initial_q.tolist(),
+                "solver_status": "not_run",
+            }
+        }
+        (directory / "summary.json").write_text(json.dumps(failure, indent=2))
+        parser.exit(2, f"{exc}\nFailure report: {directory / 'summary.json'}\n")
 
     def report_transition(time, previous, following, reason):
         print(f"[Panda stage] t={time:.3f}s: {previous} -> {following} ({reason})")
@@ -101,6 +114,8 @@ def main():
     if save_panda_control_plot(result.trace, plot_path, show=args.show_plot):
         print(f"control plot: {plot_path}")
     print(f"run artifacts: {directory}")
+    if result.failure:
+        print(f"stopped: {result.failure}")
     if result.ik_skipped:
         print("safe IK: skipped (direct mode)")
     else:

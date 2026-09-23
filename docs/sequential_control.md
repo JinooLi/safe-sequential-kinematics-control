@@ -1,4 +1,4 @@
-# Sequential end-effector control
+# 순차 말단 장치 제어
 
 ## 목적
 
@@ -20,7 +20,7 @@
 각 단계의 task frame은 `sequential_end_effector.frame_names`에 정의한다. 기본
 설정은 `[joint2, joint3, ee_joint]`이다.
 
-## 1. 목표 configuration 선택
+## 1. 목표 관절 자세 선택
 
 최종 목표 position `p*`, 목표 yaw `yaw*`, 링크 길이 `(l1, l2, l3)`에서 마지막
 링크를 제외한 손목 위치를 먼저 계산한다.
@@ -69,7 +69,7 @@ $$
 \nabla_q V_i = w_{clf}\,4(p-p_i^*)^T[J_x;J_y]
 $$
 
-### 마지막 단계: link3 / end-effector
+### 마지막 단계: link3 / 말단 장치
 
 마지막 단계에 진입하는 즉시 position과 yaw를 함께 사용한다. position 목표에
 먼저 도달한 뒤 yaw를 제어하는 별도 phase는 없다.
@@ -106,11 +106,11 @@ slack으로 완화되지 않는 hard CBF다.
 
 - 모든 활성 장애물--링크 쌍:
   \(\nabla_qh\dot q\ge-\alpha h\)
-- end-effector--link1 self-collision:
+- 말단 장치–link1 자기 충돌:
   \(h_{self}=f_{link1}(p_{ee}(q),q)-d_{self}\),
   \(\nabla_qh_{self}\dot q\ge-\alpha h_{self}\). 이 미분에는 link1의 운동과
   end-effector query point의 운동이 모두 포함된다.
-- base--link3 self-collision:
+- 베이스–link3 자기 충돌:
   \(h_{base}=f_{link3}([0,0]^T,q)-d_{self}\),
   \(\nabla_qh_{base}\dot q\ge-\alpha h_{base}\).
 - finite joint limit의 상한/하한 zeroing CBF
@@ -134,7 +134,7 @@ RDF를 사용한다.
 시뮬레이션 루프는 frame 전환이 발생한 동일 상태에서 새 frame의 kinematics와 QP를
 다시 계산한다. 따라서 다음 timestep까지 기다리지 않고 새 단계의 명령을 구한다.
 
-## Direct 및 sequential ablation 비교 기준
+## 직접 제어와 순차 제어의 구성 요소 비교 기준
 
 Direct baseline은 중간 목표점과 IK branch 선택을 제어에 사용하지 않는다. 처음부터
 최종 end-effector를 대상으로 다음 CLF를 사용한다.
@@ -166,7 +166,7 @@ sequential_end_effector:
 safety:
   clf_rate: 1.0
   clf_weight: 5.0
-  # End-effector centre-to-link1 capsule signed-distance boundary [m]
+  # 말단 장치 중심과 link1 캡슐 사이의 부호 있는 거리 경계 [m]
   self_collision_distance: 0.13
   velocity_limit: 4.0
 ```

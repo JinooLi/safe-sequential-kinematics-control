@@ -21,6 +21,7 @@ RESULTS_FLAG = $(if $(strip $(RESULTS_DIR)),--results-dir "$(RESULTS_DIR)")
 CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
 
 .DEFAULT_GOAL := help
+.PHONY: panda-train-rdf panda-validate-rdf
 .PHONY: help setup setup-runtime build test check check-format format \
  panda-run panda-view panda-direct panda-direct-view panda-sequential panda-sequential-view panda-plot panda-plot-view \
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
@@ -32,6 +33,12 @@ help: ## Show grouped commands and optional variables
 	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode targets override it."}' $(MAKEFILE_LIST)
 
 ##@ Panda: simulation and control
+panda-train-rdf: ## Offline visual-mesh RDF training and validation (fails closed)
+	$(UV) run safe-ik-train-panda-rdf --config "$(PANDA_CONFIG)" $(OUTPUT_FLAG) $(ARGS)
+
+panda-validate-rdf: ## Revalidate existing RDF coefficients without training
+	$(UV) run safe-ik-train-panda-rdf --config "$(PANDA_CONFIG)" --validate-only $(OUTPUT_FLAG) $(ARGS)
+
 panda-run: ## Headless run using trajectory.mode from Panda YAML
 	$(PANDA) $(ARGS)
 

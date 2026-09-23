@@ -62,3 +62,11 @@ class JointPlant(Protocol):
     @property
     def time(self) -> float: ...
     def advance(self, velocity: np.ndarray, period: float) -> None: ...
+
+
+class FramePoseKinematics(PoseKinematics, Protocol):
+    def frame_pose_and_jacobian(
+        self, frame_name: str, q: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Return local-to-world rotation, origin and world-aligned 6D Jacobian."""
+        ...

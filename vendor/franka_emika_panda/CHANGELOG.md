@@ -1,9 +1,11 @@
-# Changelog – Franka Emika Panda Description
+# 변경 이력 — Franka Emika Panda 모델
 
-All notable changes to this model will be documented in this file.
+원본 모델의 주요 변경 이력을 한국어로 옮긴 문서다.
 
 ## [2025-07-02]
-- Explicitly exclude contacts between the base and the first link.
+
+- 베이스와 첫 번째 링크 사이의 접촉을 명시적으로 제외했다.
 
 ## [2022-09-07]
-- Initial release.
+
+- 최초 배포.

@@ -96,6 +96,8 @@ class PandaCapsuleSafety:
         obstacles,
         margin: float,
         self_collision_exclusions=(),
+        *,
+        include_self=True,
     ):
         self.kinematics = kinematics
         self.capsules: tuple[CapsuleConfig, ...] = tuple(capsules)
@@ -106,6 +108,7 @@ class PandaCapsuleSafety:
             raise ValueError("safety margin must be non-negative")
         self.margin = float(margin)
         self.self_collision_exclusions = frozenset(self_collision_exclusions)
+        self.include_self = include_self
 
     def _states(self, q) -> tuple[CapsuleState, ...]:
         states = []
@@ -147,7 +150,7 @@ class PandaCapsuleSafety:
 
         # Capsule order follows the kinematic chain. Direct neighbours share
         # a joint and are deliberately excluded from self-collision checks.
-        for first in range(len(states)):
+        for first in range(len(states) if self.include_self else 0):
             for second in range(first + 2, len(states)):
                 left, right = states[first], states[second]
                 if frozenset((left.name, right.name)) in self.self_collision_exclusions:

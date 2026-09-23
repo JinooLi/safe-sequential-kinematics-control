@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>최댓값 기반 거리 대체 거리 함수와 그래디언트 · 2D RDF</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f6f7fb,#151921);--panel:light-dark(#fff,#202631);--text:light-dark(#202b3a,#e7edf5);--muted:light-dark(#526176,#b6c1cf);--line:light-dark(#dce2eb,#414d60);--true:light-dark(#087660,#63d9b8);--bound:light-dark(#315fdb,#91b4ff);--ext:light-dark(#b96212,#f2b96a)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 20px}h1{font-size:26px;margin:0}h2{font-size:18px;margin:0 0 10px}p{margin:8px 0 16px;color:var(--muted)}.layout{display:grid;grid-template-columns:1.15fr 1fr;gap:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}label{display:block}input[type=range]{width:100%;accent-color:var(--bound)}output{font-variant-numeric:tabular-nums;float:right}.wide{grid-column:1/-1}canvas{display:block;width:100%;height:240px}#scene{height:460px;touch-action:none;cursor:crosshair}.legend{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:13px}.swatch{display:inline-block;width:22px;border-top:3px solid;margin-right:6px;vertical-align:middle}.true{color:var(--true)}.bound{color:var(--bound)}.ext{color:var(--ext)}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px;font-variant-numeric:tabular-nums}.formula{font-family:ui-monospace,monospace;overflow-wrap:anywhere}.note{font-size:13px}#status{font-weight:600}button{padding:8px 14px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);cursor:pointer}summary{cursor:pointer}details{margin-top:18px}input:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--bound)}@media(max-width:800px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:repeat(2,minmax(0,1fr))}#scene{height:380px}}@media(max-width:420px){main{padding:16px 10px}.panel{padding:12px}.controls{grid-template-columns:1fr}.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>최댓값 기반 거리 대체 거리 함수와 그래디언트</h1>
+<p>내부 RDF와 표면 최댓값 기반 외부 함수를 연결합니다. 실제 거리의 하한이 아니며 과대평가할 수 있습니다. 그림을 클릭하거나 드래그하세요. 아래 슬라이더로도 점을 이동할 수 있습니다.</p>
+<div class="controls panel">
+ <label>확장 기준 반지름 r₀ <output id="r0Value"></output><input id="r0" type="range" min="1.10" max="1.70" step="0.01" value="1.25"></label>
+ <label>전환 폭 r₁ − r₀ <output id="widthValue"></output><input id="width" type="range" min="0.15" max="1.5" step="0.01" value="0.8"></label>
+ <label>보수적 거리 차감 ε <output id="epsValue"></output><input id="eps" type="range" min="0" max="0.12" step="0.005" value="0.04"></label>
+ <label>질의점 방향 θ <output id="thetaValue"></output><input id="theta" type="range" min="-180" max="180" step="0.1" value="38"></label>
+ <label>질의점 반지름 ρ <output id="rhoValue"></output><input id="rho" type="range" min="0.02" max="4" step="0.005" value="1.52"></label>
+ <div><label><input id="field" type="checkbox" checked> D의 그래디언트 장</label><label><input id="contours" type="checkbox" checked> D 등고선 (0.20 m 간격)</label><label><input id="trueContours" type="checkbox"> 실제 거리 d 등고선 비교</label><button id="reset" type="button">초기 설정</button></div>
+</div>
+<p id="widthCondition" aria-live="polite"></p>
+<div class="layout">
+ <section class="panel"><h2>공간과 방향 미분</h2>
+ <div class="legend"><span><i class="swatch true"></i>실제 거리 ∇d</span><span><i class="swatch bound"></i>대체 거리 함수 ∇D</span></div>
+ <canvas id="scene" role="img" aria-label="캡슐 물체와 두 동심원, 대체 거리 함수 등고선 및 실제 거리와 대체 거리 함수의 그래디언트"></canvas>
+ <div id="status" aria-live="polite"></div><div class="stats" id="stats"></div>
+ <p class="note">파란 실선: D 등고선 (0.20 m 간격), 굵은 점선: 현재 점과 같은 값 D = D(p). 선택 가능한 초록 점선은 실제 거리 d의 등고선입니다. 화살표는 값이 증가하는 방향이며 길이는 기울기 크기에 비례합니다. 따라서 링크에서 멀어지는 방향과 항상 같지는 않습니다. 등고선은 수치 보간으로 그립니다.</p>
+ <p class="note">p*는 r₀ 원 위의 방사 투영점으로 위치 참고용입니다. 외부 함수는 p*의 값 대신 원 전체의 최댓값 M을 사용합니다. 음영은 전환 구간이며, 작은 화살표는 ∇D입니다.</p>
+ </section>
+ <section class="panel"><h2>선택 방향 θ의 방사 단면</h2>
+ <div class="legend"><span><i class="swatch true"></i>실제 거리 d</span><span><i class="swatch bound"></i>대체 거리 함수 D</span><span><i class="swatch ext"></i>외부 함수 F (ρ ≥ r₀), ∂F/∂ρ = 1</span></div>
+ <canvas id="distance" role="img" aria-label="방사 좌표에 따른 실제 거리, 대체 거리 함수, 외부 함수"></canvas>
+ <canvas id="derivative" role="img" aria-label="방사 방향 미분 비교 및 두 경계에서의 연속성"></canvas>
+ <p class="note">세로선: r₀, r₁ 및 현재 ρ. 미분 그래프는 ∇D · v이며 전체 그래디언트의 크기와 다릅니다. 물체 내부의 중심선에서는 실제 부호 있는 거리 자체가 미분 불가능할 수 있습니다.</p>
+ </section>
+ <section class="panel wide"><h2>이 예제의 수식과 가정</h2>
+ <p>물체는 선분 (−0.65, 0)–(0.65, 0)에 반지름 0.22 m를 더한 캡슐입니다. 학습 RDF 대신 정확한 부호 있는 거리 f = d를 사용하여 연결 방식만 검증합니다. ε는 정확한 거리에서 추가로 차감하는 여유이며, 학습 모델의 오차 상한을 검증한 예제가 아닙니다.</p>
+ <div class="formula">ℓ(p) = d(p) − ε<br>m = min_{‖x−c‖=r₀} ℓ(x) = r₀ − 0.87 − ε<br>M = max_{‖x−c‖=r₀} ℓ(x) = r₀ − 0.22 − ε<br>v = (p − c) / ρ<br>F(p) = M + ρ − r₀　[ρ ≥ r₀]<br>F(r₁) = M + Δr &gt; M　[Δr = r₁ − r₀ &gt; 0]<br>s = (ρ − r₀)/(r₁ − r₀),　σ = 3s² − 2s³<br>D = ℓ　[ρ ≤ r₀]；D = (1−σ)ℓ + σF　[r₀ &lt; ρ &lt; r₁]；D = F　[ρ ≥ r₁]</div>
+ <details><summary>그래디언트 계산과 보장 범위</summary>
+ <div class="formula">∇F = v<br>∇D = (1−σ)∇ℓ + σv + (F−ℓ) [6s(1−s)/(r₁−r₀)] v</div>
+ <p>m과 M은 유한 샘플이 아닌 캡슐의 정확한 식으로 계산합니다. 이 예제의 ℓ는 1-Lipschitz이므로 외부에서 ℓ(p) ≤ ℓ(p*) + (ρ−r₀) ≤ F(p)입니다. 따라서 혼합 보정항은 방사 방향으로 음수가 아닙니다. 캡슐의 외부 방사 미분도 양수이므로 전환 구간에서 D는 방사 방향으로 증가합니다. 다만 폭이 좁으면 기울기 크기가 커질 수 있고, 실제 기울기와 일치하는 것은 아닙니다. smoothstep으로 r₀와 r₁의 값과 기울기는 연결됩니다. 학습 RDF가 같은 Lipschitz·방사 미분 조건을 만족한다고 가정할 수는 없습니다. D는 실제 거리의 하한이 아니며 ε를 차감해도 하한이 보장되지 않습니다. ZCBF로 사용할 때는 안전 집합과 물리적 충돌 영역의 관계를 별도로 검증해야 합니다.</p>
+ </details>
+ </section>
+</div></main>
+<script>
+'use strict';
+// 연결 방식을 명확히 확인하기 위해 학습 RDF 대신 정확한 캡슐 거리를 사용한다.
+const defaults={r0:1.25,width:0.8,eps:0.04,theta:38,rho:1.52};
+const state={...defaults};
+const hypot=Math.hypot;
+function sdf(x,y){const dx=x-Math.max(-.65,Math.min(.65,x)),n=hypot(dx,y);return {d:n-.22,g:n>1e-12?[dx/n,y/n]:[0,0],defined:n>1e-12};}
+// 중심이 원점인 캡슐에 대해 내부 원 전체의 최솟값과 최댓값을 정확히 계산한다.
+function surfaceExtrema(s=state){return {m:s.r0-.87-s.eps,M:s.r0-.22-s.eps};}
+function evaluate(x,y,s=state){
+ const f=sdf(x,y),rho=hypot(x,y),ell=f.d-s.eps;
+ if(rho<=s.r0)return {d:f.d,D:ell,g:f.g,trueG:f.g,defined:f.defined,F:rho===s.r0?surfaceExtrema(s).M:null,region:'내부 RDF 영역'};
+ const v=[x/rho,y/rho],F=surfaceExtrema(s).M+rho-s.r0;
+ if(rho>=s.r0+s.width)return {d:f.d,D:F,g:v,trueG:f.g,defined:true,F,region:'외부 함수 영역 · ∇D = v'};
+ const t=(rho-s.r0)/s.width,w=t*t*(3-2*t),dw=6*t*(1-t)/s.width;
+ return {d:f.d,D:(1-w)*ell+w*F,g:v.map((z,i)=>(1-w)*f.g[i]+w*z+(F-ell)*dw*z),trueG:f.g,defined:f.defined,F,region:'RDF ↔ 최댓값 기반 외부 함수 전환 구간'};
+}
+const $=id=>document.getElementById(id);
+function palette(){const cs=getComputedStyle(document.documentElement);return Object.fromEntries(['panel','text','muted','line','true','bound','ext'].map(k=>[k,cs.getPropertyValue('--'+k).trim()]));}
+// 임시 요소의 계산된 CSS 색상으로 Canvas에 사용할 light-dark() 값을 구한다.
+function colors(){const e=document.createElement('span');document.body.append(e);const p=palette();for(const k in p){e.style.color=p[k];p[k]=getComputedStyle(e).color;}e.remove();return p;}
+function setup(id){const el=$(id),w=el.clientWidth,h=el.clientHeight,dpr=window.devicePixelRatio||1;el.width=Math.round(w*dpr);el.height=Math.round(h*dpr);const g=el.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.font='12px system-ui';return {g,w,h};}
+function line(g,pts,color,width=1,dash=[]){g.strokeStyle=color;g.lineWidth=width;g.setLineDash(dash);g.beginPath();pts.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.stroke();g.setLineDash([]);}
+function arrow(g,a,b,color,width=2){const d=hypot(b[0]-a[0],b[1]-a[1]);if(d<1)return;line(g,[a,b],color,width);const t=Math.atan2(b[1]-a[1],b[0]-a[0]),head=Math.min(7,d*.4);line(g,[[b[0]-head*Math.cos(t-.5),b[1]-head*Math.sin(t-.5)],b,[b[0]-head*Math.cos(t+.5),b[1]-head*Math.sin(t+.5)]],color,width);}
+let sceneTransform;
+let contourCache=null;
+function contourGrid(extent){
+ const key=[extent,state.r0,state.width,state.eps].join(',');
+ if(contourCache?.key===key)return contourCache;
+ const n=100,step=2*extent/n,rows=[];
+ for(let j=0;j<=n;j++){const row=[];for(let i=0;i<=n;i++){const x=-extent+i*step,y=-extent+j*step,e=evaluate(x,y);row.push({x,y,D:e.D,d:e.d});}rows.push(row);}
+ return contourCache={key,n,rows};
+}
+// 격자 셀을 삼각형으로 나누어 marching squares의 안장점 모호성을 피한다.
+function contourSegments(grid,key,level){
+ const segments=[];
+ function triangle(a,b,c){const points=[];for(const [u,v] of [[a,b],[b,c],[c,a]]){if((u[key]<level)===(v[key]<level))continue;const t=(level-u[key])/(v[key]-u[key]);points.push([u.x+t*(v.x-u.x),u.y+t*(v.y-u.y)]);}if(points.length===2)segments.push(points);}
+ for(let j=0;j<grid.n;j++)for(let i=0;i<grid.n;i++){const a=grid.rows[j][i],b=grid.rows[j][i+1],c=grid.rows[j+1][i+1],d=grid.rows[j+1][i];triangle(a,b,c);triangle(a,c,d);}
+ return segments;
+}
+function drawContours(g,xy,extent,c){
+ if(!$('contours').checked&&!$('trueContours').checked)return;
+ const grid=contourGrid(extent);
+ const stroke=(key,level,color,width,dash,alpha)=>{const segments=contourSegments(grid,key,level);g.strokeStyle=color;g.lineWidth=width;g.globalAlpha=alpha;g.setLineDash(dash);g.beginPath();for(const [a,b] of segments){g.moveTo(...xy(...a));g.lineTo(...xy(...b));}g.stroke();g.setLineDash([]);g.globalAlpha=1;};
+ const max=Math.SQRT2*extent;
+ for(let level=0;level<=max;level+=.2){if($('contours').checked)stroke('D',level,c.bound,level===0?1.8:1,[],.4);if($('trueContours').checked)stroke('d',level,c.true,1,[3,4],.4);}
+ if($('contours').checked){const t=state.theta*Math.PI/180,e=evaluate(state.rho*Math.cos(t),state.rho*Math.sin(t));stroke('D',e.D,c.bound,2,[6,3],.9);g.fillStyle=c.text;g.fillText(`선택 등고선 D = ${e.D.toFixed(3)} m`,10,20);}
+}
+function scene(c){
+ const {g,w,h}=setup('scene'),extent=Math.max(2.15,state.r0+state.width+.25,state.rho+.35),scale=Math.min(w-50,h-50)/(2*extent),cx=w/2,cy=h/2;
+ const xy=(x,y)=>[cx+x*scale,cy-y*scale];sceneTransform={cx,cy,scale};
+ line(g,[xy(-extent,0),xy(extent,0)],c.line);line(g,[xy(0,-extent),xy(0,extent)],c.line);g.fillStyle=c.muted;g.fillText('x (m)',w-40,cy-8);g.fillText('y (m)',cx+8,18);
+ g.beginPath();g.arc(cx,cy,(state.r0+state.width)*scale,0,Math.PI*2);g.arc(cx,cy,state.r0*scale,0,Math.PI*2,true);g.fillStyle=c.bound;g.globalAlpha=.08;g.fill();g.globalAlpha=1;
+ drawContours(g,xy,extent,c);
+ for(const [r,name,dash] of [[state.r0,'r₀',[]],[state.r0+state.width,'r₁',[5,4]]]){g.beginPath();g.arc(cx,cy,r*scale,0,Math.PI*2);g.strokeStyle=c.muted;g.lineWidth=1;g.setLineDash(dash);g.stroke();g.setLineDash([]);g.fillStyle=c.text;g.fillText(name,cx+8,cy-r*scale+15);}
+ g.lineCap='round';line(g,[xy(-.65,0),xy(.65,0)],c.muted,.44*scale);g.lineCap='butt';g.fillStyle=c.panel;g.textAlign='center';g.fillText('link',cx,cy+4);g.textAlign='left';
+ if($('field').checked){g.globalAlpha=.45;for(let x=-extent+.2;x<extent;x+=.34)for(let y=-extent+.2;y<extent;y+=.34){const v=evaluate(x,y);if(v.d<.02)continue;arrow(g,xy(x,y),xy(x+.13*v.g[0],y+.13*v.g[1]),c.bound,1);}g.globalAlpha=1;}
+ const t=state.theta*Math.PI/180,v=[Math.cos(t),Math.sin(t)],p=v.map(z=>z*state.rho),ps=v.map(z=>z*state.r0),ev=evaluate(...p);
+ line(g,[[cx,cy],xy(...p)],c.muted,1,[3,5]);line(g,[xy(...ps),xy(...p)],c.ext,2,[4,3]);
+ function point(a,label,color){const b=xy(...a);g.beginPath();g.arc(...b,5,0,Math.PI*2);g.fillStyle=color;g.fill();g.fillStyle=c.text;g.fillText(label,b[0]+8,b[1]+16);}
+ point(ps,'p*',c.ext);point(p,'p',c.text);
+ arrow(g,xy(...p),xy(p[0]+.34*ev.trueG[0],p[1]+.34*ev.trueG[1]),c.true,4);
+ arrow(g,xy(...p),xy(p[0]+.34*ev.g[0],p[1]+.34*ev.g[1]),c.bound,2);
+ const radial=ev.g[0]*v[0]+ev.g[1]*v[1];
+ $('status').textContent=ev.region+(radial < -1e-6?' · 방사 미분 < 0: 이 위치에서 D는 바깥으로 갈수록 감소합니다.':'');
+ const {m,M}=surfaceExtrema();
+ $('stats').innerHTML=[['실제 부호 있는 거리',ev.d,'m'],['대체 거리 함수 D',ev.D,'m'],['오차 D − d (양수: 과대평가)',ev.D-ev.d,'m'],['‖∇D‖',hypot(...ev.g),''],['∇D · v',ev.g[0]*v[0]+ev.g[1]*v[1],''],['표면 최솟값 m (참고)',m,'m'],['표면 최댓값 M',M,'m'],['외부 경계값 F(r₁)',M+state.width,'m']].map(([k,a,u])=>`<div>${k}: <strong>${a.toFixed(4)}</strong> ${u}</div>`).join('');
+ $('widthCondition').textContent=`F(r₁) = M + Δr = ${(M+state.width).toFixed(3)} m > M = ${M.toFixed(3)} m. 양의 전환 폭이면 경계값 조건을 만족합니다. r₁ = ${(state.r0+state.width).toFixed(3)} m. 거리 하한 보장은 없습니다.`;
+}
+function plot(id,c,derivative){
+ const {g,w,h}=setup(id),l=54,r=w-14,top=30,bottom=h-36,max=Math.max(2.7,state.r0+state.width+.35,state.rho+.15),theta=state.theta*Math.PI/180,v=[Math.cos(theta),Math.sin(theta)],data=[];
+ for(let i=0;i<=600;i++){const rho=.001+(max-.001)*i/600,e=evaluate(rho*v[0],rho*v[1]);data.push({rho,truth:derivative?e.trueG[0]*v[0]+e.trueG[1]*v[1]:e.d,bound:derivative?e.g[0]*v[0]+e.g[1]*v[1]:e.D,ext:e.F===null?null:(derivative?1:e.F)});}
+ const values=data.flatMap(d=>[d.truth,d.bound,d.ext]).filter(x=>x!==null),lo=Math.min(0,...values)-.1,hi=Math.max(...values)+.15,X=x=>l+x/max*(r-l),Y=y=>bottom-(y-lo)/(hi-lo)*(bottom-top);
+ g.fillStyle=c.text;g.fillText(derivative?'방사 미분 ∂d/∂ρ, ∂D/∂ρ, ∂F/∂ρ':'거리 d, D, F (m)',l,16);
+ g.fillStyle=c.bound;g.globalAlpha=.07;g.fillRect(X(state.r0),top,X(state.r0+state.width)-X(state.r0),bottom-top);g.globalAlpha=1;
+ for(let i=0;i<4;i++){const y=lo+(hi-lo)*i/3;line(g,[[l,Y(y)],[r,Y(y)]],c.line);g.fillStyle=c.muted;g.textAlign='right';g.fillText(y.toFixed(2),l-7,Y(y)+4);}g.textAlign='center';
+ for(let i=0;i<4;i++){const x=max*i/3;g.fillStyle=c.muted;g.fillText(x.toFixed(2),X(x),bottom+17);}g.textAlign='right';g.fillText('ρ (m)',r,h-3);g.textAlign='left';
+ g.save();g.beginPath();g.rect(l,top,r-l,bottom-top);g.clip();
+ for(const [key,color,dash] of [['truth',c.true,[]],['ext',c.ext,[5,4]],['bound',c.bound,[]]]){const pts=data.filter(d=>d[key]!==null).map(d=>[X(d.rho),Y(d[key])]);if(pts.length)line(g,pts,color,key==='bound'?2.6:1.8,dash);}
+ for(const [x,col,dash] of [[state.r0,c.muted,[3,4]],[state.r0+state.width,c.muted,[3,4]],[state.rho,c.text,[2,3]]])line(g,[[X(x),top],[X(x),bottom]],col,1,dash);g.restore();
+ g.fillStyle=c.text;g.fillText('r₀',X(state.r0)+3,top+13);g.fillText('r₁',X(state.r0+state.width)+3,top+26);
+}
+function render(){for(const k of Object.keys(defaults)){const unit=k==='theta'?'°':' m';$(k+'Value').textContent=state[k].toFixed(k==='theta'?1:3)+unit;}const c=colors();scene(c);plot('distance',c,false);plot('derivative',c,true);}
+for(const k of Object.keys(defaults))$(k).addEventListener('input',()=>{state[k]=Number($(k).value);render();});
+$('field').addEventListener('change',render);
+$('contours').addEventListener('change',render);
+$('trueContours').addEventListener('change',render);
+$('reset').addEventListener('click',()=>{Object.assign(state,defaults);for(const k in defaults)$(k).value=state[k];render();});
+function movePoint(e){const rect=$('scene').getBoundingClientRect(),{cx,cy,scale}=sceneTransform,x=(e.clientX-rect.left-cx)/scale,y=(cy-e.clientY+rect.top)/scale;state.rho=Math.max(.02,Math.min(4,hypot(x,y)));state.theta=Math.atan2(y,x)*180/Math.PI;for(const k of ['rho','theta'])$(k).value=state[k];render();}
+$('scene').addEventListener('pointerdown',e=>{$('scene').setPointerCapture(e.pointerId);movePoint(e);});
+$('scene').addEventListener('pointermove',e=>{if($('scene').hasPointerCapture(e.pointerId))movePoint(e);});
+$('scene').addEventListener('pointerup',e=>{if($('scene').hasPointerCapture(e.pointerId))$('scene').releasePointerCapture(e.pointerId);});
+new ResizeObserver(render).observe(document.querySelector('.layout'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+render();
+</script></body></html>

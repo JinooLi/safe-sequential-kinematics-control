@@ -6,12 +6,16 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "matplotlib>=3.10.8",
+    "mesh-to-sdf>=0.0.15",
     "mujoco>=3.10.0",
     "numpy>=2.4.6",
     "osqp>=1.1.3",
     "pin>=4.1.0",
     "pyyaml>=6.0.3",
+    "rtree>=1.4.1",
     "scipy>=1.17.1",
+    "threadpoolctl>=3.7.0",
+    "trimesh>=5.1.0",
 ]
 
 [build-system]
@@ -30,6 +34,7 @@ dev = ["black>=26.5.1", "isort>=8.0.1"]
 safe-ik = "safe_ik.application.panda_run:main"
 safe-ik-compare = "safe_ik.application.compare_sequential:main"
 safe-ik-train-rdf = "safe_ik.application.train_rdf:main"
+safe-ik-train-panda-rdf = "safe_ik.application.train_panda_rdf:main"
 safe-ik-visualize-rdf = "safe_ik.application.visualize_rdf:main"
 
 [tool.isort]

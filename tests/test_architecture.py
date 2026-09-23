@@ -64,6 +64,7 @@ assert not {'pinocchio', 'mujoco', 'osqp', 'matplotlib.pyplot'} & sys.modules.ke
                 "safe-ik",
                 "safe-ik-compare",
                 "safe-ik-train-rdf",
+                "safe-ik-train-panda-rdf",
                 "safe-ik-visualize-rdf",
             ):
                 executable = Path(sys.executable).parent / command

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from numbers import Real
 from pathlib import Path
 
 import numpy as np
@@ -59,11 +60,65 @@ class SphereObstacleConfig:
 
 
 @dataclass(frozen=True)
+class PandaRDFConfig:
+    artifact: Path = Path("models/panda_rdf.npz")
+    query_density: float = 500.0
+    top_k: int | None = 10
+    softmin_error: float = 0.005
+    physical_margin: float = 0.030
+    error_margin: float = 0.005
+    transition_ratio: float = 0.5
+    cbf_gain: float = 1.0
+    seed: int = 0
+
+    def __post_init__(self):
+        object.__setattr__(self, "artifact", Path(self.artifact))
+        for name in (
+            "query_density",
+            "softmin_error",
+            "error_margin",
+            "transition_ratio",
+            "cbf_gain",
+        ):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, Real)
+                or not np.isfinite(value)
+                or value <= 0
+            ):
+                raise ValueError(f"safety.rdf.{name} must be finite and positive")
+        if (
+            isinstance(self.physical_margin, bool)
+            or not isinstance(self.physical_margin, Real)
+            or not np.isfinite(self.physical_margin)
+            or self.physical_margin < 0
+        ):
+            raise ValueError("safety.rdf.physical_margin must be nonnegative")
+        if self.top_k is not None and (type(self.top_k) is not int or self.top_k < 1):
+            raise ValueError(
+                "safety.rdf.top_k must be a positive integer or null (all)"
+            )
+        if type(self.seed) is not int or self.seed < 0:
+            raise ValueError("safety.rdf.seed must be a nonnegative integer")
+
+    @property
+    def effective_margin(self):
+        return self.physical_margin + self.error_margin
+
+
+@dataclass(frozen=True)
 class PandaSafetyConfig:
     margin: float
     alpha: float
     capsules: tuple[CapsuleConfig, ...]
     self_collision_exclusions: frozenset[frozenset[str]]
+    self_collision_model: str = "rdf"
+    rdf: PandaRDFConfig = PandaRDFConfig()
+
+    def __post_init__(self):
+        if self.self_collision_model not in {"rdf", "capsule"}:
+            raise ValueError("self_collision_model must be rdf or capsule")
 
 
 @dataclass(frozen=True)
