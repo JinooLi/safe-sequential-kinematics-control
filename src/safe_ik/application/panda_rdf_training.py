@@ -13,8 +13,7 @@ from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF, recursive_ridge
-
-UPSTREAM = "dc08da7ec78e7cfb002f5a118d06d9eebbf9c37d"
+from .panda_mesh_reconstruction import UPSTREAM, ReconstructionOptions
 
 
 @dataclass(frozen=True)
@@ -31,8 +30,15 @@ class TrainingOptions:
     maximum_samples: int = 10000
     maximum_starts: int = 20
     optimizer_ftol: float = 1e-12
+    reconstruction: ReconstructionOptions = ReconstructionOptions()
 
     def __post_init__(self):
+        if isinstance(self.reconstruction, dict):
+            object.__setattr__(
+                self, "reconstruction", ReconstructionOptions(**self.reconstruction)
+            )
+        if not isinstance(self.reconstruction, ReconstructionOptions):
+            raise ValueError("training.reconstruction must be a mapping")
         for key in (
             "basis_count",
             "updates",

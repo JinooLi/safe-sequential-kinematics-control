@@ -1,10 +1,10 @@
-# 공식 RDF 참조 커밋: dc08da7ec78e7cfb002f5a118d06d9eebbf9c37d.
+# 공식 idiap/RDF 참조 커밋: 550c13901ca62a659171b305b0d087d88c3fb580.
 # 아래 설정은 각 링크 형상의 오프라인 학습과 구 표면 최댓값 추정에 공통 적용한다.
 # 난수 시드·형상·질의점·검증 허용 오차는 configs/panda.yaml의 safety.rdf에서 설정한다.
 
 # 축당 Bernstein 기저 함수 개수. BP_8은 축당 7차이며, 3차원 계수는 8^3 = 512개다.
 # 2 이상이어야 하며, 늘리면 표현력과 학습·평가 비용이 함께 증가한다.
-basis_count: 8
+basis_count: 10
 # 링크당 재귀 릿지 계수 갱신 횟수. 전체 표본 풀을 한 번씩 순회하는 에포크 수가 아니다.
 updates: 200
 # 한 번 갱신할 때 표면 근처 표본 풀에서 뽑는 점 개수. 같은 배치 안에서는 중복 없이 뽑는다.
@@ -26,6 +26,17 @@ scan_resolution: 400
 # 거리 부호(내부/외부)를 법선 다수결로 판정할 때 참고하는 최근접 표면 점 개수.
 # 거리 크기는 가장 가까운 표면 점까지의 거리이며, 법선 개수로 평균하지 않는다.
 normal_count: 100
+
+# 원본 visual → voxel SDF → Marching Cubes 전처리. 원본 asset은 보존한다.
+# 표면 비교는 보고 전용이며 5 mm RDF 허용오차와 다른 양이다.
+reconstruction:
+  voxel_resolution: 128  # 양수 padding 한 겹을 추가하기 전 해상도
+  scan_count: 100
+  scan_resolution: 400
+  normal_sample_count: 100
+  sample_point_count: 10000000  # 공식 인자; scan 모드에서는 사용하지 않음
+  sdf_batch_size: 2048  # 같은 라벨 계산을 나누어 메모리 사용량만 제한
+  comparison_samples: 5000  # 각 방향에서 독립적으로 추출하는 표면 비교점
 
 # C1 구형 확장에 필요한 최댓값 M을 추정할 때 내부 구 표면에 배치하는 Fibonacci 표본 수.
 # 학습 데이터 수나 독립 검증점 수가 아니다. 표본 평가만으로 전역 최댓값을 보증하지 않는다.

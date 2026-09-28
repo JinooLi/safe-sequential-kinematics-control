@@ -13,6 +13,7 @@ import trimesh
 from safe_ik.adapters.panda_kinematics import PandaKinematics
 from safe_ik.adapters.panda_rdf_geometry import extract_visual_geometry
 from safe_ik.application.panda_configuration import load_panda_config
+from safe_ik.application.panda_mesh_reconstruction import REFERENCE, mesh_digest
 from safe_ik.application.panda_rdf_artifact import (
     RDFBundle,
     geometry_settings,
@@ -69,6 +70,7 @@ class PandaRDFIntegrationTest(unittest.TestCase):
                 "sample_counts": [3000, 2000],
                 "near_max_error": 0.001,
                 "derivatives_passed": True,
+                "reference_mesh_digest": mesh_digest(trimesh.creation.box()),
             }
         metadata = {
             "complete": True,
@@ -77,8 +79,26 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             "spheres": spheres,
             "validation": validation,
             "joint_validation": {"passed": True},
+            "validation_reference": REFERENCE,
+            "reconstruction": {
+                name: {
+                    "reference": REFERENCE,
+                    "integrity_passed": True,
+                    "mesh_digest": mesh_digest(trimesh.creation.box()),
+                }
+                for name in models
+            },
         }
-        return RDFBundle(models, queries, self.geometry.pairs, metadata), options
+        return (
+            RDFBundle(
+                models,
+                queries,
+                self.geometry.pairs,
+                metadata,
+                reconstructed={name: trimesh.creation.box() for name in models},
+            ),
+            options,
+        )
 
     def test_geometry_uses_parent_adjacency_and_closed_fingers(self):
         g = self.geometry

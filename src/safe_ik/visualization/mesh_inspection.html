@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panda visual mesh 경계 검사</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f6f8;--fg:#17232f;--panel:#fff;--muted:#4f6170;--line:#c6d0d9;--boundary:#d51d42;--nonmanifold:#b65700;--winding:#7a36d1}
+@media(prefers-color-scheme:dark){:root{--bg:#131b24;--fg:#e1eaf2;--panel:#1c2834;--muted:#b2c0ce;--line:#506072;--boundary:#ff5476;--nonmanifold:#ffad44;--winding:#c096ff}}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,sans-serif}
+main{max-width:1160px;margin:auto;padding:24px}h1{font-size:25px;margin:0 0 8px}p{margin:8px 0}.subtle{color:var(--muted)}
+.toolbar,.legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0}.field{display:flex;flex-direction:column;gap:4px;min-width:130px}.region{flex:1;min-width:230px}
+button,select{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-height:40px}select{width:100%;max-width:100%}button{cursor:pointer}button:hover{filter:brightness(.94)}
+label{display:flex;align-items:center;gap:6px}input[type=range]{width:130px}input[type=checkbox]{width:17px;height:17px}
+.viewport{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}canvas{display:block;width:100%;height:560px;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
+#axes{position:absolute;right:12px;bottom:12px;width:104px;height:104px;pointer-events:none;background:var(--panel);border-radius:50%;font:13px system-ui}
+.legend span::before{content:"";display:inline-block;width:20px;border-top:3px solid currentColor;margin-right:6px;vertical-align:middle}.boundary{color:var(--boundary)}.nonmanifold{color:var(--nonmanifold)}.winding{color:var(--winding)}
+.status{font-variant-numeric:tabular-nums;margin:12px 0}#selection{min-height:26px}.notice{padding:12px 0;border-top:1px solid var(--line);color:var(--muted);font-size:14px}#error{color:var(--boundary)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}summary{cursor:pointer;padding:8px 0}.table-wrap{overflow-x:auto}code{word-break:break-all}details{margin:10px 0}
+@media(max-width:600px){main{padding:12px}h1{font-size:21px}canvas{height:420px}.region{min-width:100%}.toolbar{gap:8px}button,select{min-height:44px}.notice{font-size:13px}}
+</style>
+</head>
+<body><main>
+<h1>Panda mesh · 형상과 열린 경계 검사</h1>
+<p class="subtle">드래그로 회전하고 휠로 확대하세요. 경계를 선택하면 해당 위치로 확대됩니다. 재구성 결과가 있으면 같은 링크의 원본과 전환해 비교할 수 있습니다.</p>
+<div class="toolbar">
+  <label class="field">링크<select id="link" aria-label="링크"></select></label>
+  <label class="field" id="variant-field" hidden>형상<select id="variant" aria-label="형상"><option value="original">원본 Visual</option><option value="reconstructed">재구성 · RDF 기준</option></select></label>
+  <label class="field region">검사 영역<select id="region" aria-label="검사 영역"></select></label>
+  <button id="fit" type="button">링크 전체 보기</button>
+</div>
+<div class="toolbar">
+  <label><input id="xray" type="checkbox" checked>가려진 경계도 표시</label>
+  <label><input id="transparent" type="checkbox">반투명 표면</label>
+  <label>확대 <input id="zoom" aria-label="확대" type="range" min="0.3" max="5" step="0.05" value="1"></label>
+  <button id="view-x" type="button">X 방향</button><button id="view-y" type="button">Y 방향</button><button id="view-z" type="button">Z 방향</button>
+  <button id="rotate" type="button">45° 회전</button>
+</div>
+<div class="legend"><span class="boundary">열린 경계: 면 1개</span><span class="nonmanifold">비다양체: 면 3개 이상</span><span class="winding">면 방향 불일치</span></div>
+<p id="status" class="status" aria-live="polite"></p>
+<p id="selection" class="subtle" aria-live="polite"></p>
+<p id="comparison" class="subtle" aria-live="polite" hidden></p>
+<p id="error" role="alert" hidden></p>
+<div class="viewport">
+  <canvas id="mesh" aria-label="선택한 Panda 링크와 mesh 경계의 회전 가능한 3D 보기">이 브라우저는 canvas를 지원하지 않습니다.</canvas>
+  <svg id="axes" viewBox="0 0 104 104" aria-label="링크 로컬 좌표축">
+    <line id="ax-x" x1="52" y1="52" stroke="#d51d42" stroke-width="2"/><text id="tx-x" fill="currentColor">X</text>
+    <line id="ax-y" x1="52" y1="52" stroke="#238746" stroke-width="2"/><text id="tx-y" fill="currentColor">Y</text>
+    <line id="ax-z" x1="52" y1="52" stroke="#428adb" stroke-width="2"/><text id="tx-z" fill="currentColor">Z</text>
+  </svg>
+</div>
+<p class="notice">강조선은 삼각형 mesh의 연결 관계입니다. 실제 물리적 구멍, 부품 이음새, 의도된 개방부를 자동 구별하지 않습니다.
+연결 성분 수는 구멍 수가 아닙니다. 열린 경계가 없어도 자기 교차나 내부·외부 판정의 정확성은 별도 확인이 필요합니다.</p>
+<details><summary>원본 전체 링크 진단 수치</summary><div class="table-wrap"><table><thead><tr><th>링크</th><th>삼각형</th><th>열린 경계</th><th>비다양체</th><th>방향 불일치</th><th>퇴화 면</th></tr></thead><tbody id="summary"></tbody></table></div></details>
+<details id="comparison-details" hidden><summary>원본 ↔ 재구성 표면 차이 (mm)</summary><p>방향별 면적 비례 표본에서 상대 mesh 삼각형까지의 거리입니다. 샘플 최댓값은 전역 상한이 아니며, 별도 형상 차이 합격 임계값은 없습니다. RDF 5 mm 오차 검사는 재구성 mesh 기준입니다.</p><div class="table-wrap"><table><thead><tr><th>링크 / 방향</th><th>평균</th><th>95%</th><th>샘플 최대</th></tr></thead><tbody id="comparison-summary"></tbody></table></div></details>
+<details><summary>검사 방법과 출처</summary><p>로컬 좌표계(m)의 삼각형을 표시합니다. UV·재질 경계의 중복을 줄이기 위해 진단 복사본에서 소수 8자리 기준 위치 동일 정점을 묶었습니다. 표시 좌표는 float32이며 뷰어는 면을 삭제하거나 구멍을 메우지 않습니다.</p><p>재구성 형상이 있으면 공식 RDF의 voxel SDF → Marching Cubes 전처리 결과입니다. 원본 asset과 시뮬레이션 표시 형상은 보존됩니다. 재구성은 원본을 보수적으로 감싼다는 보장이 없으며 이 화면은 RDF 안전성 인증이 아닙니다.</p><p>Geometry fingerprint: <code id="fingerprint"></code></p></details>
+</main>
+<script id="mesh-data" type="application/json">__MESH_DATA__</script>
+<script>
+"use strict";
+(() => {
+ const data=JSON.parse(document.getElementById("mesh-data").textContent);
+ const $=id=>document.getElementById(id), names=Object.keys(data.links);
+ const labels={boundary:"열린 경계",nonmanifold:"비다양체",winding:"방향 불일치"};
+ names.forEach(name=>$("link").add(new Option(name,name)));
+ $("link").value=names.includes("link4")?"link4":names[0];
+ $("fingerprint").textContent=data.fingerprint;
+ const comparisons=data.comparison||{}, reconstructed=data.reconstructed||{}, hasComparison=Object.keys(reconstructed).length>0;
+ $("variant-field").hidden=!hasComparison;$("comparison-details").hidden=!hasComparison;
+ Object.entries(comparisons).forEach(([name,report])=>{const stats=report.comparison;
+   [["original_to_reconstructed","원본 → 재구성"],["reconstructed_to_original","재구성 → 원본"]].forEach(([key,label])=>{const tr=document.createElement("tr");[name+" / "+label,...["mean","p95","max"].map(k=>(stats[key][k]*1000).toFixed(3))].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});$("comparison-summary").append(tr)})});
+ names.forEach(name=>{const m=data.links[name],tr=document.createElement("tr");
+   [name,m.face_count,m.edge_counts.boundary,m.edge_counts.nonmanifold,m.edge_counts.winding,m.degenerate_faces].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});$("summary").append(tr)});
+ const canvas=$("mesh"),gl=canvas.getContext("webgl",{antialias:true,alpha:false});
+ const fail=message=>{$("error").hidden=false;$("error").textContent=message};
+ if(!gl){fail("WebGL을 사용할 수 없습니다. 하드웨어 가속을 지원하는 브라우저에서 여세요. 위의 전체 링크 진단 수치는 확인할 수 있습니다.");return}
+ const vertex=`attribute vec3 aPosition;attribute vec3 aNormal;
+ uniform vec3 uCenter;uniform float uYaw,uPitch,uScale,uDepth,uPoint;uniform vec2 uFit;
+ varying vec3 vNormal;
+ vec3 rotate(vec3 p){float c=cos(uYaw),s=sin(uYaw),cp=cos(uPitch),sp=sin(uPitch);vec3 r=vec3(c*p.x-s*p.y,s*p.x+c*p.y,p.z);return vec3(r.x,cp*r.z-sp*r.y,sp*r.z+cp*r.y);}
+ void main(){vec3 p=rotate(aPosition-uCenter);gl_Position=vec4(p.xy*uScale*uFit,p.z/uDepth,1.0);gl_PointSize=uPoint;vNormal=rotate(aNormal);}`;
+ const fragment=`precision mediump float;varying vec3 vNormal;uniform vec4 uColor;uniform float uLit;
+ void main(){float shade=1.0;if(uLit>0.5){shade=0.40+0.60*abs(dot(normalize(vNormal),normalize(vec3(0.3,0.4,1.0))));}gl_FragColor=vec4(uColor.rgb*shade,uColor.a);}`;
+ function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
+ let program;
+ try{program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vertex));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program)}catch(e){fail(e.message);return}
+ const attr={p:gl.getAttribLocation(program,"aPosition"),n:gl.getAttribLocation(program,"aNormal")};
+ const u={};["Center","Yaw","Pitch","Scale","Depth","Point","Fit","Color","Lit"].forEach(n=>u[n]=gl.getUniformLocation(program,"u"+n));
+ let current,vertices,solid,groups=[],highlight=null,center=[0,0,0],radius=1,yaw=-0.6,pitch=0.4,zoom=1;
+ function decode(encoded,Type){const s=atob(encoded),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new Type(b.buffer)}
+ function buffer(array){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,array,gl.STATIC_DRAW);return b}
+ function geometry(positions,normals){return {p:buffer(positions),n:normals?buffer(normals):null,count:positions.length/3}}
+ function drop(item){if(item){gl.deleteBuffer(item.p);if(item.n)gl.deleteBuffer(item.n)}}
+ function edgePositions(indices){const p=new Float32Array(indices.length*3);indices.forEach((v,i)=>p.set(vertices.subarray(v*3,v*3+3),i*3));return p}
+ function rotate(p){const c=Math.cos(yaw),s=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),x=c*p[0]-s*p[1],y=s*p[0]+c*p[1];return [x,cp*p[2]-sp*y,sp*p[2]+cp*y]}
+ function fit(){center=current.center.slice();radius=Math.max(current.span_mm/2000,0.001);zoom=1;$("zoom").value=1}
+ function color(kind){const css=getComputedStyle(document.documentElement);const hex=css.getPropertyValue("--"+kind).trim();return [parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,1]}
+ function draw(item,mode,rgba,lit=false,point=3){if(!item||!item.count)return;
+   gl.bindBuffer(gl.ARRAY_BUFFER,item.p);gl.enableVertexAttribArray(attr.p);gl.vertexAttribPointer(attr.p,3,gl.FLOAT,false,0,0);
+   if(item.n){gl.bindBuffer(gl.ARRAY_BUFFER,item.n);gl.enableVertexAttribArray(attr.n);gl.vertexAttribPointer(attr.n,3,gl.FLOAT,false,0,0)}else{gl.disableVertexAttribArray(attr.n);gl.vertexAttrib3f(attr.n,0,0,1)}
+   gl.uniform4fv(u.Color,rgba);gl.uniform1f(u.Lit,lit?1:0);gl.uniform1f(u.Point,point);gl.drawArrays(mode,0,item.count)}
+ function render(){if(!solid)return;
+   const box=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(box.width*dpr)),h=Math.max(1,Math.round(box.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+   gl.viewport(0,0,w,h);const dark=matchMedia("(prefers-color-scheme: dark)").matches;
+   gl.clearColor(...(dark?[0.11,0.157,0.204,1]:[1,1,1,1]));gl.depthMask(true);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+   gl.uniform3fv(u.Center,center);gl.uniform1f(u.Yaw,yaw);gl.uniform1f(u.Pitch,pitch);gl.uniform1f(u.Scale,0.88*zoom/radius);gl.uniform1f(u.Depth,Math.max(current.span_mm/1000*4,0.01));gl.uniform2f(u.Fit,Math.min(1,h/w),Math.min(1,w/h));
+   gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
+   const translucent=$("transparent").checked;gl.depthMask(!translucent);draw(solid,gl.TRIANGLES,dark?[0.62,0.73,0.83,translucent?0.13:1]:[0.69,0.78,0.84,translucent?0.13:1],true);gl.disable(gl.POLYGON_OFFSET_FILL);gl.depthMask(false);
+   if($("xray").checked)gl.disable(gl.DEPTH_TEST);
+   const selected=Number($("region").value);groups.forEach(g=>{const rgba=color(g.kind);rgba[3]=selected>=0?0.20:1;draw(g.geometry,gl.LINES,rgba)});
+   if(highlight){const rgba=color(current.regions[selected].kind);draw(highlight,gl.LINES,rgba);draw(highlight,gl.POINTS,rgba,false,4*dpr)}
+   gl.depthMask(true);
+   [[1,0,0],[0,1,0],[0,0,1]].forEach((v,i)=>{const q=rotate(v),name=["x","y","z"][i],line=$("ax-"+name),text=$("tx-"+name),x=52+q[0]*31,y=52-q[1]*31;line.setAttribute("x2",x);line.setAttribute("y2",y);text.setAttribute("x",x+3);text.setAttribute("y",y-4)});
+ }
+ function selectRegion(){drop(highlight);highlight=null;const index=Number($("region").value);fit();
+   if(index>=0){const r=current.regions[index];highlight=geometry(edgePositions(r.edges));center=r.center.slice();radius=Math.max(r.span_mm/2000*1.6,0.002);$("selection").textContent=`${labels[r.kind]} · ${r.edge_count}개 변 · 길이 ${r.length_mm.toFixed(2)} mm · 범위 ${r.span_mm.toFixed(2)} mm · ${r.closed_loop?"닫힌 루프":"열린/분기된 연결"} · 중심 (${r.center.map(v=>(v*1000).toFixed(2)).join(", ")}) mm`}
+   else{$("selection").textContent=current.regions.length?"영역을 선택하면 해당 경계로 확대됩니다. 선의 가림 해제를 끄면 표면 뒤쪽 선은 숨겨집니다.":"검출된 경계·연결 이상 없음. 자기 교차나 거리 부호의 정확성을 인증하는 결과는 아닙니다."}
+   render();
+ }
+ function selectLink(){drop(solid);groups.forEach(g=>drop(g.geometry));drop(highlight);highlight=null;groups=[];
+   const name=$("link").value,reference=reconstructed[name],stats=comparisons[name]?.comparison;
+   $("variant").options[1].disabled=!reference;if(!reference)$("variant").value="original";
+   current=$("variant").value==="reconstructed"?reference:data.links[name];
+   $("comparison").hidden=!stats;if(stats)$("comparison").textContent=`양방향 각 ${stats.sample_count_per_direction.toLocaleString()}개 표본 · 샘플 최대: 원본 → 재구성 ${(stats.original_to_reconstructed.max*1000).toFixed(3)} mm / 재구성 → 원본 ${(stats.reconstructed_to_original.max*1000).toFixed(3)} mm · 자동 형상 차이 판정 없음`;
+   vertices=decode(current.vertices,Float32Array);const faces=decode(current.faces,Uint32Array),p=new Float32Array(faces.length*3),n=new Float32Array(p.length);
+   for(let i=0;i<faces.length;i+=3){const a=vertices.subarray(faces[i]*3,faces[i]*3+3),b=vertices.subarray(faces[i+1]*3,faces[i+1]*3+3),c=vertices.subarray(faces[i+2]*3,faces[i+2]*3+3),ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],normal=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]],length=Math.hypot(...normal)||1;
+     p.set(a,i*3);p.set(b,(i+1)*3);p.set(c,(i+2)*3);for(let j=0;j<3;j++)n.set(normal.map(v=>v/length),(i+j)*3)}
+   solid=geometry(p,n);Object.keys(labels).forEach(kind=>{const indices=current.regions.filter(r=>r.kind===kind).flatMap(r=>r.edges);groups.push({kind,geometry:geometry(edgePositions(indices))})});
+   $("region").replaceChildren(new Option("전체 경계",-1));const counter={};current.regions.forEach((r,i)=>{counter[r.kind]=(counter[r.kind]||0)+1;$("region").add(new Option(`${labels[r.kind]} ${counter[r.kind]} · ${r.length_mm.toFixed(2)} mm / ${r.edge_count}개 변`,i))});
+   const e=current.edge_counts;$("status").textContent=`${$("link").value} · ${$("variant").selectedOptions[0].textContent} · 삼각형 ${current.face_count.toLocaleString()}개 · 열린 경계 ${e.boundary}개 변 · 비다양체 ${e.nonmanifold}개 변 · 방향 불일치 ${e.winding}개 변`;
+   selectRegion();
+ }
+ $("link").addEventListener("change",selectLink);$("region").addEventListener("change",selectRegion);$("fit").onclick=()=>{$("region").value=-1;selectRegion()};
+ $("variant").addEventListener("change",selectLink);
+ ["xray","transparent"].forEach(id=>$(id).addEventListener("change",render));$("zoom").oninput=()=>{zoom=Number($("zoom").value);render()};
+ $("view-x").onclick=()=>{yaw=Math.PI/2;pitch=0;render()};$("view-y").onclick=()=>{yaw=0;pitch=0;render()};$("view-z").onclick=()=>{yaw=0;pitch=Math.PI/2;render()};$("rotate").onclick=()=>{yaw+=Math.PI/4;render()};
+ let drag=null;canvas.addEventListener("pointerdown",e=>{drag=[e.clientX,e.clientY];canvas.setPointerCapture(e.pointerId)});canvas.addEventListener("pointermove",e=>{if(!drag)return;yaw+=(e.clientX-drag[0])*0.008;pitch+=(e.clientY-drag[1])*0.008;drag=[e.clientX,e.clientY];render()});["pointerup","pointercancel","lostpointercapture"].forEach(event=>canvas.addEventListener(event,()=>drag=null));
+ canvas.addEventListener("wheel",e=>{e.preventDefault();zoom=Math.min(5,Math.max(.3,zoom*Math.exp(-e.deltaY*.001)));$("zoom").value=zoom;render()},{passive:false});
+ canvas.addEventListener("webglcontextlost",e=>{e.preventDefault();fail("3D 렌더링이 중단되었습니다. 페이지를 새로고침하세요.")});
+ new ResizeObserver(render).observe(canvas);matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);selectLink();
+})();
+</script>
+</body></html>

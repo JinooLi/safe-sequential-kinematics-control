@@ -13,6 +13,7 @@ dependencies = [
     "pin>=4.1.0",
     "pyyaml>=6.0.3",
     "rtree>=1.4.1",
+    "scikit-image>=0.26.0",
     "scipy>=1.17.1",
     "threadpoolctl>=3.7.0",
     "trimesh>=5.1.0",
@@ -26,6 +27,9 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 include = ["safe_ik*"]
 namespaces = false
+
+[tool.setuptools.package-data]
+safe_ik = ["visualization/mesh_inspection.html"]
 
 [dependency-groups]
 dev = ["black>=26.5.1", "isort>=8.0.1"]

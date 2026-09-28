@@ -37,6 +37,10 @@ planar 비교 worker 수는 `sequential_experiment.workers` 또는 `ARGS="--work
 
 | 명령 | 기능 |
 |---|---|
+| `panda-inspect-mesh` | 원본 visual mesh의 열린 경계·비다양체·면 방향을 검사하는 독립 HTML 생성 |
+| `panda-prepare-mesh` | 공식 voxel 전처리와 형상 비교만 수행. RDF 학습·승인 없음 |
+| `panda-train-rdf` | 재구성 mesh 기준 RDF 학습·검증과 비교 HTML 생성 |
+| `panda-validate-rdf` | 새 스키마 artifact에 저장된 동일 재구성 mesh 기준으로 재검증 |
 | `panda-run` | 설정된 모드로 headless 실행 |
 | `panda-view` | 설정된 모드로 MuJoCo viewer 및 최종 그래프 표시 |
 | `panda-direct` / `panda-direct-view` | IK를 생략하는 최종 end-effector pose 제어 |
@@ -45,6 +49,8 @@ planar 비교 worker 수는 `sequential_experiment.workers` 또는 `ARGS="--work
 
 ```bash
 make panda-plot TRACE=outputs/panda/<run-id>/trajectory.npz OUTPUT=outputs/panda_control.png
+# 실패/부분 학습 후보라도 전처리 결과가 있으면 원본과 비교할 수 있다.
+make panda-inspect-mesh ARGS="--artifact outputs/panda_mesh_reconstruction/reference.npz"
 ```
 
 `panda-plot*`는 제어를 다시 실행하지 않는다. 여기서 필요한 NPZ는 Panda의

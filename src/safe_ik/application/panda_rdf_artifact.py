@@ -1,7 +1,7 @@
 """Versioned, non-pickle RDF bundles with fail-closed compatibility checks."""
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
@@ -12,7 +12,8 @@ import numpy as np
 
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF
 
-SCHEMA = 1
+SCHEMA = 2
+REFERENCE = "voxel_reconstructed_mesh"
 REGENERATE = "Regenerate with: safe-ik-train-panda-rdf --config configs/panda.yaml"
 
 
@@ -23,6 +24,7 @@ class RDFBundle:
     pairs: tuple
     metadata: dict
     identifier: str = ""
+    reconstructed: dict = field(default_factory=dict)
 
 
 def geometry_settings(options):
@@ -41,6 +43,9 @@ def geometry_settings(options):
 
 def save_bundle(bundle, path):
     arrays = {}
+    for name, mesh in bundle.reconstructed.items():
+        arrays[f"{name}_mesh_vertices"] = np.asarray(mesh.vertices, dtype="<f8")
+        arrays[f"{name}_mesh_faces"] = np.asarray(mesh.faces, dtype="<i8")
     for name, model in bundle.models.items():
         arrays[f"{name}_weights"] = model.rdf.weights
         arrays[f"{name}_center"] = model.rdf.center
@@ -71,6 +76,23 @@ def save_bundle(bundle, path):
     return sha256(path.read_bytes()).hexdigest()
 
 
+def _check_reference(meta, names):
+    if meta.get("validation_reference") != REFERENCE:
+        raise ValueError(
+            "reconstructed validation reference missing; retrain explicitly"
+        )
+    for name in names:
+        reconstruction = meta["reconstruction"][name]
+        if (
+            reconstruction.get("reference") != REFERENCE
+            or reconstruction.get("integrity_passed") is not True
+            or not reconstruction.get("mesh_digest")
+            or meta["validation"][name].get("reference_mesh_digest")
+            != reconstruction["mesh_digest"]
+        ):
+            raise ValueError(f"{name}: reconstructed validation reference mismatch")
+
+
 def load_bundle(path, geometry, options):
     try:
         path = Path(path)
@@ -90,6 +112,7 @@ def load_bundle(path, geometry, options):
             if mismatch:
                 raise ValueError("settings mismatch: " + ", ".join(mismatch))
             names = tuple(geometry.vertices)
+            _check_reference(meta, names)
             if (
                 tuple(meta["links"]) != names
                 or tuple(map(tuple, meta["pairs"])) != geometry.pairs
@@ -111,7 +134,14 @@ def load_bundle(path, geometry, options):
                     or report.get("derivatives_passed") is not True
                 ):
                     raise ValueError(f"{name}: validation failed: {report}")
-                for suffix in ("weights", "center", "radii_max", "queries"):
+                for suffix in (
+                    "weights",
+                    "center",
+                    "radii_max",
+                    "queries",
+                    "mesh_vertices",
+                    "mesh_faces",
+                ):
                     key = f"{name}_{suffix}"
                     value = archive[key]
                     if (
@@ -177,6 +207,7 @@ def read_candidate_for_validation(path, geometry, options, *, refresh_queries=Fa
             or tuple(map(tuple, meta["pairs"])) != geometry.pairs
         ):
             raise ValueError("revalidation requires a complete set of link models")
+        _check_reference(meta, meta["links"])
         for key, digest in meta["array_hashes"].items():
             if (
                 sha256(np.ascontiguousarray(archive[key]).tobytes()).hexdigest()
@@ -197,4 +228,44 @@ def read_candidate_for_validation(path, geometry, options, *, refresh_queries=Fa
     meta.setdefault("training_wall_seconds", meta.get("wall_seconds"))
     if refresh_queries:
         meta["settings"] = settings
-    return RDFBundle(models, queries, geometry.pairs, meta)
+    reconstructed, _ = read_reconstructed_meshes(path)
+    return RDFBundle(models, queries, geometry.pairs, meta, reconstructed=reconstructed)
+
+
+def read_reconstructed_meshes(path):
+    """Offline inspection/revalidation, including incomplete or failed candidates.
+
+    Never used as permission to run the robot. Recover the exact reference arrays,
+    not a fresh reconstruction or a lossy STL round trip.
+    """
+    import trimesh
+
+    from .panda_mesh_reconstruction import mesh_digest, require_valid_reconstruction
+
+    with np.load(path, allow_pickle=False) as archive:
+        meta = json.loads(str(archive["metadata"]))
+        if (
+            meta.get("schema") != SCHEMA
+            or meta.get("validation_reference") != REFERENCE
+        ):
+            raise ValueError(
+                "artifact has no reconstructed reference; retrain explicitly"
+            )
+        meshes = {}
+        for name, report in meta["reconstruction"].items():
+            arrays = []
+            for suffix in ("mesh_vertices", "mesh_faces"):
+                key = f"{name}_{suffix}"
+                array = archive[key]
+                if (
+                    sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
+                    != meta["array_hashes"][key]
+                ):
+                    raise ValueError(f"{name}: corrupt reconstructed mesh")
+                arrays.append(array)
+            mesh = trimesh.Trimesh(*arrays, process=False)
+            require_valid_reconstruction(mesh)
+            if mesh_digest(mesh) != report["mesh_digest"]:
+                raise ValueError(f"{name}: reconstructed geometry digest mismatch")
+            meshes[name] = mesh
+    return meshes, meta

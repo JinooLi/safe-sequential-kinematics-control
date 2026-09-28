@@ -3,7 +3,6 @@
 import argparse
 import json
 import os
-from dataclasses import asdict
 from pathlib import Path
 from time import perf_counter
 
@@ -15,7 +14,9 @@ from threadpoolctl import threadpool_limits
 from ..adapters.panda_kinematics import PandaKinematics
 from ..adapters.panda_rdf_geometry import extract_visual_geometry
 from ..domain.panda_rdf import ExtendedRDF
+from ..visualization.mesh_inspection import write_inspection_html
 from .panda_configuration import load_panda_config
+from .panda_mesh_reconstruction import REFERENCE, reconstruct_mesh
 from .panda_rdf_artifact import (
     RDFBundle,
     geometry_settings,
@@ -44,6 +45,11 @@ def main():
         "--training-config", default=default_resource("configs/panda_rdf_training.yaml")
     )
     parser.add_argument("--output", help="defaults to safety.rdf.artifact")
+    parser.add_argument(
+        "--prepare-only",
+        action="store_true",
+        help="reconstruct meshes and export comparison HTML, without fitting/approving RDF",
+    )
     parser.add_argument(
         "--links",
         nargs="+",
@@ -74,6 +80,12 @@ def main():
     args = parser.parse_args()
     if args.refresh_queries or args.refresh_extension:
         args.validate_only = True
+    if args.prepare_only and args.validate_only:
+        parser.error("--prepare-only cannot be combined with revalidation")
+    if args.prepare_only and not args.output:
+        parser.error(
+            "--prepare-only requires --output to preserve the configured RDF artifact"
+        )
     if args.threads < 1:
         parser.error("threads must be positive")
     # Used only by offline official scan generation, before importing pyrender.
@@ -96,8 +108,10 @@ def main():
         "training_seed": config.safety.rdf.seed,
         "maxima": {},
         "validation": {},
+        "validation_reference": REFERENCE,
+        "reconstruction": {},
         "joint_validation": {"passed": False},
-        "seed_streams": "SeedSequence(seed, spawn_key=(link_index, purpose)); 0=train,1=validation,2=query,3=joint",
+        "seed_streams": "SeedSequence(seed, spawn_key=(link_index, purpose)); 0=train,1=validation,2=query,3=joint,4=benchmark,5=mesh-comparison",
         "complete": False,
     }
     bundle = RDFBundle({}, {}, geometry.pairs, metadata)
@@ -108,6 +122,8 @@ def main():
             output, geometry, config.safety.rdf, refresh_queries=args.refresh_queries
         )
         metadata = bundle.metadata
+        # Interrupted revalidation must not retain the previous approval flag.
+        metadata["complete"] = False
     started = perf_counter()
     try:
         with threadpool_limits(limits=args.threads):
@@ -119,11 +135,25 @@ def main():
                             config.safety.rdf.seed, spawn_key=(index, purpose)
                         )
                     )
-                    for purpose in range(3)
+                    for purpose in range(6)
                 ]
                 mesh = trimesh.Trimesh(
                     geometry.vertices[name], geometry.faces[name], process=False
                 )
+                if args.validate_only:
+                    reference = bundle.reconstructed[name]
+                else:
+                    print(
+                        f"{name}: reconstructing official voxel reference", flush=True
+                    )
+                    reference, reconstruction = reconstruct_mesh(
+                        mesh, training.reconstruction, streams[5]
+                    )
+                    bundle.reconstructed[name] = reference
+                    metadata["reconstruction"][name] = reconstruction
+                    save_bundle(bundle, output)
+                if args.prepare_only:
+                    continue
                 if args.validate_only:
                     if args.refresh_extension:
                         model = bundle.models[name]
@@ -142,11 +172,14 @@ def main():
                         bundle.queries[name] = surface_queries(mesh, count, streams[2])
                     print(f"{name}: revalidating existing coefficients", flush=True)
                     metadata["validation"][name] = validate_model(
-                        mesh,
+                        reference,
                         bundle.models[name],
                         streams[1],
                         config.safety.rdf.error_margin,
                     )
+                    metadata["validation"][name]["reference_mesh_digest"] = metadata[
+                        "reconstruction"
+                    ][name]["mesh_digest"]
                     continue
                 center, radius = minimum_sphere(mesh.vertices)
                 r0 = radius + config.safety.rdf.effective_margin
@@ -162,7 +195,7 @@ def main():
                     f"{name}: generating official scan/normal pools (r1={r1:.6f} m)",
                     flush=True,
                 )
-                pools = training_pools(mesh, center, r1, streams[0], training)
+                pools = training_pools(reference, center, r1, streams[0], training)
                 print(
                     f"{name}: recursive ridge, {training.updates} updates", flush=True
                 )
@@ -178,8 +211,11 @@ def main():
                 metadata["maxima"][name] = maximum_report
                 print(f"{name}: independent 5000-point triangle validation", flush=True)
                 metadata["validation"][name] = validate_model(
-                    mesh, model, streams[1], config.safety.rdf.error_margin
+                    reference, model, streams[1], config.safety.rdf.error_margin
                 )
+                metadata["validation"][name]["reference_mesh_digest"] = metadata[
+                    "reconstruction"
+                ][name]["mesh_digest"]
                 result = metadata["validation"][name]
                 print(
                     f"{name}: passed={result['passed']}, near max={result['near_max_error']:.6f} m",
@@ -190,7 +226,7 @@ def main():
                 report_path.write_text(
                     json.dumps(metadata, indent=2, allow_nan=False) + "\n"
                 )
-            if set(names) == set(geometry.vertices):
+            if not args.prepare_only and set(names) == set(geometry.vertices):
                 frames = set(geometry.vertices) | {
                     frame
                     for capsule in config.safety.capsules
@@ -216,6 +252,15 @@ def main():
         metadata["wall_seconds"] = perf_counter() - started
         save_bundle(bundle, output)
         report_path.write_text(json.dumps(metadata, indent=2, allow_nan=False) + "\n")
+        if bundle.reconstructed:
+            preview = output.with_suffix(".meshes.html")
+            write_inspection_html(
+                geometry, preview, bundle.reconstructed, metadata["reconstruction"]
+            )
+            print(f"Mesh comparison: {preview}", flush=True)
+    if args.prepare_only:
+        print(f"Prepared meshes: {output}; no RDF trained or approved")
+        return
     approved = (
         metadata["complete"]
         and metadata["joint_validation"]["passed"]

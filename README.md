@@ -30,7 +30,25 @@ IK나 궤적 제어에 사용할 수 있다. 산출물이 없거나 검증에 �
 make panda-train-rdf                         # 오프라인 학습·보고서 생성; 실패 시 종료 코드 2
 make panda-validate-rdf                      # 계수 재사용, 오프라인 검증 재실행
 make panda-validate-rdf ARGS="--refresh-queries" # 재학습 없이 질의 밀도·시드 변경 반영
+make panda-inspect-mesh                      # 원본 visual mesh의 열린 경계 3D HTML
+make panda-prepare-mesh                      # 공식 voxel 전처리 + 원본/재구성 비교 HTML
 ```
+
+Mesh 진단 결과는 `outputs/panda_mesh_inspection/index.html`에 저장한다.
+파일을 브라우저로 열면 링크별 열린 경계(빨강), 비다양체 연결(주황),
+면 방향 불일치(보라)를 회전·확대해서 볼 수 있다. 외부 CDN이나 서버는 필요 없다.
+경계를 선택하면 해당 영역으로 확대된다. 진단용 복사본에서 같은 위치의 정점을
+묶어 UV/재질 경계의 중복을 제거하지만, 원본 mesh나 학습 artifact는 변경하지 않는다.
+표시된 경계는 실제 물리적 구멍과 동일하지 않으며, 이 도구는 안전성 인증이 아니다.
+
+학습은 이제 원본 Visual mesh를 공식 RDF 방식의 128³ voxel SDF와 Marching
+Cubes로 재구성한 뒤 수행한다. 5 mm 검증 기준도 **재구성 mesh**에 적용한다.
+원본↔재구성 표면 차이는 양방향 통계와 HTML로 보고하며 별도 합격 임계값은 없다.
+`panda-prepare-mesh`의 결과는 `outputs/panda_mesh_reconstruction/reference.npz`와
+`reference.meshes.html`이고, RDF 계수 학습이나 제어 승인을 수행하지 않는다.
+일반 학습도 산출물 옆에 `.meshes.html`을 생성한다. 기존 학습 파일은 구형
+스키마이므로 새 기준의 재학습이 필요하다. 먼저 `OUTPUT=outputs/.../candidate.npz`로
+별도 저장하면 기존 후보와 보고서를 보존할 수 있다.
 
 `trajectory.mode: direct`는 안전 자세 IK를 생략하고 말단 장치 자세 CLF를
 바로 시작한다. 이후 비교에서 직접 제어 기준선에 IK 탐색 비용이 섞이지 않게 한다.
