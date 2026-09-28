@@ -34,15 +34,29 @@ def torch_training_environment(device="cuda"):
 
 
 def recursive_ridge_torch(
-    model, batches, regularization=1e-4, *, device="cuda", progress=None
+    model,
+    batches,
+    regularization=1e-4,
+    *,
+    device="cuda",
+    progress=None,
+    resume=None,
+    checkpoint=None,
+    checkpoint_interval=400,
 ):
     """Same normalization, Bernstein basis and Algorithm 1 as the NumPy path.
 
     A CPU torch device is allowed explicitly for parity tests, not as fallback.
     Batch sampling remains with the caller so CPU and CUDA consume identical data.
+    On resume, batches must contain ONLY the unprocessed suffix. Progress and
+    checkpoint counters are cumulative. Checkpoints receive normalized weights.
     """
     if not np.isfinite(regularization) or regularization <= 0:
         raise ValueError("regularization must be positive")
+    if type(checkpoint_interval) is not int or checkpoint_interval < 1:
+        raise ValueError("checkpoint_interval must be a positive integer")
+    if resume is not None:
+        resume.validate(model, regularization)
     torch_training_environment(device)
     import torch
 
@@ -50,15 +64,24 @@ def recursive_ridge_torch(
     selected = torch.device(device)
     size, count = model.weights.size, model.count
     with torch.no_grad():
-        covariance = torch.eye(size, dtype=dtype, device=selected) / regularization
-        weights = torch.zeros(size, dtype=dtype, device=selected)
+        if resume is None:
+            covariance = torch.eye(size, dtype=dtype, device=selected) / regularization
+            weights = torch.zeros(size, dtype=dtype, device=selected)
+            completed, seen = 0, 0
+        else:
+            # tensor() copies read-only mmap arrays; training cannot mutate snapshots.
+            covariance = torch.tensor(resume.covariance, dtype=dtype, device=selected)
+            weights = torch.tensor(resume.weights, dtype=dtype, device=selected)
+            completed = resume.metadata["completed_steps"]
+            seen = resume.metadata["consumed_samples"]
         powers = torch.arange(count, dtype=dtype, device=selected)
         coefficients = torch.tensor(
             [comb(count - 1, i) for i in range(count)], dtype=dtype, device=selected
         )
         center = torch.as_tensor(model.center, dtype=dtype, device=selected)
-        seen = 0
-        for step, (points, targets) in enumerate(batches, start=1):
+        step = completed
+        last_saved = None
+        for step, (points, targets) in enumerate(batches, start=completed + 1):
             points, targets = np.asarray(points, dtype=float), np.asarray(
                 targets, dtype=float
             )
@@ -103,10 +126,15 @@ def recursive_ridge_torch(
             ):
                 raise ValueError("nonfinite recursive regression state")
             seen += len(points)
+            if checkpoint is not None and step % checkpoint_interval == 0:
+                checkpoint(step, seen, weights, covariance)
+                last_saved = step
             if progress is not None:
                 progress(step)
-        if not seen:
+        if step == completed:
             raise ValueError("training batches must not be empty")
+        if checkpoint is not None and last_saved != step:
+            checkpoint(step, seen, weights, covariance)
         model.weights = (
             (weights * model.radius).cpu().numpy().reshape(model.weights.shape)
         )

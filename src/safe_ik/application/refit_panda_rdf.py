@@ -8,6 +8,7 @@ import argparse
 import copy
 import json
 import platform
+import shutil
 import subprocess
 from dataclasses import asdict, replace
 from hashlib import sha256
@@ -18,6 +19,14 @@ import numpy as np
 import yaml
 from threadpoolctl import threadpool_limits
 
+from ..adapters.rdf_checkpoint import (
+    RidgeState,
+    array_sha256,
+    file_sha256,
+    load_checkpoint,
+    model_signature,
+    save_checkpoint,
+)
 from ..adapters.rdf_torch_training import (
     recursive_ridge_torch,
     torch_training_environment,
@@ -35,6 +44,7 @@ from .paths import default_resource
 from .rdf_exterior_sampling import (
     ExteriorSamplingOptions,
     generate_exterior_pool,
+    load_exterior_pool,
     mix_exterior_batches,
 )
 
@@ -125,9 +135,36 @@ def main():
     )
     parser.add_argument("--extra-batch-seed", type=int, default=0)
     parser.add_argument("--exterior-sampling-config", type=Path)
+    parser.add_argument(
+        "--reuse-exterior-run",
+        type=Path,
+        help="Completed experiment whose exact exterior pool is reused",
+    )
+    parser.add_argument(
+        "--verify-prefix-run",
+        type=Path,
+        help="Require identical old batches and replayed coefficients at its final step",
+    )
+    parser.add_argument("--resume-checkpoint", type=Path)
+    parser.add_argument(
+        "--checkpoint-interval",
+        type=int,
+        default=400,
+        help="Save RLS state every N cumulative updates and at the final update",
+    )
     args = parser.parse_args()
     if args.output.exists():
         parser.error("output exists; select a new experiment directory")
+    if args.checkpoint_interval < 1:
+        parser.error("checkpoint interval must be positive")
+    if args.reuse_exterior_run is not None and args.exterior_sampling_config is None:
+        parser.error("reusing an exterior pool requires its sampling configuration")
+    if (
+        args.resume_checkpoint is not None
+        and args.exterior_sampling_config is not None
+        and args.reuse_exterior_run is None
+    ):
+        parser.error("resume must reuse the exact saved exterior pool")
     manifest = json.loads((args.inputs / "manifest.json").read_text())
     required = (
         "shared_training_pool.npz",
@@ -166,6 +203,7 @@ def main():
     )
 
     compute = torch_training_environment("cuda")
+    git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     import torch
 
     args.output.mkdir(parents=True, exist_ok=False)
@@ -178,23 +216,39 @@ def main():
         )
         indices, mixed_plan = mix_exterior_batches(a, b, exterior_options)
         batch_plan = {**mixed_plan, "baseline_plan": batch_plan}
-        exterior_points, exterior_labels, selection_truth, exterior_report = (
-            generate_exterior_pool(
-                reconstructed["link4"],
-                center,
-                r1,
-                options,
-                exterior_options,
-                progress=lambda message: print(message, flush=True),
+        if args.reuse_exterior_run is not None:
+            exterior_points, exterior_labels, selection_truth, exterior_report = (
+                load_exterior_pool(
+                    args.reuse_exterior_run,
+                    manifest,
+                    source_meta["reconstruction"]["link4"]["mesh_digest"],
+                    center,
+                    r1,
+                    options,
+                    exterior_options,
+                )
             )
-        )
+        else:
+            exterior_points, exterior_labels, selection_truth, exterior_report = (
+                generate_exterior_pool(
+                    reconstructed["link4"],
+                    center,
+                    r1,
+                    options,
+                    exterior_options,
+                    progress=lambda message: print(message, flush=True),
+                )
+            )
         pool_path = args.output / "exterior_pool.npz"
-        np.savez_compressed(
-            pool_path,
-            points=exterior_points,
-            labels=exterior_labels,
-            selection_truth=selection_truth,
-        )
+        if args.reuse_exterior_run is not None:
+            shutil.copyfile(args.reuse_exterior_run / "exterior_pool.npz", pool_path)
+        else:
+            np.savez_compressed(
+                pool_path,
+                points=exterior_points,
+                labels=exterior_labels,
+                selection_truth=selection_truth,
+            )
         exterior_report["pool_sha256"] = sha256(pool_path.read_bytes()).hexdigest()
         exterior_report["source_reference_mesh_digest"] = source_meta["reconstruction"][
             "link4"
@@ -209,14 +263,126 @@ def main():
         )
         print("STAGE COMPLETE: exterior data ready; starting GPU fit", flush=True)
 
+    rdf = BernsteinRDF(center, r1, np.zeros((options.basis_count,) * 3))
+    context = {
+        "inputs": manifest,
+        "training_options": {
+            k: v for k, v in asdict(effective_options).items() if k != "updates"
+        },
+        "exterior_pool_sha256": (
+            exterior_report["pool_sha256"] if exterior_report else None
+        ),
+        "exterior_options": asdict(exterior_options) if exterior_report else None,
+    }
+
+    def prefix_hashes(steps):
+        if not 0 < steps <= options.updates:
+            raise ValueError("checkpoint steps exceed planned batches")
+        return {name: array_sha256(ids[:steps]) for name, ids in indices.items()}
+
+    resume = None
+    if args.resume_checkpoint is not None:
+        resume = load_checkpoint(
+            args.resume_checkpoint, rdf, options.regularization, context, prefix_hashes
+        )
+    completed = resume.metadata["completed_steps"] if resume else 0
+    if completed >= options.updates:
+        raise ValueError("resume requires additional updates beyond checkpoint")
+    batch_size = sum(ids.shape[1] for ids in indices.values())
+    if resume and resume.metadata["consumed_samples"] != completed * batch_size:
+        raise ValueError("checkpoint consumed-sample counter mismatch")
+
+    prefix_steps = None
+    if args.verify_prefix_run is not None:
+        old = json.loads((args.verify_prefix_run / "summary.json").read_text())
+        prefix_steps = old["updates"]
+        if (
+            old["inputs"] != manifest
+            or old["basis_count"] != options.basis_count
+            or not completed < prefix_steps <= options.updates
+            or prefix_steps % args.checkpoint_interval != 0
+        ):
+            raise ValueError("invalid prefix verification target")
+        with np.load(
+            args.verify_prefix_run / "batch_indices.npz", allow_pickle=False
+        ) as data:
+            if set(data.files) != set(indices):
+                raise ValueError("prefix batch keys mismatch")
+            for key, ids in indices.items():
+                np.testing.assert_array_equal(data[key], ids[:prefix_steps])
+
     def batches():
-        for step, (ia, ib) in enumerate(zip(indices["near"], indices["random"])):
+        for step in range(completed, options.updates):
+            ia, ib = indices["near"][step], indices["random"][step]
             blocks, labels = [near[ia], random[ib]], [near_d[ia], random_d[ib]]
             if exterior_report is not None:
                 ic = indices["exterior"][step]
                 blocks.append(exterior_points[ic])
                 labels.append(exterior_labels[ic])
             yield np.vstack(blocks), np.concatenate(labels)
+
+    checkpoint_records = []
+    checkpoint_seconds = 0.0
+
+    def checkpoint(step, seen, weights, covariance):
+        nonlocal checkpoint_seconds
+        started = perf_counter()
+        path = args.output / "checkpoints" / f"step_{step:06d}"
+        state = RidgeState(
+            weights.cpu().numpy(),
+            covariance.cpu().numpy(),
+            {
+                "schema_version": 1,
+                "model": model_signature(rdf, options.regularization),
+                "completed_steps": step,
+                "consumed_samples": seen,
+                "context": context,
+                "batch_prefix_sha256": prefix_hashes(step),
+                "compute": compute,
+                "git_commit": git_commit,
+            },
+        )
+        metadata = save_checkpoint(path, state, rdf, options.regularization)
+        if step == prefix_steps:
+            with np.load(
+                args.verify_prefix_run / "link4_gpu.npz", allow_pickle=False
+            ) as data:
+                replayed = (state.weights * rdf.radius).reshape(rdf.weights.shape)
+                np.testing.assert_allclose(
+                    replayed, data["link4_weights"], rtol=0, atol=1e-12
+                )
+                max_difference = float(np.max(np.abs(replayed - data["link4_weights"])))
+            (args.output / "prefix_verification.json").write_text(
+                json.dumps(
+                    {
+                        "passed": True,
+                        "steps": step,
+                        "max_weight_difference": max_difference,
+                        "batch_prefix_equal": True,
+                        "reference_model_sha256": file_sha256(
+                            args.verify_prefix_run / "link4_gpu.npz"
+                        ),
+                    },
+                    indent=2,
+                    allow_nan=False,
+                )
+                + "\n"
+            )
+            print(
+                f"STAGE COMPLETE: {step}-step replay verified; checkpoint saved",
+                flush=True,
+            )
+        checkpoint_records.append(
+            {
+                "step": step,
+                "path": str(path.relative_to(args.output)),
+                "metadata_sha256": file_sha256(path / "metadata.json"),
+                "files_sha256": metadata["sha256"],
+                "seconds": perf_counter() - started,
+            }
+        )
+        checkpoint_seconds += checkpoint_records[-1]["seconds"]
+        print(f"Checkpoint saved: {path}", flush=True)
 
     # Warm up both matrix multiplication and Cholesky before timing the fit.
     warm = torch.eye(32, dtype=torch.float64, device="cuda")
@@ -231,10 +397,13 @@ def main():
     print(json.dumps(batch_plan), flush=True)
     start = perf_counter()
     rdf = recursive_ridge_torch(
-        BernsteinRDF(center, r1, np.zeros((options.basis_count,) * 3)),
+        rdf,
         batches(),
         options.regularization,
         device="cuda",
+        resume=resume,
+        checkpoint=checkpoint,
+        checkpoint_interval=args.checkpoint_interval,
         progress=lambda step: (
             print(f"GPU update {step}/{options.updates}", flush=True)
             if step % 20 == 0
@@ -242,7 +411,8 @@ def main():
         ),
     )
     torch.cuda.synchronize()
-    elapsed = perf_counter() - start
+    fit_wall_seconds = perf_counter() - start
+    elapsed = fit_wall_seconds - checkpoint_seconds
     peak_bytes = torch.cuda.max_memory_allocated()
     maximum, maxima = estimate_maximum(rdf, r0, options)
     model = ExtendedRDF(rdf, r0, maximum)
@@ -287,10 +457,22 @@ def main():
         "compute": compute,
         "hostname": platform.node(),
         "python": platform.python_version(),
-        "git_commit": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True
-        ).strip(),
+        "git_commit": git_commit,
         "fit_seconds": elapsed,
+        "fit_wall_seconds": fit_wall_seconds,
+        "checkpoint_seconds": checkpoint_seconds,
+        "checkpoints": checkpoint_records,
+        "resume_step": completed,
+        "updates_executed": options.updates - completed,
+        "resume_checkpoint_metadata_sha256": (
+            file_sha256(args.resume_checkpoint / "metadata.json") if resume else None
+        ),
+        "exterior_pool_reused": args.reuse_exterior_run is not None,
+        "data_generation_seconds_this_run": (
+            0.0
+            if args.reuse_exterior_run is not None or exterior_report is None
+            else exterior_report["generation_seconds"]
+        ),
         "peak_cuda_allocated_bytes": peak_bytes,
         "derivatives_passed": report["derivatives_passed"],
         "passed": report["passed"],

@@ -2,18 +2,22 @@
 
 import json
 import sys
+import tempfile
 import unittest
 from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import numpy as np
 import trimesh
 
+from safe_ik.adapters.rdf_checkpoint import file_sha256
 from safe_ik.application.panda_rdf_training import TrainingOptions
 from safe_ik.application.rdf_exterior_sampling import (
     ExteriorSamplingOptions,
     generate_exterior_pool,
+    load_exterior_pool,
     mix_exterior_batches,
     sample_exterior_points,
 )
@@ -146,6 +150,75 @@ class ExteriorSamplingTest(unittest.TestCase):
         ):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 self.options(**change)
+
+    def test_longer_mixed_plan_preserves_complete_prefix(self):
+        near = np.tile(np.arange(4), (8, 1))
+        random = np.tile(np.arange(2), (8, 1))
+        short, _ = mix_exterior_batches(near[:4], random[:4], self.options())
+        long, _ = mix_exterior_batches(near, random, self.options())
+        for key in short:
+            np.testing.assert_array_equal(short[key], long[key][:4])
+
+    def test_saved_exterior_pool_reuse_and_mismatch_rejection(self):
+        from dataclasses import asdict
+
+        options = self.options(pool_size=3)
+        training = TrainingOptions()
+        manifest = {"link": "link4", "sha256": {"reference": "fixed"}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            points = np.array([[0.01, 0, 0], [0.02, 0, 0], [0.03, 0, 0]])
+            # Negative scan labels are intentionally retained.
+            labels = np.array([-0.001, 0.02, 0.03])
+            np.savez_compressed(
+                root / "exterior_pool.npz",
+                points=points,
+                labels=labels,
+                selection_truth=np.array([0.01, 0.02, 0.03]),
+            )
+            report = {
+                "options": asdict(options),
+                "source_reference_mesh_digest": "mesh",
+                "reference_truth_used_as_training_labels": False,
+                "scan_count": 100,
+                "scan_resolution": 400,
+                "normal_count": 100,
+                "pool_sha256": file_sha256(root / "exterior_pool.npz"),
+            }
+            (root / "exterior_pool.report.json").write_text(json.dumps(report))
+            (root / "summary.json").write_text(
+                json.dumps({"inputs": manifest, "exterior_sampling": report})
+            )
+
+            def load(**changes):
+                args = dict(
+                    root=root,
+                    manifest=manifest,
+                    mesh_digest="mesh",
+                    center=np.zeros(3),
+                    radius=0.3,
+                    training=training,
+                    options=options,
+                )
+                return load_exterior_pool(**(args | changes))
+
+            p, y, _, r = load()
+            np.testing.assert_array_equal(p, points)
+            np.testing.assert_array_equal(y, labels)
+            self.assertEqual(r, report)
+            for changes in (
+                {"manifest": {}},
+                {"mesh_digest": "other"},
+                {"radius": 0.001},
+                {"options": replace(options, seed=1)},
+                {"training": replace(training, normal_count=10)},
+            ):
+                with self.subTest(changes=changes), self.assertRaises(ValueError):
+                    load(**changes)
+            with (root / "exterior_pool.npz").open("ab") as stream:
+                stream.write(b"changed")
+            with self.assertRaisesRegex(ValueError, "checksum"):
+                load()
 
 
 if __name__ == "__main__":

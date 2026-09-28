@@ -3,8 +3,10 @@
 import json
 import unittest
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
+import yaml
 
 from safe_ik.application.panda_rdf_training import TrainingOptions
 from safe_ik.application.refit_panda_rdf import prepare_fixed_batches
@@ -91,6 +93,12 @@ class FixedBatchTest(unittest.TestCase):
             prepare_fixed_batches(
                 self.near, self.random, self.reference, options, 20, 20, -1
             )
+
+    def test_800_config_only_changes_update_count(self):
+        config = Path(__file__).resolve().parents[1] / "configs"
+        old = yaml.safe_load((config / "panda_rdf_training_bp24_400.yaml").read_text())
+        new = yaml.safe_load((config / "panda_rdf_training_bp24_800.yaml").read_text())
+        self.assertEqual(new, old | {"updates": 800})
 
 
 if __name__ == "__main__":

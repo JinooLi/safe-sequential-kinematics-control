@@ -1,11 +1,15 @@
 """Offline exterior-band sampling ablation; no changes to RDF regression or CBFs."""
 
+import json
 from dataclasses import asdict, dataclass
 from hashlib import sha256
+from pathlib import Path
 from time import perf_counter
 
 import numpy as np
 import trimesh
+
+from ..adapters.rdf_checkpoint import file_sha256
 
 
 @dataclass(frozen=True)
@@ -227,3 +231,38 @@ def mix_exterior_batches(near, random, options):
         },
     }
     return indices, report
+
+
+def load_exterior_pool(root, manifest, mesh_digest, center, radius, training, options):
+    """Reuse the exact pool bytes, never regenerate scan labels during a paired run."""
+    root = Path(root)
+    report = json.loads((root / "exterior_pool.report.json").read_text())
+    summary = json.loads((root / "summary.json").read_text())
+    if (
+        summary.get("inputs") != manifest
+        or report != summary.get("exterior_sampling")
+        or report.get("source_reference_mesh_digest") != mesh_digest
+        or report.get("options") != asdict(options)
+        or report.get("reference_truth_used_as_training_labels") is not False
+        or any(
+            report.get(key) != getattr(training, key)
+            for key in ("scan_count", "scan_resolution", "normal_count")
+        )
+    ):
+        raise ValueError("reused exterior pool provenance mismatch")
+    if file_sha256(root / "exterior_pool.npz") != report.get("pool_sha256"):
+        raise ValueError("reused exterior pool checksum mismatch")
+    with np.load(root / "exterior_pool.npz", allow_pickle=False) as data:
+        points, labels, truth = (
+            data[k].copy() for k in ("points", "labels", "selection_truth")
+        )
+    if (
+        points.shape != (options.pool_size, 3)
+        or labels.shape != (options.pool_size,)
+        or truth.shape != labels.shape
+        or not all(np.isfinite(x).all() for x in (points, labels, truth))
+        or np.any((truth < 0) | (truth > options.distance_max))
+        or np.any(np.linalg.norm(points - center, axis=1) > radius + 1e-12)
+    ):
+        raise ValueError("invalid reused exterior pool")
+    return points, labels, truth, report

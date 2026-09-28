@@ -94,6 +94,41 @@ CPU 검증은 제외한다. 다른 컴퓨터 CPU와의 시간 비교에는 하�
 이 옵션에는 스캔 렌더링용 EGL 환경이 필요하다. 새 분포를 사용하지 않는
 기존 고정 입력 비교 경로와 실행용 제어기에는 영향이 없다.
 
+### 회귀 상태 저장과 재개
+
+고정 입력 GPU 진단 CLI는 `--checkpoint-interval`(기본 400)마다, 그리고 마지막
+갱신에서 `checkpoints/step_000400/` 같은 별도 디렉터리를 저장한다. 각 스냅샷은
+정규화 계수 `normalized_weights.npy`, 역정보 행렬 `inverse_information.npy`,
+입력·설정·배치 prefix·파일 SHA-256 및 누적 회차/표본 수를 담은 `metadata.json`이다.
+BP_24 행렬 하나는 약 1.42 GiB이며 npy/mmap을 사용해 pickle을 읽지 않는다.
+파일을 임시 디렉터리에 쓰고 flush/fsync한 뒤 디렉터리를 공개한다. 저장 실패로
+남은 임시 디렉터리는 재개 대상으로 쓰지 않는다. 기존 스냅샷은 덮어쓰지 않는다.
+
+이번 승인된 800회 실험은 이전 외부 풀을 재생성하지 않고 그대로 사용한다.
+`--verify-prefix-run`은 기존 배치와 400회 시점 계수의 일치를 요구한다.
+
+```bash
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --verify-prefix-run outputs/panda_rdf_gpu_bp24_exterior_run --output outputs/panda_rdf_gpu_bp24_exterior_800_run
+```
+
+중단된 실행을 재개할 때는 **실제 학습 프로세스가 끝난 것을 확인한 뒤** 마지막
+완료 스냅샷과 새로운 출력 경로를 지정한다. 아래는 400회 상태부터 누적 800회까지
+나머지 400회를 수행하는 예이며, 위 실행이 진행 중일 때 동시에 실행하지 않는다.
+
+```bash
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --resume-checkpoint outputs/panda_rdf_gpu_bp24_exterior_800_run/checkpoints/step_000400 --output outputs/panda_rdf_gpu_bp24_exterior_800_resumed
+```
+
+재개 시 기저·정규화·회귀 계수·학습 풀·학습 옵션 및 이미 처리한 배치를 검사한다.
+오직 저장된 $w_k,B_k$를 복원하며, 미터 단위 실행 계수만 불러와 새 $B_0$로
+시작하는 것은 지원하지 않는다. `fit_seconds`는 이번 호출의 회귀 계산 시간,
+`checkpoint_seconds`는 CPU 전송·검사·해시·저장 시간,
+`fit_wall_seconds`는 둘을 합한 시간이다. `resume_step`과 `updates_executed`를
+같이 기록하므로 재개 후 시간은 전체 800회 학습 시간과 혼동하지 않는다.
+`data_generation_seconds_this_run`은 풀 재사용 시 0이며, 원본 풀 보고서의
+`generation_seconds`는 과거 생성 시간으로 보존한다. CUDA 예열·CPU 최종 검증은
+학습 시간에서 제외한다. 체크포인트 읽기/해시 검사는 학습 타이머 시작 전이다.
+
 `safety.self_collision_model`의 기본값은 `rdf`다. 기존 `capsule`
 방식은 명시적으로 선택할 수 있다. `safety.margin`과 `safety.alpha`는
 기존 외부 장애물 캡슐 및 관절 한계 제약에 계속 사용한다.
