@@ -1,0 +1,11 @@
+# Optional link4-only ablation, combined with panda_rdf_training_bp24_400.yaml.
+# Existing near/random labels remain unchanged; new labels use the same scan oracle.
+pool_size: 500000
+near_batch: 512
+random_batch: 128
+exterior_batch: 640
+distance_max: 0.060
+seed: 0
+candidate_batch: 1024
+truth_batch: 64
+max_candidate_multiplier: 10

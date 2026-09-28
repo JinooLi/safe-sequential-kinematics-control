@@ -77,6 +77,23 @@ CPU 검증은 제외한다. 다른 컴퓨터 CPU와의 시간 비교에는 하�
 실제 인덱스는 출력의 `batch_indices.npz`, 계획·해시·고유 표본 수는
 `batch_plan.json`과 `summary.json`에 기록한다. 데이터 풀을 재생성하지 않는다.
 
+외부 0~60 mm 표본 보강은 명시적인 별도 옵션으로만 수행한다. 기존 배치 총량과
+400회 갱신은 유지하되 near/random 512/128개와 새 exterior 640개로 구성한다.
+`rdf_exterior_sampling.py`가 독립된 RNG로 새 풀 500,000개를 생성하며, 기준 mesh
+거리로 영역을 확인하고 기존 scan/normal 방법으로 학습 라벨을 계산한다.
+물체 내부 학습점이 들어 있는 기존 두 풀을 삭제하거나 재라벨링하지 않는다.
+
+```bash
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_400.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --output outputs/panda_rdf_gpu_bp24_exterior_run
+```
+
+새 풀은 `exterior_pool.npz`(points, labels, selection_truth), 생성 근거는
+`exterior_pool.report.json`에 저장한다. 학습에 `labels`를 사용하며
+`selection_truth`를 목표값으로 바꾸지 않는다. 새 배치 인덱스에는 `exterior`가
+추가된다. 순수 학습 시간은 데이터 생성·라벨 계산 시간과 별도로 기록한다.
+이 옵션에는 스캔 렌더링용 EGL 환경이 필요하다. 새 분포를 사용하지 않는
+기존 고정 입력 비교 경로와 실행용 제어기에는 영향이 없다.
+
 `safety.self_collision_model`의 기본값은 `rdf`다. 기존 `capsule`
 방식은 명시적으로 선택할 수 있다. `safety.margin`과 `safety.alpha`는
 기존 외부 장애물 캡슐 및 관절 한계 제약에 계속 사용한다.

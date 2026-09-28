@@ -9,7 +9,7 @@ import copy
 import json
 import platform
 import subprocess
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from hashlib import sha256
 from pathlib import Path
 from time import perf_counter
@@ -32,6 +32,11 @@ from .panda_rdf_training import (
 )
 from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
 from .paths import default_resource
+from .rdf_exterior_sampling import (
+    ExteriorSamplingOptions,
+    generate_exterior_pool,
+    mix_exterior_batches,
+)
 
 
 def prepare_fixed_batches(
@@ -119,6 +124,7 @@ def main():
         "--training-config", default=default_resource("configs/panda_rdf_training.yaml")
     )
     parser.add_argument("--extra-batch-seed", type=int, default=0)
+    parser.add_argument("--exterior-sampling-config", type=Path)
     args = parser.parse_args()
     if args.output.exists():
         parser.error("output exists; select a new experiment directory")
@@ -159,12 +165,58 @@ def main():
         a, b, previous, options, len(near), len(random), args.extra_batch_seed
     )
 
-    def batches():
-        for ia, ib in zip(a, b):
-            yield np.vstack((near[ia], random[ib])), np.r_[near_d[ia], random_d[ib]]
-
     compute = torch_training_environment("cuda")
     import torch
+
+    args.output.mkdir(parents=True, exist_ok=False)
+    indices = {"near": a, "random": b}
+    exterior_report = None
+    effective_options = options
+    if args.exterior_sampling_config is not None:
+        exterior_options = ExteriorSamplingOptions(
+            **yaml.safe_load(args.exterior_sampling_config.read_text())
+        )
+        indices, mixed_plan = mix_exterior_batches(a, b, exterior_options)
+        batch_plan = {**mixed_plan, "baseline_plan": batch_plan}
+        exterior_points, exterior_labels, selection_truth, exterior_report = (
+            generate_exterior_pool(
+                reconstructed["link4"],
+                center,
+                r1,
+                options,
+                exterior_options,
+                progress=lambda message: print(message, flush=True),
+            )
+        )
+        pool_path = args.output / "exterior_pool.npz"
+        np.savez_compressed(
+            pool_path,
+            points=exterior_points,
+            labels=exterior_labels,
+            selection_truth=selection_truth,
+        )
+        exterior_report["pool_sha256"] = sha256(pool_path.read_bytes()).hexdigest()
+        exterior_report["source_reference_mesh_digest"] = source_meta["reconstruction"][
+            "link4"
+        ]["mesh_digest"]
+        (args.output / "exterior_pool.report.json").write_text(
+            json.dumps(exterior_report, indent=2, allow_nan=False) + "\n"
+        )
+        effective_options = replace(
+            options,
+            near_batch=exterior_options.near_batch,
+            random_batch=exterior_options.random_batch,
+        )
+        print("STAGE COMPLETE: exterior data ready; starting GPU fit", flush=True)
+
+    def batches():
+        for step, (ia, ib) in enumerate(zip(indices["near"], indices["random"])):
+            blocks, labels = [near[ia], random[ib]], [near_d[ia], random_d[ib]]
+            if exterior_report is not None:
+                ic = indices["exterior"][step]
+                blocks.append(exterior_points[ic])
+                labels.append(exterior_labels[ic])
+            yield np.vstack(blocks), np.concatenate(labels)
 
     # Warm up both matrix multiplication and Cholesky before timing the fit.
     warm = torch.eye(32, dtype=torch.float64, device="cuda")
@@ -172,8 +224,7 @@ def main():
     torch.cuda.synchronize()
     torch.cuda.reset_peak_memory_stats()
     print(json.dumps(compute), flush=True)
-    args.output.mkdir(parents=True, exist_ok=False)
-    np.savez_compressed(args.output / "batch_indices.npz", near=a, random=b)
+    np.savez_compressed(args.output / "batch_indices.npz", **indices)
     (args.output / "batch_plan.json").write_text(
         json.dumps(batch_plan, indent=2, allow_nan=False) + "\n"
     )
@@ -251,13 +302,15 @@ def main():
         "reason": "single-link offline diagnostic",
         "inputs": manifest,
     }
+    if exterior_report is not None:
+        summary["exterior_sampling"] = exterior_report
     meta = copy.deepcopy(source_meta)
     for key in ("failure", "array_hashes", "wall_seconds", "comparison"):
         meta.pop(key, None)
     meta.update(
         {
             "complete": False,
-            "training": training_provenance(options),
+            "training": training_provenance(effective_options),
             "training_compute": compute,
             "validation": {"link4": report},
             "maxima": {"link4": maxima},
@@ -265,6 +318,9 @@ def main():
             "gpu_experiment": summary,
         }
     )
+    if exterior_report is not None:
+        meta["training"]["exterior_sampling"] = exterior_report
+        meta["training"]["baseline_options"] = asdict(options)
     save_bundle(
         RDFBundle(
             {"link4": model},
