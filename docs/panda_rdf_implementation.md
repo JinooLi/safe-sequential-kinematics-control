@@ -57,6 +57,10 @@ GPU 전환은 정확도 개선 방법이 아니며 FP32/TF32로 정밀도를 낮
 
 ```bash
 .venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --output outputs/panda_rdf_gpu_run
+# 같은 데이터에서 BP_24(축당 23차) 비교. 기본 학습 YAML은 변경하지 않는다.
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24.yaml --output outputs/panda_rdf_gpu_bp24_run
+# 기존 200회 배치를 보존하고 같은 풀에서 200회를 추가한다.
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_400.yaml --output outputs/panda_rdf_gpu_bp24_400_run
 ```
 
 입력 폴더에는 기존 `shared_training_pool.npz`, `shared_validation.npz`,
@@ -66,6 +70,12 @@ GPU 전환은 정확도 개선 방법이 아니며 FP32/TF32로 정밀도를 낮
 학습 시간에는 기저 계산·배치 전송·재귀 갱신을 포함하고 초기 CUDA 예열과
 CPU 검증은 제외한다. 다른 컴퓨터 CPU와의 시간 비교에는 하드웨어 차이도 포함된다.
 출력은 단일 링크 진단이므로 합격 여부와 무관하게 전체 로봇 실행 승인은 없다.
+
+고정 입력 비교에서는 `basis_count`와 `updates`만 변경할 수 있다. `updates`는
+기존 배치 수 이상이어야 하며 원래 배치 전체를 prefix로 보존한다. 추가 배치는
+`--extra-batch-seed`(기본 0), spawn key `(4,6)`으로 같은 풀에서 생성한다.
+실제 인덱스는 출력의 `batch_indices.npz`, 계획·해시·고유 표본 수는
+`batch_plan.json`과 `summary.json`에 기록한다. 데이터 풀을 재생성하지 않는다.
 
 `safety.self_collision_model`의 기본값은 `rdf`다. 기존 `capsule`
 방식은 명시적으로 선택할 수 있다. `safety.margin`과 `safety.alpha`는
@@ -175,11 +185,24 @@ NumPy의 공유 전역 난수 상태는 사용하지 않는다. 질의점 후보
 오차나 실제 로봇의 안전성을 보증하지 않는다. 볼록 형상 대체나 안전 여유
 완화를 자동으로 수행하지 않는다.
 
-`abs(d_mesh) <= 0.060`인 모든 검증점을 최대 오차 5 mm 합격 판정에
-사용한다. 전체 영역 오차, 부호 오판, 기울기 크기·방향 오차, 기울기가
-모호한 점의 개수는 별도로 기록한다. 표면에서 0.1 μm 이내인 점이나
+`0 <= d_mesh <= 0.060`인 외부·표면 검증점을 최대 오차 5 mm 합격 판정에
+사용한다. `d_mesh < 0`인 내부 점은 정확도 통계에서 제외하며, RDF의 예측값으로
+평가점 포함 여부를 정하지 않는다. 따라서 외부 점의 잘못된 음수 예측도 오류에 포함된다.
+전체 영역 평균·최대오차, 부호 오판 및 기준 gradient 크기·방향 오차도 외부 점만
+대상으로 한다. 표본 5,000개는 다시 뽑지 않으며, `evaluated_count`, `near_count`,
+`interior_excluded_count`로 분모를 기록한다. 외부 near 점이 없으면 오류를 낸다.
+전체 구 표본에 외부 점이 없다면 해당 통계는 0 대신 null로 기록한다.
+
+공통 계산은 `panda_rdf_validation.py`에 있다. 보고서의
+`accuracy_domain=mesh_exterior_including_surface_v1`과 표본 수를 런타임 로더가
+검사한다. 구 기준 보고서는 명시적으로 재검증해야 하며 재학습은 필요하지 않다.
+GPU 비교에서도 저장된 과거 `near` 마스크를 그대로 재사용하지 않는다.
+이는 오프라인 정확도 범위 변경이며, 내부 signed 학습점·실행 중 음수 거리·
+CBF/QP 또는 미분 일치 검사를 제거하는 변경이 아니다.
+
+표면에서 0.1 μm 이내인 점이나
 삼각형 모서리에 가까운 점(최소 무게중심 좌표가 1e-5 미만)은 기울기
-방향 통계에서 모호한 것으로 표시한다. **거리 합격 판정에서는 제외하지 않는다.**
+방향 통계에서 모호한 것으로 표시한다. **외부·표면 점이면 거리 합격 판정에서는 제외하지 않는다.**
 
 해석적 공간 기울기와 중앙 차분의 비교에는 간격 1 μm, 절대 허용오차
 1e-5를 사용한다. 내부·전환 구간·외부 표본에서는 C1 연속성만 갖는

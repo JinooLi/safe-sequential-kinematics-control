@@ -43,6 +43,10 @@ Mesh 진단 결과는 `outputs/panda_mesh_inspection/index.html`에 저장한다
 
 학습은 이제 원본 Visual mesh를 공식 RDF 방식의 128³ voxel SDF와 Marching
 Cubes로 재구성한 뒤 수행한다. 5 mm 검증 기준도 **재구성 mesh**에 적용한다.
+거리 정확도는 기준 거리 `d_mesh >= 0`인 외부·표면 점만 평가하며, 합격 판정은
+`0 <= d_mesh <= 60 mm`에서 수행한다. 내부 점은 통계에서 제외하지만 signed
+학습 데이터와 미분·경계 검사는 유지한다. 이전 평가 정책의 산출물은 계수를
+유지한 채 명시적으로 재검증해야 한다.
 원본↔재구성 표면 차이는 양방향 통계와 HTML로 보고하며 별도 합격 임계값은 없다.
 `panda-prepare-mesh`의 결과는 `outputs/panda_mesh_reconstruction/reference.npz`와
 `reference.meshes.html`이고, RDF 계수 학습이나 제어 승인을 수행하지 않는다.

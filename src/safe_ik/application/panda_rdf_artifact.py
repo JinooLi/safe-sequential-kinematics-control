@@ -11,6 +11,7 @@ from zipfile import BadZipFile
 import numpy as np
 
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF
+from .panda_rdf_validation import ACCURACY_DOMAIN, NEAR_DISTANCE
 
 SCHEMA = 2
 REFERENCE = "voxel_reconstructed_mesh"
@@ -126,12 +127,26 @@ def load_bundle(path, geometry, options):
             models, queries = {}, {}
             for name in names:
                 report = meta["validation"][name]
+                if report.get("accuracy_domain") != ACCURACY_DOMAIN:
+                    raise ValueError(
+                        f"{name}: accuracy policy changed; revalidate existing "
+                        "coefficients with --validate-only"
+                    )
                 if (
                     report.get("passed") is not True
                     or report["sample_counts"] != [3000, 2000]
+                    or report.get("near_distance") != NEAR_DISTANCE
+                    or report.get("sample_count") != 5000
+                    or type(report.get("evaluated_count")) is not int
+                    or type(report.get("interior_excluded_count")) is not int
+                    or type(report.get("near_count")) is not int
+                    or not 0 < report["near_count"] <= report["evaluated_count"] <= 5000
+                    or report["interior_excluded_count"]
+                    != 5000 - report["evaluated_count"]
                     or not np.isfinite(report["near_max_error"])
                     or report["near_max_error"] > options.error_margin
                     or report.get("derivatives_passed") is not True
+                    or report.get("distance_passed") is not True
                 ):
                     raise ValueError(f"{name}: validation failed: {report}")
                 for suffix in (

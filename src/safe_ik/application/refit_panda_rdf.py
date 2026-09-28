@@ -30,7 +30,85 @@ from .panda_rdf_training import (
     training_provenance,
     validate_model,
 )
+from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
 from .paths import default_resource
+
+
+def prepare_fixed_batches(
+    near_ids,
+    random_ids,
+    reference_options,
+    options,
+    near_count,
+    random_count,
+    extra_batch_seed=0,
+):
+    """Keep the original prefix; append reproducible batches from the same pools.
+
+    A separate random stream deliberately avoids pretending to restore the
+    original RNG state after point-cloud sampling. No labels are regenerated.
+    """
+    previous = asdict(reference_options)
+    current = asdict(options)
+    variable = {"basis_count", "updates"}
+    if {k: v for k, v in current.items() if k not in variable} != {
+        k: v for k, v in previous.items() if k not in variable
+    }:
+        raise ValueError("only basis_count and updates may differ from fixed inputs")
+    if options.updates < reference_options.updates:
+        raise ValueError("updates must preserve the full original batch prefix")
+    if type(extra_batch_seed) is not int or extra_batch_seed < 0:
+        raise ValueError("extra_batch_seed must be a nonnegative integer")
+    arrays = []
+    for ids, width, count in (
+        (near_ids, options.near_batch, near_count),
+        (random_ids, options.random_batch, random_count),
+    ):
+        ids = np.asarray(ids)
+        if (
+            count != options.pool_size
+            or ids.shape != (reference_options.updates, width)
+            or ids.dtype.kind not in "iu"
+            or np.any(ids < 0)
+            or np.any(ids >= count)
+            or np.any(np.diff(np.sort(ids, axis=1), axis=1) == 0)
+        ):
+            raise ValueError("invalid fixed batch indices or pool size")
+        arrays.append(ids.astype(np.int64, copy=True))
+    added = options.updates - reference_options.updates
+    if added:
+        rng = np.random.default_rng(
+            np.random.SeedSequence(extra_batch_seed, spawn_key=(4, 6))
+        )
+        extra_near, extra_random = [], []
+        for _ in range(added):
+            extra_near.append(rng.choice(near_count, options.near_batch, replace=False))
+            extra_random.append(
+                rng.choice(random_count, options.random_batch, replace=False)
+            )
+        arrays = [
+            np.vstack((old, extra))
+            for old, extra in zip(arrays, (extra_near, extra_random))
+        ]
+    plan = {
+        "original_updates": reference_options.updates,
+        "updates": options.updates,
+        "appended_updates": added,
+        "original_prefix_preserved": True,
+        "extra_batch_seed": extra_batch_seed if added else None,
+        "extra_batch_spawn_key": [4, 6] if added else None,
+        "consumed_samples": options.updates
+        * (options.near_batch + options.random_batch),
+        "array_sha256": {
+            name: sha256(np.ascontiguousarray(ids).tobytes()).hexdigest()
+            for name, ids in zip(("near", "random"), arrays)
+        },
+        "unique_samples": {
+            name: int(np.unique(ids).size)
+            for name, ids in zip(("near", "random"), arrays)
+        },
+    }
+    return *arrays, plan
 
 
 def main():
@@ -40,6 +118,7 @@ def main():
     parser.add_argument(
         "--training-config", default=default_resource("configs/panda_rdf_training.yaml")
     )
+    parser.add_argument("--extra-batch-seed", type=int, default=0)
     args = parser.parse_args()
     if args.output.exists():
         parser.error("output exists; select a new experiment directory")
@@ -61,11 +140,7 @@ def main():
     source = args.inputs / "link4_bp10.npz"
     reconstructed, source_meta = read_reconstructed_meshes(source)
     options = TrainingOptions(**yaml.safe_load(Path(args.training_config).read_text()))
-    previous = source_meta["training"]["options"]
-    if {k: v for k, v in asdict(options).items() if k != "basis_count"} != {
-        k: v for k, v in previous.items() if k != "basis_count"
-    }:
-        raise ValueError("only basis_count may differ from the fixed-input experiment")
+    previous = TrainingOptions(**source_meta["training"]["options"])
     with np.load(source, allow_pickle=False) as data:
         for key, digest in source_meta["array_hashes"].items():
             if sha256(np.ascontiguousarray(data[key]).tobytes()).hexdigest() != digest:
@@ -80,17 +155,9 @@ def main():
         )
     with np.load(args.inputs / "batch_indices.npz", allow_pickle=False) as data:
         a, b = data["near"].copy(), data["random"].copy()
-    for ids, width, count in (
-        (a, options.near_batch, len(near)),
-        (b, options.random_batch, len(random)),
-    ):
-        if (
-            ids.shape != (options.updates, width)
-            or ids.dtype.kind not in "iu"
-            or np.any(ids < 0)
-            or np.any(ids >= count)
-        ):
-            raise ValueError("invalid fixed batch indices")
+    a, b, batch_plan = prepare_fixed_batches(
+        a, b, previous, options, len(near), len(random), args.extra_batch_seed
+    )
 
     def batches():
         for ia, ib in zip(a, b):
@@ -106,6 +173,11 @@ def main():
     torch.cuda.reset_peak_memory_stats()
     print(json.dumps(compute), flush=True)
     args.output.mkdir(parents=True, exist_ok=False)
+    np.savez_compressed(args.output / "batch_indices.npz", near=a, random=b)
+    (args.output / "batch_plan.json").write_text(
+        json.dumps(batch_plan, indent=2, allow_nan=False) + "\n"
+    )
+    print(json.dumps(batch_plan), flush=True)
     start = perf_counter()
     rdf = recursive_ridge_torch(
         BernsteinRDF(center, r1, np.zeros((options.basis_count,) * 3)),
@@ -136,23 +208,31 @@ def main():
         "mesh_digest"
     ]
     with np.load(args.inputs / "shared_validation.npz", allow_pickle=False) as data:
-        points, truth, near_mask = (
+        points, truth = (
             data["points"].copy(),
             data["truth"].copy(),
-            data["near"].copy(),
         )
+    # Cached comparisons may contain the obsolete abs(truth) <= 60 mm mask.
+    # Always reclassify from the independent mesh sign under the current policy.
+    exterior, near_mask = accuracy_masks(truth)
     prediction, _ = rdf.query(points)
     cpu_prediction, _ = cpu_reference.query(points)
+    accuracy = distance_accuracy_report(
+        points, truth, prediction, source_meta["settings"]["error_margin"]
+    )
     np.testing.assert_allclose(
-        np.abs(prediction - truth)[near_mask].max(),
+        accuracy["near_max_error"],
         report["near_max_error"],
         atol=1e-10,
         rtol=0,
     )
     summary = {
+        **accuracy,
         "link": "link4",
         "basis_count": options.basis_count,
         "degree": options.basis_count - 1,
+        "updates": options.updates,
+        "batch_plan": batch_plan,
         "compute": compute,
         "hostname": platform.node(),
         "python": platform.python_version(),
@@ -161,13 +241,11 @@ def main():
         ).strip(),
         "fit_seconds": elapsed,
         "peak_cuda_allocated_bytes": peak_bytes,
-        "near_max_error": report["near_max_error"],
-        "near_mean_error": float(np.abs(prediction - truth)[near_mask].mean()),
         "derivatives_passed": report["derivatives_passed"],
         "passed": report["passed"],
         "cpu_reference_basis_count": cpu_reference.count,
         "prediction_max_difference_from_cpu": float(
-            np.max(np.abs(prediction - cpu_prediction))
+            np.max(np.abs(prediction - cpu_prediction)[exterior])
         ),
         "runtime_approved": False,
         "reason": "single-link offline diagnostic",
@@ -207,6 +285,7 @@ def main():
         args.output / "validation.npz",
         points=points,
         truth=truth,
+        exterior=exterior,
         near=near_mask,
         prediction=prediction,
         cpu_reference_prediction=cpu_prediction,

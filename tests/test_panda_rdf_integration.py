@@ -29,6 +29,7 @@ from safe_ik.application.panda_rdf_training import (
     surface_queries,
     validate_joint_gradients,
 )
+from safe_ik.application.panda_rdf_validation import ACCURACY_DOMAIN, NEAR_DISTANCE
 from safe_ik.application.panda_rollout import run_panda
 from safe_ik.application.panda_runtime import PandaRuntime
 from safe_ik.application.panda_setup import build_panda_components
@@ -67,7 +68,14 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             spheres[name] = {"mesh_radius": 0.2}
             validation[name] = {
                 "passed": True,
+                "distance_passed": True,
+                "accuracy_domain": ACCURACY_DOMAIN,
+                "near_distance": NEAR_DISTANCE,
                 "sample_counts": [3000, 2000],
+                "sample_count": 5000,
+                "evaluated_count": 4000,
+                "interior_excluded_count": 1000,
+                "near_count": 1500,
                 "near_max_error": 0.001,
                 "derivatives_passed": True,
                 "reference_mesh_digest": mesh_digest(trimesh.creation.box()),
@@ -208,6 +216,30 @@ class PandaRDFIntegrationTest(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "Panda RDF unavailable"):
             build_panda_components(config)
+
+    def test_old_accuracy_policy_requires_revalidation_not_retraining(self):
+        bundle, options = self.bundle()
+        bundle.metadata["validation"]["link0"].pop("accuracy_domain")
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy.npz"
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "accuracy policy.*revalidate"):
+                load_bundle(path, self.geometry, options)
+            candidate = read_candidate_for_validation(path, self.geometry, options)
+            np.testing.assert_array_equal(
+                candidate.models["link0"].rdf.weights,
+                bundle.models["link0"].rdf.weights,
+            )
+
+    def test_empty_or_inconsistent_exterior_coverage_rejected(self):
+        for key, value in (("near_count", 0), ("interior_excluded_count", 999)):
+            with self.subTest(key=key), TemporaryDirectory() as directory:
+                bundle, options = self.bundle()
+                bundle.metadata["validation"]["link0"][key] = value
+                path = Path(directory) / "bad.npz"
+                save_bundle(bundle, path)
+                with self.assertRaisesRegex(ValueError, "validation failed"):
+                    load_bundle(path, self.geometry, options)
 
     def test_triangle_oracle_known_box_distances_and_signs(self):
         mesh = trimesh.creation.box(extents=[0.1, 0.2, 0.3])

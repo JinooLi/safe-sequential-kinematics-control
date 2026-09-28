@@ -1,0 +1,23 @@
+# Fixed-input link4 experiment: only updates differs from BP_24 / 200.
+# Preserve the original 200 batches, then append 200 from the same saved pools.
+# CLI extra-batch-seed defaults to 0; no new geometry/labels/validation points.
+basis_count: 24
+updates: 400
+near_batch: 1024
+random_batch: 256
+pool_size: 500000
+regularization: 0.0001
+scan_count: 100
+scan_resolution: 400
+normal_count: 100
+reconstruction:
+  voxel_resolution: 128
+  scan_count: 100
+  scan_resolution: 400
+  normal_sample_count: 100
+  sample_point_count: 10000000
+  sdf_batch_size: 2048
+  comparison_samples: 5000
+maximum_samples: 10000
+maximum_starts: 20
+optimizer_ftol: 1.0e-12

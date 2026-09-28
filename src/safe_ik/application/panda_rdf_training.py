@@ -14,6 +14,7 @@ from scipy.spatial import ConvexHull
 
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF, recursive_ridge
 from .panda_mesh_reconstruction import UPSTREAM, ReconstructionOptions
+from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
 
 
 @dataclass(frozen=True)
@@ -329,8 +330,8 @@ def validate_model(mesh, model, rng, error_margin):
     points = np.vstack((global_points, near_points))
     truth, truth_gradient, ambiguous = mesh_truth(mesh, points)
     predicted, gradient = rdf.query(points)
-    error = np.abs(predicted - truth)
-    near = np.abs(truth) <= 0.060
+    accuracy = distance_accuracy_report(points, truth, predicted, error_margin)
+    exterior, _ = accuracy_masks(truth)
     # Test f inside its ball and D in all three branches, independent of labels.
     check = uniform_ball(rng, 100, rdf.center, rdf.radius)
     rdf_difference = float(
@@ -365,35 +366,21 @@ def validate_model(mesh, model, rng, error_margin):
         and all(v < 1e-5 and g < 1e-4 for v, g in continuity)
     )
     norm = np.linalg.norm(gradient, axis=1)
-    valid = ~ambiguous & (norm > 1e-8)
+    valid = exterior & ~ambiguous & (norm > 1e-8)
     angles = np.arccos(
         np.clip(
             np.sum(gradient[valid] * truth_gradient[valid], axis=1) / norm[valid], -1, 1
         )
     )
-    worst = np.flatnonzero(near)[np.argsort(-error[near], kind="stable")[:5]]
     return {
-        "passed": bool(error[near].max() <= error_margin and derivative_pass),
+        **accuracy,
+        "passed": bool(accuracy["distance_passed"] and derivative_pass),
         "sample_counts": [3000, 2000],
-        "near_count": int(near.sum()),
-        "near_max_error": float(error[near].max()),
-        "global_max_error": float(error[:3000].max()),
-        "mean_error": float(error.mean()),
-        "sign_errors": int(np.sum((predicted < 0) != (truth < 0))),
-        "worst_near_points": [
-            {
-                "point": points[i].tolist(),
-                "truth": float(truth[i]),
-                "prediction": float(predicted[i]),
-                "absolute_error": float(error[i]),
-            }
-            for i in worst
-        ],
         "gradient_magnitude_mean_error": (
             float(np.abs(norm[valid] - 1).mean()) if valid.any() else None
         ),
         "gradient_angle_mean_rad": float(angles.mean()) if len(angles) else None,
-        "ambiguous_gradient_count": int(ambiguous.sum()),
+        "ambiguous_gradient_count": int(np.sum(exterior & ambiguous)),
         "mesh_watertight": bool(mesh.is_watertight),
         "welded_mesh_watertight": bool(welded.is_watertight),
         "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
