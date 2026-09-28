@@ -31,9 +31,41 @@ make panda-train-rdf OUTPUT=outputs/panda_rdf_reconstructed/candidate.npz
 하며, 제어기를 호출했다고 자동으로 학습하지 않는다.
 
 스캔 생성에는 공식 `mesh-to-sdf` 렌더러를 사용한다. 기본값은 화면 없이
-실행하는 EGL이며 `--gl-platform osmesa`도 지원한다. 수치 근사, 질의,
+실행하는 EGL이며 `--gl-platform osmesa`도 지원한다. 기본 수치 근사, 질의,
 미분은 CPU에서 수행하며 BLAS 스레드 기본값은 1개다(`--threads`).
 IK나 제어기에서는 렌더러나 삼각형 기준 거리 계산을 호출하지 않는다.
+
+### 선택적 GPU 학습
+
+오프라인 재귀 릿지만 `--device cuda`로 실행할 수 있다. CPU 기본 경로와
+제어기 의존성은 유지하고, GPU용 PyTorch는 별도 가상환경에 추가 설치한다.
+
+```bash
+uv sync --locked --python 3.11
+uv pip install --python .venv/bin/python -r configs/panda_rdf_gpu_requirements.txt
+.venv/bin/python -m unittest tests.test_rdf_torch_training -v
+.venv/bin/python -m safe_ik.application.train_panda_rdf --device cuda --links link4 --output outputs/panda_rdf_gpu/link4.npz
+```
+
+추가 설치 후에는 `.venv/bin/python`으로 실행한다. `uv sync`를 다시 실행하면
+선택적 PyTorch 설치가 제거될 수 있다. CUDA가 없으면 오류를 내며 CPU로
+조용히 전환하지 않는다. float64, Bernstein 기저, 정규화 및 재귀 갱신식은
+CPU와 같고, 합격 기준·삼각형 검증·확장 함수·실행 시 미분은 변경하지 않는다.
+GPU 전환은 정확도 개선 방법이 아니며 FP32/TF32로 정밀도를 낮추지 않는다.
+
+기존 link4 BP_10과 정확히 같은 입력으로 계산만 비교할 때는 다음 진단을 쓴다.
+
+```bash
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --output outputs/panda_rdf_gpu_run
+```
+
+입력 폴더에는 기존 `shared_training_pool.npz`, `shared_validation.npz`,
+`link4_bp10.npz`와 고정된 `batch_indices.npz`, SHA-256 `manifest.json`이 필요하다.
+출력 폴더는 새 경로여야 한다. 입력·배치·기준 형상을 확인한 뒤 GPU 학습과 CPU
+독립 검증을 수행하고, 학습 시간·최대 메모리·CPU 예측값과의 차이를 기록한다.
+학습 시간에는 기저 계산·배치 전송·재귀 갱신을 포함하고 초기 CUDA 예열과
+CPU 검증은 제외한다. 다른 컴퓨터 CPU와의 시간 비교에는 하드웨어 차이도 포함된다.
+출력은 단일 링크 진단이므로 합격 여부와 무관하게 전체 로봇 실행 승인은 없다.
 
 `safety.self_collision_model`의 기본값은 `rdf`다. 기존 `capsule`
 방식은 명시적으로 선택할 수 있다. `safety.margin`과 `safety.alpha`는

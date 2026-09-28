@@ -188,7 +188,7 @@ def training_pools(mesh, center, radius, rng, options):
     )
 
 
-def train_model(center, radius, pools, rng, options):
+def train_model(center, radius, pools, rng, options, *, device="cpu", progress=None):
     near, near_d, random, random_d = pools
 
     def batches():
@@ -197,10 +197,20 @@ def train_model(center, radius, pools, rng, options):
             b = rng.choice(len(random), options.random_batch, replace=False)
             yield np.vstack((near[a], random[b])), np.r_[near_d[a], random_d[b]]
 
-    return recursive_ridge(
+    if device not in ("cpu", "cuda"):
+        raise ValueError("training device must be cpu or cuda")
+    fit = recursive_ridge
+    kwargs = {}
+    if device == "cuda":
+        from ..adapters.rdf_torch_training import recursive_ridge_torch
+
+        fit = recursive_ridge_torch
+        kwargs = {"device": device, "progress": progress}
+    return fit(
         BernsteinRDF(center, radius, np.zeros((options.basis_count,) * 3)),
         batches(),
         options.regularization,
+        **kwargs,
     )
 
 

@@ -46,6 +46,12 @@ def main():
     )
     parser.add_argument("--output", help="defaults to safety.rdf.artifact")
     parser.add_argument(
+        "--device",
+        default="cpu",
+        choices=("cpu", "cuda"),
+        help="ridge training backend; validation and runtime remain CPU",
+    )
+    parser.add_argument(
         "--prepare-only",
         action="store_true",
         help="reconstruct meshes and export comparison HTML, without fitting/approving RDF",
@@ -92,6 +98,11 @@ def main():
     os.environ.setdefault("PYOPENGL_PLATFORM", args.gl_platform)
     config = load_panda_config(args.config)
     training = TrainingOptions(**yaml.safe_load(Path(args.training_config).read_text()))
+    compute = {"backend": "numpy/scipy", "device": "cpu", "dtype": "float64"}
+    if args.device == "cuda":
+        from ..adapters.rdf_torch_training import torch_training_environment
+
+        compute = torch_training_environment("cuda")
     output = Path(args.output) if args.output else config.safety.rdf.artifact
     report_path = output.with_suffix(".report.json")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -104,6 +115,7 @@ def main():
         "geometry": geometry.provenance,
         "settings": geometry_settings(config.safety.rdf),
         "training": training_provenance(training),
+        "training_compute": compute,
         "spheres": {},
         "training_seed": config.safety.rdf.seed,
         "maxima": {},
@@ -199,7 +211,9 @@ def main():
                 print(
                     f"{name}: recursive ridge, {training.updates} updates", flush=True
                 )
-                rdf = train_model(center, r1, pools, streams[0], training)
+                rdf = train_model(
+                    center, r1, pools, streams[0], training, device=args.device
+                )
                 del pools
                 maximum, maximum_report = estimate_maximum(rdf, r0, training)
                 model = ExtendedRDF(rdf, r0, maximum)

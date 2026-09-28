@@ -1,0 +1,4 @@
+# Optional offline GPU backend; install AFTER uv sync --locked --python 3.11.
+# Keep the normal controller environment free of mandatory CUDA dependencies.
+--index-url https://download.pytorch.org/whl/cu128
+torch==2.8.0

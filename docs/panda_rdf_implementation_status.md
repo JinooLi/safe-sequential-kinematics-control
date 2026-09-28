@@ -158,6 +158,9 @@ app-server socket directory has an unsupported host mount at /mnt/wslg/distro
 거리와 공식 학습 설정을 검토한 뒤 명시적으로 재학습해야 한다.
 자동 파라미터 탐색, 안전 기준 완화, 메시 보정, 캡슐로의 자동 전환,
 검증에 실패한 모델을 사용하는 실제 궤적 실험은 수행하지 않았다.
-GPU 전환과 궤적 안전성·성능 비교도 기존 합격 기준을 통과할 때까지 보류한다.
+궤적 안전성·성능 비교는 기존 합격 기준을 통과할 때까지 보류한다.
+후속 사용자 요청으로 오프라인 학습에는 선택적 GPU 경로를 추가했다.
+같은 link4 BP_10 입력의 계산시간·수치 일치 재현이며, 검증 기준 완화나
+GPU 제어기 도입이 아니다. 사용법은 [구현 상세](panda_rdf_implementation.md)를 따른다.
 
 기준 문서는 [Panda RDF 확정 명세](panda_rdf_specification.md)다.
