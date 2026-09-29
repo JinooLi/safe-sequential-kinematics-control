@@ -52,7 +52,7 @@ table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}th,t
 <p class="notice">강조선은 삼각형 mesh의 연결 관계입니다. 실제 물리적 구멍, 부품 이음새, 의도된 개방부를 자동 구별하지 않습니다.
 연결 성분 수는 구멍 수가 아닙니다. 열린 경계가 없어도 자기 교차나 내부·외부 판정의 정확성은 별도 확인이 필요합니다.</p>
 <details><summary>원본 전체 링크 진단 수치</summary><div class="table-wrap"><table><thead><tr><th>링크</th><th>삼각형</th><th>열린 경계</th><th>비다양체</th><th>방향 불일치</th><th>퇴화 면</th></tr></thead><tbody id="summary"></tbody></table></div></details>
-<details id="comparison-details" hidden><summary>원본 ↔ 재구성 표면 차이 (mm)</summary><p>방향별 면적 비례 표본에서 상대 mesh 삼각형까지의 거리입니다. 샘플 최댓값은 전역 상한이 아니며, 별도 형상 차이 합격 임계값은 없습니다. RDF 5 mm 오차 검사는 재구성 mesh 기준입니다.</p><div class="table-wrap"><table><thead><tr><th>링크 / 방향</th><th>평균</th><th>95%</th><th>샘플 최대</th></tr></thead><tbody id="comparison-summary"></tbody></table></div></details>
+<details id="comparison-details" hidden><summary>원본 ↔ 재구성 표면 차이 (mm)</summary><p>방향별 면적 비례 표본에서 상대 mesh 삼각형까지의 거리입니다. 샘플 최댓값은 전역 상한이 아니며, 별도 형상 차이 합격 임계값은 없습니다. RDF 거리 오차 검사는 재구성 mesh 기준이며, 허용치는 해당 학습 산출물의 error_margin 설정을 따릅니다.</p><div class="table-wrap"><table><thead><tr><th>링크 / 방향</th><th>평균</th><th>95%</th><th>샘플 최대</th></tr></thead><tbody id="comparison-summary"></tbody></table></div></details>
 <details><summary>검사 방법과 출처</summary><p>로컬 좌표계(m)의 삼각형을 표시합니다. UV·재질 경계의 중복을 줄이기 위해 진단 복사본에서 소수 8자리 기준 위치 동일 정점을 묶었습니다. 표시 좌표는 float32이며 뷰어는 면을 삭제하거나 구멍을 메우지 않습니다.</p><p>재구성 형상이 있으면 공식 RDF의 voxel SDF → Marching Cubes 전처리 결과입니다. 원본 asset과 시뮬레이션 표시 형상은 보존됩니다. 재구성은 원본을 보수적으로 감싼다는 보장이 없으며 이 화면은 RDF 안전성 인증이 아닙니다.</p><p>Geometry fingerprint: <code id="fingerprint"></code></p></details>
 </main>
 <script id="mesh-data" type="application/json">__MESH_DATA__</script>

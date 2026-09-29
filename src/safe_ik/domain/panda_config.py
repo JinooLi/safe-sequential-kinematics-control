@@ -66,7 +66,8 @@ class PandaRDFConfig:
     top_k: int | None = 10
     softmin_error: float = 0.005
     physical_margin: float = 0.030
-    error_margin: float = 0.005
+    # Both the offline near-distance error limit and the CBF uncertainty margin.
+    error_margin: float = 0.010
     transition_ratio: float = 0.5
     cbf_gain: float = 1.0
     seed: int = 0

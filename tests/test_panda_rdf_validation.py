@@ -22,7 +22,7 @@ class ExteriorAccuracyTest(unittest.TestCase):
             np.zeros((len(truth), 3)),
             truth,
             prediction,
-            0.005,
+            kwargs.pop("error_margin", 0.005),
             global_count=kwargs.pop("global_count", len(truth)),
             **kwargs,
         )
@@ -56,6 +56,19 @@ class ExteriorAccuracyTest(unittest.TestCase):
         self.assertAlmostEqual(report["near_max_error"], 0.06)
         self.assertFalse(report["distance_passed"])
 
+    def test_10mm_limit_accepts_new_range_but_rejects_larger_error(self):
+        for prediction, accepted in (
+            (0.007113405, True),
+            (0.010, True),
+            (0.010001, False),
+        ):
+            with self.subTest(prediction=prediction):
+                old = self.report([0.0], [prediction], error_margin=0.005)
+                new = self.report([0.0], [prediction], error_margin=0.010)
+                self.assertFalse(old["distance_passed"])
+                self.assertEqual(new["distance_passed"], accepted)
+                self.assertEqual(old["near_max_error"], new["near_max_error"])
+
     def test_empty_exterior_near_region_never_vacuously_passes(self):
         for truth in ([-0.01, -0.02], [0.061, 0.1]):
             with (
@@ -76,7 +89,7 @@ class ExteriorAccuracyTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reference distances"):
             self.report([np.nan, 0.02], [0, 0.021])
 
-    def validation(self, bad_derivative=False):
+    def validation(self, bad_derivative=False, error_margin=0.005):
         mesh = trimesh.creation.box(extents=[0.1] * 3)
         model = ExtendedRDF(
             BernsteinRDF(np.zeros(3), 0.3, np.full((2,) * 3, 0.003)), 0.2, 0.003
@@ -95,8 +108,10 @@ class ExteriorAccuracyTest(unittest.TestCase):
                     "safe_ik.application.panda_rdf_training.numerical_gradient",
                     side_effect=lambda model, points: np.ones_like(points),
                 ):
-                    return validate_model(mesh, model, np.random.default_rng(2), 0.005)
-            return validate_model(mesh, model, np.random.default_rng(2), 0.005)
+                    return validate_model(
+                        mesh, model, np.random.default_rng(2), error_margin
+                    )
+            return validate_model(mesh, model, np.random.default_rng(2), error_margin)
 
     def test_validate_model_uses_exterior_policy_and_preserves_generated_count(self):
         report = self.validation()
@@ -107,10 +122,12 @@ class ExteriorAccuracyTest(unittest.TestCase):
         self.assertEqual(report["ambiguous_gradient_count"], 0)
 
     def test_derivative_failure_still_rejects_good_exterior_accuracy(self):
-        report = self.validation(bad_derivative=True)
-        self.assertTrue(report["distance_passed"])
-        self.assertFalse(report["derivatives_passed"])
-        self.assertFalse(report["passed"])
+        for margin in (0.005, 0.010):
+            with self.subTest(error_margin=margin):
+                report = self.validation(bad_derivative=True, error_margin=margin)
+                self.assertTrue(report["distance_passed"])
+                self.assertFalse(report["derivatives_passed"])
+                self.assertFalse(report["passed"])
 
 
 if __name__ == "__main__":

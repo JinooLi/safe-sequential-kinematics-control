@@ -44,7 +44,9 @@ class ExteriorSamplingOptions:
             raise ValueError("exterior.distance_max must be finite and positive")
 
 
-def sample_exterior_points(mesh, center, radius, options, progress=None):
+def sample_exterior_points(
+    mesh, center, radius, options, progress=None, *, link_index=4
+):
     """Area-weighted faces + uniform outward offset, filtered by exact mesh sign.
 
     Uniform offset is not uniform true distance in concave regions. Rejections
@@ -60,7 +62,11 @@ def sample_exterior_points(mesh, center, radius, options, progress=None):
         or radius <= 0
     ):
         raise ValueError("invalid exterior training sphere")
-    rng = np.random.default_rng(np.random.SeedSequence(options.seed, spawn_key=(4, 7)))
+    if type(link_index) is not int or link_index < 0:
+        raise ValueError("link_index must be a nonnegative integer")
+    rng = np.random.default_rng(
+        np.random.SeedSequence(options.seed, spawn_key=(link_index, 7))
+    )
     samples, distances = [], []
     accepted = drawn = outside_ball = outside_band = 0
     limit = options.pool_size * options.max_candidate_multiplier
@@ -125,7 +131,9 @@ def sample_exterior_points(mesh, center, radius, options, progress=None):
     )
 
 
-def generate_exterior_pool(mesh, center, radius, training, options, progress=print):
+def generate_exterior_pool(
+    mesh, center, radius, training, options, progress=print, *, link_index=4
+):
     """Reuse the official scan/normal label method; mesh truth only selects points."""
     # Must be set before importing the renderer. This remains an offline-only dependency.
     import os
@@ -136,7 +144,7 @@ def generate_exterior_pool(mesh, center, radius, training, options, progress=pri
     start = perf_counter()
     progress("Exterior data: generating and checking new points against mesh triangles")
     points, truth, report = sample_exterior_points(
-        mesh, center, radius, options, progress
+        mesh, center, radius, options, progress, link_index=link_index
     )
     progress("Exterior data: rendering the existing scan/normal label oracle")
     normalized = trimesh.Trimesh(
@@ -166,7 +174,7 @@ def generate_exterior_pool(mesh, center, radius, training, options, progress=pri
     report.update(
         {
             "options": asdict(options),
-            "point_seed_spawn_key": [4, 7],
+            "point_seed_spawn_key": [link_index, 7],
             "proposal": "mesh-area sampling plus uniform outward normal offset",
             "selection_oracle": "negative trimesh exact triangle signed_distance",
             "training_label_oracle": "mesh_to_sdf scan/normal; same parameters and outer-sphere normalization",
@@ -184,7 +192,7 @@ def generate_exterior_pool(mesh, center, radius, training, options, progress=pri
     return points, labels, truth, report
 
 
-def mix_exterior_batches(near, random, options):
+def mix_exterior_batches(near, random, options, *, link_index=4):
     """Retain paired baseline subsets and replace the other half with exterior data."""
     near, random = np.asarray(near), np.asarray(random)
     if (
@@ -202,7 +210,11 @@ def mix_exterior_batches(near, random, options):
         != near.shape[1] + random.shape[1]
     ):
         raise ValueError("exterior mixing must preserve baseline batch size")
-    rng = np.random.default_rng(np.random.SeedSequence(options.seed, spawn_key=(4, 8)))
+    if type(link_index) is not int or link_index < 0:
+        raise ValueError("link_index must be a nonnegative integer")
+    rng = np.random.default_rng(
+        np.random.SeedSequence(options.seed, spawn_key=(link_index, 8))
+    )
     indices = {
         "near": near[:, : options.near_batch].copy(),
         "random": random[:, : options.random_batch].copy(),
@@ -222,7 +234,7 @@ def mix_exterior_batches(near, random, options):
         },
         "batch_sizes": {name: a.shape[1] for name, a in indices.items()},
         "exterior_batch_seed": options.seed,
-        "exterior_batch_spawn_key": [4, 8],
+        "exterior_batch_spawn_key": [link_index, 8],
         "consumed_samples": sum(a.size for a in indices.values()),
         "unique_samples": {name: int(np.unique(a).size) for name, a in indices.items()},
         "array_sha256": {

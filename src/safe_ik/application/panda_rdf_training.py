@@ -318,7 +318,7 @@ def numerical_gradient(model, points, step=1e-6):
     return np.column_stack(columns)
 
 
-def validate_model(mesh, model, rng, error_margin):
+def validate_model(mesh, model, rng, error_margin, *, evidence_path=None):
     welded = mesh.copy()
     welded.merge_vertices()
     rdf = model.rdf
@@ -332,6 +332,18 @@ def validate_model(mesh, model, rng, error_margin):
     predicted, gradient = rdf.query(points)
     accuracy = distance_accuracy_report(points, truth, predicted, error_margin)
     exterior, _ = accuracy_masks(truth)
+    if evidence_path is not None:
+        # Original 5000 samples, including interiors, retained for independent audit.
+        with open(evidence_path, "xb") as stream:
+            np.savez_compressed(
+                stream,
+                points=points,
+                truth=truth,
+                prediction=predicted,
+                exterior=exterior,
+                near=accuracy_masks(truth)[1],
+                error_margin=np.array(error_margin),
+            )
     # Test f inside its ball and D in all three branches, independent of labels.
     check = uniform_ball(rng, 100, rdf.center, rdf.radius)
     rdf_difference = float(
@@ -497,7 +509,7 @@ def training_provenance(options):
     return {
         "options": asdict(options),
         "upstream_commit": UPSTREAM,
-        "algorithm": "Li ICRA 2024 Algorithm 1; w0=0, B0=I/1e-4; float64 CPU solves",
+        "algorithm": "Li ICRA 2024 Algorithm 1; w0=0, B0=I/regularization; float64; backend recorded separately",
         "normalization": "(p-c)/(2*r1)+0.5; targets/r1; metric weights",
         "sampling_adaptation": "outer-sphere normalization; uniform random ball replaces cube; shared scan cloud; chunked normal labels",
         "versions": {

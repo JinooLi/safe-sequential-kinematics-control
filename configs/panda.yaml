@@ -35,8 +35,10 @@ safety:
     query_density: 500.0 # m^-2; changing this regenerates query points offline
     top_k: 10 # null uses all query points
     softmin_error: 0.005 # m; not subtracted from barrier again
-    physical_margin: 0.030
-    error_margin: 0.005
+    physical_margin: 0.030 # m; physical clearance is unchanged
+    # m; offline near-error limit AND CBF uncertainty margin (total 0.040 m).
+    # Also changes training radii; a 5 mm artifact must not be relabeled/reused.
+    error_margin: 0.010
     transition_ratio: 0.5
     cbf_gain: 1.0
     seed: 0

@@ -54,8 +54,8 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             cls.config.model_path, cls.config.ee_frame, cls.geometry.vertices
         )
 
-    def bundle(self):
-        options = PandaRDFConfig(query_density=10)
+    def bundle(self, options=None):
+        options = options if options is not None else PandaRDFConfig(query_density=10)
         # Deliberately synthetic *test* artifact, never used as mesh approval.
         models, queries, spheres, validation = {}, {}, {}, {}
         rng = np.random.default_rng(4)
@@ -119,6 +119,15 @@ class PandaRDFIntegrationTest(unittest.TestCase):
         self.assertEqual(
             {v["body"] for v in sources}, {"hand", "left_finger", "right_finger"}
         )
+
+    def test_default_and_yaml_use_10mm_error_and_30mm_physical_margin(self):
+        configured = load_panda_config(ROOT / "configs/panda.yaml").safety.rdf
+        for options in (PandaRDFConfig(), configured):
+            with self.subTest(options=options):
+                self.assertAlmostEqual(options.error_margin, 0.010)
+                self.assertAlmostEqual(options.physical_margin, 0.030)
+                self.assertAlmostEqual(options.effective_margin, 0.040)
+                self.assertAlmostEqual(options.softmin_error, 0.005)
 
     def test_minimum_sphere_and_query_surface(self):
         mesh = trimesh.creation.box(extents=[0.1, 0.2, 0.3])
@@ -190,18 +199,109 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             )
             for key, value in (
                 ("physical_margin", 0.04),
+                ("error_margin", 0.005),
                 ("query_density", 30),
                 ("seed", 1),
                 ("transition_ratio", 0.7),
             ):
                 with self.assertRaisesRegex(ValueError, key):
                     load_bundle(path, self.geometry, replace(options, **{key: value}))
-            bundle.metadata["validation"]["link0"]["near_max_error"] = 0.006
+            bundle.metadata["validation"]["link0"]["near_max_error"] = (
+                options.error_margin + 0.001
+            )
             save_bundle(bundle, path)
             with self.assertRaisesRegex(ValueError, "link0.*validation failed"):
                 load_bundle(path, self.geometry, options)
             with self.assertRaisesRegex(ValueError, "Regenerate"):
                 load_bundle(path.with_name("missing.npz"), self.geometry, options)
+
+    def test_old_5mm_artifact_requires_new_geometry_not_just_reapproval(self):
+        bundle, old = self.bundle(PandaRDFConfig(query_density=10, error_margin=0.005))
+        changed = replace(old, error_margin=0.010)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "old_5mm.npz"
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "settings mismatch.*error_margin"):
+                load_bundle(path, self.geometry, changed)
+            for refresh_queries in (False, True):
+                with self.subTest(refresh_queries=refresh_queries):
+                    with self.assertRaisesRegex(ValueError, "settings mismatch"):
+                        read_candidate_for_validation(
+                            path,
+                            self.geometry,
+                            changed,
+                            refresh_queries=refresh_queries,
+                        )
+            # Even rewriting only the metadata must not authorize old radii.
+            bundle.metadata["settings"] = geometry_settings(changed)
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "radii mismatch"):
+                load_bundle(path, self.geometry, changed)
+
+    def test_10mm_distance_gate_does_not_waive_other_runtime_checks(self):
+        bundle, options = self.bundle()
+        report = bundle.metadata["validation"]["link0"]
+        report["near_max_error"] = options.error_margin
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "test_10mm.npz"
+            save_bundle(bundle, path)
+            load_bundle(path, self.geometry, options)
+            report["derivatives_passed"] = False
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "validation failed"):
+                load_bundle(path, self.geometry, options)
+            report["derivatives_passed"] = True
+            bundle.metadata["complete"] = False
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "incomplete"):
+                load_bundle(path, self.geometry, options)
+
+    def test_error_margin_increase_tightens_self_cbf_without_changing_obstacles(self):
+        bundle, options = self.bundle()
+        cfg = self.runtime_config()
+        capsule = PandaCapsuleSafety(
+            self.kinematics,
+            cfg.safety.capsules,
+            cfg.obstacles,
+            cfg.safety.margin,
+            include_self=False,
+        )
+        evaluations, problems = [], []
+        # Isolate the subtraction on one synthetic field; this is not an
+        # artifact migration or permission to reuse old training radii.
+        for margin in (0.005, 0.010):
+            rdf_options = replace(options, error_margin=margin, cbf_gain=2)
+            safety = PandaRDFSafety(
+                self.kinematics,
+                bundle.models,
+                bundle.queries,
+                bundle.pairs,
+                rdf_options,
+                capsule,
+            )
+            solver = Mock()
+            solver.solve.return_value = QPSolution(QPStatus.SOLVED, np.zeros(8), 0.01)
+            controller = PandaTrajectoryController(
+                replace(cfg, safety=replace(cfg.safety, rdf=rdf_options)),
+                self.kinematics,
+                safety,
+                (),
+                solver,
+            )
+            controller.get_velocity(cfg.initial_q)
+            evaluations.append(safety.evaluate(cfg.initial_q))
+            problems.append(solver.solve.call_args.args[0])
+        old, new = evaluations
+        count = len(bundle.pairs)
+        np.testing.assert_allclose(new.values[:count], old.values[:count] - 0.005)
+        np.testing.assert_array_equal(new.values[count:], old.values[count:])
+        np.testing.assert_array_equal(new.gradients, old.gradients)
+        rows = slice(1, 1 + count)
+        np.testing.assert_allclose(
+            problems[1].lower[rows], problems[0].lower[rows] + 0.010
+        )
+        np.testing.assert_array_equal(problems[1].A[rows], problems[0].A[rows])
+        np.testing.assert_array_equal(problems[1].A[rows, -1], 0)
 
     def test_default_rdf_missing_artifact_never_falls_back(self):
         config = replace(

@@ -1,5 +1,5 @@
-# Optional link4-only ablation, combined with panda_rdf_training_bp24_400.yaml.
-# Existing near/random labels remain unchanged; new labels use the same scan oracle.
+# Optional enrichment for the fixed-link ablation or fresh full-robot training.
+# New exterior labels use the same scan oracle, not the exact selection distances.
 pool_size: 500000
 near_batch: 512
 random_batch: 128

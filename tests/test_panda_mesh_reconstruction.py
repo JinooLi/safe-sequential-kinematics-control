@@ -40,7 +40,14 @@ class MeshReconstructionTest(unittest.TestCase):
         pools, queries, validation = (
             Mock(return_value=()),
             Mock(return_value=np.zeros((2, 3))),
-            Mock(return_value={"passed": False, "near_max_error": 0.01}),
+            Mock(
+                return_value={
+                    "passed": False,
+                    "distance_passed": False,
+                    "derivatives_passed": True,
+                    "near_max_error": 0.01,
+                }
+            ),
         )
         with (
             TemporaryDirectory() as directory,

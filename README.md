@@ -18,11 +18,13 @@ soft-min 안전 기울기를 Moore–Penrose 영공간에 투영한다.
 
 자기 충돌 기본값은 시각화 메시 기반 RDF(`safety.self_collision_model: rdf`)이며,
 닫힌 손가락은 손 형상에 합친다. 외부 장애물은 기존 캡슐–구 모델을 유지한다.
-호환되는 학습 산출물이 독립적인 표면 근처 오차 5 mm 검증을 통과해야
+호환되는 학습 산출물이 독립적인 표면 근처 오차 10 mm 검증을 통과해야
 IK나 궤적 제어에 사용할 수 있다. 산출물이 없거나 검증에 실패했거나
 설정과 호환되지 않으면 실행을 중단한다. 캡슐 자기 충돌을 사용하려면
 `safety.self_collision_model: capsule`을 명시해야 한다.
-현재 학습 후보는 검증에 실패하여 **제어에 사용할 수 없다**.
+물리적 여유 30 mm와 RDF 오차 여유 10 mm를 합산해 장벽에서 40 mm를 차감한다.
+기존 5 mm 설정의 산출물은 학습 구와 설정이 달라 **그대로 제어에 사용할 수 없다**.
+새 설정과 호환되는 전체 링크 산출물의 거리·미분 검증이 필요하다.
 [구현 진행 상황](docs/panda_rdf_implementation_status.md)과
 [구현 상세](docs/panda_rdf_implementation.md)를 참조한다.
 
@@ -42,11 +44,12 @@ Mesh 진단 결과는 `outputs/panda_mesh_inspection/index.html`에 저장한다
 표시된 경계는 실제 물리적 구멍과 동일하지 않으며, 이 도구는 안전성 인증이 아니다.
 
 학습은 이제 원본 Visual mesh를 공식 RDF 방식의 128³ voxel SDF와 Marching
-Cubes로 재구성한 뒤 수행한다. 5 mm 검증 기준도 **재구성 mesh**에 적용한다.
+Cubes로 재구성한 뒤 수행한다. 10 mm 검증 기준도 **재구성 mesh**에 적용한다.
 거리 정확도는 기준 거리 `d_mesh >= 0`인 외부·표면 점만 평가하며, 합격 판정은
 `0 <= d_mesh <= 60 mm`에서 수행한다. 내부 점은 통계에서 제외하지만 signed
-학습 데이터와 미분·경계 검사는 유지한다. 이전 평가 정책의 산출물은 계수를
-유지한 채 명시적으로 재검증해야 한다.
+학습 데이터와 미분·경계 검사는 유지한다. 평가 영역 정책만 바뀌고 구·정규화
+설정은 같은 산출물에 한해 계수를 유지한 재검증이 가능하다. `error_margin`
+변경은 학습 구도 바꾸므로 `--validate-only`로 호환성 검사를 우회할 수 없다.
 원본↔재구성 표면 차이는 양방향 통계와 HTML로 보고하며 별도 합격 임계값은 없다.
 `panda-prepare-mesh`의 결과는 `outputs/panda_mesh_reconstruction/reference.npz`와
 `reference.meshes.html`이고, RDF 계수 학습이나 제어 승인을 수행하지 않는다.
