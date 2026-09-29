@@ -54,6 +54,11 @@ def main():
     )
     parser.add_argument("--checkpoint-interval", type=int, default=400)
     parser.add_argument(
+        "--continue-from",
+        type=Path,
+        help="continue an enriched full build after a verified completed link prefix; requires a NEW output",
+    )
+    parser.add_argument(
         "--device",
         default="cpu",
         choices=("cpu", "cuda"),
@@ -104,6 +109,15 @@ def main():
         parser.error("threads must be positive")
     if args.checkpoint_interval < 1:
         parser.error("checkpoint interval must be positive")
+    if args.continue_from and (
+        not args.exterior_sampling_config
+        or args.links
+        or args.validate_only
+        or args.prepare_only
+    ):
+        parser.error(
+            "--continue-from requires a full enriched build without subset/revalidation flags"
+        )
     exterior = None
     if args.exterior_sampling_config:
         if (
@@ -179,6 +193,28 @@ def main():
         metadata["exterior_seed_streams"] = (
             "SeedSequence(exterior.seed, spawn_key=(link_index, 7=points or 8=batches))"
         )
+        if args.continue_from:
+            from ..adapters.rdf_checkpoint import file_sha256
+            from .panda_rdf_handoff import copy_prefix_evidence, read_completed_prefix
+
+            bundle, audit = read_completed_prefix(
+                args.continue_from, geometry, config.safety.rdf, training, exterior
+            )
+            metadata = bundle.metadata
+            copy_prefix_evidence(args.continue_from, state_root, bundle.models)
+            metadata.setdefault("handoffs", []).append(
+                {
+                    "source": str(args.continue_from.resolve()),
+                    "source_sha256": file_sha256(args.continue_from),
+                    "completed_links": list(bundle.models),
+                    "source_compute": metadata["training_compute"],
+                    "destination_compute": compute,
+                    "verified_evidence": audit,
+                }
+            )
+            metadata["training_compute"] = compute
+            save_bundle(bundle, output)
+            print(f"HANDOFF VERIFIED: preserved {list(bundle.models)}", flush=True)
     if args.validate_only:
         if args.links:
             parser.error("--validate-only requires all links")
@@ -192,6 +228,9 @@ def main():
     try:
         with threadpool_limits(limits=args.threads):
             for name in names:
+                if args.continue_from and name in bundle.models:
+                    print(f"LINK PRESERVED: {name}; no retraining", flush=True)
+                    continue
                 index = list(geometry.vertices).index(name)
                 print(
                     f"LINK START: {name} ({names.index(name) + 1}/{len(names)})",
