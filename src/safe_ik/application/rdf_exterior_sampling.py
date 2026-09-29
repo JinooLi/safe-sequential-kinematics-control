@@ -10,6 +10,12 @@ import numpy as np
 import trimesh
 
 from ..adapters.rdf_checkpoint import file_sha256
+from .rdf_data_workers import (
+    data_execution,
+    mesh_distance_evaluator,
+    scan_label_evaluator,
+    validate_data_workers,
+)
 
 
 @dataclass(frozen=True)
@@ -45,13 +51,23 @@ class ExteriorSamplingOptions:
 
 
 def sample_exterior_points(
-    mesh, center, radius, options, progress=None, *, link_index=4
+    mesh, center, radius, options, progress=None, *, link_index=4, data_workers=1
 ):
     """Area-weighted faces + uniform outward offset, filtered by exact mesh sign.
 
     Uniform offset is not uniform true distance in concave regions. Rejections
     and the accepted true-distance histogram are recorded rather than hidden.
     """
+    validate_data_workers(data_workers)
+    with mesh_distance_evaluator(mesh, data_workers) as evaluator:
+        return _sample_exterior_points(
+            mesh, center, radius, options, progress, link_index, evaluator
+        )
+
+
+def _sample_exterior_points(
+    mesh, center, radius, options, progress, link_index, evaluator
+):
     if not mesh.is_watertight or not mesh.is_winding_consistent or mesh.volume <= 0:
         raise ValueError("exterior sampling requires a closed, outward-oriented mesh")
     center = np.asarray(center, dtype=float)
@@ -89,14 +105,7 @@ def sample_exterior_points(
         points = points[inside]
         if not len(points):
             continue
-        truth = np.concatenate(
-            [
-                -trimesh.proximity.signed_distance(
-                    mesh, points[i : i + options.truth_batch]
-                )
-                for i in range(0, len(points), options.truth_batch)
-            ]
-        )
+        truth = np.concatenate(list(evaluator.chunks(points, options.truth_batch)))
         if not np.isfinite(truth).all():
             raise ValueError("nonfinite exterior selection truth")
         valid = (truth >= 0) & (truth <= options.distance_max)
@@ -132,19 +141,34 @@ def sample_exterior_points(
 
 
 def generate_exterior_pool(
-    mesh, center, radius, training, options, progress=print, *, link_index=4
+    mesh,
+    center,
+    radius,
+    training,
+    options,
+    progress=print,
+    *,
+    link_index=4,
+    data_workers=1,
 ):
     """Reuse the official scan/normal label method; mesh truth only selects points."""
     # Must be set before importing the renderer. This remains an offline-only dependency.
     import os
 
+    validate_data_workers(data_workers)
     os.environ.setdefault("PYOPENGL_PLATFORM", "egl")
     from mesh_to_sdf import get_surface_point_cloud
 
     start = perf_counter()
     progress("Exterior data: generating and checking new points against mesh triangles")
     points, truth, report = sample_exterior_points(
-        mesh, center, radius, options, progress, link_index=link_index
+        mesh,
+        center,
+        radius,
+        options,
+        progress,
+        link_index=link_index,
+        data_workers=data_workers,
     )
     progress("Exterior data: rendering the existing scan/normal label oracle")
     normalized = trimesh.Trimesh(
@@ -160,13 +184,15 @@ def generate_exterior_pool(
     )
     labels = []
     last_report = 0
-    for i in range(0, len(points), 2048):
-        block = (points[i : i + 2048] - center) / radius
-        labels.append(cloud.get_sdf(block, sample_count=training.normal_count) * radius)
-        count = min(i + 2048, len(points))
-        if count - last_report >= 20000 or count == len(points):
-            progress(f"Exterior labels {count}/{len(points)}")
-            last_report = count
+    with scan_label_evaluator(cloud, data_workers) as evaluator:
+        for index, values in enumerate(
+            evaluator.chunks((points - center) / radius, 2048, training.normal_count)
+        ):
+            labels.append(values * radius)
+            count = min((index + 1) * 2048, len(points))
+            if count - last_report >= 20000 or count == len(points):
+                progress(f"Exterior labels {count}/{len(points)}")
+                last_report = count
     labels = np.concatenate(labels)
     if labels.shape != truth.shape or not np.isfinite(labels).all():
         raise ValueError("invalid exterior scan labels")
@@ -187,6 +213,7 @@ def generate_exterior_pool(
             "label_max_absolute_error": float(errors.max()),
             "label_p95_absolute_error": float(np.quantile(errors, 0.95)),
             "generation_seconds": perf_counter() - start,
+            "data_generation_execution": data_execution(data_workers),
         }
     )
     return points, labels, truth, report

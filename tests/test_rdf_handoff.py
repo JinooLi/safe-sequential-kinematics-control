@@ -277,6 +277,8 @@ class HandoffTest(unittest.TestCase):
             str(self.root / "new.npz"),
             "--continue-from",
             str(self.path),
+            "--data-workers",
+            "2",
         ]
         with (
             patch.multiple(
@@ -314,10 +316,19 @@ class HandoffTest(unittest.TestCase):
                 [c.kwargs["link_index"] for c in trained.call_args_list], [1, 2]
             )
             cli.validate_joint_gradients.assert_called_once()
+            self.assertTrue(
+                all(c.kwargs["data_workers"] == 2 for c in trained.call_args_list)
+            )
         metadata = json.loads((self.root / "new.report.json").read_text())
         self.assertTrue(metadata["complete"])
         self.assertFalse(metadata["validation"]["link0"]["passed"])
         self.assertEqual(metadata["handoffs"][0]["completed_links"], ["link0"])
+        self.assertEqual(metadata["data_generation_execution"]["workers"], 2)
+        self.assertIsNone(metadata["handoffs"][0]["source_data_generation_execution"])
+        self.assertEqual(
+            metadata["handoffs"][0]["destination_data_generation_execution"]["workers"],
+            2,
+        )
         self.assertEqual(
             metadata["handoffs"][0]["destination_compute"]["gpu"], "destination"
         )

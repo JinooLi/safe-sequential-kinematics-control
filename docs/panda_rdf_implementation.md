@@ -35,6 +35,46 @@ make panda-train-rdf OUTPUT=outputs/panda_rdf_reconstructed/candidate.npz
 미분은 CPU에서 수행하며 BLAS 스레드 기본값은 1개다(`--threads`).
 IK나 제어기에서는 렌더러나 삼각형 기준 거리 계산을 호출하지 않는다.
 
+### 데이터 생성의 CPU 병렬화 (다음 실행부터)
+
+`--data-workers`는 거리 질의를 처리하는 별도 CPU 프로세스 수다. 새 학습 명령의
+기본값은 사용 가능한 CPU affinity 내 최대 4개이며 `--data-workers 1`로 기존
+직렬 처리를 선택할 수 있다. `--threads`는 BLAS 스레드 수로, 이 옵션과 다르다.
+
+```bash
+# 새 후보 경로에서 실행할 때만 적용한다. 현재 실행 중인 프로세스는 변경하지 않는다.
+safe-ik-train-panda-rdf --device cuda --data-workers 4 --threads 1 \
+  --training-config configs/panda_rdf_training_full_bp24.yaml \
+  --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml \
+  --output outputs/panda_rdf_next/candidate.npz
+```
+
+병렬 대상은 exterior 선택용 삼각형 거리와 near/random/exterior의 scan/normal
+라벨 질의다. 스캔 렌더링과 난수 생성은 부모 프로세스에 남겨 두며, 원래 청크 크기
+(삼각형 64점, 라벨 2,048점), 표본 순서, 반려된 점, 부호 판정과 float32 라벨
+변환을 유지한다. 렌더러는 복제하지 않고 정확히 같은 KD-tree/표면점/법선을
+각 작업자에 전달한다. 따라서 일부 전처리 구간은 계속 단일 코어로 보일 수 있다.
+
+CUDA/EGL 초기화 이후에도 fork하지 않고 `spawn`을 사용한다. 각 작업자의 BLAS는
+1스레드로 제한하고 대기 중인 청크는 최대 작업자 수의 2배다. 메모리는 작업자 수에
+따라 증가하므로 모든 코어를 무조건 사용하지 않는다. 데이터 단계가 끝나면 작업자를
+종료한 뒤 GPU 회귀를 시작한다. 작업자 오류는 전달하며 직렬 fallback으로 숨기지 않는다.
+
+실제 실행 설정은 `data_generation_execution`에 저장하며 학습 분포·정규화 옵션이나
+체크포인트 호환성 조건에는 섞지 않는다. 이전 링크의 실행 정보는 handoff 기록과
+링크별 fit 보고서에 보존한다. 저장된 풀 재사용에서는 과거 생성 보고서를 유지하며
+새 작업자 설정으로 재생성하지 않는다. 독립 검증과 합격 기준은 변경하지 않는다.
+
+속도/정확도 비교는 다음 진단으로 재현할 수 있다. 학습은 실행하지 않으며, 저장된
+기준 형상과 학습점으로 1·4·8 작업자를 비교한다. 렌더링은 한 번만 수행하고
+각 경우의 시작·직렬화·종료 비용을 포함한 시간을 기록한다.
+
+```bash
+.venv/bin/python -m safe_ik.application.benchmark_rdf_data_generation \
+  --candidate <보존된_candidate.npz> --link link1 \
+  --output <새_진단_폴더> --workers 1 4 8
+```
+
 ### 선택적 GPU 학습
 
 오프라인 재귀 릿지만 `--device cuda`로 실행할 수 있다. CPU 기본 경로와

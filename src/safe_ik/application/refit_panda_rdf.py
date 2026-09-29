@@ -41,6 +41,7 @@ from .panda_rdf_training import (
 )
 from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
 from .paths import default_resource
+from .rdf_data_workers import add_data_workers_argument
 from .rdf_exterior_sampling import (
     ExteriorSamplingOptions,
     generate_exterior_pool,
@@ -152,7 +153,10 @@ def main():
         default=400,
         help="Save RLS state every N cumulative updates and at the final update",
     )
+    add_data_workers_argument(parser)
     args = parser.parse_args()
+    if args.data_workers < 1:
+        parser.error("data workers must be positive")
     if args.output.exists():
         parser.error("output exists; select a new experiment directory")
     if args.checkpoint_interval < 1:
@@ -203,7 +207,9 @@ def main():
     )
 
     compute = torch_training_environment("cuda")
-    git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    git_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], text=True
+    ).strip()
     import torch
 
     args.output.mkdir(parents=True, exist_ok=False)
@@ -237,6 +243,7 @@ def main():
                     options,
                     exterior_options,
                     progress=lambda message: print(message, flush=True),
+                    data_workers=args.data_workers,
                 )
             )
         pool_path = args.output / "exterior_pool.npz"

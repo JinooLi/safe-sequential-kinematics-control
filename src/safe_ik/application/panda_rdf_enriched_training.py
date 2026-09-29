@@ -24,6 +24,7 @@ from ..adapters.rdf_torch_training import (
 )
 from ..domain.panda_rdf import BernsteinRDF
 from .panda_rdf_training import training_pools
+from .rdf_data_workers import data_execution, validate_data_workers
 from .rdf_exterior_sampling import generate_exterior_pool, mix_exterior_batches
 
 
@@ -57,12 +58,14 @@ def train_enriched_link(
     checkpoint_interval=400,
     progress=print,
     device="cuda",
+    data_workers=1,
 ):
     """Create new pools at the new radius; do not relabel or resume older models.
 
     Explicit torch CPU is supported for tiny parity tests only. The CLI requires
     CUDA for this mode, and never silently falls back to CPU.
     """
+    validate_data_workers(data_workers)
     if type(checkpoint_interval) is not int or checkpoint_interval < 1:
         raise ValueError("checkpoint_interval must be positive")
     # Reject incompatible batch sizes before spending time generating labels.
@@ -80,7 +83,9 @@ def train_enriched_link(
     directory.mkdir(parents=True, exist_ok=False)
     started = perf_counter()
     progress("generating near/random scan pools")
-    near, near_d, random, random_d = training_pools(mesh, center, radius, rng, training)
+    near, near_d, random, random_d = training_pools(
+        mesh, center, radius, rng, training, data_workers=data_workers
+    )
     baseline_seconds = perf_counter() - started
     np.savez_compressed(
         directory / "training_pool.npz",
@@ -97,6 +102,7 @@ def train_enriched_link(
         exterior,
         progress,
         link_index=link_index,
+        data_workers=data_workers,
     )
     np.savez_compressed(
         directory / "exterior_pool.npz",
@@ -195,6 +201,7 @@ def train_enriched_link(
         "training": asdict(training),
         "exterior_sampling": exterior_report,
         "compute": compute,
+        "data_generation_execution": data_execution(data_workers),
         "batch_plan": plan,
         "context": context,
         "baseline_pool_seconds": baseline_seconds,

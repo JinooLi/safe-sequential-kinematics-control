@@ -73,6 +73,8 @@ class EnrichedTrainingTest(unittest.TestCase):
                     str(root / "configs/panda.yaml"),
                     "--device",
                     "cuda",
+                    "--data-workers",
+                    "2",
                     "--training-config",
                     str(root / "configs/panda_rdf_training_full_bp24.yaml"),
                     "--exterior-sampling-config",
@@ -90,6 +92,7 @@ class EnrichedTrainingTest(unittest.TestCase):
                 [c.kwargs["link_index"] for c in fitted.call_args_list], list(range(9))
             )
             for call in fitted.call_args_list:
+                self.assertEqual(call.kwargs["data_workers"], 2)
                 self.assertEqual(
                     call.kwargs["context"]["settings"]["error_margin"], 0.010
                 )
@@ -97,6 +100,7 @@ class EnrichedTrainingTest(unittest.TestCase):
                 self.assertEqual(call.args[4].updates, 800)
             report = json.loads((Path(directory) / "candidate.report.json").read_text())
             self.assertTrue(report["complete"])
+            self.assertEqual(report["data_generation_execution"]["workers"], 2)
             self.assertEqual(len(report["validation"]), 9)
             self.assertEqual(report["training"]["options"]["near_batch"], 512)
             self.assertEqual(

@@ -15,6 +15,7 @@ from scipy.spatial import ConvexHull
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF, recursive_ridge
 from .panda_mesh_reconstruction import UPSTREAM, ReconstructionOptions
 from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
+from .rdf_data_workers import scan_label_evaluator, validate_data_workers
 
 
 @dataclass(frozen=True)
@@ -125,7 +126,7 @@ def uniform_ball(rng, count, center, radius):
     return center + radius * rng.random(count)[:, None] ** (1 / 3) * directions
 
 
-def training_pools(mesh, center, radius, rng, options):
+def training_pools(mesh, center, radius, rng, options, *, data_workers=1):
     """Official scan/normal labels, normalized to the *outer* sphere.
 
     Reproduce mesh_to_sdf's 47% + 47% noisy surface / 6% uniform near pool,
@@ -134,6 +135,7 @@ def training_pools(mesh, center, radius, rng, options):
     the specification's training-domain adaptation; regression is unchanged.
     Label in small chunks to avoid the upstream million-by-100 allocation.
     """
+    validate_data_workers(data_workers)
     from mesh_to_sdf import get_surface_point_cloud
 
     normalized = trimesh.Trimesh(
@@ -168,25 +170,22 @@ def training_pools(mesh, center, radius, rng, options):
         invalid = np.linalg.norm(near, axis=1) > 1
     random = uniform_ball(rng, count, np.zeros(3), 1.0)
 
-    def labels(points):
-        return (
-            np.concatenate(
-                [
-                    cloud.get_sdf(
-                        points[i : i + 2048], sample_count=options.normal_count
-                    )
-                    for i in range(0, len(points), 2048)
-                ]
-            )
-            * radius
-        )
+    with scan_label_evaluator(cloud, data_workers) as evaluator:
 
-    return (
-        near * radius + center,
-        labels(near),
-        random * radius + center,
-        labels(random),
-    )
+        def labels(points):
+            return (
+                np.concatenate(
+                    list(evaluator.chunks(points, 2048, options.normal_count))
+                )
+                * radius
+            )
+
+        return (
+            near * radius + center,
+            labels(near),
+            random * radius + center,
+            labels(random),
+        )
 
 
 def train_model(center, radius, pools, rng, options, *, device="cpu", progress=None):

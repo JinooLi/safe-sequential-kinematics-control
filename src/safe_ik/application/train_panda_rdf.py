@@ -37,6 +37,7 @@ from .panda_rdf_training import (
     validate_model,
 )
 from .paths import default_resource
+from .rdf_data_workers import add_data_workers_argument, data_execution
 from .rdf_exterior_sampling import ExteriorSamplingOptions
 
 
@@ -96,6 +97,7 @@ def main():
         help="CPU BLAS threads (default 1 avoids oversubscription)",
     )
     parser.add_argument("--gl-platform", default="egl", choices=("egl", "osmesa"))
+    add_data_workers_argument(parser)
     args = parser.parse_args()
     if args.refresh_queries or args.refresh_extension:
         args.validate_only = True
@@ -107,6 +109,8 @@ def main():
         )
     if args.threads < 1:
         parser.error("threads must be positive")
+    if args.data_workers < 1:
+        parser.error("data workers must be positive")
     if args.checkpoint_interval < 1:
         parser.error("checkpoint interval must be positive")
     if args.continue_from and (
@@ -165,6 +169,7 @@ def main():
         "settings": geometry_settings(config.safety.rdf),
         "training": training_provenance(training),
         "training_compute": compute,
+        "data_generation_execution": data_execution(args.data_workers),
         "spheres": {},
         "training_seed": config.safety.rdf.seed,
         "maxima": {},
@@ -209,10 +214,17 @@ def main():
                     "completed_links": list(bundle.models),
                     "source_compute": metadata["training_compute"],
                     "destination_compute": compute,
+                    "source_data_generation_execution": metadata.get(
+                        "data_generation_execution"
+                    ),
+                    "destination_data_generation_execution": data_execution(
+                        args.data_workers
+                    ),
                     "verified_evidence": audit,
                 }
             )
             metadata["training_compute"] = compute
+            metadata["data_generation_execution"] = data_execution(args.data_workers)
             save_bundle(bundle, output)
             print(f"HANDOFF VERIFIED: preserved {list(bundle.models)}", flush=True)
     if args.validate_only:
@@ -322,13 +334,21 @@ def main():
                             "sphere": metadata["spheres"][name],
                         },
                         checkpoint_interval=args.checkpoint_interval,
+                        data_workers=args.data_workers,
                         progress=lambda message: print(
                             f"{name}: {message}", flush=True
                         ),
                     )
                     metadata["link_training"][name] = fit_report
                 else:
-                    pools = training_pools(reference, center, r1, streams[0], training)
+                    pools = training_pools(
+                        reference,
+                        center,
+                        r1,
+                        streams[0],
+                        training,
+                        data_workers=args.data_workers,
+                    )
                     print(
                         f"{name}: recursive ridge, {training.updates} updates",
                         flush=True,
