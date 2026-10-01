@@ -33,10 +33,15 @@ class RunArtifactsTest(unittest.TestCase):
         source = ROOT / "tests/fixtures/panda.yaml"
         config = load_panda_config(source)
         config = replace(
-            config, trajectory=replace(config.trajectory, mode="direct", duration=0.1)
+            config,
+            trajectory=replace(config.trajectory, mode="direct", duration=0.1),
+            safety=replace(
+                config.safety, rdf=replace(config.safety.rdf, runtime_device="cuda")
+            ),
         )
         raw = yaml.safe_load(source.read_text())
         raw["trajectory"].update(mode="direct", duration=0.1)
+        raw["safety"].setdefault("rdf", {})["runtime_device"] = "cuda"
         with TemporaryDirectory() as directory:
             run = create_run_directory(directory)
             save_run_provenance(
@@ -51,6 +56,7 @@ class RunArtifactsTest(unittest.TestCase):
             self.assertEqual(loaded.model_path, config.model_path)
             self.assertEqual(loaded.trajectory.mode, "direct")
             self.assertEqual(loaded.trajectory.duration, 0.1)
+            self.assertEqual(loaded.safety.rdf.runtime_device, "cuda")
             metadata = json.loads((run / "metadata.json").read_text())
             self.assertGreater(len(metadata["resource_sha256"]), 1)
             self.assertIn("git", metadata)

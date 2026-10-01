@@ -37,6 +37,11 @@ def main():
     )
     parser.add_argument("--mode", choices=("direct", "sequential"))
     parser.add_argument(
+        "--rdf-device",
+        choices=("cpu", "cuda"),
+        help="override RDF inference device; CUDA uses float64 and never falls back",
+    )
+    parser.add_argument(
         "--duration", type=float, help="override trajectory duration [s]"
     )
     parser.add_argument(
@@ -52,6 +57,17 @@ def main():
     args = parser.parse_args()
     config = load_panda_config(Path(args.config))
     raw = yaml.safe_load(Path(args.config).read_text())
+    if args.rdf_device is not None:
+        config = replace(
+            config,
+            safety=replace(
+                config.safety,
+                rdf=replace(config.safety.rdf, runtime_device=args.rdf_device),
+            ),
+        )
+        raw.setdefault("safety", {}).setdefault("rdf", {})[
+            "runtime_device"
+        ] = args.rdf_device
     if args.mode is not None:
         config = replace(config, trajectory=replace(config.trajectory, mode=args.mode))
         raw["trajectory"]["mode"] = args.mode
@@ -87,7 +103,7 @@ def main():
     try:
         print("Loading kinematics and safety models...", flush=True)
         runtime = build_panda_runtime(config)
-    except (ValueError, OSError) as exc:
+    except (ValueError, OSError, RuntimeError) as exc:
         failure = {
             "failure": {
                 "reason": "runtime_initialization_failed",

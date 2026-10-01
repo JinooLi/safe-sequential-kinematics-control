@@ -24,6 +24,17 @@ dependencies = [
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+[project.optional-dependencies]
+cuda = ["torch==2.8.0; sys_platform == 'linux' or sys_platform == 'win32'"]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", extra = "cuda" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["safe_ik*"]

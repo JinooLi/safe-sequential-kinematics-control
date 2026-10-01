@@ -261,6 +261,9 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             self.kinematics, bundle, options, np.random.default_rng(0)
         )
         self.assertTrue(report["passed"], report)
+        self.assertEqual(
+            report["query_policy"], "lower_link_surface_to_higher_link_rdf_v1"
+        )
 
     def test_obstacles_remain_exact_capsules_and_cache_reuses_evaluation(self):
         bundle, options = self.bundle()
@@ -564,6 +567,8 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             ("self_link0_hand",), np.array([0.1]), np.ones((1, 7))
         )
         safety.artifact_id, safety.total_timings = "synthetic", {}
+        safety.query_policy = PandaRDFSafety.query_policy
+        safety.gate_metadata = {"policy": "test-sphere-gate"}
         safety.last_timings = {}
         safety.minimum_self_barrier, safety.minimum_self_pair = 0.1, "self_link0_hand"
         plant.q, plant.time = config.initial_q.copy(), 0.0
@@ -578,6 +583,19 @@ class PandaRDFIntegrationTest(unittest.TestCase):
         self.assertEqual(result.steps, 0)
         np.testing.assert_array_equal(result.final_q, config.initial_q)
         self.assertEqual(result.safety_metadata["artifact_id"], "synthetic")
+        self.assertEqual(
+            result.safety_metadata["rdf_query_policy"], PandaRDFSafety.query_policy
+        )
+        self.assertEqual(
+            result.safety_metadata["safe_ik_rdf_query_policy"],
+            PandaRDFSafety.query_policy,
+        )
+        self.assertEqual(
+            result.safety_metadata["rdf_sphere_gate"], safety.gate_metadata
+        )
+        self.assertEqual(
+            result.safety_metadata["safe_ik_rdf_sphere_gate"], safety.gate_metadata
+        )
         plant.advance.assert_not_called()
 
     def test_self_cbf_has_own_gain_and_no_clf_slack(self):

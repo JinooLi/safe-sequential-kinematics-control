@@ -1,10 +1,13 @@
 # Robot-specific entry points. Every CLI accepts additional flags via ARGS.
-UV ?= uv
+UV ?= $(or $(shell command -v uv 2>/dev/null),$(wildcard $(HOME)/.local/bin/uv),uv)
 UV_CACHE_DIR ?= /tmp/safe-inv-clf-uv-cache
 MPLCONFIGDIR ?= /tmp/safe-inv-clf-matplotlib
 export UV_CACHE_DIR MPLCONFIGDIR
 
 PANDA_CONFIG ?= configs/panda.yaml
+# Panda run/view targets default to CUDA. Explicit CPU avoids the CUDA extra.
+# This CLI override takes precedence over safety.rdf.runtime_device in the YAML.
+PANDA_RDF_DEVICE ?= cuda
 PLANAR_CONFIG ?= configs/planar.yaml
 ARGS ?=
 RESULTS_DIR ?=
@@ -12,7 +15,8 @@ CASE_ID ?=
 TRACE ?=
 OUTPUT ?=
 
-PANDA = $(UV) run safe-ik --config "$(PANDA_CONFIG)"
+PANDA_CUDA_EXTRA = $(if $(filter cuda,$(PANDA_RDF_DEVICE)),--extra cuda)
+PANDA = $(UV) run --locked $(PANDA_CUDA_EXTRA) safe-ik --config "$(PANDA_CONFIG)" --rdf-device "$(PANDA_RDF_DEVICE)"
 PLANAR = $(UV) run python -m safe_ik.application.planar_run --config "$(PLANAR_CONFIG)"
 RECORDING = $(UV) run python -m safe_ik.application.recording_view
 TRACE_FLAG = $(if $(strip $(TRACE)),--trace "$(TRACE)")
@@ -22,6 +26,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
 
 .DEFAULT_GOAL := help
 .PHONY: panda-train-rdf panda-validate-rdf panda-inspect-mesh panda-prepare-mesh
+.PHONY: panda-gpu-run panda-gpu-view
 .PHONY: help setup setup-runtime build test check check-format format \
  panda-run panda-view panda-direct panda-direct-view panda-sequential panda-sequential-view panda-plot panda-plot-view \
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
@@ -30,7 +35,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
  run train-rdf visualize-rdf compare-sequential-run compare-sequential-visualize compare-sequential-visualize-all
 
 help: ## Show grouped commands and optional variables
-	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode targets override it."}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PANDA_RDF_DEVICE=cuda|cpu (default cuda), PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode/device overrides take precedence."}' $(MAKEFILE_LIST)
 
 ##@ Panda: simulation and control
 panda-inspect-mesh: ## Export standalone HTML highlighting visual-mesh open boundaries
@@ -45,11 +50,17 @@ panda-train-rdf: ## Offline visual-mesh RDF training and validation (fails close
 panda-validate-rdf: ## Revalidate existing RDF coefficients without training
 	$(UV) run safe-ik-train-panda-rdf --config "$(PANDA_CONFIG)" --validate-only $(OUTPUT_FLAG) $(ARGS)
 
-panda-run: ## Headless run using trajectory.mode from Panda YAML
+panda-run: ## Headless run; CUDA RDF by default, PANDA_RDF_DEVICE=cpu for CPU
 	$(PANDA) $(ARGS)
 
-panda-view: ## Compute with progress, then replay in MuJoCo and show diagnostics
+panda-view: ## CUDA RDF + progress, then replay and plot; PANDA_RDF_DEVICE=cpu for CPU
 	$(PANDA) --visualize --show-plot $(ARGS)
+
+panda-gpu-run: ## Headless float64 CUDA RDF (installs the optional CUDA extra)
+	$(UV) run --locked --extra cuda safe-ik --config "$(PANDA_CONFIG)" --rdf-device cuda $(ARGS)
+
+panda-gpu-view: ## CUDA RDF computation, then replay and diagnostics
+	$(UV) run --locked --extra cuda safe-ik --config "$(PANDA_CONFIG)" --rdf-device cuda --visualize --show-plot $(ARGS)
 
 panda-direct: ## Headless end-effector pose control, skipping safe IK
 	$(PANDA) --mode direct $(ARGS)

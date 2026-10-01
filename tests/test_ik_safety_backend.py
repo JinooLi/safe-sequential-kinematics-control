@@ -333,6 +333,9 @@ class IKCandidateHandoffTest(unittest.TestCase):
         self.safety.evaluate.return_value = self.evaluation(0.1)
         self.ik_safety.total_timings = {"distance": 5.0}
         self.ik_safety.artifact_id = "ik-only-test"
+        self.ik_safety.query_policy = PandaRDFSafety.query_policy
+        self.ik_safety.gate_metadata = {"policy": "ik-test-gate"}
+        self.ik_safety.runtime_metadata = {"device": "cuda", "dtype": "float64"}
 
         def solve(*args, **kwargs):
             self.ik_safety.total_timings["distance"] += 3.0
@@ -342,6 +345,21 @@ class IKCandidateHandoffTest(unittest.TestCase):
         result = run_panda(config, self.runtime, should_continue=lambda: False)
         self.assertEqual(result.safety_metadata["model"], "capsule")
         self.assertEqual(result.safety_metadata["safe_ik_artifact_id"], "ik-only-test")
+        self.assertIsNone(result.safety_metadata["rdf_query_policy"])
+        self.assertIsNone(result.safety_metadata["rdf_sphere_gate"])
+        self.assertIsNone(result.safety_metadata["rdf_runtime"])
+        self.assertEqual(
+            result.safety_metadata["safe_ik_rdf_runtime"],
+            self.ik_safety.runtime_metadata,
+        )
+        self.assertEqual(
+            result.safety_metadata["safe_ik_rdf_sphere_gate"],
+            self.ik_safety.gate_metadata,
+        )
+        self.assertEqual(
+            result.safety_metadata["safe_ik_rdf_query_policy"],
+            PandaRDFSafety.query_policy,
+        )
         self.assertEqual(
             result.safety_metadata["safe_ik_rdf"]["timings"], {"distance": 3.0}
         )

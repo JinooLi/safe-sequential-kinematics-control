@@ -33,8 +33,14 @@ safety:
   self_collision_model: rdf
   rdf:
     artifact: ../models/panda_rdf.npz
+    # Direct CLI default. Panda Make targets override with PANDA_RDF_DEVICE=cuda.
+    runtime_device: cpu # make panda-view PANDA_RDF_DEVICE=cpu for explicit CPU.
     query_density: 500.0 # m^-2; changing this regenerates query points offline
-    top_k: 6  # null uses all query points
+    top_k: 2  # null uses all query points
+    sphere_gate: true # Far pairs: sphere barrier only; near pairs: RDF.
+    # Width = fraction * (sum of outer radii - sum of verified bounds - margin).
+    # Must be strictly between 0 and 1; does not change the trained model.
+    sphere_gate_transition_fraction: 0.5
     softmin_error: 0.005 # m; not subtracted from barrier again
     # m; runtime allows 0 <= value <= trained physical_margin (this model: 0.030).
     # Reducing this changes CBF clearance only; trained radii/weights stay fixed.
@@ -155,7 +161,7 @@ obstacles:
 
 trajectory:
   duration: 60.0
-  integration_period: 0.01
+  integration_period: 0.02
   # sequential: link endpoint position stages, then final EE pose.
   # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
   mode: sequential

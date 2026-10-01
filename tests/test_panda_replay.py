@@ -1,6 +1,7 @@
 """Compute/save before GUI; replay never reintegrates or invokes control."""
 
 import io
+import json
 import unittest
 from contextlib import nullcontext, redirect_stdout
 from pathlib import Path
@@ -172,12 +173,16 @@ class PandaReplayTest(unittest.TestCase):
                         "--config",
                         str(FIXTURE),
                         "--no-progress",
+                        "--rdf-device",
+                        "cuda",
                         "--output-dir",
                         directory,
                     ],
                 ),
-                patch.object(panda_run, "build_panda_runtime", return_value=runtime),
-                patch.object(panda_run, "save_run_provenance"),
+                patch.object(
+                    panda_run, "build_panda_runtime", return_value=runtime
+                ) as build,
+                patch.object(panda_run, "save_run_provenance") as provenance,
                 patch.object(panda_run, "run_panda", return_value=result) as calculate,
                 patch.object(panda_run, "save_panda_control_plot"),
                 patch.object(panda_run, "replay_panda_result") as replay,
@@ -186,3 +191,48 @@ class PandaReplayTest(unittest.TestCase):
                 panda_run.main()
                 self.assertIsNone(calculate.call_args.kwargs["progress"])
                 replay.assert_not_called()
+                self.assertEqual(
+                    build.call_args.args[0].safety.rdf.runtime_device, "cuda"
+                )
+                self.assertEqual(
+                    provenance.call_args.kwargs["effective_yaml"]["safety"]["rdf"][
+                        "runtime_device"
+                    ],
+                    "cuda",
+                )
+
+    def test_cuda_initialization_failure_saved_without_running(self):
+        with TemporaryDirectory() as directory:
+            with (
+                patch(
+                    "sys.argv",
+                    [
+                        "safe-ik",
+                        "--config",
+                        str(FIXTURE),
+                        "--rdf-device",
+                        "cuda",
+                        "--output-dir",
+                        directory,
+                        "--run-name",
+                        "cuda_failure",
+                    ],
+                ),
+                patch.object(
+                    panda_run,
+                    "build_panda_runtime",
+                    side_effect=RuntimeError("CUDA allocation failure"),
+                ),
+                patch.object(panda_run, "run_panda") as calculate,
+                patch.object(panda_run, "save_run_provenance"),
+                redirect_stdout(io.StringIO()),
+                self.assertRaises(SystemExit) as error,
+            ):
+                panda_run.main()
+            self.assertEqual(error.exception.code, 2)
+            calculate.assert_not_called()
+            failure = json.loads(
+                (Path(directory) / "cuda_failure/summary.json").read_text()
+            )["failure"]
+            self.assertEqual(failure["reason"], "runtime_initialization_failed")
+            self.assertIn("CUDA allocation failure", failure["detail"])

@@ -84,9 +84,15 @@ class PandaRDFConfig:
     seed: int = 0
     # Validation/performance limit ONLY; None preserves legacy symmetric checks.
     underestimation_limit: float | None = None
+    # Runtime-only pair gate; no artifact/radius/learning changes.
+    sphere_gate: bool = False
+    sphere_gate_transition_fraction: float = 0.5
+    runtime_device: str = "cpu"
 
     def __post_init__(self):
         object.__setattr__(self, "artifact", Path(self.artifact))
+        if self.runtime_device not in ("cpu", "cuda"):
+            raise ValueError("safety.rdf.runtime_device must be cpu or cuda")
         for name in (
             "query_density",
             "softmin_error",
@@ -115,6 +121,18 @@ class PandaRDFConfig:
             )
         if type(self.seed) is not int or self.seed < 0:
             raise ValueError("safety.rdf.seed must be a nonnegative integer")
+        if type(self.sphere_gate) is not bool:
+            raise ValueError("safety.rdf.sphere_gate must be a boolean")
+        fraction = self.sphere_gate_transition_fraction
+        if (
+            isinstance(fraction, bool)
+            or not isinstance(fraction, Real)
+            or not np.isfinite(fraction)
+            or not 0 < fraction < 1
+        ):
+            raise ValueError(
+                "safety.rdf.sphere_gate_transition_fraction must be between 0 and 1"
+            )
         if self.underestimation_limit is not None and (
             isinstance(self.underestimation_limit, bool)
             or not isinstance(self.underestimation_limit, Real)

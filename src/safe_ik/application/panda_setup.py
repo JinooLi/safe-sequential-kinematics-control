@@ -54,6 +54,7 @@ def build_panda_components(
     )
     if bundle is not None:
         from ..domain.panda_rdf_safety import PandaRDFSafety
+        from .panda_rdf_runtime import build_pair_evaluator
 
         # Exclusions are runtime policy, not edits to the trained artifact or
         # its geometry/adjacency provenance. load_bundle above still validates
@@ -73,7 +74,15 @@ def build_panda_components(
             config.safety.rdf,
             safety,
             bundle.identifier,
+            bounding_vertices=(
+                geometry.vertices if config.safety.rdf.sphere_gate else None
+            ),
+            pair_evaluator=build_pair_evaluator(bundle, pairs, config.safety.rdf),
         )
+        if config.safety.rdf.runtime_device == "cuda":
+            # Surface driver/allocation/inference failures during initialization,
+            # before any control step. Initial evaluation is reused by run_panda.
+            safety.evaluate(config.initial_q)
     return kinematics, safety
 
 

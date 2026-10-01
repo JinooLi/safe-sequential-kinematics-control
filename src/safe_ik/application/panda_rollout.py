@@ -110,6 +110,24 @@ def run_panda(
             getattr(ik_safety, "artifact_id", None) if not ik_skipped else None
         ),
         "artifact_id": getattr(safety, "artifact_id", None),
+        "rdf_runtime": (
+            getattr(safety, "runtime_metadata", None) if rdf_enabled else None
+        ),
+        "safe_ik_rdf_runtime": (
+            getattr(ik_safety, "runtime_metadata", None) if ik_rdf_enabled else None
+        ),
+        "rdf_query_policy": (
+            getattr(safety, "query_policy", None) if rdf_enabled else None
+        ),
+        "safe_ik_rdf_query_policy": (
+            getattr(ik_safety, "query_policy", None) if ik_rdf_enabled else None
+        ),
+        "rdf_sphere_gate": (
+            getattr(safety, "gate_metadata", None) if rdf_enabled else None
+        ),
+        "safe_ik_rdf_sphere_gate": (
+            getattr(ik_safety, "gate_metadata", None) if ik_rdf_enabled else None
+        ),
         "rdf_config": (
             dict(asdict(config.safety.rdf), artifact=str(config.safety.rdf.artifact))
             if rdf_enabled or ik_rdf_enabled

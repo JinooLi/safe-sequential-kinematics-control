@@ -78,9 +78,35 @@ IK 초기값 탐색은 `safe_ik.workers`로 병렬화한다. 현재 기본 설�
 프로세스를 만들지 않는다. [병렬 IK 설명](docs/panda_safe_pose_ik.md#parallel-seed-search)을 참조한다.
 
 ```bash
-make panda-run  # 설정된 모드로 화면 없이 실행
-make panda-view # 진행률 표시 → 전체 계산·저장 → MuJoCo 기록 재생 → 그래프
+make panda-run  # CUDA 의존성 설치 + GPU RDF, 화면 없이 실행
+make panda-view # GPU RDF + 진행률 → 전체 계산·저장 → MuJoCo 재생 → 그래프
+make panda-view PANDA_RDF_DEVICE=cpu # CUDA 없이 CPU 참조 경로 실행
+make panda-gpu-view # 명시적인 CUDA 실행 명령도 유지
 ```
+
+Panda run/view Make 명령의 기본값은 `PANDA_RDF_DEVICE=cuda`다.
+`uv run --locked --extra cuda`와 `--rdf-device cuda`를 사용하므로 pull 후 별도
+`pip install torch` 없이 잠긴 CUDA 의존성을 설치한다. `cpu`를 명시하면 CUDA extra를
+설치하지 않는다. 이 Make 변수는 YAML의 `safety.rdf.runtime_device`보다 우선하며,
+직접 `uv run safe-ik ...`를 실행할 때는 YAML 기본값(cpu)을 따른다.
+NVIDIA CUDA가 필요하며, 사용할 수 없으면 CPU로 자동 대체하지 않는다.
+모델 재학습은 필요 없다. 현재 capsule IK는 그대로이며 RDF를 사용하는 안전성 평가만
+GPU로 옮긴다. [구현·성능·검증](docs/panda_rdf_runtime_optimization.md#9-runtime-cuda-rdf-추가--2026-10-01)을 참조한다.
+
+RTX 4070 Linux 컴퓨터에서는 저장소의 `panda` 브랜치에서 다음처럼 실행한다.
+모델과 메시가 저장소에 포함되어 있어 학습 결과를 별도로 복사할 필요는 없다.
+
+```bash
+git pull --ff-only origin panda
+make panda-view
+```
+
+Make는 PATH의 uv를 우선 사용하고, 없으면 `~/.local/bin/uv`를 찾는다.
+다른 위치에 설치했을 때만 `UV=/설치경로/uv`를 전달한다.
+NVIDIA 드라이버와 데스크톱 display는 필요하며 uv가 설치하는 대상이 아니다.
+첫 CUDA 설치는 수 GB 다운로드가 발생한다. SSH의 display 없는 셸에서는
+`make panda-run ARGS="--mode direct --duration 0.1"`로 먼저 동작을 확인할 수 있다.
+서버에서 학습 등 다른 실행이 진행 중이면 해당 checkout을 pull하지 않는다.
 
 Panda 실행은 `tqdm`으로 IK의 완료 시드·현재 반복 수와 궤적 계산 스텝을 표시한다.
 병렬 탐색과 실패 후 자세 전용 진단도 별도로 표시한다. `panda-view`는 계산 중

@@ -37,7 +37,8 @@ class RDFBundle:
 def geometry_settings(options):
     # These are training/provenance settings. Only the runtime loader permits a
     # smaller physical margin; offline validation/resume must still match them.
-    # top-k, soft-min and CBF gain affect runtime only; never require retraining.
+    # top-k, soft-min, sphere gate, runtime device and CBF gain affect runtime only;
+    # never require retraining or relabeling an old artifact report.
     # underestimation_limit affects validation only, NOT radii or checkpoints.
     return {
         key: getattr(options, key)

@@ -452,12 +452,27 @@ def validate_saved_model(
     }
 
 
+def _sphere_gate_vertices(kinematics, options):
+    if not options.sphere_gate:
+        return None
+    from ..adapters.panda_rdf_geometry import extract_visual_geometry
+
+    return extract_visual_geometry(kinematics.model_path).vertices
+
+
 def validate_joint_gradients(kinematics, bundle, options, rng):
     from ..domain.panda_rdf import relative_point_jacobian
     from ..domain.panda_rdf_safety import PandaRDFSafety
+    from .panda_rdf_runtime import build_pair_evaluator
 
     evaluator = PandaRDFSafety(
-        kinematics, bundle.models, bundle.queries, bundle.pairs, options
+        kinematics,
+        bundle.models,
+        bundle.queries,
+        bundle.pairs,
+        options,
+        bounding_vertices=_sphere_gate_vertices(kinematics, options),
+        pair_evaluator=build_pair_evaluator(bundle, bundle.pairs, options),
     )
     maximum, relative_maximum, excluded = 0.0, 0.0, 0
     timings = []
@@ -488,41 +503,37 @@ def validate_joint_gradients(kinematics, bundle, options, rng):
                 bundle.models[target].query(local, False)[0], options.top_k
             )
 
-        for row, (left, right) in enumerate(bundle.pairs):
+        for row, (source, target) in enumerate(evaluator.query_pairs):
             stable = True
-            for target, source in ((left, right), (right, left)):
-                initial = np.sort(selection(q, target, source))
-                for axis in np.eye(7) * step:
-                    stable &= np.array_equal(
-                        initial, np.sort(selection(q + axis, target, source))
-                    )
-                    stable &= np.array_equal(
-                        initial, np.sort(selection(q - axis, target, source))
-                    )
-                R, t, jac = kinematics.frame_pose_and_jacobian(target, q)
-                point, point_jac = kinematics.frame_point_and_jacobian(
-                    source, q, bundle.queries[source][0]
+            initial = np.sort(selection(q, target, source))
+            for axis in np.eye(7) * step:
+                stable &= np.array_equal(
+                    initial, np.sort(selection(q + axis, target, source))
                 )
-                analytic = relative_point_jacobian(
-                    R, t, jac[:3], jac[3:], point[None], point_jac[None]
-                )[0]
+                stable &= np.array_equal(
+                    initial, np.sort(selection(q - axis, target, source))
+                )
+            R, t, jac = kinematics.frame_pose_and_jacobian(target, q)
+            point, point_jac = kinematics.frame_point_and_jacobian(
+                source, q, bundle.queries[source][0]
+            )
+            analytic = relative_point_jacobian(
+                R, t, jac[:3], jac[3:], point[None], point_jac[None]
+            )[0]
 
-                def local(state):
-                    rot, pos, _ = kinematics.frame_pose_and_jacobian(target, state)
-                    x, _ = kinematics.frame_point_and_jacobian(
-                        source, state, bundle.queries[source][0]
-                    )
-                    return rot.T @ (x - pos)
+            def local(state):
+                rot, pos, _ = kinematics.frame_pose_and_jacobian(target, state)
+                x, _ = kinematics.frame_point_and_jacobian(
+                    source, state, bundle.queries[source][0]
+                )
+                return rot.T @ (x - pos)
 
-                numeric = np.column_stack(
-                    [
-                        (local(q + a) - local(q - a)) / (2 * step)
-                        for a in np.eye(7) * step
-                    ]
-                )
-                relative_maximum = max(
-                    relative_maximum, float(np.max(np.abs(analytic - numeric)))
-                )
+            numeric = np.column_stack(
+                [(local(q + a) - local(q - a)) / (2 * step) for a in np.eye(7) * step]
+            )
+            relative_maximum = max(
+                relative_maximum, float(np.max(np.abs(analytic - numeric)))
+            )
             if stable:
                 maximum = max(
                     maximum,
@@ -531,6 +542,9 @@ def validate_joint_gradients(kinematics, bundle, options, rng):
             else:
                 excluded += 1
     return {
+        "query_policy": evaluator.query_policy,
+        "sphere_gate": evaluator.gate_metadata,
+        "runtime": evaluator.runtime_metadata,
         "top_k": options.top_k,
         "softmin_error": options.softmin_error,
         "passed": bool(
@@ -567,6 +581,7 @@ def benchmark_candidate(config, kinematics, bundle):
     """Offline timing only, including unapproved candidates; no trajectories."""
     from ..domain.panda_rdf_safety import PandaRDFSafety
     from ..domain.spatial_safety import PandaCapsuleSafety
+    from .panda_rdf_runtime import build_pair_evaluator
 
     capsule = PandaCapsuleSafety(
         kinematics,
@@ -589,6 +604,8 @@ def benchmark_candidate(config, kinematics, bundle):
         bundle.pairs,
         config.safety.rdf,
         obstacles,
+        bounding_vertices=_sphere_gate_vertices(kinematics, config.safety.rdf),
+        pair_evaluator=build_pair_evaluator(bundle, bundle.pairs, config.safety.rdf),
     )
     rng = np.random.default_rng(
         np.random.SeedSequence(config.safety.rdf.seed, spawn_key=(0, 4))

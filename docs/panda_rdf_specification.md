@@ -166,14 +166,20 @@ Mesh 면적 비례 후보를 생성하고 서로 떨어진 점을 선택해 군�
 밀도는 YAML에서 조절한다. 최대 샘플 간격이나 연속 표면 전체의 충돌 누락 방지는
 엄밀하게 보장되지 않는다. 이 점들은 RDF 학습점과 별개다.
 
-### 양방향 top-k
+### 고정 단방향 top-k
 
-각 링크 쌍에 대해 양방향으로 최종 D 값을 평가한다. 방향별 기본 k=10이며,
+2026-10-01 사용자 승인으로 양방향 집계를 고정 단방향 집계로 변경했다.
+순서는 `link0 < ... < link7 < hand`이며, 앞쪽 링크 i의 표면점을 뒤쪽 링크 j의
+RDF에 질의한다. 예를 들어 `link1` 표면점 → `link4` RDF만 평가하며 역방향은
+평가하지 않는다. 쌍 입력 순서나 모델 사전 순서로 방향이 달라지지 않는다.
+RDF 평가가 필요한 쌍에서는 앞쪽 링크의 모든 질의점을 사용하며 반구 필터는
+적용하지 않는다. 아래 구 선별로 생략된 먼 쌍은 질의점 대신 구 장벽을 사용한다.
+기본 k=10이며,
 매 평가마다 현재 값이 가장 작은 점들을 다시 선택한다. Hysteresis는 적용하지 않는다.
 설정에서 k를 변경하거나 전체 샘플을 사용할 수 있다.
 
 $$
-n=\min(k,N_i)+\min(k,N_j).
+n=\min(k,N_i) \quad (i<j).
 $$
 
 선택 교체 시 gradient 불연속은 우선 허용하고 검증 대상으로 남긴다.
@@ -187,7 +193,8 @@ $$
 \widetilde D_{ij}=-\frac1\beta\log\sum_{a=1}^n e^{-\beta D_a}.
 $$
 
-보통 n=20이며 beta는 약 599.15 m⁻¹이다. 실제 개수에 맞춰 계산한다.
+기본 k=10에서 n=10이면 beta는 약 460.52 m⁻¹이다. 현재 YAML의 k=2에서
+n=2이면 약 138.63 m⁻¹이다. 단방향에서 선택된 실제 개수에 맞춰 계산한다.
 합을 n으로 나누지 않고 stable log-sum-exp를 사용한다.
 n=1이면 해당 거리 자체를 사용하고, n=0은 유효하지 않은 입력으로 처리한다.
 
@@ -198,16 +205,63 @@ $$
 Soft-min 오차는 YAML에서 조절하며 RDF 오차 여유와 별개다.
 Soft-min의 보수 오차 5 mm를 barrier에서 다시 차감하지 않는다.
 
+단방향 변경은 학습 계수·반경·질의점·오차 검증 기준을 변경하지 않지만,
+역방향 표본의 보완이 사라지므로 이전 양방향 barrier와 안전 판정의 동등성을
+보장하지 않는다. 원래 모델의 검증 기록도 새 정책의 충돌 보증으로 바꾸지 않는다.
+
+### 연속 구 선별 (2026-10-01)
+
+사용자 승인으로 `sphere_gate`를 추가했다. 기본값은 false이며 현재 YAML은 true다.
+모델의 로컬 구 중심을 world로 옮긴 점을 $c_i(q)$, 두 번째 반경 합을
+$R=r_{1,i}+r_{1,j}$, 중심 거리를 $L=\|c_j-c_i\|$라 한다.
+초기화 때 각 artifact 중심에서 실제 Visual mesh의 전체 정점과 저장 질의점을
+포함하는 반경 $b_i$를 확인한다(바깥쪽 수치 여유 $10^{-9}$ m 포함).
+기존 모델 로더의 형상·배열·검증 검사는 유지한다.
+
+$$
+m=m_{\mathrm{physical,runtime}}+m_{\mathrm{error}},\quad
+A=R-b_i-b_j-m>0,\quad
+\Delta=\eta A,\quad 0<\eta<1.
+$$
+
+$\eta$는 `sphere_gate_transition_fraction`이며 기본값은 0.5다.
+형상 포함 실패나 양의 전환 여유 부족은 명시적 실패로 처리한다.
+기존 `transition_ratio`, 학습 반경·계수·질의점·보고서는 수정하지 않는다.
+
+$$
+h_s=L-b_i-b_j-m,\qquad h_R=\widetilde D_{ij}-m,
+$$
+$$
+u=\operatorname{clip}((R-L)/\Delta,0,1),\quad w=3u^2-2u^3,
+\qquad h_{ij}=(1-w)h_s+w h_R.
+$$
+
+$L\ge R$에서는 RDF를 계산하지 않고 구 장벽만 사용한다.
+$L\le R-\Delta$에서는 기존 단방향 RDF를 그대로 사용한다.
+중간 구간의 구 여유는 $h_s\ge A-\Delta>0$이므로, 기하학적으로 분리된 영역에서
+두 표현을 연결한다. 쌍별 CBF 행을 삭제하거나 가중치로 제약식 자체를 축소하지 않는다.
+
+$$
+\nabla_q h_{ij}=(1-w)\nabla_q h_s+w\nabla_q h_R
+ +(h_R-h_s)\nabla_q w.
+$$
+
+구 중심의 Jacobian에는 로컬 중심의 회전 운동도 포함한다. 두 경계에서
+$\nabla_q w=0$이므로 선택 집합이 고정된 RDF 구간에 대해 C1으로 연결한다.
+기존 top-k 교체의 gradient 불연속을 제거하거나, 표본 검증을 연속 공간의
+충돌 안전성 증명으로 바꾸는 것은 아니다. 먼 쌍의 장벽은 이전 RDF와 달라진다.
+상세 식·실측·검증 범위는 [실행 최적화 문서](panda_rdf_runtime_optimization.md)를 따른다.
+
 ## 8. 상대 Jacobian과 CBF
 
 $$
-x_{j,a}=R_js_{j,a}+t_j,\qquad
-p_{i\leftarrow j,a}=R_i^\top(x_{j,a}-t_i),
+x_{i,a}=R_is_{i,a}+t_i,\qquad
+p_{j\leftarrow i,a}=R_j^\top(x_{i,a}-t_j) \quad (i<j),
 $$
 
 $$
-\nabla_qD_a=\left(\frac{\partial p_{i\leftarrow j,a}}{\partial q}\right)^\top
-\nabla_pD_i.
+\nabla_qD_a=\left(\frac{\partial p_{j\leftarrow i,a}}{\partial q}\right)^\top
+\nabla_pD_j.
 $$
 
 질의하는 점과 질의받는 링크의 상대운동을 모두 반영한다. 선택 집합이 고정된 구간에서
@@ -218,11 +272,12 @@ w_a=\frac{e^{-\beta D_a}}{\sum_b e^{-\beta D_b}},\qquad
 $$
 
 $$
-h_{ij}=\widetilde D_{ij}-0.035,\qquad
+h_R=\widetilde D_{ij}-(m_{\mathrm{physical}}+m_{\mathrm{error}}),\qquad
 \nabla_qh_{ij}^\top\dot q\ge-\gamma h_{ij},\qquad
 \gamma=1\ \mathrm s^{-1}.
 $$
 
+구 선별을 끄면 $h_{ij}=h_R$이며, 켜면 7절의 혼합 장벽과 그 전체 미분을 사용한다.
 모든 쌍에 공통 gain을 사용하고 YAML에서 조절한다. 링크 쌍별 hard CBF 제약을
 사용하며 CLF slack을 공유하지 않는다.
 
@@ -538,7 +593,12 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
 
 ## 11. 실행 환경, 재현성 및 로그
 
-CPU에서 먼저 구현한다. 계산시간 측정 후 GPU 필요성을 판단한다.
+CPU 참조 구현과 계산시간 측정 후, 2026-10-01 사용자 승인으로 선택 CUDA 추론을
+추가했다. `safety.rdf.runtime_device: cuda` 또는 `--rdf-device cuda`로 선택한다.
+float64, 학습 계수·질의점·반경, 단방향·구 선별·top-k·soft-min·상대운동 미분을
+유지하고 CPU와의 수치 일치를 검증한다. CUDA가 없으면 명시적으로 실패하며
+자동 CPU fallback이나 정밀도 축소를 하지 않는다. 기본 CPU 경로는 보존한다.
+상세 계산 경계·시간 계측 의미는 [실행 최적화 문서](panda_rdf_runtime_optimization.md)를 따른다.
 기본 seed는 0이고 설정에서 변경할 수 있다. 학습·검증·query 샘플링에는
 서로 구분된 난수 흐름을 사용한다.
 
