@@ -1,0 +1,118 @@
+{
+  "started_at": "2026-10-01T02:14:33.614061+00:00",
+  "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/panda_rdf.npz",
+  "source_sha256": "392dd422f0813822a7ac953ec7fe3c2e5211897d6e256bbd37f7c3f90ce08743",
+  "source_density_m_minus_2": 500.0,
+  "query_density_m_minus_2": 2000.0,
+  "count_rule": "ceil(query_density * 4*pi*stored_inner_radius**2)",
+  "algorithm": "visual_surface_seeded_farthest_point_append_v1",
+  "candidate_count_rule": "max(30*target_count,1000)",
+  "seed_stream": "SeedSequence(0, spawn_key=(link_index,202))",
+  "training_performed": false,
+  "new_holdout_sampling": false,
+  "distance_validation": "unchanged approved fields and stored holdout reports",
+  "runtime_installed": false,
+  "continuous_error_certificate": false,
+  "runtime_physical_margin": 0.01,
+  "links": {
+    "link0": {
+      "old_count": 178,
+      "new_count": 710,
+      "added_count": 532,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 7.016541077313498e-17,
+      "generation_and_surface_check_seconds": 0.4571418880368583
+    },
+    "link1": {
+      "old_count": 214,
+      "new_count": 853,
+      "added_count": 639,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 5.594315114139762e-17,
+      "generation_and_surface_check_seconds": 0.4772736679879017
+    },
+    "link2": {
+      "old_count": 216,
+      "new_count": 861,
+      "added_count": 645,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 4.3885418357208765e-17,
+      "generation_and_surface_check_seconds": 0.5282131449785084
+    },
+    "link3": {
+      "old_count": 176,
+      "new_count": 702,
+      "added_count": 526,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 4.3885418357208765e-17,
+      "generation_and_surface_check_seconds": 0.40688881604000926
+    },
+    "link4": {
+      "old_count": 178,
+      "new_count": 710,
+      "added_count": 532,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 5.551115123125783e-17,
+      "generation_and_surface_check_seconds": 0.4274952750420198
+    },
+    "link5": {
+      "old_count": 286,
+      "new_count": 1144,
+      "added_count": 858,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 4.86032246606382e-17,
+      "generation_and_surface_check_seconds": 0.7261166199459694
+    },
+    "link6": {
+      "old_count": 121,
+      "new_count": 482,
+      "added_count": 361,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 8.371725890308806e-17,
+      "generation_and_surface_check_seconds": 0.31163184699835256
+    },
+    "link7": {
+      "old_count": 80,
+      "new_count": 320,
+      "added_count": 240,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 2.964296775167217e-17,
+      "generation_and_surface_check_seconds": 0.15291941503528506
+    },
+    "hand": {
+      "old_count": 137,
+      "new_count": 547,
+      "added_count": 410,
+      "original_prefix_preserved": true,
+      "visual_surface_max_residual_m": 1.1103585416259206e-16,
+      "generation_and_surface_check_seconds": 0.2306635720306076
+    }
+  },
+  "complete": true,
+  "output": "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/panda_rdf_query_density_2000.npz",
+  "output_sha256": "7cb0fc01bfc50ac2892871cc6839db3c9d6e13f531bb1167bd3f58d9f713bc1b",
+  "original_total": 1586,
+  "new_total": 6329,
+  "source_and_runtime_unchanged": true,
+  "protected_files": {
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/panda_rdf.npz": "392dd422f0813822a7ac953ec7fe3c2e5211897d6e256bbd37f7c3f90ce08743",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/panda_rdf.report.json": "c95141eebdeb38922eb3cbf2b5ba2f62adc12bcc1046b077ed88020bbf55b188"
+  },
+  "all_non_query_arrays_unchanged": true,
+  "distance_validation_reports_unchanged": true,
+  "joint_validation": {
+    "configurations": 5,
+    "cpu_evaluation_seconds_mean": 0.2684218392008916,
+    "joint_gradient_max_error": 2.706168784894394e-10,
+    "joint_tolerance": 0.0001,
+    "passed": true,
+    "relative_jacobian_max_error": 2.6464845592766295e-10,
+    "relative_tolerance": 1e-07,
+    "softmin_error": 0.005,
+    "step": 1e-06,
+    "switching_pairs_excluded": 0,
+    "top_k": 3
+  },
+  "loader_approved": true,
+  "seconds": 43.37478186294902
+}

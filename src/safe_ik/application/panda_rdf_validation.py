@@ -1,9 +1,40 @@
 """Shared, versioned distance-accuracy policy for offline Panda RDF evaluation."""
 
+from numbers import Real
+
 import numpy as np
 
 ACCURACY_DOMAIN = "mesh_exterior_including_surface_v1"
 NEAR_DISTANCE = 0.060
+ASYMMETRIC_POLICY = "asymmetric_exterior_near_error_v1"
+
+
+def validation_policy(options):
+    """Accuracy policy is deliberately separate from geometry/training settings."""
+    return {
+        "accuracy_policy": (
+            ASYMMETRIC_POLICY
+            if options.underestimation_limit is not None
+            else "symmetric_absolute_error_v1"
+        ),
+        "accuracy_domain": ACCURACY_DOMAIN,
+        "near_distance": NEAR_DISTANCE,
+        "overestimation_limit": options.error_margin,
+        "underestimation_limit": (
+            options.error_margin
+            if options.underestimation_limit is None
+            else options.underestimation_limit
+        ),
+    }
+
+
+def _positive_limit(value):
+    return (
+        isinstance(value, Real)
+        and not isinstance(value, bool)
+        and np.isfinite(value)
+        and value > 0
+    )
 
 
 def accuracy_masks(truth):
@@ -16,7 +47,13 @@ def accuracy_masks(truth):
 
 
 def distance_accuracy_report(
-    points, truth, predicted, error_margin, *, global_count=3000
+    points,
+    truth,
+    predicted,
+    error_margin,
+    *,
+    global_count=3000,
+    underestimation_limit=None,
 ):
     """Accuracy statistics exclude mesh interiors; empty near coverage fails closed.
 
@@ -33,8 +70,11 @@ def distance_accuracy_report(
         or predicted.shape != truth.shape
         or not np.isfinite(points).all()
         or not np.isfinite(predicted).all()
-        or not np.isfinite(error_margin)
-        or error_margin <= 0
+        or not _positive_limit(error_margin)
+        or (
+            underestimation_limit is not None
+            and not _positive_limit(underestimation_limit)
+        )
         or type(global_count) is not int
         or not 0 <= global_count <= len(truth)
     ):
@@ -48,7 +88,7 @@ def distance_accuracy_report(
     global_exterior[global_count:] = False
     worst = np.flatnonzero(near)[np.argsort(-error[near], kind="stable")[:5]]
     near_max = float(error[near].max())
-    return {
+    report = {
         "accuracy_domain": ACCURACY_DOMAIN,
         "near_distance": NEAR_DISTANCE,
         "sample_count": len(truth),
@@ -75,3 +115,57 @@ def distance_accuracy_report(
             for i in worst
         ],
     }
+    if underestimation_limit is not None:
+        signed = predicted - truth
+        over = float(np.maximum(signed[near], 0).max())
+        under = float(np.maximum(-signed[near], 0).max())
+        report.update(
+            accuracy_policy=ASYMMETRIC_POLICY,
+            overestimation_limit=float(error_margin),
+            underestimation_limit=float(underestimation_limit),
+            near_max_overestimate=over,
+            near_max_underestimate=under,
+            near_overestimation_exceedance_count=int(
+                np.sum(signed[near] > error_margin)
+            ),
+            near_underestimation_exceedance_count=int(
+                np.sum(signed[near] < -underestimation_limit)
+            ),
+            near_absolute_above_10mm_count=int(np.sum(error[near] > 0.010)),
+            distance_passed=bool(
+                over <= error_margin and under <= underestimation_limit
+            ),
+        )
+    return report
+
+
+def require_distance_policy(report, options):
+    """Fail closed on old/partial/direction-swapped reports under the new policy."""
+    under = options.underestimation_limit
+    if under is None:
+        if report.get("accuracy_policy") not in (None, "symmetric_absolute_error_v1"):
+            raise ValueError("accuracy policy mismatch; explicit revalidation required")
+        if report["near_max_error"] > options.error_margin:
+            raise ValueError("symmetric distance validation failed")
+        return
+    expected = validation_policy(options)
+    if any(report.get(k) != v for k, v in expected.items()):
+        raise ValueError("accuracy policy mismatch; explicit revalidation required")
+    maxima = [
+        report.get(k)
+        for k in ("near_max_underestimate", "near_max_overestimate", "near_max_error")
+    ]
+    if any(
+        isinstance(v, bool) or not isinstance(v, Real) or not np.isfinite(v) or v < 0
+        for v in maxima
+    ):
+        raise ValueError("invalid signed distance maxima")
+    u, o, absolute = maxima
+    if absolute != max(u, o) or u > under or o > options.error_margin:
+        raise ValueError("asymmetric distance validation failed")
+    for key in (
+        "near_underestimation_exceedance_count",
+        "near_overestimation_exceedance_count",
+    ):
+        if type(report.get(key)) is not int or report[key] != 0:
+            raise ValueError("asymmetric exceedance counts fail validation")

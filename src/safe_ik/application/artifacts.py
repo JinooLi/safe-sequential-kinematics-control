@@ -103,7 +103,10 @@ def save_run_provenance(
         raw["robot"]["model_path"] = str(config.model_path)
     if "safety" in raw and "rdf_model_path" in raw["safety"]:
         raw["safety"]["rdf_model_path"] = str(config.safety.rdf_model_path)
-    if getattr(config.safety, "self_collision_model", None) == "rdf":
+    if getattr(config.safety, "self_collision_model", None) == "rdf" or (
+        getattr(config, "ik_self_collision_model", None) == "rdf"
+        and config.trajectory.mode != "direct"
+    ):
         raw["safety"].setdefault("rdf", {})["artifact"] = str(
             config.safety.rdf.artifact
         )

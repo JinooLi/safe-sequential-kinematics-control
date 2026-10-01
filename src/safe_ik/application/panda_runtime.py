@@ -18,3 +18,5 @@ class PandaRuntime:
     plant: JointPlant
 
     ik_search_factory: Callable[[], ContextManager[PoseIKSearch]] | None = None
+    # Optional for legacy/injected runtimes sharing a single safety backend.
+    ik_safety: SafetyEvaluator | None = None

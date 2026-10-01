@@ -13,9 +13,19 @@ from .panda_runtime import PandaRuntime
 from .parallel_ik import panda_ik_search
 
 
-def build_panda_components(config: PandaControllerConfig):
+def build_panda_components(
+    config: PandaControllerConfig, *, self_collision_model: str | None = None
+):
+    """Construct a backend without mutating the trajectory safety configuration."""
+    model = (
+        config.safety.self_collision_model
+        if self_collision_model is None
+        else self_collision_model
+    )
+    if model not in ("rdf", "capsule"):
+        raise ValueError("self_collision_model must be rdf or capsule")
     bundle = None
-    if config.safety.self_collision_model == "rdf":
+    if model == "rdf":
         from ..adapters.panda_rdf_geometry import extract_visual_geometry
         from .panda_rdf_artifact import load_bundle
 
@@ -45,11 +55,21 @@ def build_panda_components(config: PandaControllerConfig):
     if bundle is not None:
         from ..domain.panda_rdf_safety import PandaRDFSafety
 
+        # Exclusions are runtime policy, not edits to the trained artifact or
+        # its geometry/adjacency provenance. load_bundle above still validates
+        # every link and the full pair list before any pair is excluded.
+        pairs = tuple(
+            pair
+            for pair in bundle.pairs
+            if frozenset(pair) not in config.safety.self_collision_exclusions
+        )
+        if not pairs:
+            raise ValueError("RDF self-collision exclusions remove all checked pairs")
         safety = PandaRDFSafety(
             kinematics,
             bundle.models,
             bundle.queries,
-            bundle.pairs,
+            pairs,
             config.safety.rdf,
             safety,
             bundle.identifier,
@@ -59,6 +79,14 @@ def build_panda_components(config: PandaControllerConfig):
 
 def build_panda_runtime(config: PandaControllerConfig) -> PandaRuntime:
     kinematics, safety = build_panda_components(config)
+    ik_kinematics, ik_safety = kinematics, safety
+    if (
+        config.trajectory.mode != "direct"
+        and config.ik_self_collision_model != config.safety.self_collision_model
+    ):
+        ik_kinematics, ik_safety = build_panda_components(
+            config, self_collision_model=config.ik_self_collision_model
+        )
     return PandaRuntime(
         kinematics,
         safety,
@@ -68,5 +96,6 @@ def build_panda_runtime(config: PandaControllerConfig) -> PandaRuntime:
             relative_tolerance=config.qp.relative_tolerance,
         ),
         MujocoPlant(config),
-        ik_search_factory=partial(panda_ik_search, config, kinematics, safety),
+        ik_search_factory=partial(panda_ik_search, config, ik_kinematics, ik_safety),
+        ik_safety=ik_safety,
     )

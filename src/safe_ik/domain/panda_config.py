@@ -8,6 +8,10 @@ from pathlib import Path
 
 import numpy as np
 
+# Numerical IK step in virtual seconds, not a wall-clock or trajectory period.
+# Keep the existing update scale independent of the per-seed iteration budget.
+SAFE_IK_STEP_SIZE = 0.01
+
 
 @dataclass(frozen=True)
 class PandaTargetConfig:
@@ -21,8 +25,7 @@ class PandaTargetConfig:
 
 @dataclass(frozen=True)
 class SafeIKConfig:
-    integration_period: float
-    duration_per_seed: float
+    iteration_number: int
     convergence_hold_duration: float
     max_restarts: int
     random_seed: int
@@ -31,14 +34,20 @@ class SafeIKConfig:
     softmin_temperature: float
     safety_gradient_gain: float
     workers: int = 1
+    # None inherits the trajectory backend for backward-compatible YAML files.
+    self_collision_model: str | None = None
 
-    @property
-    def iterations_per_seed(self) -> int:
-        return int(np.ceil(self.duration_per_seed / self.integration_period))
+    def __post_init__(self):
+        if type(self.iteration_number) is not int or self.iteration_number < 1:
+            raise ValueError("safe_ik.iteration_number must be a positive integer")
+        if self.self_collision_model not in (None, "rdf", "capsule"):
+            raise ValueError(
+                "safe_ik.self_collision_model must be rdf, capsule or null"
+            )
 
     @property
     def convergence_hold_steps(self) -> int:
-        return int(np.ceil(self.convergence_hold_duration / self.integration_period))
+        return int(np.ceil(self.convergence_hold_duration / SAFE_IK_STEP_SIZE))
 
 
 @dataclass(frozen=True)
@@ -65,12 +74,16 @@ class PandaRDFConfig:
     query_density: float = 500.0
     top_k: int | None = 10
     softmin_error: float = 0.005
+    # Sets radii at training; runtime may use <= the artifact's training value.
+    # Runtime reductions affect CBF clearance only, not the stored learned field.
     physical_margin: float = 0.030
-    # Both the offline near-distance error limit and the CBF uncertainty margin.
+    # Upper bound on overestimation AND CBF uncertainty margin. Also sets radii.
     error_margin: float = 0.010
     transition_ratio: float = 0.5
     cbf_gain: float = 1.0
     seed: int = 0
+    # Validation/performance limit ONLY; None preserves legacy symmetric checks.
+    underestimation_limit: float | None = None
 
     def __post_init__(self):
         object.__setattr__(self, "artifact", Path(self.artifact))
@@ -102,9 +115,19 @@ class PandaRDFConfig:
             )
         if type(self.seed) is not int or self.seed < 0:
             raise ValueError("safety.rdf.seed must be a nonnegative integer")
+        if self.underestimation_limit is not None and (
+            isinstance(self.underestimation_limit, bool)
+            or not isinstance(self.underestimation_limit, Real)
+            or not np.isfinite(self.underestimation_limit)
+            or self.underestimation_limit <= 0
+        ):
+            raise ValueError(
+                "safety.rdf.underestimation_limit must be finite and positive"
+            )
 
     @property
     def effective_margin(self):
+        # Never add underestimation_limit: it is not an uncertainty compensation.
         return self.physical_margin + self.error_margin
 
 
@@ -162,3 +185,7 @@ class PandaControllerConfig:
     obstacles: tuple[SphereObstacleConfig, ...]
     trajectory: PandaTrajectoryConfig
     qp: PandaQPConfig
+
+    @property
+    def ik_self_collision_model(self) -> str:
+        return self.safe_ik.self_collision_model or self.safety.self_collision_model

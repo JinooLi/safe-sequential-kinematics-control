@@ -9,6 +9,7 @@ from time import perf_counter
 import numpy as np
 import trimesh
 
+from ..adapters.mesh_distance import SIGN_ORACLE
 from ..adapters.rdf_checkpoint import file_sha256
 from .rdf_data_workers import (
     data_execution,
@@ -202,7 +203,7 @@ def generate_exterior_pool(
             "options": asdict(options),
             "point_seed_spawn_key": [link_index, 7],
             "proposal": "mesh-area sampling plus uniform outward normal offset",
-            "selection_oracle": "negative trimesh exact triangle signed_distance",
+            "selection_oracle": SIGN_ORACLE,
             "training_label_oracle": "mesh_to_sdf scan/normal; same parameters and outer-sphere normalization",
             "reference_truth_used_as_training_labels": False,
             "scan_count": training.scan_count,

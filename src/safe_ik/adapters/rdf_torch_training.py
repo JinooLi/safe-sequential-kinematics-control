@@ -1,7 +1,8 @@
 """Optional PyTorch implementation of the existing float64 recursive ridge fit.
 
 Only offline training uses this module. No clipping, gradient normalization,
-precision reduction, altered objective, or implicit CPU fallback is introduced.
+precision reduction or implicit CPU fallback is introduced. The default keeps
+the original objective; weighted offline experiments require explicit opt-in.
 """
 
 from math import comb
@@ -43,6 +44,8 @@ def recursive_ridge_torch(
     resume=None,
     checkpoint=None,
     checkpoint_interval=400,
+    weighted=False,
+    allow_weighted_resume=False,
 ):
     """Same normalization, Bernstein basis and Algorithm 1 as the NumPy path.
 
@@ -50,12 +53,41 @@ def recursive_ridge_torch(
     Batch sampling remains with the caller so CPU and CUDA consume identical data.
     On resume, batches must contain ONLY the unprocessed suffix. Progress and
     checkpoint counters are cumulative. Checkpoints receive normalized weights.
+
+    Explicit weighted mode consumes (points, targets, positive sample weights).
+    Both features and normalized targets are multiplied by sqrt(weight), giving
+    sum_i weight_i * residual_i**2 + regularization * ||w||**2. It must start
+    from scratch by default. A verified weighted parent can be continued only
+    with allow_weighted_resume=True; callers must verify and preserve its weight
+    arrays/prefix and record the appended data lineage in the new checkpoint.
     """
     if not np.isfinite(regularization) or regularization <= 0:
         raise ValueError("regularization must be positive")
     if type(checkpoint_interval) is not int or checkpoint_interval < 1:
         raise ValueError("checkpoint_interval must be a positive integer")
+    if type(weighted) is not bool:
+        raise ValueError("weighted must be boolean")
+    if type(allow_weighted_resume) is not bool:
+        raise ValueError("allow_weighted_resume must be boolean")
+    if allow_weighted_resume and (resume is None or not weighted):
+        raise ValueError("weighted resume opt-in requires a weighted parent")
     if resume is not None:
+        objective = resume.metadata.get("objective", "unweighted")
+        if weighted or objective != "unweighted":
+            if not (allow_weighted_resume and weighted and objective == "weighted"):
+                raise ValueError(
+                    "weighted experiments cannot resume checkpoints without explicit opt-in"
+                )
+            context = resume.metadata.get("context", {})
+            prefix = resume.metadata.get("sample_weight_prefix_sha256", {})
+            digest = context.get("sample_weights_sha256", "")
+            if (
+                context.get("objective") != "weighted"
+                or not prefix
+                or len(digest) != 64
+                or any(len(v) != 64 for v in prefix.values())
+            ):
+                raise ValueError("weighted resume requires weight provenance")
         resume.validate(model, regularization)
     torch_training_environment(device)
     import torch
@@ -81,7 +113,11 @@ def recursive_ridge_torch(
         center = torch.as_tensor(model.center, dtype=dtype, device=selected)
         step = completed
         last_saved = None
-        for step, (points, targets) in enumerate(batches, start=completed + 1):
+        for step, batch in enumerate(batches, start=completed + 1):
+            if weighted:
+                points, targets, sample_weights = batch
+            else:
+                points, targets = batch
             points, targets = np.asarray(points, dtype=float), np.asarray(
                 targets, dtype=float
             )
@@ -109,6 +145,19 @@ def recursive_ridge_torch(
                 for axis in range(3)
             ]
             phi = torch.einsum("bi,bj,bk->bijk", *bases).reshape(len(points), size)
+            root_weights = None
+            if weighted:
+                sample_weights = np.asarray(sample_weights, dtype=float)
+                if (
+                    sample_weights.shape != (len(points),)
+                    or not np.isfinite(sample_weights).all()
+                    or np.any(sample_weights <= 0)
+                ):
+                    raise ValueError("sample weights must be finite and positive")
+                root_weights = torch.as_tensor(
+                    np.sqrt(sample_weights), dtype=dtype, device=selected
+                )
+                phi *= root_weights[:, None]
             cross = covariance @ phi.T
             system = torch.eye(len(points), dtype=dtype, device=selected) + phi @ cross
             # Match scipy.linalg.solve(assume_a='pos')'s upper triangle convention.
@@ -117,6 +166,8 @@ def recursive_ridge_torch(
             targets_t = (
                 torch.as_tensor(targets, dtype=dtype, device=selected) / model.radius
             )
+            if root_weights is not None:
+                targets_t = targets_t * root_weights
             weights += gain @ (targets_t - phi @ weights)
             covariance -= gain @ cross.T
             covariance = (covariance + covariance.T) * 0.5

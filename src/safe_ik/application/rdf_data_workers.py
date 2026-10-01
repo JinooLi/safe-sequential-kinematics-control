@@ -16,6 +16,8 @@ import numpy as np
 import trimesh
 from threadpoolctl import threadpool_limits
 
+from ..adapters.mesh_distance import signed_mesh_distance
+
 _RESOURCE = None
 _KIND = None
 _THREAD_LIMIT = None
@@ -70,7 +72,7 @@ def _initialize(kind, resource):
 
 def _query(kind, resource, points, sample_count):
     if kind == "mesh":
-        return -trimesh.proximity.signed_distance(resource, points)
+        return signed_mesh_distance(resource, points)
     # Keep the upstream normal-vote and float32 distance conversion unchanged.
     return resource.get_sdf(points, sample_count=sample_count)
 

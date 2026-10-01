@@ -120,14 +120,117 @@ class PandaRDFIntegrationTest(unittest.TestCase):
             {v["body"] for v in sources}, {"hand", "left_finger", "right_finger"}
         )
 
-    def test_default_and_yaml_use_10mm_error_and_30mm_physical_margin(self):
+    def test_default_margins_and_yaml_allow_reduced_runtime_clearance(self):
+        defaults = PandaRDFConfig()
+        self.assertAlmostEqual(defaults.physical_margin, 0.030)
+        self.assertAlmostEqual(defaults.effective_margin, 0.040)
         configured = load_panda_config(ROOT / "configs/panda.yaml").safety.rdf
-        for options in (PandaRDFConfig(), configured):
+        # The editable runtime config may request less clearance than training.
+        # Artifact/radii compatibility is checked independently by load_bundle.
+        self.assertGreaterEqual(configured.physical_margin, 0.0)
+        self.assertLessEqual(configured.physical_margin, defaults.physical_margin)
+        for options in (defaults, configured):
             with self.subTest(options=options):
                 self.assertAlmostEqual(options.error_margin, 0.010)
-                self.assertAlmostEqual(options.physical_margin, 0.030)
-                self.assertAlmostEqual(options.effective_margin, 0.040)
+                self.assertAlmostEqual(
+                    options.effective_margin, options.physical_margin + 0.010
+                )
                 self.assertAlmostEqual(options.softmin_error, 0.005)
+
+    def test_runtime_exclusion_removes_only_requested_rdf_pair(self):
+        bundle, options = self.bundle()
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "rdf.npz"
+            identifier = save_bundle(bundle, path)
+            config = replace(
+                self.config,
+                safety=replace(
+                    self.config.safety,
+                    self_collision_model="rdf",
+                    rdf=replace(options, artifact=path),
+                ),
+            )
+            _, baseline = build_panda_components(config)
+            for pair in (("link6", "hand"), ("hand", "link6")):
+                with self.subTest(pair=pair):
+                    changed = replace(
+                        config,
+                        safety=replace(
+                            config.safety,
+                            self_collision_exclusions=(
+                                config.safety.self_collision_exclusions
+                                | {frozenset(pair)}
+                            ),
+                        ),
+                    )
+                    _, filtered = build_panda_components(changed)
+                    self.assertEqual(filtered.artifact_id, identifier)
+                    self.assertEqual(
+                        filtered.pairs,
+                        tuple(p for p in bundle.pairs if p != ("link6", "hand")),
+                    )
+                    self.assertEqual(len(filtered.pairs), 27)
+                    self.assertEqual(len(filtered.models), 9)
+                    for q in (config.initial_q, config.initial_q + 0.01):
+                        before, after = baseline.evaluate(q), filtered.evaluate(q)
+                        retained = [
+                            i
+                            for i, label in enumerate(before.labels)
+                            if label != "self_link6_hand"
+                        ]
+                        self.assertEqual(
+                            after.labels, tuple(before.labels[i] for i in retained)
+                        )
+                        np.testing.assert_array_equal(
+                            after.values, before.values[retained]
+                        )
+                        np.testing.assert_array_equal(
+                            after.gradients, before.gradients[retained]
+                        )
+            loaded = load_bundle(path, self.geometry, options)
+            self.assertEqual(loaded.identifier, identifier)
+            self.assertEqual(loaded.pairs, self.geometry.pairs)
+            self.assertIn(("link6", "hand"), loaded.pairs)
+
+    def test_runtime_exclusion_does_not_waive_artifact_validation(self):
+        bundle, options = self.bundle()
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "rdf.npz"
+            config = replace(
+                self.config,
+                safety=replace(
+                    self.config.safety,
+                    self_collision_model="rdf",
+                    rdf=replace(options, artifact=path),
+                    self_collision_exclusions=frozenset({frozenset(("link6", "hand"))}),
+                ),
+            )
+            bundle.metadata["validation"]["link6"]["derivatives_passed"] = False
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "link6.*validation failed"):
+                build_panda_components(config)
+            bundle.metadata["validation"]["link6"]["derivatives_passed"] = True
+            bundle.pairs = tuple(p for p in bundle.pairs if p != ("link6", "hand"))
+            save_bundle(bundle, path)
+            with self.assertRaisesRegex(ValueError, "adjacency pairs mismatch"):
+                build_panda_components(config)
+
+    def test_runtime_exclusion_cannot_remove_all_rdf_pairs(self):
+        bundle, options = self.bundle()
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "rdf.npz"
+            save_bundle(bundle, path)
+            config = replace(
+                self.config,
+                safety=replace(
+                    self.config.safety,
+                    self_collision_model="rdf",
+                    rdf=replace(options, artifact=path),
+                    self_collision_exclusions=frozenset(map(frozenset, bundle.pairs)),
+                ),
+            )
+            with self.assertRaisesRegex(ValueError, "remove all checked pairs"):
+                build_panda_components(config)
 
     def test_minimum_sphere_and_query_surface(self):
         mesh = trimesh.creation.box(extents=[0.1, 0.2, 0.3])
@@ -385,7 +488,7 @@ class PandaRDFIntegrationTest(unittest.TestCase):
                     self.config.safe_ik,
                     workers=2,
                     max_restarts=2,
-                    duration_per_seed=0.03,
+                    iteration_number=3,
                     convergence_hold_duration=0.02,
                     safety_gradient_gain=1e-6,
                 ),

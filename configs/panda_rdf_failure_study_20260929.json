@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "links": [
+    "link6",
+    "link0",
+    "hand"
+  ],
+  "basis_count": 24,
+  "updates": 800,
+  "batch_sizes": [
+    512,
+    128,
+    640
+  ],
+  "checkpoint_steps": [
+    400,
+    800
+  ],
+  "error_margin": 0.01,
+  "pool_size": 500000,
+  "data_workers": 4,
+  "seed": 20260929,
+  "relabel": "all_pools_mesh_truth_preserve_label_dtype",
+  "local_weighting": {
+    "mining_count": 20000,
+    "threshold": 0.008,
+    "radius": 0.01,
+    "maximum": 4,
+    "label_tolerance": 0.001,
+    "pool": "exterior"
+  },
+  "source_candidate_sha256": "2cf3c5d7346013968a44629e121cb9c3adeddb6690c222d97adbda0eeee16e4b",
+  "source_report_sha256": "555959f1382b35cfad1f140d072d2566d8581798132eee2e14b3242522b9ab96",
+  "input_sha256": {
+    "link6": {
+      "training_pool.npz": "825f96f35dcb15d0013c1e3fe089921103f84478ef3e367ae2b0904fa289a496",
+      "exterior_pool.npz": "2ec148d8d801f0676f461c7f56460e5b537b3652f0aaaf2f32ef551f3125dd85",
+      "batch_indices.npz": "29444682a8bcd3cdd353ff278247605e9a6dcd54caaa48aa18290de74f2c5849",
+      "batch_plan.json": "b0c8639056eb7bedd75d31479558c78e498c13c1f263709025dad34a2ed24573",
+      "context.json": "a49efcd4e168ded7d374edf25f7c0fdf9f89ce1d5ad5b7b184cc9c55362eae6c",
+      "fit.npz": "7eab62b8b6235958a07de30daced8f2fc1b24af025025c1b0654294dff31f6b3",
+      "fit.report.json": "72655b45261719787baabd876b5c15811823730b07a0a1e6c5e650660528f8e3",
+      "validation.npz": "af6e461fce0e99333a91540edce4ec4842e482e03f70956f63fc293d8620aa3e"
+    },
+    "link0": {
+      "training_pool.npz": "ff220f58fcbd03f1c7167b114e82816febe25b41c40ca8560f65c74e77fc1bf3",
+      "exterior_pool.npz": "37d639efb49948fb42bb702cf3e7c3093ddf9505e394ed6cdd5a969195dee34c",
+      "batch_indices.npz": "d43740ce63a10155d0721fdbe1f5998e4543e2b0739c4cd67ca4a013e8bbc8dd",
+      "batch_plan.json": "43da1a73e1b59288a67630975f4609b195c46f8d8db76ddd9647c731da74b824",
+      "context.json": "029e4d360569eeced24ec745c26e2d439fbbdd144c31848772dc9e091134c215",
+      "fit.npz": "fe69740aae912e0515cbe427b0b8a291ab99f9571950c07896c106f1db459bfa",
+      "fit.report.json": "6c9f167da95b185e541d36ac56d0f7a63ec1fe1f25826eff1370ae6c9ccce6c3",
+      "validation.npz": "41a664304ca544c320728147e3b09eafa99c30a4d67a24dcac6a19fe3972200e"
+    },
+    "hand": {
+      "training_pool.npz": "0cc245d43cef0fc01affa5ad653db95cf51f4a5009d8e3edb7753de467d1f51b",
+      "exterior_pool.npz": "10deea87c964635154da13c2f639a6c7f14074e5434c4be0f88aacd41c0c76f0",
+      "batch_indices.npz": "ed1a70ef21684c0b346fd29f480261ab83de839d1f6e63f583ce9182927f2c64",
+      "batch_plan.json": "1e5bd92be920b9b44567e545998080ba841bd05ab6573a0927d42ed022f17a4f",
+      "context.json": "ec1c099ac403ca469348943fb1d247ec491c9a4dd0025cd14fbfd0b7b89c5a4f",
+      "fit.npz": "c3912d1218efb7c5c7cd868d498ba70d02a0d423bfd11bef3b2142a29d850224",
+      "fit.report.json": "22561d3c1e08ce3e16f397cd54caa8e6518e1b214e53883eeac6e725b747a1da",
+      "validation.npz": "22e794419c1988e87e32508e91770a2624c87733d30be721c80d962428dc5d93"
+    }
+  }
+}

@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass, field
 from hashlib import sha256
 from io import BytesIO
+from numbers import Real
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from zipfile import BadZipFile
@@ -11,7 +12,12 @@ from zipfile import BadZipFile
 import numpy as np
 
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF
-from .panda_rdf_validation import ACCURACY_DOMAIN, NEAR_DISTANCE
+from .panda_rdf_validation import (
+    ACCURACY_DOMAIN,
+    NEAR_DISTANCE,
+    require_distance_policy,
+    validation_policy,
+)
 
 SCHEMA = 2
 REFERENCE = "voxel_reconstructed_mesh"
@@ -29,7 +35,10 @@ class RDFBundle:
 
 
 def geometry_settings(options):
+    # These are training/provenance settings. Only the runtime loader permits a
+    # smaller physical margin; offline validation/resume must still match them.
     # top-k, soft-min and CBF gain affect runtime only; never require retraining.
+    # underestimation_limit affects validation only, NOT radii or checkpoints.
     return {
         key: getattr(options, key)
         for key in (
@@ -94,7 +103,59 @@ def _check_reference(meta, names):
             raise ValueError(f"{name}: reconstructed validation reference mismatch")
 
 
+def _check_validation(name, report, options):
+    if report.get("accuracy_domain") != ACCURACY_DOMAIN:
+        raise ValueError(
+            f"{name}: accuracy policy changed; revalidate existing coefficients"
+        )
+    if (
+        report.get("passed") is not True
+        or report.get("sample_counts") != [3000, 2000]
+        or report.get("near_distance") != NEAR_DISTANCE
+        or report.get("sample_count") != 5000
+        or type(report.get("evaluated_count")) is not int
+        or type(report.get("interior_excluded_count")) is not int
+        or type(report.get("near_count")) is not int
+        or not 0 < report["near_count"] <= report["evaluated_count"] <= 5000
+        or report["interior_excluded_count"] != 5000 - report["evaluated_count"]
+        or not isinstance(report.get("near_max_error"), (int, float))
+        or not np.isfinite(report["near_max_error"])
+        or report["near_max_error"] < 0
+        or report.get("derivatives_passed") is not True
+        or report.get("distance_passed") is not True
+    ):
+        raise ValueError(f"{name}: validation failed")
+    try:
+        require_distance_policy(report, options)
+    except ValueError as exc:
+        raise ValueError(f"{name}: validation failed: {exc}") from exc
+
+
+def _check_runtime_settings(meta, options):
+    """Allow reduced runtime clearance, returning the original training margin."""
+    trained = meta["settings"]
+    physical = trained.get("physical_margin")
+    if (
+        isinstance(physical, bool)
+        or not isinstance(physical, Real)
+        or not np.isfinite(physical)
+        or physical < 0
+    ):
+        raise ValueError("invalid training physical_margin")
+    mismatch = [
+        key
+        for key, value in geometry_settings(options).items()
+        if key != "physical_margin" and trained.get(key) != value
+    ]
+    if options.physical_margin > physical:
+        mismatch.append("physical_margin (runtime exceeds training value)")
+    if mismatch:
+        raise ValueError("settings mismatch: " + ", ".join(mismatch))
+    return physical + trained["error_margin"]
+
+
 def load_bundle(path, geometry, options):
+    """Load unchanged trained fields; runtime physical clearance may be smaller."""
     try:
         path = Path(path)
         payload = path.read_bytes()
@@ -108,10 +169,13 @@ def load_bundle(path, geometry, options):
                 raise ValueError(
                     "visual geometry, closed fingers or kinematics mismatch"
                 )
-            settings = geometry_settings(options)
-            mismatch = [k for k, v in settings.items() if meta["settings"].get(k) != v]
-            if mismatch:
-                raise ValueError("settings mismatch: " + ", ".join(mismatch))
+            training_margin = _check_runtime_settings(meta, options)
+            if options.underestimation_limit is not None and meta.get(
+                "validation_policy"
+            ) != validation_policy(options):
+                raise ValueError(
+                    "accuracy policy changed; explicit revalidation required"
+                )
             names = tuple(geometry.vertices)
             _check_reference(meta, names)
             if (
@@ -119,6 +183,18 @@ def load_bundle(path, geometry, options):
                 or tuple(map(tuple, meta["pairs"])) != geometry.pairs
             ):
                 raise ValueError("link coverage or adjacency pairs mismatch")
+            if "validation_set_requirements" in meta and (
+                not isinstance(meta["validation_set_requirements"], dict)
+                or set(meta["validation_set_requirements"]) != set(names)
+                or any(
+                    not isinstance(v, list)
+                    or not v
+                    or any(not isinstance(label, str) for label in v)
+                    or len(set(v)) != len(v)
+                    for v in meta["validation_set_requirements"].values()
+                )
+            ):
+                raise ValueError("validation set requirements must cover all links")
             joint_check = meta["joint_validation"]
             if joint_check.get("passed") is not True:
                 raise ValueError(
@@ -127,28 +203,26 @@ def load_bundle(path, geometry, options):
             models, queries = {}, {}
             for name in names:
                 report = meta["validation"][name]
-                if report.get("accuracy_domain") != ACCURACY_DOMAIN:
-                    raise ValueError(
-                        f"{name}: accuracy policy changed; revalidate existing "
-                        "coefficients with --validate-only"
-                    )
-                if (
-                    report.get("passed") is not True
-                    or report["sample_counts"] != [3000, 2000]
-                    or report.get("near_distance") != NEAR_DISTANCE
-                    or report.get("sample_count") != 5000
-                    or type(report.get("evaluated_count")) is not int
-                    or type(report.get("interior_excluded_count")) is not int
-                    or type(report.get("near_count")) is not int
-                    or not 0 < report["near_count"] <= report["evaluated_count"] <= 5000
-                    or report["interior_excluded_count"]
-                    != 5000 - report["evaluated_count"]
-                    or not np.isfinite(report["near_max_error"])
-                    or report["near_max_error"] > options.error_margin
-                    or report.get("derivatives_passed") is not True
-                    or report.get("distance_passed") is not True
-                ):
-                    raise ValueError(f"{name}: validation failed: {report}")
+                _check_validation(name, report, options)
+                required = meta.get("validation_set_requirements", {}).get(name)
+                if required is not None:
+                    sets = report.get("validation_sets", {})
+                    if (
+                        not isinstance(required, list)
+                        or not required
+                        or len(set(required)) != len(required)
+                        or set(sets) != set(required)
+                    ):
+                        raise ValueError(f"{name}: required validation sets missing")
+                    for label in required:
+                        _check_validation(f"{name}/{label}", sets[label], options)
+                        if (
+                            sets[label].get("reference_mesh_digest")
+                            != report["reference_mesh_digest"]
+                        ):
+                            raise ValueError(f"{name}/{label}: reference mismatch")
+                elif "validation_sets" in report:
+                    raise ValueError(f"{name}: validation set requirements missing")
                 for suffix in (
                     "weights",
                     "center",
@@ -167,7 +241,10 @@ def load_bundle(path, geometry, options):
                         raise ValueError(f"{name}: corrupt {suffix}")
                 r0, r1, maximum = archive[f"{name}_radii_max"]
                 mesh_radius = meta["spheres"][name]["mesh_radius"]
-                expected_r0 = mesh_radius + options.effective_margin
+                # A runtime clearance reduction only changes CBF subtraction.
+                # Validate and use the original radii/normalization, never
+                # shrink the learned field or relabel its training metadata.
+                expected_r0 = mesh_radius + training_margin
                 expected_r1 = max(
                     (1 + options.transition_ratio) * expected_r0, mesh_radius + 0.060
                 )

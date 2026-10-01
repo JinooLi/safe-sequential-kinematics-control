@@ -12,6 +12,7 @@ import trimesh
 from scipy.optimize import minimize
 from scipy.spatial import ConvexHull
 
+from ..adapters.mesh_distance import SIGN_ORACLE, mesh_distance
 from ..domain.panda_rdf import BernsteinRDF, ExtendedRDF, recursive_ridge
 from .panda_mesh_reconstruction import UPSTREAM, ReconstructionOptions
 from .panda_rdf_validation import accuracy_masks, distance_accuracy_report
@@ -279,15 +280,20 @@ def estimate_maximum(rdf, inner_radius, options):
 
 
 def mesh_truth(mesh, points):
-    """Independent exact triangle proximity and trimesh signed-distance oracle.
+    """Independent exact triangle proximity with deterministic signs.
 
     For non-watertight visual parts, sign is an empirical normal/ray convention;
     mark gradient ambiguity separately, never substitute scan training labels.
     """
     distances, gradients, ambiguous = [], [], []
     for block in np.array_split(points, max(1, int(np.ceil(len(points) / 64)))):
-        closest, unsigned, triangles = trimesh.proximity.closest_point(mesh, block)
-        signed = -trimesh.proximity.signed_distance(mesh, block)
+        proximity = mesh_distance(mesh, block)
+        closest, unsigned, triangles = (
+            proximity.closest,
+            proximity.unsigned,
+            proximity.triangles,
+        )
+        signed = proximity.signed
         gradient = np.divide(
             block - closest,
             unsigned[:, None],
@@ -317,9 +323,9 @@ def numerical_gradient(model, points, step=1e-6):
     return np.column_stack(columns)
 
 
-def validate_model(mesh, model, rng, error_margin, *, evidence_path=None):
-    welded = mesh.copy()
-    welded.merge_vertices()
+def validate_model(
+    mesh, model, rng, error_margin, *, evidence_path=None, underestimation_limit=None
+):
     rdf = model.rdf
     global_points = uniform_ball(rng, 3000, rdf.center, rdf.radius)
     surface, ids = trimesh.sample.sample_surface(mesh, 2000, seed=rng)
@@ -327,9 +333,43 @@ def validate_model(mesh, model, rng, error_margin, *, evidence_path=None):
         surface + rng.uniform(-0.060, 0.060, (2000, 1)) * mesh.face_normals[ids]
     )
     points = np.vstack((global_points, near_points))
+    return validate_saved_model(
+        mesh,
+        model,
+        points,
+        rng,
+        error_margin,
+        evidence_path=evidence_path,
+        underestimation_limit=underestimation_limit,
+    )
+
+
+def validate_saved_model(
+    mesh,
+    model,
+    points,
+    rng,
+    error_margin,
+    *,
+    evidence_path=None,
+    underestimation_limit=None,
+):
+    """Recheck exactly the supplied holdout; never sample replacement points."""
+    points = np.asarray(points, dtype=float)
+    if points.shape != (5000, 3) or not np.isfinite(points).all():
+        raise ValueError("saved validation requires exactly 5000 finite 3D points")
+    welded = mesh.copy()
+    welded.merge_vertices()
+    rdf = model.rdf
     truth, truth_gradient, ambiguous = mesh_truth(mesh, points)
     predicted, gradient = rdf.query(points)
-    accuracy = distance_accuracy_report(points, truth, predicted, error_margin)
+    accuracy = distance_accuracy_report(
+        points,
+        truth,
+        predicted,
+        error_margin,
+        underestimation_limit=underestimation_limit,
+    )
     exterior, _ = accuracy_masks(truth)
     if evidence_path is not None:
         # Original 5000 samples, including interiors, retained for independent audit.
@@ -342,6 +382,11 @@ def validate_model(mesh, model, rng, error_margin, *, evidence_path=None):
                 exterior=exterior,
                 near=accuracy_masks(truth)[1],
                 error_margin=np.array(error_margin),
+                **(
+                    {"underestimation_limit": np.array(underestimation_limit)}
+                    if underestimation_limit is not None
+                    else {}
+                ),
             )
     # Test f inside its ball and D in all three branches, independent of labels.
     check = uniform_ball(rng, 100, rdf.center, rdf.radius)
@@ -394,7 +439,7 @@ def validate_model(mesh, model, rng, error_margin, *, evidence_path=None):
         "ambiguous_gradient_count": int(np.sum(exterior & ambiguous)),
         "mesh_watertight": bool(mesh.is_watertight),
         "welded_mesh_watertight": bool(welded.is_watertight),
-        "sign_oracle": "negative trimesh.proximity.signed_distance; exact triangles + normal/ray signs",
+        "sign_oracle": SIGN_ORACLE,
         "derivatives_passed": bool(derivative_pass),
         "rdf_fd_max": rdf_difference,
         "extension_fd_max": extension_difference,

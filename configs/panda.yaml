@@ -15,17 +15,18 @@ target:
   orientation_tolerance: 0.01
 
 safe_ik:
-  integration_period: 0.01 #(s)
-  duration_per_seed: 10.0 # 하나의 seed에서 IK 찾는데 시간 이정도만 투자해줌
+  self_collision_model: capsule # rdf 또는 capsule; 생략/null이면 safety 설정을 따름.
+  iteration_number: 1000 # 시드당 최대 반복 횟수; 실제 실행 시간 제한이 아님.
   # Accept a candidate only after pose and safety conditions remain satisfied
-  # continuously for this duration.
+  # for ceil(duration / 0.01) consecutive iterations (3.0 = 300 iterations).
+  # The internal numerical step stays at 0.01; this is not wall-clock time.
   convergence_hold_duration: 3.0
   workers: 5 # 독립 프로세스 수; 1이면 직렬 실행. seed 수보다 많이 만들지 않음.
-  max_restarts: 10 # 첫번째 seed는 현재 위치에서 시작함.
+  max_restarts: 20 # 첫번째 seed는 현재 위치에서 시작함.
   random_seed: 0 # 랜덤 seed를 만들기 위한 seed.
   damping: 0.001 # damped pseudo inverse 사용
   pose_gain: 100.0 #
-  softmin_temperature: 1.0 # log-sum-exp에 있는 그 상수
+  softmin_temperature: 10 # log-sum-exp에 있는 그 상수
   safety_gradient_gain: 10.0 # null space control부의 gain. 이걸로 safety 제어함.
 
 safety:
@@ -33,19 +34,27 @@ safety:
   rdf:
     artifact: ../models/panda_rdf.npz
     query_density: 500.0 # m^-2; changing this regenerates query points offline
-    top_k: 10 # null uses all query points
+    top_k: 6  # null uses all query points
     softmin_error: 0.005 # m; not subtracted from barrier again
-    physical_margin: 0.030 # m; physical clearance is unchanged
-    # m; offline near-error limit AND CBF uncertainty margin (total 0.040 m).
+    # m; runtime allows 0 <= value <= trained physical_margin (this model: 0.030).
+    # Reducing this changes CBF clearance only; trained radii/weights stay fixed.
+    physical_margin: 0.010
+    # m; overestimation limit AND CBF uncertainty margin (0.040 m total at 0.030).
     # Also changes training radii; a 5 mm artifact must not be relabeled/reused.
     error_margin: 0.010
+    # m; separate offline underestimation limit; does NOT alter CBF or radii.
+    # Requires explicit revalidation; never relabel a legacy report as passing.
+    underestimation_limit: 0.020
     transition_ratio: 0.5
     cbf_gain: 1.0
     seed: 0
   margin: 0.05
   alpha: 1.0
-  # Fixed hand assembly members cannot collide with each other.
-  self_collision_exclusions: [[link7, gripper]]
+  # Explicit self-pair exclusions; obstacle checks remain enabled.
+  self_collision_exclusions:
+    - [link7, gripper] # Fixed hand assembly (capsule backend).
+    - [link6, hand] # User-approved wrist pair exclusion (2026-09-30).
+    - [link5, link7] # 애초에 너무 가까이 있음
   # Endpoints are expressed in each named frame's local coordinates. Adjacent
   # capsules are omitted from self-collision pairs; all others are checked.
   capsules:
@@ -140,17 +149,17 @@ obstacles:
   - {
       name: obstacle2,
       position: [0.25, -0.35, 0.45],
-      radius: 0.12,
+      radius: 0.10,
       enabled: true,
     }
 
 trajectory:
   duration: 60.0
-  integration_period: 0.05
+  integration_period: 0.01
   # sequential: link endpoint position stages, then final EE pose.
   # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
   mode: sequential
-  stage_frames: [link4, hand] # [link2, link3, link4, link5, link6, link7, hand]
+  stage_frames: [link2, link5] # [link2, link3, link4, link5, link6, link7, hand]
   stage_position_tolerance: 0.05
   orientation_weight: 1.0
   stop_window: 0.5 # stop_window동안 계속 stop_velocity_tolerance를 넘지 못하면 정지로 판별한다.

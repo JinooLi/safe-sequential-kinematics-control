@@ -6,10 +6,13 @@ from dataclasses import replace
 from pathlib import Path
 
 import yaml
+from tqdm import tqdm
 
 from ..visualization.panda import save_panda_control_plot
+from ..visualization.panda_replay import replay_panda_result
 from .artifacts import create_run_directory, save_run_provenance
 from .panda_configuration import load_panda_config
+from .panda_progress import PandaProgress
 from .panda_results import result_payload, save_panda_control_trace
 from .panda_rollout import run_panda
 from .panda_setup import build_panda_runtime
@@ -19,7 +22,14 @@ from .paths import default_resource, project_root
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=default_resource("configs/panda.yaml"))
-    parser.add_argument("--visualize", action="store_true")
+    parser.add_argument(
+        "--visualize",
+        action="store_true",
+        help="compute and save first, then replay the recorded motion",
+    )
+    parser.add_argument(
+        "--no-progress", action="store_true", help="disable tqdm calculation progress"
+    )
     parser.add_argument("--output-dir", default=default_resource("outputs/panda"))
     parser.add_argument("--run-name")
     parser.add_argument(
@@ -56,6 +66,7 @@ def main():
         if extra and Path(extra).exists():
             parser.error(f"refusing to overwrite existing export: {extra}")
     directory = create_run_directory(args.output_dir, args.run_name)
+    print(f"run artifacts: {directory}", flush=True)
     save_run_provenance(
         directory,
         config_path=Path(args.config),
@@ -67,8 +78,14 @@ def main():
     if config.trajectory.mode == "sequential":
         workers = min(config.safe_ik.workers, config.safe_ik.max_restarts)
         execution = "serial" if workers == 1 else f"{workers} worker processes"
-        print(f"safe IK: {config.safe_ik.max_restarts} seeds, {execution}", flush=True)
+        print(
+            f"safe IK: {config.safe_ik.max_restarts} seeds, {execution}, "
+            f"safety={config.ik_self_collision_model} "
+            f"(trajectory={config.safety.self_collision_model})",
+            flush=True,
+        )
     try:
+        print("Loading kinematics and safety models...", flush=True)
         runtime = build_panda_runtime(config)
     except (ValueError, OSError) as exc:
         failure = {
@@ -84,19 +101,16 @@ def main():
         parser.exit(2, f"{exc}\nFailure report: {directory / 'summary.json'}\n")
 
     def report_transition(time, previous, following, reason):
-        print(f"[Panda stage] t={time:.3f}s: {previous} -> {following} ({reason})")
+        tqdm.write(f"[Panda stage] t={time:.3f}s: {previous} -> {following} ({reason})")
 
-    if args.visualize:
-        with runtime.plant.viewer() as viewer:
-            result = run_panda(
-                config,
-                runtime,
-                observe=viewer.sync,
-                should_continue=viewer.is_running,
-                on_transition=report_transition,
-            )
-    else:
-        result = run_panda(config, runtime, on_transition=report_transition)
+    # Always finish computation (and shut down IK workers) before opening a GUI.
+    with PandaProgress(enabled=not args.no_progress) as progress:
+        result = run_panda(
+            config,
+            runtime,
+            on_transition=report_transition,
+            progress=progress if not args.no_progress else None,
+        )
     output_path = directory / "summary.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -111,7 +125,8 @@ def main():
     trace_path = directory / "trajectory.npz"
     if save_panda_control_trace(result.trace, trace_path):
         print(f"control trace: {trace_path}")
-    if save_panda_control_plot(result.trace, plot_path, show=args.show_plot):
+    has_plot = save_panda_control_plot(result.trace, plot_path, show=False)
+    if has_plot:
         print(f"control plot: {plot_path}")
     print(f"run artifacts: {directory}")
     if result.failure:
@@ -122,11 +137,23 @@ def main():
         print(f"safe IK candidates: {len(result.ik.candidates)}")
     if result.ik.failure_reason:
         print(f"failure: {result.ik.failure_reason}")
-        return
-    print(f"trajectory time: {result.elapsed:.3f} s ({result.steps} control steps)")
-    print(f"final q: {result.final_q}")
-    print(f"status: {result.status}")
+    else:
+        print(f"trajectory time: {result.elapsed:.3f} s ({result.steps} control steps)")
+        print(f"final q: {result.final_q}")
+        print(f"status: {result.status}")
     print(f"summary: {output_path}")
+    if args.visualize:
+        print(
+            "Calculation and saving complete. Replaying at 1x speed; close the viewer to exit playback.",
+            flush=True,
+        )
+        replay_panda_result(runtime.plant, result)
+    if args.show_plot and has_plot:
+        # Plot rendering only: the rollout and safety checks are never rerun.
+        print(
+            "Showing saved-run diagnostics; close the plot window to exit.", flush=True
+        )
+        save_panda_control_plot(result.trace, plot_path, show=True)
 
 
 if __name__ == "__main__":

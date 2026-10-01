@@ -22,6 +22,11 @@ soft-min 안전 기울기를 Moore–Penrose 영공간에 투영한다.
 IK나 궤적 제어에 사용할 수 있다. 산출물이 없거나 검증에 실패했거나
 설정과 호환되지 않으면 실행을 중단한다. 캡슐 자기 충돌을 사용하려면
 `safety.self_collision_model: capsule`을 명시해야 한다.
+IK 탐색 모델만 따로 선택하려면 `safe_ik.self_collision_model: capsule` 또는
+`rdf`를 지정한다. 생략/null이면 `safety.self_collision_model`을 따른다.
+예를 들어 IK는 capsule, 궤적 제어는 RDF로 설정할 수 있다. 이 경우 찾은
+후보를 제어용 RDF로 재검사해 통과한 후보만 사용하며, 기존 CBF 제약은 유지한다.
+직렬·병렬 탐색 모두 적용되고 `make panda-run`/`make panda-view`로 그대로 실행한다.
 물리적 여유 30 mm와 RDF 오차 여유 10 mm를 합산해 장벽에서 40 mm를 차감한다.
 기존 5 mm 설정의 산출물은 학습 구와 설정이 달라 **그대로 제어에 사용할 수 없다**.
 새 설정과 호환되는 전체 링크 산출물의 거리·미분 검증이 필요하다.
@@ -74,11 +79,19 @@ IK 초기값 탐색은 `safe_ik.workers`로 병렬화한다. 현재 기본 설�
 
 ```bash
 make panda-run  # 설정된 모드로 화면 없이 실행
-make panda-view # MuJoCo 뷰어 실행
+make panda-view # 진행률 표시 → 전체 계산·저장 → MuJoCo 기록 재생 → 그래프
 ```
 
-Panda 설정은 `configs/panda.yaml`에 있다. 현재 IK 기본값은 적분 주기
-0.01초와 시드당 10초이며, 이후 궤적 예산은 60초, 제어 주파수는 20 Hz다.
+Panda 실행은 `tqdm`으로 IK의 완료 시드·현재 반복 수와 궤적 계산 스텝을 표시한다.
+병렬 탐색과 실패 후 자세 전용 진단도 별도로 표시한다. `panda-view`는 계산 중
+뷰어를 열지 않고, 계산·저장 후 원래 시간 간격으로 기록을 재생한다. 재생 중에는
+IK·RDF·QP를 다시 계산하지 않는다. 뷰어를 닫으면 진단 그래프가 열리고, 그래프까지
+닫으면 종료한다. `ARGS="--no-progress"`로 진행 표시를 끌 수 있다.
+
+Panda 설정은 `configs/panda.yaml`에 있다. IK는 `safe_ik.iteration_number`로
+시드당 최대 반복 횟수(기본 1000회)를 지정하며, 실제 실행 시간 제한은 아니다.
+내부 수치 간격은 기존의 0.01을 유지한다. 이후 궤적 예산은 60초,
+제어 주파수는 20 Hz다.
 `assets/robots/panda.xml`의 고정 그리퍼 모델은 MuJoCo Menagerie의
 Apache-2.0 `franka_emika_panda`에서 가져왔다. 원본 자료, 라이선스, 출처는
 `vendor/franka_emika_panda/`에 유지한다.

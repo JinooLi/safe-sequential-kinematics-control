@@ -29,7 +29,7 @@ class ParallelIKTest(unittest.TestCase):
             self.base,
             safe_ik=replace(
                 self.base.safe_ik,
-                duration_per_seed=0.04,
+                iteration_number=4,
                 convergence_hold_duration=0.02,
                 max_restarts=4,
                 workers=2,

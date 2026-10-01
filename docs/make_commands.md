@@ -42,7 +42,7 @@ planar 비교 worker 수는 `sequential_experiment.workers` 또는 `ARGS="--work
 | `panda-train-rdf` | 재구성 mesh 기준 RDF 학습·검증과 비교 HTML 생성 |
 | `panda-validate-rdf` | 새 스키마 artifact에 저장된 동일 재구성 mesh 기준으로 재검증 |
 | `panda-run` | 설정된 모드로 headless 실행 |
-| `panda-view` | 설정된 모드로 MuJoCo viewer 및 최종 그래프 표시 |
+| `panda-view` | 진행률과 함께 전체 계산·저장 후 MuJoCo에서 기록 재생, 마지막에 그래프 표시 |
 | `panda-direct` / `panda-direct-view` | IK를 생략하는 최종 end-effector pose 제어 |
 | `panda-sequential` / `panda-sequential-view` | safe IK 후 순차 CLF-CBF 제어 |
 | `panda-plot` / `panda-plot-view` | 저장된 Panda trace에서 진단 그래프 저장 / 저장·표시 |
@@ -56,6 +56,40 @@ make panda-inspect-mesh ARGS="--artifact outputs/panda_mesh_reconstruction/refer
 `panda-plot*`는 제어를 다시 실행하지 않는다. 여기서 필요한 NPZ는 Panda의
 `time`, `clf_value`, `clf_slack`, `stage_index`, `stage_names`, `barrier_labels`,
 `barrier_values`를 가진 파일이다.
+
+### Panda 계산 진행 표시와 재생
+
+`panda-view`, `panda-direct-view`, `panda-sequential-view`는 뷰어 없이 계산을
+마친 다음 `summary.json`, `trajectory.npz`, 진단 PNG를 저장하고 뷰어를 연다.
+기록된 관절 자세를 시뮬레이션 시간 기준 1배속으로 재생하며, 마지막 자세에서
+창을 닫을 때까지 기다린다. 프레임을 보간하거나 IK·RDF·QP를 다시 계산하지 않는다.
+화면 재생이 느리면 중간 표시 프레임을 건너뛸 수 있지만 저장된 궤적은 바뀌지 않는다.
+재생 창을 닫으면 즉시 재생을 끝낸다. 이때 IK worker는 이미 종료된 상태다.
+`*-view`에 포함된 `--show-plot` 때문에 그다음 진단 그래프 창이 열리며,
+그 창까지 닫으면 명령이 종료된다. 계산에 실패했으면 실패 전까지의 기록 또는
+정지 자세만 보여주며, 실패 결과를 성공 궤적으로 표시하지 않는다.
+
+`tqdm`은 headless 명령에도 적용한다. 단계별 표시 의미는 다음과 같다.
+
+- `Safe IK`: 완료 시드 수/전체 시드 수. `iter`는 실제 반복 수의 합/최대 예산이며,
+  `seed`는 최근 갱신한 시드와 반복 수, `found`는 찾은 후보 수다. 조기 수렴하면
+  최대 반복 예산을 다 쓰지 않아도 모든 시드가 완료되므로 시드 진행률은 100%다.
+- `Pose-only IK diagnostic`: 안전 후보가 없을 때 수행하는 별도 진단이다.
+  앞의 IK 진행률과 섞지 않고 새 막대로 표시한다.
+- `IK trajectory-safety check`: IK와 제어용 모델이 다를 때 후보 재검사 진행률이다.
+- `Trajectory`: 완료한 제어 스텝/최대 스텝. 조기 수렴·실패 시 실제 횟수에서
+  종료 이유를 표시하며, 남은 스텝을 계산한 것처럼 100%로 채우지 않는다.
+
+병렬 IK 진행은 부모 프로세스의 막대 하나로 집계한다. 작업 중 반복 횟수는
+worker당 최대 약 0.1초 간격으로 전달하고, 먼저 완료된 시드부터 반영한다.
+최종 후보 정렬·선택은 원래 시드 순서를 따르므로 진행 표시 순서와 무관하다.
+ETA는 관측된 처리 속도의 추정치이며 수렴 성공이나 정확한 완료 시각을 보장하지 않는다.
+모델 로딩은 별도 시작 메시지로 표시하며 작업량을 모르는 단계에 가짜 비율을 붙이지 않는다.
+
+```bash
+make panda-view                          # 계산 → 저장 → 재생 → 진단 그래프
+make panda-run ARGS="--no-progress"      # 진행 막대 끄기
+```
 
 ## Planar
 

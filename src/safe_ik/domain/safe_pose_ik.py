@@ -9,9 +9,9 @@ from typing import Protocol
 import numpy as np
 
 from .interfaces import PoseKinematics
-from .panda_config import PandaControllerConfig
+from .panda_config import SAFE_IK_STEP_SIZE, PandaControllerConfig
 from .rotations import quaternion_orientation_error
-from .spatial_safety import SafetyEvaluator
+from .spatial_safety import BarrierEvaluation, SafetyEvaluator
 
 
 @dataclass(frozen=True)
@@ -40,8 +40,25 @@ class IKSeed:
 SeedMap = Callable[[list[IKSeed], bool], Iterable[SafeIKCandidate | None]]
 
 
+@dataclass(frozen=True)
+class IKProgress:
+    seed_index: int
+    iteration: int
+    finished: bool = False
+    candidate_found: bool = False
+
+
+IKProgressCallback = Callable[[IKProgress], None]
+
+
 class PoseIKSearch(Protocol):
-    def solve(self, initial_q=None, *, require_safe: bool = True) -> SafeIKResult: ...
+    def solve(
+        self,
+        initial_q=None,
+        *,
+        require_safe: bool = True,
+        on_progress: IKProgressCallback | None = None,
+    ) -> SafeIKResult: ...
 
 
 def damped_pseudoinverse(jacobian: np.ndarray, damping: float) -> np.ndarray:
@@ -75,9 +92,18 @@ class SafePoseIKSolver:
         )
         return position_error, orientation_error, jacobian
 
-    def _candidate(self, q, seed_index, iterations, require_safe):
-        position_error, orientation_error, _ = self._pose_errors(q)
-        barriers = self.safety.evaluate(q)
+    def _candidate(
+        self,
+        q,
+        seed_index,
+        iterations,
+        require_safe,
+        *,
+        position_error,
+        orientation_error,
+        barriers: BarrierEvaluation,
+    ):
+        """Check a pose using only the current iteration's computed values."""
         position_norm = float(np.linalg.norm(position_error))
         orientation_norm = float(np.linalg.norm(orientation_error))
         minimum_barrier = barriers.minimum
@@ -98,23 +124,40 @@ class SafePoseIKSolver:
         )
 
     def solve_seed(
-        self, seed: IKSeed, *, require_safe: bool = True
+        self,
+        seed: IKSeed,
+        *,
+        require_safe: bool = True,
+        on_progress: IKProgressCallback | None = None,
     ) -> SafeIKCandidate | None:
         """Evaluate one independent initial configuration using this solver's state."""
         ik = self.config.safe_ik
         lower, upper = self.kinematics.lower_limits, self.kinematics.upper_limits
         q = np.asarray(seed.q, dtype=float).copy()
         consecutive_acceptable_steps = 0
-        for iteration in range(1, ik.iterations_per_seed + 1):
-            candidate = self._candidate(q, seed.index, iteration, require_safe)
+        for iteration in range(1, ik.iteration_number + 1):
+            # Keep this snapshot local to the iteration/worker. Candidate checks
+            # and aggregation share it explicitly, with no second evaluate(q).
+            position_error, orientation_error, jacobian = self._pose_errors(q)
+            barriers = self.safety.evaluate(q)
+            candidate = self._candidate(
+                q,
+                seed.index,
+                iteration,
+                require_safe,
+                position_error=position_error,
+                orientation_error=orientation_error,
+                barriers=barriers,
+            )
             if candidate is not None:
                 consecutive_acceptable_steps += 1
                 if consecutive_acceptable_steps >= ik.convergence_hold_steps:
+                    if on_progress is not None:
+                        on_progress(IKProgress(seed.index, iteration, True, True))
                     return candidate
             else:
                 consecutive_acceptable_steps = 0
 
-            position_error, orientation_error, jacobian = self._pose_errors(q)
             # Qd * Qe^-1: twice the vector part gives the small-angle correction.
             task_error = np.concatenate((position_error, 2.0 * orientation_error))
             primary_inverse = damped_pseudoinverse(jacobian, ik.damping)
@@ -123,17 +166,21 @@ class SafePoseIKSolver:
                 np.eye(self.config.dof) - np.linalg.pinv(jacobian) @ jacobian
             )
             if require_safe:
-                _, safety_gradient, _ = self.safety.softmin(q, ik.softmin_temperature)
+                _, safety_gradient = barriers.softmin(ik.softmin_temperature)
                 safety_velocity = null_projector @ (
                     ik.safety_gradient_gain * safety_gradient
                 )
             else:
                 safety_velocity = np.zeros(self.config.dof)
             q = np.clip(
-                q + ik.integration_period * (primary_velocity + safety_velocity),
+                q + SAFE_IK_STEP_SIZE * (primary_velocity + safety_velocity),
                 lower,
                 upper,
             )
+            if on_progress is not None:
+                on_progress(
+                    IKProgress(seed.index, iteration, iteration == ik.iteration_number)
+                )
         return None
 
     def solve(
@@ -142,6 +189,7 @@ class SafePoseIKSolver:
         *,
         require_safe: bool = True,
         seed_map: SeedMap | None = None,
+        on_progress: IKProgressCallback | None = None,
     ) -> SafeIKResult:
         """Generate identical seeds, evaluate all, then choose the nearest safe pose.
 
@@ -162,7 +210,12 @@ class SafePoseIKSolver:
         results = (
             seed_map(seeds, require_safe)
             if seed_map is not None
-            else (self.solve_seed(seed, require_safe=require_safe) for seed in seeds)
+            else (
+                self.solve_seed(
+                    seed, require_safe=require_safe, on_progress=on_progress
+                )
+                for seed in seeds
+            )
         )
         # Stable seed order also preserves the serial tie-breaking rule.
         candidates = sorted(

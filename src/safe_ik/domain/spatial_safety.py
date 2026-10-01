@@ -31,6 +31,23 @@ class BarrierEvaluation:
     def minimum(self) -> float:
         return float(np.min(self.values)) if self.values.size else float("inf")
 
+    def softmin(self, temperature: float) -> tuple[float, np.ndarray]:
+        """Aggregate this evaluation without querying geometry or kinematics.
+
+        ``temperature`` is tau in -tau * log(sum(exp(-h / tau))), not its
+        reciprocal. Shift by the minimum to retain the existing stable formula.
+        """
+        if temperature <= 0.0:
+            raise ValueError("soft-min temperature must be positive")
+        if not self.values.size:
+            return float("inf"), np.zeros(self.gradients.shape[1])
+        minimum = float(np.min(self.values))
+        exponentials = np.exp(-(self.values - minimum) / temperature)
+        weights = exponentials / np.sum(exponentials)
+        value = minimum - temperature * np.log(np.sum(exponentials))
+        gradient = weights @ self.gradients
+        return float(value), gradient
+
 
 class SafetyEvaluator(Protocol):
     def evaluate(self, q: np.ndarray) -> BarrierEvaluation: ...
@@ -175,15 +192,9 @@ class PandaCapsuleSafety:
         )
 
     def softmin(self, q, temperature: float):
-        """Return log-sum-exp soft minimum and its joint gradient."""
+        """Compatibility wrapper; reuse evaluation.softmin() within an iteration."""
         if temperature <= 0.0:
             raise ValueError("soft-min temperature must be positive")
         evaluation = self.evaluate(q)
-        if not evaluation.values.size:
-            return float("inf"), np.zeros(len(self.kinematics.lower_limits)), evaluation
-        minimum = float(np.min(evaluation.values))
-        exponentials = np.exp(-(evaluation.values - minimum) / temperature)
-        weights = exponentials / np.sum(exponentials)
-        value = minimum - temperature * np.log(np.sum(exponentials))
-        gradient = weights @ evaluation.gradients
-        return float(value), gradient, evaluation
+        value, gradient = evaluation.softmin(temperature)
+        return value, gradient, evaluation

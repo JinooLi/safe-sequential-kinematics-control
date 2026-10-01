@@ -36,6 +36,7 @@ from .panda_rdf_training import (
     validate_joint_gradients,
     validate_model,
 )
+from .panda_rdf_validation import validation_policy
 from .paths import default_resource
 from .rdf_data_workers import add_data_workers_argument, data_execution
 from .rdf_exterior_sampling import ExteriorSamplingOptions
@@ -167,6 +168,7 @@ def main():
         "geometry_fingerprint": geometry.fingerprint,
         "geometry": geometry.provenance,
         "settings": geometry_settings(config.safety.rdf),
+        "validation_policy": validation_policy(config.safety.rdf),
         "training": training_provenance(training),
         "training_compute": compute,
         "data_generation_execution": data_execution(args.data_workers),
@@ -206,6 +208,12 @@ def main():
                 args.continue_from, geometry, config.safety.rdf, training, exterior
             )
             metadata = bundle.metadata
+            if config.safety.rdf.underestimation_limit is not None and metadata.get(
+                "validation_policy"
+            ) != validation_policy(config.safety.rdf):
+                parser.error(
+                    "continuation cannot change validation policy; explicitly revalidate saved evidence first"
+                )
             copy_prefix_evidence(args.continue_from, state_root, bundle.models)
             metadata.setdefault("handoffs", []).append(
                 {
@@ -234,6 +242,13 @@ def main():
             output, geometry, config.safety.rdf, refresh_queries=args.refresh_queries
         )
         metadata = bundle.metadata
+        if metadata.get("validation_set_requirements") or any(
+            "fresh_and_regression_passed" in v for v in metadata["validation"].values()
+        ):
+            parser.error(
+                "paired holdouts must be retained; use revalidate_panda_rdf with saved evidence"
+            )
+        metadata["validation_policy"] = validation_policy(config.safety.rdf)
         # Interrupted revalidation must not retain the previous approval flag.
         metadata["complete"] = False
     started = perf_counter()
@@ -295,6 +310,7 @@ def main():
                         bundle.models[name],
                         streams[1],
                         config.safety.rdf.error_margin,
+                        underestimation_limit=config.safety.rdf.underestimation_limit,
                     )
                     metadata["validation"][name]["reference_mesh_digest"] = metadata[
                         "reconstruction"
@@ -371,6 +387,7 @@ def main():
                     model,
                     streams[1],
                     config.safety.rdf.error_margin,
+                    underestimation_limit=config.safety.rdf.underestimation_limit,
                     **(
                         {"evidence_path": state_root / name / "validation.npz"}
                         if exterior

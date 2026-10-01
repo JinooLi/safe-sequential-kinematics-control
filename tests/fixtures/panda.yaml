@@ -15,10 +15,10 @@ target:
   orientation_tolerance: 0.01
 
 safe_ik:
-  integration_period: 0.01 #(s)
-  duration_per_seed: 10.0 # 하나의 seed에서 IK 찾는데 시간 이정도만 투자해줌
+  iteration_number: 1000 # 시드당 최대 반복 횟수; 실제 실행 시간 제한이 아님.
   # Accept a candidate only after pose and safety conditions remain satisfied
-  # continuously for this duration.
+  # for ceil(duration / 0.01) consecutive iterations (3.0 = 300 iterations).
+  # The internal numerical step stays at 0.01; this is not wall-clock time.
   convergence_hold_duration: 3.0 
   max_restarts: 10 # 첫번째 seed는 현재 위치에서 시작함.
   random_seed: 0 # 랜덤 seed를 만들기 위한 seed.

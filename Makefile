@@ -48,19 +48,19 @@ panda-validate-rdf: ## Revalidate existing RDF coefficients without training
 panda-run: ## Headless run using trajectory.mode from Panda YAML
 	$(PANDA) $(ARGS)
 
-panda-view: ## YAML mode with MuJoCo viewer and final diagnostic plot
+panda-view: ## Compute with progress, then replay in MuJoCo and show diagnostics
 	$(PANDA) --visualize --show-plot $(ARGS)
 
 panda-direct: ## Headless end-effector pose control, skipping safe IK
 	$(PANDA) --mode direct $(ARGS)
 
-panda-direct-view: ## Direct control with viewer and final plot
+panda-direct-view: ## Compute direct control, then replay and show the final plot
 	$(PANDA) --mode direct --visualize --show-plot $(ARGS)
 
 panda-sequential: ## Headless safe IK followed by sequential CLF-CBF control
 	$(PANDA) --mode sequential $(ARGS)
 
-panda-sequential-view: ## Safe IK and sequential control with viewer and final plot
+panda-sequential-view: ## Compute safe IK/sequential control, then replay and plot
 	$(PANDA) --mode sequential --visualize --show-plot $(ARGS)
 
 ##@ Panda: saved control traces (no new simulation)

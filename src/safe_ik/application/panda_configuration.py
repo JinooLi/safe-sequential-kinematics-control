@@ -80,6 +80,13 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
     robot = data["robot"]
     target = data["target"]
     ik = data["safe_ik"]
+    legacy_ik_fields = {"integration_period", "duration_per_seed"}.intersection(ik)
+    if legacy_ik_fields:
+        raise ValueError(
+            "safe_ik.integration_period and safe_ik.duration_per_seed are no longer "
+            "supported; replace them with safe_ik.iteration_number "
+            "(old defaults: 1000). The numerical IK step is fixed at 0.01."
+        )
     safety = data["safety"]
     self_model = str(safety.get("self_collision_model", "rdf"))
     if self_model not in {"rdf", "capsule"}:
@@ -185,18 +192,14 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
             ),
         ),
         safe_ik=SafeIKConfig(
-            integration_period=_positive(
-                "safe_ik.integration_period", ik["integration_period"]
-            ),
-            duration_per_seed=_positive(
-                "safe_ik.duration_per_seed", ik["duration_per_seed"]
-            ),
+            iteration_number=ik["iteration_number"],
             convergence_hold_duration=_positive(
                 "safe_ik.convergence_hold_duration",
                 ik["convergence_hold_duration"],
             ),
             max_restarts=int(ik["max_restarts"]),
             workers=_worker_count(ik.get("workers", 1)),
+            self_collision_model=ik.get("self_collision_model"),
             random_seed=int(ik.get("random_seed", 0)),
             damping=_positive("safe_ik.damping", ik["damping"]),
             pose_gain=_positive("safe_ik.pose_gain", ik["pose_gain"]),

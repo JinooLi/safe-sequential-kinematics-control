@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "basis_count": 24,
+  "updates": 800,
+  "batch_sizes": [
+    512,
+    128,
+    640
+  ],
+  "checkpoint_steps": [
+    400,
+    800
+  ],
+  "error_margin": 0.01,
+  "pool_size": 500000,
+  "data_workers": 4,
+  "seed": 20260929,
+  "relabel": "all_pools_mesh_truth_preserve_label_dtype",
+  "links": [
+    "link6"
+  ],
+  "purpose": "deterministic_sign_fresh_refit",
+  "sign_oracle": "triangle_normal_fixed_ray_integer_winding_v1",
+  "regularization": 0.0001,
+  "dtype": "float64",
+  "initial_state": "w=0,B=I/lambda",
+  "source_candidate_sha256": "9b0911807bca6d8497bd27e84b0c2a8a2de4adb40bc2d39eea56647b5b7e8fff",
+  "source_report_sha256": "909d62efec5abad84b1dcf4e8dac9c29577b7473a81081413f23022e39696cbf",
+  "input_candidate_sha256": "2cf3c5d7346013968a44629e121cb9c3adeddb6690c222d97adbda0eeee16e4b",
+  "runtime_model_sha256": "b89e31f133bf31982f76c43ccfa0e60a6d15d96b310da49e77964bf7d83fb853",
+  "input_sha256": {
+    "link6": {
+      "training_pool.npz": "825f96f35dcb15d0013c1e3fe089921103f84478ef3e367ae2b0904fa289a496",
+      "exterior_pool.npz": "2ec148d8d801f0676f461c7f56460e5b537b3652f0aaaf2f32ef551f3125dd85",
+      "batch_indices.npz": "29444682a8bcd3cdd353ff278247605e9a6dcd54caaa48aa18290de74f2c5849",
+      "batch_plan.json": "b0c8639056eb7bedd75d31479558c78e498c13c1f263709025dad34a2ed24573",
+      "context.json": "a49efcd4e168ded7d374edf25f7c0fdf9f89ce1d5ad5b7b184cc9c55362eae6c",
+      "fit.npz": "7eab62b8b6235958a07de30daced8f2fc1b24af025025c1b0654294dff31f6b3",
+      "fit.report.json": "72655b45261719787baabd876b5c15811823730b07a0a1e6c5e650660528f8e3",
+      "validation.npz": "af6e461fce0e99333a91540edce4ec4842e482e03f70956f63fc293d8620aa3e"
+    }
+  },
+  "independent_audit_summary_sha256": "c0453a58c96f55dc4b2194e5e86b91ccba00e93e4a7ddceb17f85f105810f126",
+  "expected_mesh_label_array_sha256": {
+    "near": "18cb5bd30f7667b7cb484243d1d7c1892d8657cb5e3433c9d8b4e1ab8c598e76",
+    "random": "51ec1ce5393c4ec2bd40c22f9b58e8fcc58071d1dfd59a818be1e65422d2f717",
+    "exterior": "6607cd23852115784074918f485a72232ce6d814e3a75bbbe9878bea451898f7"
+  }
+}

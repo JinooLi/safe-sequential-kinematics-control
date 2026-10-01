@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "link": "hand",
+  "purpose": "targeted_append_from_weighted_800",
+  "basis_count": 24,
+  "regularization": 0.0001,
+  "dtype": "float64",
+  "parent_step": 800,
+  "parent_samples": 1024000,
+  "new_count": 5000,
+  "batch_sizes": [
+    1280,
+    1280,
+    1280,
+    1160
+  ],
+  "new_weight": 1,
+  "passes": 1,
+  "seed": 20260930,
+  "index": 8,
+  "mining_purpose": 201,
+  "proposal_purpose": 202,
+  "mining_count": 20000,
+  "proposal_count": 50000,
+  "error_threshold": 0.008,
+  "local_radius": 0.01,
+  "near_distance": 0.06,
+  "error_margin": 0.01,
+  "sign_oracle": "triangle_normal_fixed_ray_integer_winding_v1",
+  "label_method": "scan_normal",
+  "data_workers": 4,
+  "runtime_model_sha256": "b89e31f133bf31982f76c43ccfa0e60a6d15d96b310da49e77964bf7d83fb853",
+  "parent_files": {
+    "context.json": "f2a29373b1cc0246447b2a892bbdda6d36a8fe7d00915fd3b95f66f772f4640b",
+    "targets.npz": "7eb1984c37e6e3261791bbdc4bf331a6c49323e41f6c3e4ef19649128ee99cf6",
+    "sample_weights.npz": "4637b1be0f909e36007205317d5acf6ebd526cf9f524641da43b46eca698638d",
+    "source_batch_indices.npz": "ed1a70ef21684c0b346fd29f480261ab83de839d1f6e63f583ce9182927f2c64",
+    "fit.npz": "46049f15dededbac122872e2570bf4ee723dcba58c188f72f8075331908fed22",
+    "regression.npz": "36d622ecf58ff0c9157ee17c6ef19b747f24422db5a11d22a4fd512ba5e93ed3",
+    "fresh.npz": "05383e688bf0b56d4b0a08ae386a872699d52a3ca03951c5c7ca8cbf438be032",
+    "mining.npz": "c944adb834db1bbe74b9042358bea76bffcd489e9d7d1f0ca00bba5fc0b87f1f",
+    "checkpoints/step_000800/metadata.json": "5a29544f0ff1cdb6cf00d303bd60697e3adff0f35593f811a9342519f0f0764b",
+    "checkpoints/step_000800/normalized_weights.npy": "c61380473f633e6713c262f1d3dc9954fe34e8d5fec48b18ae1161d675ce8d08",
+    "checkpoints/step_000800/inverse_information.npy": "1ac1f113542066f5bbc1d8441952e84755fd4238ec9eb37311033621996fac36"
+  },
+  "original_input_files": {
+    "training_pool.npz": "0cc245d43cef0fc01affa5ad653db95cf51f4a5009d8e3edb7753de467d1f51b",
+    "exterior_pool.npz": "10deea87c964635154da13c2f639a6c7f14074e5434c4be0f88aacd41c0c76f0",
+    "batch_indices.npz": "ed1a70ef21684c0b346fd29f480261ab83de839d1f6e63f583ce9182927f2c64",
+    "batch_plan.json": "1e5bd92be920b9b44567e545998080ba841bd05ab6573a0927d42ed022f17a4f",
+    "context.json": "ec1c099ac403ca469348943fb1d247ec491c9a4dd0025cd14fbfd0b7b89c5a4f",
+    "fit.npz": "c3912d1218efb7c5c7cd868d498ba70d02a0d423bfd11bef3b2142a29d850224",
+    "fit.report.json": "22561d3c1e08ce3e16f397cd54caa8e6518e1b214e53883eeac6e725b747a1da",
+    "validation.npz": "22e794419c1988e87e32508e91770a2624c87733d30be721c80d962428dc5d93"
+  },
+  "baseline_files": {
+    "candidate.npz": "951b2577d0f85ef404cda002124d4536fecd81d869acccc4bb336cd4f787f5db",
+    "candidate.report.json": "5b81536083733733e88793347435caf937c757d4eb7f7107807c82224f317a19"
+  }
+}

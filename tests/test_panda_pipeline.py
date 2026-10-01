@@ -43,9 +43,7 @@ class PandaPipelineTest(unittest.TestCase):
         self.assertIn("gripper_tip", self.kinematics.frame_ids)
 
     def test_timing_configuration_matches_clarified_specification(self):
-        self.assertEqual(self.config.safe_ik.integration_period, 0.01)
-        self.assertEqual(self.config.safe_ik.duration_per_seed, 10.0)
-        self.assertEqual(self.config.safe_ik.iterations_per_seed, 1000)
+        self.assertEqual(self.config.safe_ik.iteration_number, 1000)
         self.assertEqual(self.config.safe_ik.convergence_hold_duration, 3.0)
         self.assertEqual(self.config.safe_ik.convergence_hold_steps, 300)
         self.assertEqual(self.config.trajectory.integration_period, 0.05)
@@ -149,7 +147,9 @@ class PandaPipelineTest(unittest.TestCase):
         near = SafeIKCandidate(config.initial_q + 0.1, 1, 1, 0.0, 0.0, 0.1)
         solver = SafePoseIKSolver(config, self.kinematics, self.safety)
 
-        def candidate_for_seed(_q, seed_index, _iteration, _require_safe):
+        def candidate_for_seed(
+            _q, seed_index, _iteration, _require_safe, **_evaluation
+        ):
             return far if seed_index == 0 else near
 
         with patch.object(solver, "_candidate", side_effect=candidate_for_seed):
@@ -169,7 +169,7 @@ class PandaPipelineTest(unittest.TestCase):
         candidate = SafeIKCandidate(config.initial_q.copy(), 0, 1, 0.0, 0.0, 0.1)
         first_checked_q = []
 
-        def capture_first_q(q, _seed_index, _iteration, _require_safe):
+        def capture_first_q(q, _seed_index, _iteration, _require_safe, **_evaluation):
             first_checked_q.append(np.asarray(q).copy())
             return candidate
 

@@ -42,11 +42,66 @@ class MujocoPlant:
         mujoco.mj_forward(self.model, self.data)
 
     @contextmanager
-    def viewer(self):
+    def viewer(self, *, hold=True):
         from mujoco import viewer
 
         with viewer.launch_passive(self.model, self.data) as window:
             yield window
-            while window.is_running():
+            while hold and window.is_running():
                 window.sync()
                 time.sleep(0.05)
+
+    def replay(self, timestamps: np.ndarray, positions: np.ndarray) -> None:
+        """Display recorded poses at 1x speed, then hold the final frame.
+
+        There is no integration, IK, RDF or QP during playback. Closing the
+        viewer exits this loop; no computation workers are attached to it.
+        Only recorded poses are shown (no unvalidated interpolation).
+        """
+        timestamps = np.asarray(timestamps, dtype=float)
+        positions = np.asarray(positions, dtype=float)
+        if (
+            timestamps.ndim != 1
+            or not timestamps.size
+            or positions.shape != (timestamps.size, self.model.nq)
+            or not np.all(np.isfinite(timestamps))
+            or not np.all(np.isfinite(positions))
+            or np.any(np.diff(timestamps) < 0)
+        ):
+            raise ValueError(
+                "replay needs finite ordered timestamps and matching joint poses"
+            )
+        original_q, original_velocity, original_time = (
+            self.q,
+            self.data.qvel.copy(),
+            self.time,
+        )
+
+        def display(index):
+            self.data.qpos[:] = positions[index]
+            self.data.qvel[:] = 0.0
+            self.data.time = timestamps[index]
+            mujoco.mj_forward(self.model, self.data)
+
+        try:
+            display(0)
+            with self.viewer(hold=False) as window:
+                start = time.monotonic()
+                current = 0
+                while window.is_running():
+                    sample_time = timestamps[0] + time.monotonic() - start
+                    index = min(
+                        int(np.searchsorted(timestamps, sample_time, side="right")) - 1,
+                        len(timestamps) - 1,
+                    )
+                    if index != current:
+                        with window.lock():
+                            display(index)
+                        current = index
+                    window.sync()
+                    time.sleep(1.0 / 60.0)
+        finally:
+            self.data.qpos[:] = original_q
+            self.data.qvel[:] = original_velocity
+            self.data.time = original_time
+            mujoco.mj_forward(self.model, self.data)

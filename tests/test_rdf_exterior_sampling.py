@@ -59,8 +59,8 @@ class ExteriorSamplingTest(unittest.TestCase):
         options = self.options(pool_size=12, max_candidate_multiplier=2)
         mesh = trimesh.creation.box(extents=[0.1] * 3)
         with patch(
-            "trimesh.proximity.signed_distance",
-            side_effect=lambda mesh, p: np.full(len(p), 0.01),
+            "safe_ik.application.rdf_data_workers.signed_mesh_distance",
+            side_effect=lambda mesh, p: np.full(len(p), -0.01),
         ):
             with self.assertRaisesRegex(ValueError, "acceptance"):
                 sample_exterior_points(mesh, np.zeros(3), 0.3, options)

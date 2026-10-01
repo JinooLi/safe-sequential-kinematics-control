@@ -10,14 +10,15 @@ from ..application.panda_results import PandaControlTrace
 def save_panda_control_plot(
     trace: PandaControlTrace | None, path: str | Path, *, show: bool = False
 ) -> bool:
-    """Save CLF, slack, and CBF histories; optionally open the figure."""
+    """Save CLF, slack, CBF, and recorded joint angles; optionally show them."""
     if trace is None or trace.time.size == 0:
         return False
 
     import matplotlib.pyplot as plt
 
+    rows = 4 if trace.q is not None else 3
     figure, axes = plt.subplots(
-        3, 1, sharex=True, figsize=(11, 9), layout="constrained"
+        rows, 1, sharex=True, figsize=(11, 3 * rows), layout="constrained"
     )
     axes[0].plot(trace.time, trace.clf_value, color="tab:blue")
     axes[0].set_ylabel("CLF  V(q)")
@@ -41,6 +42,13 @@ def save_panda_control_plot(
     )
     axes[2].set_ylabel("CBF  hᵢ(q)")
     axes[2].legend(loc="best")
+
+    if trace.q is not None:
+        # Convert only for display; recorded/controller angles remain radians.
+        for joint, angles in enumerate(np.rad2deg(trace.q).T, start=1):
+            axes[3].plot(trace.time, angles, label=f"q{joint}", linewidth=1.2)
+        axes[3].set_ylabel("Joint angle [deg]")
+        axes[3].legend(loc="best", ncol=min(7, trace.q.shape[1]))
 
     for axis in axes:
         axis.grid(True, alpha=0.3)
