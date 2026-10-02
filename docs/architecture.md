@@ -12,6 +12,8 @@ pyproject.toml / uv.lock         설치·명령 등록·개발 의존성·잠긴
 configs/
   panda.yaml                    사용자가 편집하는 Panda 실험 설정
   planar.yaml                   사용자가 편집하는 planar 실험 설정
+  training/                     오프라인 RDF 학습·샘플링 설정
+  archive/                      과거 비교 실험·고정 프로토콜 (재현용)
 assets/robots/
   panda.xml                     고정 gripper Panda MJCF
   planar.xml / planar.urdf       planar 시뮬레이션·기구학 모델

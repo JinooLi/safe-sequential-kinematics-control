@@ -415,7 +415,7 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
 
 - 원본 `n_func=24`는 축당 기저 24개, 즉 23차·총 계수 13,824개다.
   `basis_count: 25`로 해석하지 않는다.
-- 실험 설정은 `configs/panda_rdf_training_bp24.yaml`에 별도로 보관하며,
+- 실험 설정은 `configs/archive/panda_rdf_training_bp24.yaml`에 별도로 보관하며,
   기본 BP_10 설정과 기존 산출물은 보존한다.
 - BP_10 GPU 재현에 사용했던 동일 저장 mesh·학습 풀·200회 배치 인덱스·
   독립 검증점으로 학습한다. float64, 정규화·릿지 계수와 5 mm 합격 판정은 유지한다.
@@ -441,7 +441,7 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
 
 **결정 9: BP_24의 실제 학습 사용량을 200회에서 400회로 늘려 단계적으로 비교한다.**
 
-- 먼저 link4만 대상으로 `configs/panda_rdf_training_bp24_400.yaml`을 사용한다.
+- 먼저 link4만 대상으로 `configs/archive/panda_rdf_training_bp24_400.yaml`을 사용한다.
   기존 BP_24/200회 설정에서 `updates`만 변경한다. 새 데이터를 생성하지 않고
   기존 near/random 각각 500,000개 풀, 라벨, mesh, 구 설정, 차수, 배치 크기,
   정규화 계수 및 독립 검증점을 유지한다.
@@ -463,7 +463,7 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
 - 사용자 승인에 따라 BP_24·400회를 유지하면서 회차당 기존 near 512개,
   기존 random 128개, 새 exterior 640개를 사용한다. 배치 합계 1,280개와
   총 사용량 512,000개, 기존 라벨·mesh·구·정규화 계수·검증점은 유지한다.
-- 별도 `configs/panda_rdf_exterior_sampling.yaml`로 새 풀과 배치 구성을 설정한다.
+- 별도 `configs/training/panda_rdf_exterior_sampling.yaml`로 새 풀과 배치 구성을 설정한다.
   기존 400회 배치의 near 앞 512열과 random 앞 128열을 사용해 비교 대상을
   짝지으며, 전체 배치가 동일하다고 기록하지 않는다. 추가 exterior 인덱스는
   배치 내 중복 없이 뽑고 별도 `SeedSequence(0, spawn_key=(4,8))`로 재현한다.
@@ -496,7 +496,7 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
 - 기존 외부 풀 500,000개와 원래 near/random 풀을 파일 해시까지 동일하게
   재사용한다. 배치는 512/128/640을 유지하며 기존 400회 전체 인덱스 prefix를
   보존하고 같은 RNG 흐름에서 400회를 더 생성한다. 검증점은 학습에 넣지 않는다.
-- `configs/panda_rdf_training_bp24_800.yaml`은 400회 설정에서 `updates`만 800으로
+- `configs/archive/panda_rdf_training_bp24_800.yaml`은 400회 설정에서 `updates`만 800으로
   바꾼다. BP_24·float64·scan 라벨·기준 형상·구·정규화·5 mm 기준은 유지한다.
 - 재개에 필요한 상태는 정규화된 계수 $w_k$와 역정보 행렬 $B_k$다.
   실행 RDF 파일의 미터 단위 계수만으로 $B_k$를 복원하거나, 이를 초기화한 채
@@ -540,7 +540,7 @@ RDF 학습 구 내부라는 뜻이 아니며, 학습 구 안에 있더라도 물
   각 링크 BP_24(축당 23차)·800회·float64, 배치 near/random/exterior
   512/128/640, 각 풀 500,000개를 사용한다. 10 mm 오차 여유와 30 mm 물리 여유에
   맞춘 새 구·정규화로 생성하며 기존 link4의 5 mm 모델이나 회귀 상태를 재개하지 않는다.
-- 별도 `panda_rdf_training_full_bp24.yaml`을 사용한다. 외부 표본은 기존 방식의
+- 별도 `configs/training/panda_rdf_training_full_bp24.yaml`을 사용한다. 외부 표본은 기존 방식의
   0–60 mm mesh 영역 판정과 scan/normal 라벨을 유지한다. 기하 전처리·회귀 목적·
   허용오차·CBF 및 CLF 구조는 추가 변경하지 않는다.
 - 링크 인덱스를 난수 spawn key에 반영한다. 목적 0=train, 1=validation,

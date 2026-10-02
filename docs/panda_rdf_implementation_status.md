@@ -1,5 +1,9 @@
 # Panda RDF 구현 진행 상황
 
+설정 파일 경로는 2026-10-02에 정리한 현재 위치(`configs/training/`,
+`configs/archive/`)로 표시한다. 설정 내용·해시는 그대로이며, `outputs/`의
+원본 실행 기록과 당시 경로는 변경하지 않았다.
+
 ## 2026-09-28: BP_10(9차) link4 비교
 
 사용자 YAML의 `basis_count: 10`을 유지해 **link4만** 비교했다. 저장된 재구성
@@ -170,7 +174,7 @@ GPU 제어기 도입이 아니다. 사용법은 [구현 상세](panda_rdf_implem
 
 재구성 link4의 동일 mesh·학습 풀·200회 배치·독립 검증점으로 BP_24를 학습했다.
 BP_24는 기저 24개/축, 즉 23차·계수 13,824개다. 기본 BP_10 YAML은 보존하고
-`configs/panda_rdf_training_bp24.yaml`만 별도로 추가했다. float64와 5 mm 판정은 유지했다.
+`configs/archive/panda_rdf_training_bp24.yaml`만 별도로 추가했다. float64와 5 mm 판정은 유지했다.
 
 | 항목 | BP_10 GPU | BP_24 GPU |
 | --- | ---: | ---: |
@@ -214,7 +218,7 @@ near 최대오차 약 14.2%, 평균오차 약 36.8% 감소에 대해 관측 학�
 복제본에 적용했다. 원격에서 CUDA 일치 검사를 포함한 134개 테스트가 모두
 통과한 뒤 RTX 3070 Ti에서 학습했다. 기본 학습 YAML과 기존 제어 모델은 유지했다.
 
-새 설정은 `configs/panda_rdf_training_bp24_400.yaml`이다. 기존 200회 배치는
+새 설정은 `configs/archive/panda_rdf_training_bp24_400.yaml`이다. 기존 200회 배치는
 정확히 보존하고 동일한 near/random 풀에서 200회를 추가했다. 누적 표본 수는
 256,000→512,000이며, 400회에서 사용된 고유 풀 인덱스는 near 279,803개,
 random 92,536개다. 기저·mesh·라벨·구·배치 크기·정규화 계수·검증점은 같다.
@@ -253,7 +257,7 @@ random 92,536개다. 기저·mesh·라벨·구·배치 크기·정규화 계수�
 복제본에 적용했다. 원격 테스트 141개가 통과했으며, 로컬은 138개 통과 및
 선택적 GPU 검사 3개 생략이었다. 실제 mesh 표본 640개 생성·라벨 smoke 검사
 이후 승인된 외부 학습 풀 500,000개를 생성하고 RTX 3070 Ti에서 학습했다.
-설정은 `configs/panda_rdf_exterior_sampling.yaml`이다.
+설정은 `configs/training/panda_rdf_exterior_sampling.yaml`이다.
 
 기존 near 1,024 + random 256 배치를 **near 512 + random 128 + exterior 640**으로
 교체했다. 기존 두 풀은 그대로 보존하고 각 기존 배치의 앞 512/128개 인덱스를
@@ -451,7 +455,7 @@ CBF 행의 CLF slack 계수 0은 그대로임을 확인했다. 이는 이전 학
 사용자가 전체 링크 학습을 승인했다. 최신 외부 보강 설정을 전체 빌더에 연결해
 BP_24·800회·float64·512/128/640 배치, 각 풀 500,000개로 학습하도록 했다.
 1 cm 오차 여유와 3 cm 물리 여유의 새 구를 사용하며 과거 link4 모델은 재개하지 않는다.
-`configs/panda_rdf_training_full_bp24.yaml`에 이번 학습 설정을 별도 기록했다.
+`configs/training/panda_rdf_training_full_bp24.yaml`에 이번 학습 설정을 별도 기록했다.
 링크별 풀·배치·독립 검증점·400/800회 회귀 상태를 저장하며, 기존 산출물은 보존한다.
 기존 link4 전용 함수는 기본 RNG 인덱스 4를 유지하고 전체 학습에는 실제 링크
 인덱스를 전달한다. 오차 미달 링크가 있어도 나머지를 평가하는 경로와 출력 경로
@@ -908,7 +912,7 @@ BP24, 800회, float64, 정규화·기하·margin·regularization 및 실제 배�
 입력·기하·프레임·GPU·공간 사전 검사와 Python 파일 101개 전송 해시 대조도 통과했다.
 서버의 기존 checkout은 c726d1f로 유지하고 별도 코드 사본으로 실행한다.
 
-고정 프로토콜은 `configs/panda_rdf_failure_study_20260929.json`이며 SHA-256은
+고정 프로토콜은 `configs/archive/panda_rdf_failure_study_20260929.json`이며 SHA-256은
 `fb3782155424f1db3b7cd6da68e43d295d3c8f7ebb2c8abcad02038e45f65825`이다.
 원격 결과는 `outputs/panda_rdf_failure_study_20260929_run`, 로그·프로세스 기록은
 같은 이름의 `_control`, 코드 사본은 `_code`에 있다. 로컬 작업 기록은

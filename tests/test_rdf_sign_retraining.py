@@ -24,7 +24,8 @@ class SignRetrainingTest(unittest.TestCase):
     def protocol(self):
         return json.loads(
             (
-                Path(__file__).parents[1] / "configs/panda_rdf_link6_sign_20260930.json"
+                Path(__file__).parents[1]
+                / "configs/archive/panda_rdf_link6_sign_20260930.json"
             ).read_text()
         )
 

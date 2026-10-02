@@ -255,7 +255,7 @@ hand 통과와 9링크 전체 후보 통과는 별개다. 보존된 link0의 기
 
 ## 구현과 증거 위치
 
-- [고정 프로토콜](../configs/panda_rdf_hand_targeted_20260930.json)
+- [고정 프로토콜](../configs/archive/panda_rdf_hand_targeted_20260930.json)
 - [탐색과 추가 학습 구현](../src/safe_ik/application/panda_rdf_hand_continuation.py)
 - [가중치 재개 구현](../src/safe_ik/adapters/rdf_torch_training.py)
 - [샘플링 테스트](../tests/test_rdf_hand_continuation.py)
@@ -356,7 +356,7 @@ CPU에서 부모 w/B에 같은 네 배치를 독립적으로 적용한 결과, G
 오차가 늘 수 있으므로 최대 오차뿐 아니라 평균·과대평가와 미분·경계 검사도 본다.
 계속 관찰한 기존 두 검증 세트의 통과는 전 공간 보증이나 미공개 최종 시험 통과가 아니다.
 
-- [가중치 4 고정 프로토콜](../configs/panda_rdf_hand_weight4_20260930.json)
+- [가중치 4 고정 프로토콜](../configs/archive/panda_rdf_hand_weight4_20260930.json)
 - [저장 데이터 불변과 가중치 변경 검사](../tests/test_rdf_hand_reweight.py)
 
 ### 가중치 1과 4의 측정 결과

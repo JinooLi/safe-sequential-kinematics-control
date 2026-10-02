@@ -167,10 +167,14 @@ src/safe_ik/
   experiments/   비교 시나리오·병렬 실행·분석·저장
   logging/       SimulationStep 기록·NPZ·CSV
   visualization/ 그래프·거리장·GUI
-configs/         실험 YAML
+configs/         실행 설정(panda.yaml, planar.yaml), training/, archive/
 assets/robots/   프로젝트 로봇 XML/URDF
 tests/fixtures/ 고정 회귀 시나리오
 ```
+
+설정 파일별 용도와 보관 기준은 [설정 파일 안내](configs/README.md)를 참고한다.
+일반 실행용 YAML은 `configs/`에, 오프라인 학습용은 `configs/training/`에,
+과거 실험 재현용은 `configs/archive/`에 분리했다.
 
 ### 생성 파일 정책
 

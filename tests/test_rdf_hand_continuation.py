@@ -65,7 +65,7 @@ class HandSamplingTest(unittest.TestCase):
     def test_protocol_does_not_silently_increase_steps_or_weight(self):
         root = Path(__file__).resolve().parents[1]
         p = json.loads(
-            (root / "configs/panda_rdf_hand_targeted_20260930.json").read_text()
+            (root / "configs/archive/panda_rdf_hand_targeted_20260930.json").read_text()
         )
         validate_protocol(p)
         for key, value in [

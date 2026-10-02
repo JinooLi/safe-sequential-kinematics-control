@@ -95,7 +95,7 @@ class FixedBatchTest(unittest.TestCase):
             )
 
     def test_800_config_only_changes_update_count(self):
-        config = Path(__file__).resolve().parents[1] / "configs"
+        config = Path(__file__).resolve().parents[1] / "configs/archive"
         old = yaml.safe_load((config / "panda_rdf_training_bp24_400.yaml").read_text())
         new = yaml.safe_load((config / "panda_rdf_training_bp24_800.yaml").read_text())
         self.assertEqual(new, old | {"updates": 800})

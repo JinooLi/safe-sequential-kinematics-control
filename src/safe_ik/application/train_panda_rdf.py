@@ -46,7 +46,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=default_resource("configs/panda.yaml"))
     parser.add_argument(
-        "--training-config", default=default_resource("configs/panda_rdf_training.yaml")
+        "--training-config",
+        default=default_resource("configs/training/panda_rdf_training.yaml"),
     )
     parser.add_argument("--output", help="defaults to safety.rdf.artifact")
     parser.add_argument(

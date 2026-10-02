@@ -23,7 +23,7 @@ make panda-train-rdf OUTPUT=outputs/panda_rdf_reconstructed/candidate.npz
 
 같은 작업을 수행하는 진입 명령은 `safe-ik-train-panda-rdf`다.
 `--config`는 실행 YAML을, `--training-config`는
-`configs/panda_rdf_training.yaml`을 선택한다. 기본 산출물은
+`configs/training/panda_rdf_training.yaml`을 선택한다. 기본 산출물은
 `models/panda_rdf.npz`이며, 옆의 `.report.json`에는 실패 결과를 포함한
 검증 근거를 사람이 읽을 수 있는 형태로 저장한다. 종료 코드 2는 후보가
 승인되지 않았음을 뜻한다. 학습 중에는 미완성 중간 산출물을 원자적으로
@@ -44,8 +44,8 @@ IK나 제어기에서는 렌더러나 삼각형 기준 거리 계산을 호출�
 ```bash
 # 새 후보 경로에서 실행할 때만 적용한다. 현재 실행 중인 프로세스는 변경하지 않는다.
 safe-ik-train-panda-rdf --device cuda --data-workers 4 --threads 1 \
-  --training-config configs/panda_rdf_training_full_bp24.yaml \
-  --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml \
+  --training-config configs/training/panda_rdf_training_full_bp24.yaml \
+  --exterior-sampling-config configs/training/panda_rdf_exterior_sampling.yaml \
   --output outputs/panda_rdf_next/candidate.npz
 ```
 
@@ -78,25 +78,24 @@ CUDA/EGL 초기화 이후에도 fork하지 않고 `spawn`을 사용한다. 각 �
 ### 선택적 GPU 학습
 
 오프라인 재귀 릿지는 `--device cuda`로 실행할 수 있다. CPU 기본 경로와
-제어기 의존성은 유지하고, GPU용 PyTorch는 별도 가상환경에 추가 설치한다.
+제어기 의존성은 유지하고, GPU용 PyTorch는 `cuda` 선택 의존성으로 uv가 관리한다.
 
 ```bash
-uv sync --locked --python 3.11
-uv pip install --python .venv/bin/python -r configs/panda_rdf_gpu_requirements.txt
-.venv/bin/python -m unittest tests.test_rdf_torch_training -v
-.venv/bin/python -m safe_ik.application.train_panda_rdf --device cuda --links link4 --output outputs/panda_rdf_gpu/link4.npz
+uv sync --locked --extra cuda --python 3.11
+uv run --locked --extra cuda python -m unittest tests.test_rdf_torch_training -v
+uv run --locked --extra cuda safe-ik-train-panda-rdf --device cuda --links link4 --output outputs/panda_rdf_gpu/link4.npz
 ```
 
-추가 설치 후에는 `.venv/bin/python`으로 실행한다. `uv sync`를 다시 실행하면
-선택적 PyTorch 설치가 제거될 수 있다. CUDA가 없으면 오류를 내며 CPU로
+GPU 실행·환경 동기화 시에는 `--extra cuda`를 지정한다. 아래 과거 진단 예제의
+`.venv/bin/python`도 위 환경을 설치한 뒤 사용할 수 있다. CUDA가 없으면 오류를 내며 CPU로
 조용히 전환하지 않는다. float64, Bernstein 기저, 정규화 및 재귀 갱신식은
 CPU와 같고, 합격 기준·삼각형 검증·확장 함수·실행 시 미분은 변경하지 않는다.
 GPU 전환은 정확도 개선 방법이 아니며 FP32/TF32로 정밀도를 낮추지 않는다.
 
 2026-10-01부터 제어 시 추론도 CUDA를 지원하며, `make panda-view`는 기본적으로
 GPU RDF를 선택한다(`PANDA_RDF_DEVICE=cpu`로 CPU 선택). 직접 CLI에서는
-`--rdf-device cuda`로 선택한다. 선택 의존성 `uv run --extra cuda`를 사용하면 위 수동 pip 설치와 달리
-uv가 PyTorch를 관리한다. [Runtime GPU 구현·검증](panda_rdf_runtime_optimization.md#9-runtime-cuda-rdf-추가--2026-10-01)은
+`--rdf-device cuda`로 선택한다. 학습과 추론 모두 같은 `cuda` 선택 의존성을 사용한다.
+[Runtime GPU 구현·검증](panda_rdf_runtime_optimization.md#9-runtime-cuda-rdf-추가--2026-10-01)은
 오프라인 학습 device와 별개다. 기존 모델·검증 기준을 바꾸지 않는다.
 
 기존 link4 BP_10과 정확히 같은 입력으로 계산만 비교할 때는 다음 진단을 쓴다.
@@ -104,9 +103,9 @@ uv가 PyTorch를 관리한다. [Runtime GPU 구현·검증](panda_rdf_runtime_op
 ```bash
 .venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --output outputs/panda_rdf_gpu_run
 # 같은 데이터에서 BP_24(축당 23차) 비교. 기본 학습 YAML은 변경하지 않는다.
-.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24.yaml --output outputs/panda_rdf_gpu_bp24_run
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/archive/panda_rdf_training_bp24.yaml --output outputs/panda_rdf_gpu_bp24_run
 # 기존 200회 배치를 보존하고 같은 풀에서 200회를 추가한다.
-.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_400.yaml --output outputs/panda_rdf_gpu_bp24_400_run
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/archive/panda_rdf_training_bp24_400.yaml --output outputs/panda_rdf_gpu_bp24_400_run
 ```
 
 입력 폴더에는 기존 `shared_training_pool.npz`, `shared_validation.npz`,
@@ -130,7 +129,7 @@ CPU 검증은 제외한다. 다른 컴퓨터 CPU와의 시간 비교에는 하�
 물체 내부 학습점이 들어 있는 기존 두 풀을 삭제하거나 재라벨링하지 않는다.
 
 ```bash
-.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_400.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --output outputs/panda_rdf_gpu_bp24_exterior_run
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/archive/panda_rdf_training_bp24_400.yaml --exterior-sampling-config configs/training/panda_rdf_exterior_sampling.yaml --output outputs/panda_rdf_gpu_bp24_exterior_run
 ```
 
 새 풀은 `exterior_pool.npz`(points, labels, selection_truth), 생성 근거는
@@ -154,7 +153,7 @@ BP_24 행렬 하나는 약 1.42 GiB이며 npy/mmap을 사용해 pickle을 읽지
 `--verify-prefix-run`은 기존 배치와 400회 시점 계수의 일치를 요구한다.
 
 ```bash
-.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --verify-prefix-run outputs/panda_rdf_gpu_bp24_exterior_run --output outputs/panda_rdf_gpu_bp24_exterior_800_run
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/archive/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/training/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --verify-prefix-run outputs/panda_rdf_gpu_bp24_exterior_run --output outputs/panda_rdf_gpu_bp24_exterior_800_run
 ```
 
 중단된 실행을 재개할 때는 **실제 학습 프로세스가 끝난 것을 확인한 뒤** 마지막
@@ -162,7 +161,7 @@ BP_24 행렬 하나는 약 1.42 GiB이며 npy/mmap을 사용해 pickle을 읽지
 나머지 400회를 수행하는 예이며, 위 실행이 진행 중일 때 동시에 실행하지 않는다.
 
 ```bash
-.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --resume-checkpoint outputs/panda_rdf_gpu_bp24_exterior_800_run/checkpoints/step_000400 --output outputs/panda_rdf_gpu_bp24_exterior_800_resumed
+.venv/bin/python -m safe_ik.application.refit_panda_rdf --inputs outputs/panda_rdf_gpu_inputs --training-config configs/archive/panda_rdf_training_bp24_800.yaml --exterior-sampling-config configs/training/panda_rdf_exterior_sampling.yaml --reuse-exterior-run outputs/panda_rdf_gpu_bp24_exterior_run --resume-checkpoint outputs/panda_rdf_gpu_bp24_exterior_800_run/checkpoints/step_000400 --output outputs/panda_rdf_gpu_bp24_exterior_800_resumed
 ```
 
 재개 시 기저·정규화·회귀 계수·학습 풀·학습 옵션 및 이미 처리한 배치를 검사한다.
@@ -245,9 +244,9 @@ metadata는 그대로**다. 반경의 무결성 검사는 실행값이 아니라
 일반 빌더에 외부 보강 설정을 전달한다. 아래 출력 경로는 반드시 새 경로여야 한다.
 
 ```bash
-uv run safe-ik-train-panda-rdf --config configs/panda.yaml --device cuda \
-  --training-config configs/panda_rdf_training_full_bp24.yaml \
-  --exterior-sampling-config configs/panda_rdf_exterior_sampling.yaml \
+uv run --locked --extra cuda safe-ik-train-panda-rdf --config configs/panda.yaml --device cuda \
+  --training-config configs/training/panda_rdf_training_full_bp24.yaml \
+  --exterior-sampling-config configs/training/panda_rdf_exterior_sampling.yaml \
   --checkpoint-interval 400 --output outputs/panda_rdf_full_10mm/candidate.npz
 ```
 
@@ -481,4 +480,4 @@ QP를 사용하지 않으므로 IK의 QP 시간은 null이다. 실행 출처 기
 구형 스키마 1 후보는 새 기준으로 명시적 재학습이 필요하다. `--prepare-only`는
 기본 실행 artifact를 덮어쓰지 않도록 `--output`을 필수로 받고, 계수와 실행
 승인 없이 전처리 결과만 저장한다. 전처리 해상도와 표면 비교 표본 수 등은
-`configs/panda_rdf_training.yaml`의 `reconstruction`에서 조절한다.
+`configs/training/panda_rdf_training.yaml`의 `reconstruction`에서 조절한다.

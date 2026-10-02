@@ -23,7 +23,7 @@ class HandReweightTest(unittest.TestCase):
     def protocol(self):
         root = Path(__file__).resolve().parents[1]
         return json.loads(
-            (root / "configs/panda_rdf_hand_weight4_20260930.json").read_text()
+            (root / "configs/archive/panda_rdf_hand_weight4_20260930.json").read_text()
         )
 
     def fixture(self, source):

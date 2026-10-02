@@ -132,7 +132,8 @@ def main():
     parser.add_argument("--inputs", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
-        "--training-config", default=default_resource("configs/panda_rdf_training.yaml")
+        "--training-config",
+        default=default_resource("configs/training/panda_rdf_training.yaml"),
     )
     parser.add_argument("--extra-batch-seed", type=int, default=0)
     parser.add_argument("--exterior-sampling-config", type=Path)

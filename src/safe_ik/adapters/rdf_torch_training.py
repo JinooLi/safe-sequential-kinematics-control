@@ -15,7 +15,7 @@ def torch_training_environment(device="cuda"):
         import torch
     except ImportError as exc:
         raise RuntimeError(
-            "PyTorch required; see configs/panda_rdf_gpu_requirements.txt"
+            "PyTorch required; run this command with uv run --locked --extra cuda"
         ) from exc
     selected = torch.device(device)
     if selected.type not in ("cpu", "cuda"):
