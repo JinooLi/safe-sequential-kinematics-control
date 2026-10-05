@@ -165,7 +165,8 @@ trajectory:
   # sequential: link endpoint position stages, then final EE pose.
   # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
   mode: sequential
-  stage_frames: [link2, link5] # [link2, link3, link4, link5, link6, link7, hand]
+  # Frame origins: link2 is fixed; link3 and link5 provide moving position goals.
+  stage_frames: [link3, link5]
   stage_position_tolerance: 0.05
   orientation_weight: 1.0
   stop_window: 0.5 # stop_window동안 계속 stop_velocity_tolerance를 넘지 못하면 정지로 판별한다.
