@@ -3,34 +3,17 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
 
 import numpy as np
 from scipy.linalg import block_diag
 
-from ..domain.interfaces import PoseKinematics
+from ..domain.ik_contracts import SafeIKCandidate
+from ..domain.interfaces import PoseKinematics, QPSolver
 from ..domain.panda_config import PandaControllerConfig
+from ..domain.panda_types import PandaControlStatus
 from ..domain.rotations import quaternion_orientation_error_components
-from ..domain.safe_pose_ik import SafeIKCandidate
-from ..domain.spatial_safety import SafetyEvaluator
+from ..domain.safety_contracts import SafetyEvaluator
 from ..domain.types import QPProblem, QPStatus, SafetyDiagnostics
-from .solver import QPSolver
-
-
-@dataclass(frozen=True)
-class PandaControlStatus:
-    success: bool
-    stalled: bool
-    candidates_exhausted: bool
-    qp_infeasible: bool
-    qp_solver_failed: bool
-    stage_index: int
-    stage_name: str
-    stage_position_error: float
-    joint_error: float | None
-    position_error: float
-    orientation_error: float
-    minimum_barrier: float
 
 
 class PandaTrajectoryController:

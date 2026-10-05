@@ -12,7 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from safe_ik.application.panda_results import PandaControlTrace
+from safe_ik.domain.panda_types import PandaControlTrace
 from safe_ik.visualization.panda import save_panda_control_plot
 
 

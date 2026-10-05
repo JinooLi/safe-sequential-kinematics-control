@@ -7,8 +7,8 @@ from .paths import project_root
 
 
 def main():
-    from ..experiments.runner import run_comparison
     from ..visualization.comparison import visualize_all_cases, visualize_case
+    from .comparison_runner import run_comparison
 
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)

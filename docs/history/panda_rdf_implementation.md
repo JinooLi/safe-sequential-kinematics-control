@@ -1,5 +1,7 @@
 # Panda RDF 구현 상세
 
+> 기존 설계·구현·실험 기록입니다. 본문의 현재·기본값은 작성 당시 기준이며, 현재 동작은 [구현 지도](../current/README.md)를 참고하세요.
+
 구현 기준은 [Panda RDF 확정 명세](panda_rdf_specification.md)다.
 실측 결과는 [구현 진행 상황](panda_rdf_implementation_status.md)을 참조한다.
 학습 후보를 생성했다고 실행 승인을 받은 것은 아니다. 9개 링크 모두의 검증과

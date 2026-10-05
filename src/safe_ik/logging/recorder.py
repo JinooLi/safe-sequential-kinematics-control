@@ -8,15 +8,16 @@ from .labels import component_label
 
 
 class Recorder:
-    """시뮬레이션 데이터를 메모리에 기록하고 파일/그래프로 내보낸다.
+    """시뮬레이션 데이터를 메모리에 기록하고 NPZ와 CSV로 내보낸다.
+
+    그래프와 GUI는 실행 계층이 visualization.recording에 arrays()와
+    barrier_labels를 전달하여 표시한다.
 
     Usage:
         recorder = Recorder()
         recorder.record(step)
         recorder.save_npz("outputs/sim_data.npz")
         recorder.save_csv("outputs/sim_data.csv")
-        recorder.plot("outputs/sim_plot.png")
-        recorder.show_gui()
     """
 
     def __init__(self):
@@ -74,7 +75,7 @@ class Recorder:
 
         Usage:
             recorder = Recorder.from_npz("outputs/sim_data.npz")
-            recorder.show_gui()
+            arrays = recorder.arrays()
         """
         recorder = cls()
         loaded = np.load(path)
@@ -157,13 +158,3 @@ class Recorder:
 
     def _component_label(self, key, index):
         return component_label(key, index, self.barrier_labels)
-
-    def plot(self, path=None, show=False):
-        from ..visualization.recording import plot
-
-        return plot(self.arrays(), self.barrier_labels, path=path, show=show)
-
-    def show_gui(self):
-        from ..visualization.recording import show_gui
-
-        return show_gui(self.arrays(), self.barrier_labels)

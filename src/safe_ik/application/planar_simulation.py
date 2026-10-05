@@ -11,6 +11,7 @@ from ..domain.interfaces import (
     VelocityController,
 )
 from ..domain.types import SimulationStep
+from ..visualization.recording import plot, show_gui
 
 
 def load_mujoco_model(mujoco_xml_path):
@@ -241,10 +242,10 @@ def run_simulation(
     if recorder is not None and save_recording:
         recorder.save_npz(data_path)
         recorder.save_csv(csv_path)
-        recorder.plot(plot_path)
+        plot(recorder.arrays(), recorder.barrier_labels, path=plot_path)
         if verbose:
             print(f"Saved data: {data_path}")
             print(f"Saved CSV: {csv_path}")
             print(f"Saved plot: {plot_path}")
         if show_recording_gui:
-            recorder.show_gui()
+            show_gui(recorder.arrays(), recorder.barrier_labels)

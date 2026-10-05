@@ -2,11 +2,11 @@ import numpy as np
 from scipy.linalg import block_diag
 
 from ..domain.goal_configuration import GoalConfiguration, solve_goal_configurations
+from ..domain.interfaces import QPSolver
 from ..domain.planar_config import ControllerConfig
 from ..domain.rdf import PlanarBernsteinRobot
 from ..domain.safety import PlanarCapsuleRobot, obstacles_from_config
 from ..domain.types import QPProblem, QPStatus, SafetyDiagnostics
-from .solver import QPSolver
 
 
 def wrap_to_pi(angle):

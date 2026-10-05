@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
 
 import numpy as np
 
 from .interfaces import PoseKinematics
 from .panda_config import CapsuleConfig, SphereObstacleConfig
+from .safety_contracts import BarrierEvaluation, SafetyEvaluator, evaluate_softmin
 
 
 @dataclass(frozen=True)
@@ -19,41 +19,6 @@ class CapsuleState:
     start_jacobian: np.ndarray
     end_jacobian: np.ndarray
     radius: float
-
-
-@dataclass(frozen=True)
-class BarrierEvaluation:
-    labels: tuple[str, ...]
-    values: np.ndarray
-    gradients: np.ndarray
-
-    @property
-    def minimum(self) -> float:
-        return float(np.min(self.values)) if self.values.size else float("inf")
-
-    def softmin(self, temperature: float) -> tuple[float, np.ndarray]:
-        """Aggregate this evaluation without querying geometry or kinematics.
-
-        ``temperature`` is tau in -tau * log(sum(exp(-h / tau))), not its
-        reciprocal. Shift by the minimum to retain the existing stable formula.
-        """
-        if temperature <= 0.0:
-            raise ValueError("soft-min temperature must be positive")
-        if not self.values.size:
-            return float("inf"), np.zeros(self.gradients.shape[1])
-        minimum = float(np.min(self.values))
-        exponentials = np.exp(-(self.values - minimum) / temperature)
-        weights = exponentials / np.sum(exponentials)
-        value = minimum - temperature * np.log(np.sum(exponentials))
-        gradient = weights @ self.gradients
-        return float(value), gradient
-
-
-class SafetyEvaluator(Protocol):
-    def evaluate(self, q: np.ndarray) -> BarrierEvaluation: ...
-    def softmin(
-        self, q: np.ndarray, temperature: float
-    ) -> tuple[float, np.ndarray, BarrierEvaluation]: ...
 
 
 def _unit_or_default(vector: np.ndarray) -> tuple[float, np.ndarray]:
@@ -193,8 +158,4 @@ class PandaCapsuleSafety:
 
     def softmin(self, q, temperature: float):
         """Compatibility wrapper; reuse evaluation.softmin() within an iteration."""
-        if temperature <= 0.0:
-            raise ValueError("soft-min temperature must be positive")
-        evaluation = self.evaluate(q)
-        value, gradient = evaluation.softmin(temperature)
-        return value, gradient, evaluation
+        return evaluate_softmin(self, q, temperature)

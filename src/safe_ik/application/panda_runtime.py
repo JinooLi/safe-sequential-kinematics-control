@@ -4,10 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import ContextManager
 
-from ..control.solver import QPSolver
-from ..domain.interfaces import JointPlant, PoseKinematics
-from ..domain.safe_pose_ik import PoseIKSearch
-from ..domain.spatial_safety import SafetyEvaluator
+from ..domain.ik_contracts import PoseIKSearch
+from ..domain.interfaces import JointPlant, PoseKinematics, QPSolver
+from ..domain.safety_contracts import SafetyEvaluator
 
 
 @dataclass

@@ -11,32 +11,32 @@ import yaml
 
 from ..adapters.osqp_solver import OSQPSolver
 from ..adapters.planar_kinematics import RobotInterface
-from ..application.artifacts import create_run_directory, save_run_provenance
-from ..application.planar_configuration import (
-    load_controller_config,
-    validate_geometry_consistency,
-)
-from ..application.planar_simulation import run_simulation
 from ..control.planar_controller import QPController, wrap_to_pi
 from ..domain.planar_config import ControllerConfig
-from ..logging.recorder import Recorder
-from ..visualization.comparison import _write_paired_plot
-from .analysis import (
+from ..experiments.analysis import (
     _failure_reason,
     _nonzero_slack_ratio_to_goal,
     _sample_interval,
     _stage_durations,
     classify_outcome,
 )
-from .models import (
+from ..experiments.models import (
     COMPARISONS,
     OUTCOME_LABELS,
     ComparisonWorkerInput,
     ExperimentCase,
     RunResult,
 )
-from .reporting import _write_summary
-from .sampling import sample_case
+from ..experiments.reporting import _write_summary
+from ..experiments.sampling import sample_case
+from ..logging.recorder import Recorder
+from ..visualization.comparison import _write_paired_plot
+from .artifacts import create_run_directory, save_run_provenance
+from .planar_configuration import (
+    load_controller_config,
+    validate_geometry_consistency,
+)
+from .planar_simulation import run_simulation
 
 
 def _case_config(

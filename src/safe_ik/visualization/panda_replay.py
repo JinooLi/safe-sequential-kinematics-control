@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from ..application.panda_results import PandaRunResult
+from ..domain.panda_types import PandaRunResult
 
 
 def replay_panda_result(plant, result: PandaRunResult) -> None:

@@ -1,5 +1,7 @@
 # Panda hand 취약 영역 탐색과 체크포인트 추가 학습
 
+> 기존 설계·구현·실험 기록입니다. 본문의 현재·기본값은 작성 당시 기준이며, 현재 동작은 [구현 지도](../current/README.md)를 참고하세요.
+
 이 문서는 Panda hand RDF의 오차가 큰 공간 영역을 별도 데이터로 찾고, 그 주변에
 새 학습점 5,000개를 추가하는 알고리즘을 설명한다. 최신 국소 가중치 모델의
 800회 체크포인트에서 **계수와 누적 정보 행렬을 함께 이어받는 한 차례의 실험**이다.
@@ -255,11 +257,11 @@ hand 통과와 9링크 전체 후보 통과는 별개다. 보존된 link0의 기
 
 ## 구현과 증거 위치
 
-- [고정 프로토콜](../configs/archive/panda_rdf_hand_targeted_20260930.json)
-- [탐색과 추가 학습 구현](../src/safe_ik/application/panda_rdf_hand_continuation.py)
-- [가중치 재개 구현](../src/safe_ik/adapters/rdf_torch_training.py)
-- [샘플링 테스트](../tests/test_rdf_hand_continuation.py)
-- [재개 동등성 테스트](../tests/test_rdf_weighted_resume.py)
+- [고정 프로토콜](../../configs/archive/panda_rdf_hand_targeted_20260930.json)
+- [탐색과 추가 학습 구현](../../src/safe_ik/application/panda_rdf_hand_continuation.py)
+- [가중치 재개 구현](../../src/safe_ik/adapters/rdf_torch_training.py)
+- [샘플링 테스트](../../tests/test_rdf_hand_continuation.py)
+- [재개 동등성 테스트](../../tests/test_rdf_weighted_resume.py)
 - [전체 실험 상태 기록](panda_rdf_implementation_status.md)
 
 출발점의 과거 감사 실패는 소급 통과로 바꾸지 않는다. 이번 새 결과의 무결성,
@@ -356,8 +358,8 @@ CPU에서 부모 w/B에 같은 네 배치를 독립적으로 적용한 결과, G
 오차가 늘 수 있으므로 최대 오차뿐 아니라 평균·과대평가와 미분·경계 검사도 본다.
 계속 관찰한 기존 두 검증 세트의 통과는 전 공간 보증이나 미공개 최종 시험 통과가 아니다.
 
-- [가중치 4 고정 프로토콜](../configs/archive/panda_rdf_hand_weight4_20260930.json)
-- [저장 데이터 불변과 가중치 변경 검사](../tests/test_rdf_hand_reweight.py)
+- [가중치 4 고정 프로토콜](../../configs/archive/panda_rdf_hand_weight4_20260930.json)
+- [저장 데이터 불변과 가중치 변경 검사](../../tests/test_rdf_hand_reweight.py)
 
 ### 가중치 1과 4의 측정 결과
 

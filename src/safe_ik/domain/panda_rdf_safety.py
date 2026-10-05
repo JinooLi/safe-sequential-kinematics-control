@@ -7,7 +7,7 @@ import numpy as np
 from .interfaces import FramePoseKinematics
 from .panda_rdf import relative_point_jacobian, soft_min, top_indices
 from .panda_rdf_gate import SpherePairGate
-from .spatial_safety import BarrierEvaluation, PandaCapsuleSafety
+from .safety_contracts import BarrierEvaluation, evaluate_softmin
 
 _LINK_ORDER = {f"link{i}": i for i in range(8)} | {"hand": 8}
 
@@ -21,7 +21,6 @@ def _query_pair(left, right):
 
 
 class PandaRDFSafety:
-    softmin = PandaCapsuleSafety.softmin
     query_policy = "lower_link_surface_to_higher_link_rdf_v1"
 
     def __init__(
@@ -71,6 +70,10 @@ class PandaRDFSafety:
         self.minimum_self_barrier = float("inf")
         self.minimum_self_pair = None
         self._q = self._evaluation = None
+
+    def softmin(self, q, temperature: float):
+        """Compatibility wrapper; the IK loop aggregates an existing evaluation."""
+        return evaluate_softmin(self, q, temperature)
 
     def evaluate(self, q):
         q = np.asarray(q, dtype=float)

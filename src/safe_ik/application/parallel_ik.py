@@ -8,17 +8,17 @@ from contextlib import contextmanager
 from queue import Empty
 from time import monotonic
 
-from ..domain.interfaces import PoseKinematics
-from ..domain.panda_config import PandaControllerConfig
-from ..domain.safe_pose_ik import (
+from ..domain.ik_contracts import (
     IKProgress,
     IKProgressCallback,
     IKSeed,
     SafeIKCandidate,
     SafeIKResult,
-    SafePoseIKSolver,
 )
-from ..domain.spatial_safety import SafetyEvaluator
+from ..domain.interfaces import PoseKinematics
+from ..domain.panda_config import PandaControllerConfig
+from ..domain.safe_pose_ik import SafePoseIKSolver
+from ..domain.safety_contracts import SafetyEvaluator
 
 _worker_solver: SafePoseIKSolver | None = None
 _worker_progress_queue = None
@@ -27,7 +27,7 @@ _worker_progress_queue = None
 def _initialize_worker(config: PandaControllerConfig, progress_queue=None) -> None:
     # Construct private Pinocchio Data/cache and safety objects once per process.
     # Only the configuration is serialized; no live model, solver or viewer crosses.
-    from .panda_setup import build_panda_components
+    from .panda_components import build_panda_components
 
     global _worker_solver, _worker_progress_queue
     _worker_progress_queue = progress_queue

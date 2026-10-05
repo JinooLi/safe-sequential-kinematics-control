@@ -12,13 +12,10 @@ from safe_ik.application.panda_configuration import (
     load_panda_config,
     orientation_vectors_to_wxyz,
 )
-from safe_ik.application.panda_results import (
-    PandaControlTrace,
-    save_panda_control_trace,
-)
 from safe_ik.application.panda_rollout import run_panda
 from safe_ik.application.panda_setup import build_panda_components, build_panda_runtime
 from safe_ik.control.panda_controller import PandaTrajectoryController
+from safe_ik.domain.panda_types import PandaControlTrace
 from safe_ik.domain.rotations import quaternion_orientation_error
 from safe_ik.domain.safe_pose_ik import (
     SafeIKCandidate,
@@ -26,6 +23,7 @@ from safe_ik.domain.safe_pose_ik import (
     damped_pseudoinverse,
 )
 from safe_ik.domain.types import QPSolution, QPStatus
+from safe_ik.logging.panda_results import save_panda_control_trace
 from safe_ik.visualization.panda import save_panda_control_plot
 
 ROOT = Path(__file__).resolve().parents[1]

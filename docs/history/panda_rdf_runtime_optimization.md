@@ -1,5 +1,7 @@
 # Panda RDF 자기충돌 계산 최적화
 
+> 기존 설계·구현·실험 기록입니다. 본문의 현재·기본값은 작성 당시 기준이며, 현재 동작은 [구현 지도](../current/README.md)를 참고하세요.
+
 작성 기준: 2026-10-01. 현재 실행 코드와 로컬 측정을 정리한다.
 학습 정확도 개선 실험이 아니라 **이미 학습한 RDF를 제어 중 평가하는 비용**이 대상이다.
 이후 추가한 RTX 4070 runtime CUDA 구현과 원격 측정은 9절에 별도로 기록한다.
@@ -335,16 +337,16 @@ top-k 구성 교체, QP 활성 제약 변경, IK/제어 이득, 이산 적분 �
 
 주요 구현:
 
-- [쌍별 구 선별과 미분](../src/safe_ik/domain/panda_rdf_gate.py)
-- [단방향 RDF 평가·캐시·혼합](../src/safe_ik/domain/panda_rdf_safety.py)
-- [설정 검증](../src/safe_ik/domain/panda_config.py)
-- [형상 검증 후 평가기 구성](../src/safe_ik/application/panda_setup.py)
-- [기구학 재사용](../src/safe_ik/adapters/panda_kinematics.py)
-- [IK 평가 재사용](../src/safe_ik/domain/safe_pose_ik.py)
-- [제어 평가 재사용](../src/safe_ik/control/panda_controller.py)
-- [오프라인 관절 미분 검사](../src/safe_ik/application/panda_rdf_training.py)
-- [구 선별 회귀 테스트](../tests/test_rdf_sphere_gate.py)
-- [단방향 회귀 테스트](../tests/test_rdf_unidirectional.py)
+- [쌍별 구 선별과 미분](../../src/safe_ik/domain/panda_rdf_gate.py)
+- [단방향 RDF 평가·캐시·혼합](../../src/safe_ik/domain/panda_rdf_safety.py)
+- [설정 검증](../../src/safe_ik/domain/panda_config.py)
+- [형상 검증 후 평가기 구성](../../src/safe_ik/application/panda_setup.py)
+- [기구학 재사용](../../src/safe_ik/adapters/panda_kinematics.py)
+- [IK 평가 재사용](../../src/safe_ik/domain/safe_pose_ik.py)
+- [제어 평가 재사용](../../src/safe_ik/control/panda_controller.py)
+- [오프라인 관절 미분 검사](../../src/safe_ik/application/panda_rdf_training.py)
+- [구 선별 회귀 테스트](../../tests/test_rdf_sphere_gate.py)
+- [단방향 회귀 테스트](../../tests/test_rdf_unidirectional.py)
 
 로컬 측정 파일은 `outputs/` 아래에 보존했다. 이 디렉터리는 Git 추적 대상이 아니므로
 다른 checkout에 문서만 복사하면 측정 데이터까지 생기지는 않는다.
@@ -490,9 +492,9 @@ selection 열은 0, gradient 열은 CPU 구 계산·혼합 시간이다. metadat
 
 구현과 재현:
 
-- [CUDA 배치 평가기](../src/safe_ik/adapters/rdf_torch_runtime.py)
-- [CPU/CUDA 벤치마크](../src/safe_ik/application/benchmark_rdf_runtime.py)
-- [Torch/CUDA 회귀 테스트](../tests/test_rdf_torch_runtime.py)
+- [CUDA 배치 평가기](../../src/safe_ik/adapters/rdf_torch_runtime.py)
+- [CPU/CUDA 벤치마크](../../src/safe_ik/application/benchmark_rdf_runtime.py)
+- [Torch/CUDA 회귀 테스트](../../tests/test_rdf_torch_runtime.py)
 - 로컬 보존: `outputs/panda_rdf_cuda_runtime_validation_dXnSs3/benchmark_saved/report.json`
 - 추가 무작위 검사: 같은 디렉터리의 `benchmark_random/report.json`
 - 짧은 실행 비교: 같은 디렉터리의 `smoke/{cpu,cuda}/summary.json`, `trajectory.npz`

@@ -92,10 +92,11 @@ def show_gui(arrays, barrier_labels):
     확인할 수 있다.
 
     Usage:
-        recorder.show_gui()
+        show_gui(recorder.arrays(), recorder.barrier_labels)
 
         # 저장된 데이터를 나중에 보고 싶을 때
-        Recorder.from_npz("outputs/sim_data.npz").show_gui()
+        recorder = Recorder.from_npz("outputs/sim_data.npz")
+        show_gui(recorder.arrays(), recorder.barrier_labels)
     """
     _configure_matplotlib_cache()
     _select_interactive_backend()

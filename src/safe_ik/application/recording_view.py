@@ -5,9 +5,10 @@ from pathlib import Path
 
 import numpy as np
 
+from ..domain.panda_types import PandaControlTrace
 from ..logging.recorder import Recorder
 from ..visualization.panda import save_panda_control_plot
-from .panda_results import PandaControlTrace
+from ..visualization.recording import plot, show_gui
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
     else:
         recorder = Recorder.from_npz(args.trace)
         if args.action == "gui":
-            recorder.show_gui()
+            show_gui(recorder.arrays(), recorder.barrier_labels)
             return
         if args.action == "csv":
             output = args.output or args.trace.with_suffix(".csv")
@@ -49,7 +50,9 @@ def main():
             output = args.output or args.trace.with_name(
                 args.trace.stem + "_control.png"
             )
-            recorder.plot(output, show=args.show)
+            plot(
+                recorder.arrays(), recorder.barrier_labels, path=output, show=args.show
+            )
     print(f"Saved: {output}")
 
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from ..application.panda_results import PandaControlTrace
+from ..domain.panda_types import PandaControlTrace
 
 
 def save_panda_control_plot(

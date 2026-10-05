@@ -27,7 +27,7 @@ BP24로 바꾸거나 현재 배포 모델을 다시 학습하는 작업이 아�
 별도 학습에서는 `--training-config configs/training/<파일명>`을 지정한다.
 외부 표본 설정은 `--exterior-sampling-config`로 별도로 전달한다.
 기존 모델을 보존하려면 항상 새 `--output` 경로를 선택한다.
-자세한 명령은 [Panda RDF 구현 상세](../docs/panda_rdf_implementation.md)를 참고한다.
+자세한 명령은 [Panda RDF 구현 상세](../docs/history/panda_rdf_implementation.md)를 참고한다.
 
 ## 과거 실험 보관 — `archive/`
 

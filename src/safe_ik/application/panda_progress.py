@@ -4,7 +4,7 @@ from time import monotonic
 
 from tqdm import tqdm
 
-from ..domain.safe_pose_ik import IKProgress
+from ..domain.ik_contracts import IKProgress
 
 
 class PandaProgress:

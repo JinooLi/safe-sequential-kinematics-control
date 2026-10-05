@@ -6,7 +6,11 @@ from typing import Protocol
 
 import numpy as np
 
-from .types import SafetyDiagnostics, SimulationStep
+from .types import QPProblem, QPSolution, SafetyDiagnostics, SimulationStep
+
+
+class QPSolver(Protocol):
+    def solve(self, problem: QPProblem) -> QPSolution: ...
 
 
 class KinematicsProvider(Protocol):
@@ -32,15 +36,15 @@ class VelocityController(Protocol):
 
 
 class SimulationRecorder(Protocol):
+    barrier_labels: tuple[str, ...]
+
     def record(self, step: SimulationStep): ...
+
+    def arrays(self) -> dict[str, np.ndarray]: ...
 
     def save_npz(self, path): ...
 
     def save_csv(self, path): ...
-
-    def plot(self, path): ...
-
-    def show_gui(self): ...
 
 
 class PoseKinematics(Protocol):
