@@ -29,7 +29,7 @@ flowchart TD
 ```
 
 - **direct**는 Safe IK를 건너뛰고 처음부터 말단 장치 목표 pose를 향해 제어한다.
-- **sequential**은 안전한 IK 후보 `q*`에서 중간 프레임의 목표 위치를 계산하고,
+- **sequential**은 안전한 IK 후보 $q^*$에서 중간 프레임의 목표 위치를 계산하고,
   설정된 순서로 그 위치를 따라간 뒤 말단 장치 pose를 제어한다. 모든 단계에서 CBF를 적용한다.
 - 현재 Panda의 명령 `u`는 **관절 속도**다. `MujocoPlant`는 이를 적분하고 자세를 갱신한다.
   이 실행 경로에서 토크나 actuator 동역학을 푸는 `mj_step`은 호출하지 않는다.
@@ -50,11 +50,11 @@ flowchart TD
 | [설정 읽기 `load_panda_config`](../../src/safe_ik/application/panda_configuration.py) | YAML 경로 | 검증된 `PandaControllerConfig`: 초기 관절각, 목표 pose, IK·안전성·궤적·QP 설정 |
 | [실행 객체 조립 `build_panda_runtime`](../../src/safe_ik/application/panda_setup.py) | 설정, MJCF, RDF 선택 시 학습 산출물 | `PandaRuntime`: 기구학, 안전성 평가기, QP solver, plant, IK 탐색기 생성 함수 |
 | [기구학 `pose_and_jacobian`](../../src/safe_ik/adapters/panda_kinematics.py) | 현재 `q`; 생성 시 로봇 모델·말단 프레임 | 말단 위치 `p`, quaternion `Q`, Jacobian `J` |
-| [안전성 `evaluate`](../../src/safe_ik/domain/spatial_safety.py) | `q`; 생성 시 형상·장애물·여유, RDF 선택 시 [RDF 평가기](../../src/safe_ik/domain/panda_rdf_safety.py) | `BarrierEvaluation`: 제약 이름, 장벽값 `h`, 관절 미분 `∂h/∂q` |
+| [안전성 `evaluate`](../../src/safe_ik/domain/spatial_safety.py) | `q`; 생성 시 형상·장애물·여유, RDF 선택 시 [RDF 평가기](../../src/safe_ik/domain/panda_rdf_safety.py) | `BarrierEvaluation`: 제약 이름, 장벽값 $h$, 관절 미분 $\frac{\partial h}{\partial q}$ |
 | [안전 자세 IK `SafePoseIKSolver.solve`](../../src/safe_ik/domain/safe_pose_ik.py) | 기준 `q`; 생성 시 목표 pose·탐색 설정·기구학·안전성 평가기 | `SafeIKResult`: 후보 목록, 선택 후보, 실패 사유 |
 | [궤적 제어 `get_velocity`](../../src/safe_ik/control/panda_controller.py) | 현재 `q`; 생성 시 설정·기구학·안전성·IK 후보·solver | `u`; 내부에 현재 단계, 직전 속도, CLF slack, QP 상태를 갱신 |
 | [QP 풀이 `OSQPSolver.solve`](../../src/safe_ik/adapters/osqp_solver.py) | `QPProblem(P, q, A, lower, upper)` | `QPSolution`: 상태, 해 `x`, 풀이 시간, 메시지 |
-| [상태 갱신 `MujocoPlant.advance`](../../src/safe_ik/adapters/mujoco_plant.py) | `u`, 적분 간격 `Δt` | 반환값은 없음. plant의 `q`, `time`을 갱신 |
+| [상태 갱신 `MujocoPlant.advance`](../../src/safe_ik/adapters/mujoco_plant.py) | `u`, 적분 간격 $\Delta t$ | 반환값은 없음. plant의 `q`, `time`을 갱신 |
 | [전체 실행 `run_panda`](../../src/safe_ik/application/panda_rollout.py) | 설정, runtime, 선택적 관찰·종료 콜백 | `PandaRunResult`: IK 결과, 최종 상태, 궤적, 지표, 실패 정보 |
 | [저장과 표시](../../src/safe_ik/logging/panda_results.py) | 실행 결과 또는 궤적 기록, 출력 경로 | JSON 요약, NPZ 궤적, [진단 그래프](../../src/safe_ik/visualization/panda.py), [재생](../../src/safe_ik/visualization/panda_replay.py) |
 
@@ -66,8 +66,8 @@ flowchart TD
 | `p`, 목표 위치 | `(3,)`, m | base/world 좌표계 |
 | `Q` | `(4,)`, 무차원 | scalar-first `[w, x, y, z]`; 방향 허용오차는 상대 quaternion 벡터 성분의 norm으로 판단하며 각도 자체가 아님 |
 | `J` | `(6, 7)` | 말단 원점의 world 축 기준 Jacobian. 위 3행은 선속도, 아래 3행은 각속도 |
-| `h`, `∂h/∂q` | `(B,)`, `(B, 7)`; `B`는 충돌 제약 수 | 충돌 장벽은 m 단위, 미분은 m/rad. `h ≥ 0`은 해당 모델과 여유에 대한 허용 상태 |
-| QP 해 `x` | `(8,)` | `[u₁, …, u₇, δ]`; `δ`는 CLF 완화량 |
+| $h$, $\frac{\partial h}{\partial q}$ | `(B,)`, `(B, 7)`; $B$는 충돌 제약 수 | 충돌 장벽은 m 단위, 미분은 m/rad. $h \ge 0$은 해당 모델과 여유에 대한 허용 상태 |
+| QP 해 $x$ | `(8,)` | $x = [u_1, \ldots, u_7, \delta]^\top$; $\delta$는 CLF 완화량 |
 
 목표 방향의 `approach`는 말단 로컬 +z축의 world 방향이다. `up`은 +z축에 수직인
 평면으로 투영·정규화되어 로컬 +y축을 정한다. 설정 로더가 이를 quaternion으로 변환한다.
@@ -84,7 +84,7 @@ Safe IK는 목표 pose를 만족하는 **관절 자세 후보**를 만든다. se
 업데이트와, 영공간에서 안전성 soft-min을 높이는 업데이트를 더한다.
 
 이 탐색은 QP를 사용하지 않으며 궤적의 속도·가속도 제한과 hard CBF를 적용하지 않는다.
-관절각은 관절 범위로 clip한다. 목표 위치·방향 허용오차와 `h ≥ 0`을 연속으로 만족하면
+관절각은 관절 범위로 clip한다. 목표 위치·방향 허용오차와 $h \ge 0$을 연속으로 만족하면
 후보를 반환한다. 모든 seed를 평가한 뒤 초기 자세와 관절각의 유클리드 거리가 가장 가까운 후보를 선택한다.
 
 `iteration_number`는 seed당 최대 반복 수다. 내부 수치 간격은 `0.01`이고,
@@ -101,25 +101,37 @@ IK와 궤적의 충돌 모델이 다르면 `run_panda`가 후보를 **궤적용 
 
 1. 현재 `q`에서 충돌 장벽과 미분을 평가한다.
 2. 도달한 중간 단계를 넘기고, 정체되었으면 남은 IK 후보로 전환한다.
-3. 현재 단계의 CLF 값 `V`와 관절 미분을 계산한다.
+3. 현재 단계의 CLF 값 $V$와 관절 미분을 계산한다.
 4. CLF, 충돌 CBF, 관절 범위 CBF, 속도·가속도 제한으로 QP를 만든다.
 5. QP 해의 앞 7개 성분을 `u`로 반환하고, 마지막 성분을 CLF slack으로 기록한다.
 
-중간 단계의 목표는 `p_frame(q*)`이고 CLF는 `V = ½‖p_frame(q) − p_frame(q*)‖²`다.
+중간 단계의 목표는 $p_{\mathrm{frame}}(q^*)$이고 CLF는 다음과 같다.
+
+$$
+V(q) = \frac{1}{2}\left\lVert p_{\mathrm{frame}}(q) - p_{\mathrm{frame}}(q^*) \right\rVert^2.
+$$
+
 마지막 단계와 direct 모드는 위치 오차와 quaternion 방향 오차를 합친 pose CLF를 사용한다.
-관절 목표 `q*`와의 오차는 진단값이며, 이를 직접 줄이는 관절 공간 CLF를 사용하지 않는다.
+관절 목표 $q^*$와의 오차는 진단값이며, 이를 직접 줄이는 관절 공간 CLF를 사용하지 않는다.
 
 QP의 핵심 관계는 다음과 같다.
 
-```text
-결정변수: x = [u, δ]
-목적함수: ½ w_u ||u||² + ½ w_δ δ²
-CLF:      ∇V · u − δ ≤ −k_V V,  δ ≥ 0
-충돌 CBF: ∇h_i · u ≥ −α_i h_i
-추가 제한: 관절 범위 CBF, 속도 상한, 직전 u에서의 가속도 제한
-```
+결정변수는 관절 속도와 CLF 완화량을 묶은 $x = [u^\top, \delta]^\top$이다.
 
-`δ`는 CLF만 완화한다. RDF 자기 충돌에는 `safety.rdf.cbf_gain`, 다른 충돌 장벽과 관절
+$$
+\begin{aligned}
+\min_{u,\delta}\quad
+& \frac{1}{2} w_u \lVert u \rVert^2 + \frac{1}{2} w_\delta \delta^2 \\
+\text{CLF:}\quad
+& \nabla_q V(q)^\top u - \delta \le -k_V V(q), \qquad \delta \ge 0, \\
+\text{collision CBF:}\quad
+& \nabla_q h_i(q)^\top u \ge -\alpha_i h_i(q).
+\end{aligned}
+$$
+
+여기에 관절 범위 CBF, 속도 상한, 직전 $u$에서의 가속도 제한을 추가한다.
+
+$\delta$는 CLF만 완화한다. RDF 자기 충돌에는 `safety.rdf.cbf_gain`, 다른 충돌 장벽과 관절
 범위에는 `safety.alpha`를 사용한다. 같은 `q`라도 현재 단계·후보·직전 속도·정체 이력이
 다르면 `u`가 달라질 수 있다. 내부 QP 전체는 현재 궤적 NPZ에 저장하지 않는다.
 
@@ -133,7 +145,7 @@ CLF:      ∇V · u − δ ≤ −k_V V,  δ ≥ 0
 | `capsule` | 비인접 capsule 쌍의 거리에서 반지름과 `safety.margin`을 차감 | capsule과 활성 sphere 장애물의 거리에서 반지름과 여유를 차감 |
 | `rdf` | 학습된 링크 거리장과 저장된 표면 질의점을 이용한 장벽 | capsule 평가를 계속 사용 |
 
-RDF 자기 충돌은 `link0 < … < link7 < hand` 순서에서 낮은 링크의 표면점을 높은 링크의
+RDF 자기 충돌은 $\mathrm{link0} < \cdots < \mathrm{link7} < \mathrm{hand}$ 순서에서 낮은 링크의 표면점을 높은 링크의
 좌표계로 변환하여 질의한다. 작은 거리의 top-k를 soft-min으로 모은 뒤
 `physical_margin + error_margin`을 차감한다. 상대운동 Jacobian으로 점의 공간 미분을
 관절 미분으로 변환한다. 제외하도록 설정한 쌍은 평가하지 않는다.

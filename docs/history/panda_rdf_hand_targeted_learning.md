@@ -74,7 +74,7 @@ seed/purpose와 다르며, 결과가 불리하다고 seed를 바꾸거나 다시
 
 - 12,000점은 정규화 학습 구 안에서 부피 균일하게 생성한다.
 - 8,000점은 mesh의 면적에 비례해 표면을 뽑고, 해당 면의 법선 방향으로
-  −60~+60mm의 균일한 이동량을 더한다.
+  $-60\sim+60\,\mathrm{mm}$의 균일한 이동량을 더한다.
 
 표면 주변 후보의 실제 mesh 거리는 이동량과 다를 수 있다. 특히 오목한 부분이나
 가까운 다른 면이 있는 곳에서는 법선 이동이 실제 외부 거리를 뜻하지 않으므로,
@@ -86,19 +86,20 @@ seed/purpose와 다르며, 결과가 불리하다고 seed를 바꾸거나 다시
 
 ## 취약 위치 선택
 
-현재 hand 모델을 f_old, 기준 mesh 거리를 d_mesh, 점을 x라고 하자.
+현재 hand 모델을 $f_{\mathrm{old}}$, 기준 mesh 거리를 $d_{\mathrm{mesh}}$, 점을 $x$라고 하자.
+오차와 anchor 선택 조건은 다음과 같다. $c$는 학습 구의 중심, $r_{\mathrm{train}}$은 반경이다.
 
-```text
-e(x) = abs(f_old(x) - d_mesh(x))
-
-anchor 조건
-    0 ≤ d_mesh(x) ≤ 0.060 m
-    e(x) ≥ 0.008 m
-    norm(x - center) ≤ training_radius
-```
+$$
+\begin{aligned}
+e(x) &= \left\lvert f_{\mathrm{old}}(x) - d_{\mathrm{mesh}}(x) \right\rvert, \\
+0 &\le d_{\mathrm{mesh}}(x) \le 0.060\,\mathrm{m}, \\
+e(x) &\ge 0.008\,\mathrm{m}, \\
+\lVert x - c \rVert &\le r_{\mathrm{train}}.
+\end{aligned}
+$$
 
 예측이 음수라는 이유로 점을 버리지 않는다. 예를 들어 기준 거리가 +2mm이고
-예측이 −7mm이면 절대오차는 9mm이므로 anchor가 될 수 있다. 제외 판단의 부호는
+예측이 $-7\,\mathrm{mm}$이면 절대오차는 9mm이므로 anchor가 될 수 있다. 제외 판단의 부호는
 항상 **기준 mesh 거리**를 사용한다.
 
 8mm는 합격 기준 10mm와 별개의 탐색 문턱이다. 10mm를 넘은 점만 고르면 드문
@@ -115,11 +116,15 @@ anchor가 하나도 없으면 문턱을 내리지 않고 중단한다.
 부피 균일하게 이동시킨다. 반경 자체를 균일하게 뽑는 것과 구의 부피 균일 분포는
 다르다. 구현은 기존 `uniform_ball` 함수를 사용한다.
 
-```text
-a ~ Uniform(anchor 목록)
-u ~ UniformBall(radius = 0.010 m)
-x_candidate = a + u
-```
+anchor 목록을 $\mathcal A$라고 하면 다음과 같다.
+
+$$
+\begin{aligned}
+a &\sim \operatorname{Uniform}(\mathcal A), \\
+u &\sim \operatorname{UniformBall}(r = 0.010\,\mathrm{m}), \\
+x_{\mathrm{candidate}} &= a + u.
+\end{aligned}
+$$
 
 총 50,000개 후보를 한 번 생성한 뒤 기준 거리를 계산한다. 다음 조건을 모두
 만족한 후보 중 **원래 생성 순서의 첫 5,000개**를 사용한다.
@@ -162,48 +167,62 @@ scan cloud의 순서 있는 점·법선 배열도 보존한다. 로컬에서는 
 
 ## 체크포인트에서 이어가는 수학적 의미
 
-BP24는 축별 24개 Bernstein 기저를 쓰므로 계수는 24³=13,824개다.
-center를 c, 바깥 정규화 반경을 r이라고 할 때 특징과 target은 다음처럼 맞춘다.
+BP24는 축별 24개 Bernstein 기저를 쓰므로 계수는 $24^3 = 13{,}824$개다.
+center를 $c$, 바깥 정규화 반경을 $r$이라고 할 때 특징과 target은 다음처럼 맞춘다.
+$\phi(x)$는 3차원 Bernstein tensor 기저 벡터다.
 
-```text
-t(x) = (x - c) / (2r) + 1/2
-φ(x) = 3차원 Bernstein tensor 기저 벡터
-z = y_scan / r
-f(x) = r · φ(x)ᵀ w
-```
+$$
+\begin{aligned}
+t(x) &= \frac{x - c}{2r} + \frac{1}{2}, \\
+z &= \frac{y_{\mathrm{scan}}}{r}, \\
+f(x) &= r\,\phi(x)^\top w.
+\end{aligned}
+$$
 
-이 문서의 w는 체크포인트에 저장한 정규화 계수다. 최종 RDF 파일의 거리 단위
-계수는 r·w다. 두 값을 혼동하면 재개 시작점부터 다른 모델이 된다.
+이 문서의 $w$는 체크포인트에 저장한 정규화 계수다. 최종 RDF 파일의 거리 단위
+계수는 $rw$다. 두 값을 혼동하면 재개 시작점부터 다른 모델이 된다.
 
-부모의 누적 관측을 (φ_i, z_i), 기존 sample weight를 q_i라고 하면 부모가
+부모의 누적 관측을 $(\phi_i, z_i)$, 기존 sample weight를 $q_i$라고 하면 부모가
 나타내는 ridge 목적함수와 상태는 다음과 같다.
 
-```text
-J_old(w) = Σ_old q_i (φ_iᵀ w - z_i)² + λ ||w||²
-H_old    = λ I + Σ_old q_i φ_i φ_iᵀ
-B_old    = H_old⁻¹
-λ        = 1e-4
-```
+$$
+\begin{aligned}
+J_{\mathrm{old}}(w)
+&= \sum_{i\in\mathrm{old}} q_i (\phi_i^\top w - z_i)^2 + \lambda\lVert w\rVert^2, \\
+H_{\mathrm{old}}
+&= \lambda I + \sum_{i\in\mathrm{old}} q_i\phi_i\phi_i^\top, \\
+B_{\mathrm{old}} &= H_{\mathrm{old}}^{-1}, \\
+\lambda &= 10^{-4}.
+\end{aligned}
+$$
 
-새 점을 추가하면 `J_new = J_old + Σ_new (φ_jᵀ w - z_j)²`가 된다.
+새 점을 추가하면 다음과 같다.
+
+$$
+J_{\mathrm{new}}(w) = J_{\mathrm{old}}(w)
++ \sum_{j\in\mathrm{new}} (\phi_j^\top w - z_j)^2.
+$$
+
 정규화 항을 새로 추가하지 않고, 과거 관측의 가중치를 줄이는 forgetting factor도
 사용하지 않는다. SGD fine-tuning처럼 이전 가중치만 가져오는 방식이 아니다.
 
-계수 w만 있으면 과거 데이터가 각 방향에 얼마나 많은 정보를 주었는지 알 수 없다.
-따라서 **w와 B 둘 다 이어받는다**. 새 데이터의 특징 행렬을 X, target 벡터를 z라
-하면 현재 구현의 한 배치 갱신은 다음과 같다. 가중 배치는 X와 z의 각 행에
-sqrt(q)를 곱하며, 이번 새 데이터는 q=1이다.
+계수 $w$만 있으면 과거 데이터가 각 방향에 얼마나 많은 정보를 주었는지 알 수 없다.
+따라서 **$w$와 $B$ 둘 다 이어받는다**. 새 데이터의 특징 행렬을 $X$, target 벡터를 $z$라
+하면 현재 구현의 한 배치 갱신은 다음과 같다. 가중 배치는 $X$와 $z$의 각 행에
+$\sqrt{q}$를 곱하며, 이번 새 데이터는 $q=1$이다.
 
-```text
-C  = B Xᵀ
-S  = I + X C
-K  = C S⁻¹
-w' = w + K (z - Xw)
-B' = B - K Cᵀ
-B' = (B' + B'ᵀ) / 2
-```
+$$
+\begin{aligned}
+C &= BX^\top, \\
+S &= I + XC, \\
+K &= CS^{-1}, \\
+w' &= w + K(z - Xw), \\
+B' &= B - KC^\top, \\
+B' &\leftarrow \frac{B' + (B')^\top}{2}.
+\end{aligned}
+$$
 
-구현에서는 S의 역행렬을 직접 만들지 않고 Cholesky 선형계 풀이를 사용한다.
+구현에서는 $S$의 역행렬을 직접 만들지 않고 Cholesky 선형계 풀이를 사용한다.
 위 식은 저장소의 `recursive_ridge_torch` 구현을 표기한 것이다. 관측을 순차적으로
 추가하며 누적 최소제곱 문제를 갱신한다는 배경은
 [Stephen Boyd의 EE263 강의 6, 6–21쪽](https://ee263.stanford.edu/archive/ls-app.pdf)에
@@ -315,7 +334,7 @@ CPU에서 부모 w/B에 같은 네 배치를 독립적으로 적용한 결과, G
 계수 최대 차이는 1.002e-12, B 최대 차이는 1.819e-12였다. 이는 bit 단위의
 동일성을 주장하는 것이 아니라 미리 정한 float64 허용 오차 이내의 수치 일치다.
 부모와 최종 B의 유한·대칭성, 누적 카운터와 실제 배치·가중치 이력을 검사했고
-저장된 **804회 계수×반경=fit=최종 후보**는 정확히 일치했다.
+저장된 **804회 계수에 반경을 곱한 값, fit, 최종 후보**는 정확히 일치했다.
 
 두 검증 세트의 좌표·기준 mesh 거리·저장 CPU 예측은 로컬 재계산과 차이 0이었다.
 미분·경계·관절 gradient와 실행 로더 판정도 원격 기록과 일치한다. 나머지
@@ -339,15 +358,22 @@ CPU에서 부모 w/B에 같은 네 배치를 독립적으로 적용한 결과, G
 그대로 재사용한다. 새 점이나 scan cloud를 만들지 않으며, 검증점도 새로 뽑지 않는다.
 저장된 원본 파일 13개의 SHA와 부모 파일·정규화·설정을 고정 프로토콜에 명시했다.
 
-```text
-단위 가중치 비교군: J_1(w) = J_old(w) + Σ_new (φ_jᵀ w - z_j)²
-가중치 4 비교군:   J_4(w) = J_old(w) + 4 Σ_new (φ_jᵀ w - z_j)²
+단위 가중치 비교군과 가중치 4 비교군의 목적함수는 다음과 같다.
 
-가중치 4 배치: X_weighted = 2 X, z_weighted = 2 z
-갱신식과 λ = 1e-4는 동일
-```
+$$
+\begin{aligned}
+J_1(w) &= J_{\mathrm{old}}(w) + \sum_{j\in\mathrm{new}} (\phi_j^\top w - z_j)^2, \\
+J_4(w) &= J_{\mathrm{old}}(w) + 4\sum_{j\in\mathrm{new}} (\phi_j^\top w - z_j)^2.
+\end{aligned}
+$$
 
-가중치가 제곱오차에 곱해지므로 특징과 target에는 4가 아니라 sqrt(4)=2를 곱한다.
+가중치 4 배치에는 다음 변환을 적용한다. 갱신식과 $\lambda = 10^{-4}$는 동일하다.
+
+$$
+X_{\mathrm{weighted}} = 2X, \qquad z_{\mathrm{weighted}} = 2z.
+$$
+
+가중치가 제곱오차에 곱해지므로 특징과 target에는 4가 아니라 $\sqrt{4}=2$를 곱한다.
 이상적인 가중 최소제곱 목적함수에서 같은 관측을 네 번 넣는 것과 같은 기여지만,
 독립적인 정보를 가진 새 점 20,000개를 만든 것은 아니다. 실제로는 5,000점을
 한 번씩 네 배치로 처리하므로 업데이트는 800→804회, 관측 카운터는
@@ -424,7 +450,7 @@ CUDA 최대 할당은 5,049,925,120 bytes였다. 재사용 시간이므로 최�
 좌표·라벨·truth·배치 순서는 정확히 같으며, 새 가중치만 모두 4임을 확인했다.
 라벨 및 탐색 예측 재계산 차이는 0이다. 최종 카운터 804회/1,029,000개,
 부모와 새 데이터의 prefix·해시·context 및 유한 대칭 mmap B를 검사했고,
-804회 정규화 계수×반경=fit=최종 후보는 정확히 일치했다.
+804회 정규화 계수에 반경을 곱한 값, fit, 최종 후보는 정확히 일치했다.
 
 같은 부모에서 CPU로 가중 네 배치를 독립 재계산한 GPU 대비 최대 차이는
 정규화 계수 3.434e-12, B 3.638e-12였다. 사전 허용 오차인 계수 1e-9,

@@ -50,10 +50,10 @@ Mesh 진단 결과는 `outputs/panda_mesh_inspection/index.html`에 저장한다
 묶어 UV/재질 경계의 중복을 제거하지만, 원본 mesh나 학습 artifact는 변경하지 않는다.
 표시된 경계는 실제 물리적 구멍과 동일하지 않으며, 이 도구는 안전성 인증이 아니다.
 
-학습은 이제 원본 Visual mesh를 공식 RDF 방식의 128³ voxel SDF와 Marching
+학습은 이제 원본 Visual mesh를 공식 RDF 방식의 $128^3$ voxel SDF와 Marching
 Cubes로 재구성한 뒤 수행한다. 10 mm 검증 기준도 **재구성 mesh**에 적용한다.
-거리 정확도는 기준 거리 `d_mesh >= 0`인 외부·표면 점만 평가하며, 합격 판정은
-`0 <= d_mesh <= 60 mm`에서 수행한다. 내부 점은 통계에서 제외하지만 signed
+거리 정확도는 기준 거리 $d_{\mathrm{mesh}} \ge 0$인 외부·표면 점만 평가하며, 합격 판정은
+$0 \le d_{\mathrm{mesh}} \le 60\,\mathrm{mm}$에서 수행한다. 내부 점은 통계에서 제외하지만 signed
 학습 데이터와 미분·경계 검사는 유지한다. 평가 영역 정책만 바뀌고 구·정규화
 설정은 같은 산출물에 한해 계수를 유지한 재검증이 가능하다. `error_margin`
 변경은 학습 구도 바꾸므로 `--validate-only`로 호환성 검사를 우회할 수 없다.
@@ -289,7 +289,7 @@ Bernstein RDF에서는 검증 데이터의 최악 근사오차보다 큰 값을 
 포함해 보수성을 유지한다. `link_lengths`와 `link_radius`는 현재 반드시
 URDF/MuJoCo와 동일하게 유지해야 한다.
 
-CLF relaxation slack은 `delta >= 0`만 제약하며, `QP_ctrl.Q`의 비용 가중치로
+CLF relaxation slack은 $\delta \ge 0$만 제약하며, `QP_ctrl.Q`의 비용 가중치로
 크기를 억제한다. CBF 안전 제약은 이 slack으로 완화되지 않는다.
 
 `ee_obj: [x, y]`와 `ee_orientation: yaw`는 각각 end-effector의 목표 위치와
@@ -297,16 +297,16 @@ CLF relaxation slack은 `delta >= 0`만 제약하며, `QP_ctrl.Q`의 비용 가�
 spatial Jacobian에서는 `[J_x, J_y, J_angular_z] = J[[0, 1, 5], :]`를 사용한다.
 특히 `J[2, :]`는 linear z 속도이므로 yaw 제어에 사용하면 안 된다. yaw 오차는
 실험 성공 판정과 IK branch 거리에서는 shortest-angle wrap을 사용한다. CLF의 yaw
-항은 wrap 대신 `1 - cos(yaw - yaw_target)`를 사용해 ±pi에서 미분 불가능한 점을
+항은 wrap 대신 $1-\cos(\mathrm{yaw}-\mathrm{yaw}_{\mathrm{target}})$를 사용해 $\pm\pi$에서 미분 불가능한 점을
 피한다.
 
 ### CLF QP
 
 목표 수렴에는 단일 CLF-QP 제약
 
-\[
+$$
 \dot V - \delta \le -k_V V
-\]
+$$
 
 을 사용한다. 링크별 CBF와 joint-limit CBF는 hard constraint로 유지되며
 CLF slack으로 완화되지 않는다.
@@ -373,22 +373,25 @@ MuJoCo 시뮬레이션에는 충돌 계산에 포함되지 않는 초록색 구�
 `SafetyDiagnostics`가 각 장애물--링크 barrier를 이름과 함께 보유한다. 순서는
 `obs1_link1`, `obs1_link2`, ... 이며, 각 성분은 다음과 같다.
 
-```text
-h = f_link(obstacle_center, q) - obstacle_radius - safe_distance
-```
+$$
+h = f_{\mathrm{link}}(c_{\mathrm{obs}}, q) - r_{\mathrm{obs}} - d_{\mathrm{safe}}.
+$$
+
+여기서 $c_{\mathrm{obs}}$는 `obstacle_center`, $r_{\mathrm{obs}}$는 `obstacle_radius`,
+$d_{\mathrm{safe}}$는 `safe_distance`다.
 
 양수는 안전 여유가 남았음을, `0`은 CBF 경계를, 음수는 여유 침범을 뜻한다.
 생성되는 CSV에는 위 이름으로 각각의 열이 생기고, PNG plot 및 `show_gui()`의
-`barrier` 항목에는 `h=0` 점선이 함께 표시된다.
+`barrier` 항목에는 $h=0$ 점선이 함께 표시된다.
 
 관절 범위도 `safety.joint_limits`에서 동일한 zeroing-CBF로 제약한다. 각 유한
-범위 `[q_min, q_max]`에 대해 `q_i-q_min`과 `q_max-q_i`를 barrier로 두므로,
+범위 $[q_{\min}, q_{\max}]$에 대해 $q_i-q_{\min}$과 $q_{\max}-q_i$를 barrier로 두므로,
 QP는 각각 하한 밖과 상한 밖으로 향하는 속도를 제한한다. 범위가 없는 관절은
 `null`로 지정하며, CBF 이득은 `safety.joint_limit_alpha`로 조정한다.
 
 ### 기구학 기반 CBF 시뮬레이션
 
-기본 시뮬레이션은 QP의 결정변수 `u = q_dot`를 직접 적분한다. 따라서 CBF
+기본 시뮬레이션은 QP의 결정변수 $u = \dot q$를 직접 적분한다. 따라서 CBF
 제약을 평가한 속도와 실제 시뮬레이션 속도가 동일하며, velocity actuator의
 추종 지연으로 barrier가 침범하는 문제를 피한다. actuator 동역학을 포함한
 실험이 필요하면 `run_simulation(..., kinematic=False)`를 사용한다.

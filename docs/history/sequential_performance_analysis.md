@@ -9,8 +9,8 @@
 단순한 목표 도달 여부보다, 안전·수렴·계산 비용·실패 양상을 함께 기록하는 것을
 목표로 한다.
 
-현재 제어기는 목표 pose에서 collision-free IK configuration `q*`를 선택하고, 그
-configuration의 링크 끝점 목표 `[p_1^*, p_2^*, p_3^*]`를 순서대로 추종한다.
+현재 제어기는 목표 pose에서 collision-free IK configuration $q^*$를 선택하고, 그
+configuration의 링크 끝점 목표 $[p_1^*, p_2^*, p_3^*]$를 순서대로 추종한다.
 마지막 링크에서는 position과 yaw를 동시에 제어한다. 안전은 hard CBF와 joint-limit
 CBF로 유지한다. 알고리즘 상세는 [순차 제어 알고리즘](sequential_control.md)을
 참조한다.
@@ -187,5 +187,5 @@ randomized experiment로 제시하는 편이 정확하다.
 3. 성공, CBF-boundary stall, QP infeasible 사례를 한 개씩 시각화한다.
 4. direct와 sequential의 수렴 시간·최소 barrier·effort를 paired plot으로 비교한다.
 5. `clf_rate`, `safe_distance`, `final_yaw_weight` 순으로 민감도 분석한다.
-6. 마지막으로 `q*` 직접 CLF baseline을 추가해 task-space 순차화의 고유 기여를
+6. 마지막으로 $q^*$ 직접 CLF baseline을 추가해 task-space 순차화의 고유 기여를
    확인한다.

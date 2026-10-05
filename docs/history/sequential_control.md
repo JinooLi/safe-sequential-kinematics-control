@@ -4,7 +4,7 @@
 
 ## 목적
 
-이 제어기는 최종 목표 관절 자세 `q*`를 직접 추종하지 않는다. 대신 목표 pose에서
+이 제어기는 최종 목표 관절 자세 $q^*$를 직접 추종하지 않는다. 대신 목표 pose에서
 계산한 안전한 IK configuration의 각 링크 끝점 위치를 task 목표로 사용한다. 3-DOF
 평면 로봇에서는 다음 세 목표를 만든다.
 
@@ -24,7 +24,7 @@
 
 ## 1. 목표 관절 자세 선택
 
-최종 목표 position `p*`, 목표 yaw `yaw*`, 링크 길이 `(l1, l2, l3)`에서 마지막
+최종 목표 position $p^*$, 목표 yaw $\mathrm{yaw}^*$, 링크 길이 $(l_1,l_2,l_3)$에서 마지막
 링크를 제외한 손목 위치를 먼저 계산한다.
 
 $$
@@ -51,12 +51,12 @@ base--elbow--wrist의 2-link 기하로 elbow-up 및 elbow-down 두 해를 계산
 실패하며 목표를 불가능한 것으로 처리한다.
 
 선택된 해의 누적 forward kinematics로 링크 끝점 위치
-`[p1*, p2*, p3*]`를 계산한다. 이것이 각 sequential 단계의 position 목표다.
+$[p_1^*,p_2^*,p_3^*]$를 계산한다. 이것이 각 sequential 단계의 position 목표다.
 
 ## 2. CLF 구성
 
-활성 frame의 현재 position을 `p`, planar Jacobian을
-`J_task = [Jx; Jy; Jyaw]`라 하자. 모든 CLF에는 전역 계수
+활성 frame의 현재 position을 $p$, planar Jacobian을
+$J_{\mathrm{task}} = \begin{bmatrix}J_x \\ J_y \\ J_{\mathrm{yaw}}\end{bmatrix}$라 하자. 모든 CLF에는 전역 계수
 `safety.clf_weight`가 곱해진다.
 
 ### 중간 단계: link1, link2
@@ -83,9 +83,9 @@ V_3 = w_{clf}\,2\left(
 \right)
 $$
 
-여기서 `w_yaw`는 `sequential_end_effector.final_yaw_weight`이다. `1`보다
+여기서 $w_{\mathrm{yaw}}$는 `sequential_end_effector.final_yaw_weight`이다. `1`보다
 작게 설정하면 마지막 단계에서 position에 비해 yaw의 영향력을 낮춘다. 비교
-실험의 direct end-effector CLF도 동일한 `w_yaw`를 사용한다. yaw 항의 gradient는
+실험의 direct end-effector CLF도 동일한 $w_{\mathrm{yaw}}$를 사용한다. yaw 항의 gradient는
 $2w_{clf}w_{yaw}\sin(yaw-yaw^*)J_{yaw}$이므로, wrap의 $\pm\pi$ 불연속이 없다.
 
 ## 3. CLF-CBF QP
@@ -107,14 +107,14 @@ slack의 크기는 QP 비용의 slack 가중치 `QP_ctrl.Q`로 억제한다. 안
 slack으로 완화되지 않는 hard CBF다.
 
 - 모든 활성 장애물--링크 쌍:
-  \(\nabla_qh\dot q\ge-\alpha h\)
+  $\nabla_qh\dot q\ge-\alpha h$
 - 말단 장치–link1 자기 충돌:
-  \(h_{self}=f_{link1}(p_{ee}(q),q)-d_{self}\),
-  \(\nabla_qh_{self}\dot q\ge-\alpha h_{self}\). 이 미분에는 link1의 운동과
+  $h_{self}=f_{link1}(p_{ee}(q),q)-d_{self}$,
+  $\nabla_qh_{self}\dot q\ge-\alpha h_{self}$. 이 미분에는 link1의 운동과
   end-effector query point의 운동이 모두 포함된다.
 - 베이스–link3 자기 충돌:
-  \(h_{base}=f_{link3}([0,0]^T,q)-d_{self}\),
-  \(\nabla_qh_{base}\dot q\ge-\alpha h_{base}\).
+  $h_{base}=f_{link3}([0,0]^T,q)-d_{self}$,
+  $\nabla_qh_{base}\dot q\ge-\alpha h_{base}$.
 - finite joint limit의 상한/하한 zeroing CBF
 - 관절별 속도 상한 `velocity_limit`
 
