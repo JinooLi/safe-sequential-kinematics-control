@@ -23,6 +23,16 @@ def save_panda_control_trace(trace: PandaControlTrace | None, path: str | Path) 
         clf_slack=trace.clf_slack,
         stage_index=trace.stage_index,
         stage_names=np.asarray(trace.stage_names, dtype=str),
+        **(
+            {"stage_position_error": trace.stage_position_error}
+            if trace.stage_position_error is not None
+            else {}
+        ),
+        **(
+            {"stage_orientation_error": trace.stage_orientation_error}
+            if trace.stage_orientation_error is not None
+            else {}
+        ),
         barrier_labels=np.asarray(trace.barrier_labels, dtype=str),
         barrier_values=trace.barrier_values,
         **({"q": trace.q} if trace.q is not None else {}),
@@ -90,6 +100,12 @@ def result_payload(result: PandaRunResult) -> dict:
             "stage_transition_count": result.stage_transition_count,
             "final_stage": (
                 None if result.status is None else result.status.stage_name
+            ),
+            "final_stage_position_error": (
+                None if result.status is None else result.status.stage_position_error
+            ),
+            "final_stage_orientation_error": (
+                None if result.status is None else result.status.stage_orientation_error
             ),
             "final_q": result.final_q.tolist(),
             "final_joint_error": (

@@ -105,13 +105,37 @@ IK와 궤적의 충돌 모델이 다르면 `run_panda`가 후보를 **궤적용 
 4. CLF, 충돌 CBF, 관절 범위 CBF, 속도·가속도 제한으로 QP를 만든다.
 5. QP 해의 앞 7개 성분을 `u`로 반환하고, 마지막 성분을 CLF slack으로 기록한다.
 
-중간 단계의 목표는 $p_{\mathrm{frame}}(q^*)$이고 CLF는 다음과 같다.
+`trajectory.stage_task: position`이면 중간 목표는 $p_{\mathrm{frame}}(q^*)$이고
+CLF는 다음과 같다. 이 설정을 생략한 기존 YAML도 위치 전용으로 동작한다.
 
 $$
 V(q) = \frac{1}{2}\left\lVert p_{\mathrm{frame}}(q) - p_{\mathrm{frame}}(q^*) \right\rVert^2.
 $$
 
+`stage_task: pose`이면 같은 IK 후보의 해당 링크 orientation도 사용한다.
+입력은 현재 관절각 $q$, 선택한 IK $q^*$, 링크 frame, orientation 가중치와 허용오차다.
+기구학에서 world 기준 링크 위치·quaternion·Jacobian을 받아 다음 CLF와 관절 미분을 출력한다.
+
+$$
+\begin{aligned}
+e_{p,i} &= p_i(q)-p_i(q^*),\\
+[\eta_i,\epsilon_i] &= Q_i(q^*)Q_i(q)^{-1},\\
+V_i(q) &= \frac12\lVert e_{p,i}\rVert^2+
+          \frac{w_i}{2}\lVert\epsilon_i\rVert^2,\\
+\frac{\partial V_i}{\partial q} &= e_{p,i}^{\top}J_{p,i}
+                -\frac{w_i}{2}\eta_i\epsilon_i^{\top}J_{\omega,i}.
+\end{aligned}
+$$
+
+여기서 $w_i$는 `stage_orientation_weight`다. quaternion 부호 선택은 최종 pose와 같고,
+`stage_orientation_tolerance`는 $\lVert\epsilon_i\rVert=\sin(\theta_i/2)$의 허용치다.
+기본값 0.05는 약 $5.73^\circ$이며 rad 단위 각도 0.05가 아니다.
+pose 중간 단계는 위치·orientation 허용오차를 **모두** 만족해야 다음 단계로 넘어간다.
+정체 판정도 두 오차를 각각 허용오차로 나눈 값의 최댓값을 사용한다.
+IK가 바뀌면 목표 위치와 목표 orientation을 함께 바꾸고 정체 이력을 초기화한다.
+
 마지막 단계와 direct 모드는 위치 오차와 quaternion 방향 오차를 합친 pose CLF를 사용한다.
+이때의 `orientation_weight`와 최종 목표 허용오차는 중간 단계 설정과 별개다.
 관절 목표 $q^*$와의 오차는 진단값이며, 이를 직접 줄이는 관절 공간 CLF를 사용하지 않는다.
 
 QP의 핵심 관계는 다음과 같다.
@@ -214,11 +238,12 @@ $\varepsilon_h=10^{-6}\,\mathrm{m}$이며, 0으로 설정하면 엄격한 비음
 않았을 때만 정체로 판정한다. 남은 IK 후보가 있으면 교체하고, 없으면 종료한다.
 
 서로 다른 단위를 비교하기 위해 단계 오차를 해당 허용오차로 나눈다.
-중간 단계는 위치만, 마지막 단계와 direct 모드는 위치·자세 중 큰 비율을 사용한다.
+위치 전용 중간 단계는 위치만, pose 중간 단계와 마지막 단계는 위치·자세 중 큰 비율을 사용한다.
 
 $$
 E(q)=\begin{cases}
-\lVert e_{\mathrm{stage}}(q)\rVert/\tau_{\mathrm{stage}}, & \text{중간 단계},\\
+\lVert e_{\mathrm{stage}}(q)\rVert/\tau_{\mathrm{stage}}, & \text{position 중간 단계},\\
+\max\bigl(\lVert e_{p,i}(q)\rVert/\tau_{p,i},\lVert\epsilon_i(q)\rVert/\tau_{R,i}\bigr), & \text{pose 중간 단계},\\
 \max\bigl(\lVert e_p(q)\rVert/\tau_p,\lVert e_R(q)\rVert/\tau_R\bigr), & \text{최종 pose}.
 \end{cases}
 $$

@@ -44,10 +44,11 @@ Panda에서는 이러한 **도달률과 시간의 교환 관계가 재현되는�
 
 현재 Panda 구현에는 다음 특성이 있다.
 
-- 중간 목표는 선택한 IK 해에서 계산한 **프레임 원점의 위치**다. 관절을 하나씩
-  고정하는 방식이 아니며, 이전 단계의 위치를 이후 단계에서 계속 강제하지 않는다.
+- 중간 목표는 선택한 IK 해에서 계산한 **프레임 원점의 위치**이며,
+  `stage_task: pose`에서는 해당 프레임의 orientation도 사용한다. 관절을 하나씩
+  고정하는 방식이 아니며, 이전 단계의 목표를 이후 단계에서 계속 강제하지 않는다.
 - `link2` 원점은 모든 관절각에서 $[0,0,0.333]^T$ m에 고정되어 위치 Jacobian이
-  0이다. 기존 설정에서는 첫 단계가 즉시 통과했다. 주실험은 관절 움직임에 따라
+  0이다. 기존 위치 전용 설정에서는 첫 단계가 즉시 통과했다. 주실험은 관절 움직임에 따라
   위치가 변하는 `link3` 원점으로 바꾸어 **두 개의 중간 위치 목표**를 사용한다.
 - `link5`와 `link6`의 원점도 서로 같다. 프레임 이름을 모두 나열하면 독립적인
   중간 목표가 늘어나는 것은 아니다. 추가 단계는 움직이는 점을 확인한 뒤 선택한다.
@@ -98,6 +99,52 @@ QP 실패는 기존처럼 종료한다. Direct는 두 설정 모두 IK 후보를
 Direct는 IK 정보를 제어에 쓰지 않으므로, 이 비교에는 **IK로 정한 중간 목표의 정보와
 순차 제어의 효과가 함께 포함**된다. 순차화 자체의 고유 기여까지 주장하려면
 같은 IK 해를 직접 추종하는 관절 CLF 기준선을 추가해야 한다.
+
+## 중간 링크 orientation 비교 브랜치
+
+`experiment/panda-intermediate-pose`에서는 중간 위치 전용 제어와 pose 제어를 선택할 수 있다.
+이 브랜치의 `configs/experiments/panda_comparison.yaml`은 다음 조건으로 시작한다.
+공통 `configs/panda.yaml`과 새 키가 없는 기존 설정은 `stage_task: position`을 유지한다.
+
+```yaml
+controller_overrides:
+  trajectory:
+    stage_frames: [link3, link5]
+    stage_task: pose                 # position이면 기존 위치 전용 방식
+    stage_orientation_weight: 1.0   # 중간 orientation CLF 가중치
+    stage_orientation_tolerance: 0.05 # quaternion 벡터 norm, 약 5.73도
+```
+
+선택한 IK 후보 $q^*$에서 각 링크의 위치와 orientation을 함께 얻는다.
+따라서 중간 목표 pose 자체는 로봇이 취할 수 있는 자세에서 나온다. 앞쪽 링크의
+자유도가 적다는 사실만으로 목표가 도달 불가능해지는 것은 아니다. 다만 orientation까지
+요구하면 위치만 맞출 때 남아 있던 자세 선택의 여유가 줄어, CBF와 충돌하는 진행 방향이나
+긴 단계 체류가 생길 수 있다. orientation 제어가 전역 수렴을 보장하지는 않는다.
+사용하는 quaternion 제곱 오차는 $180^\circ$에서 orientation 미분이 0이 되는 한계도 갖는다.
+
+CLF·Jacobian과 전환 조건은 [현재 구현 설명](../current/README.md#제어-한-스텝에서-일어나는-일)에 있다.
+orientation 목표는 최종 말단 quaternion을 모든 링크에 복사한 값이 아니며,
+각 링크의 world 기준 자세다. IK 후보 변경 시 위치와 orientation 목표를 함께 갱신한다.
+이전 링크 자세를 다음 단계에서 계속 강제하는 제약은 추가하지 않는다.
+
+비교할 때는 동일한 seed·표본 생성·IK 예산·CBF·시간 제한·후보 정책을 유지하고
+`stage_task`만 바꿔 새 결과 폴더로 실행한다. `use_all_ik_candidates`는 별도 변수다.
+위치 전용과 pose 조건에서 이 옵션도 동시에 바꾸면 두 효과를 구분하기 어렵다.
+먼저 가중치 1.0, orientation 허용치 0.05로 동작을 확인하고, 같은 장면들에서
+가중치 0.1/0.3/1.0과 허용치 0.02/0.05/0.1을 각각 바꾸어 평가할 수 있다.
+이는 검증된 최적값이 아닌 실험 시작값이다.
+
+`make panda-compare ARGS="--dry-run"`으로 유효 설정을 확인하고
+`make panda-compare`로 실행한다. 기존 결과 폴더의 설정을 바꿔 재개하지 않는다.
+전체 `duration`, hard CBF, 최종 말단 목표와 공통 성공 판정은 유지한다.
+비교실험은 중간 단계 완료 여부와 독립적으로 최종 말단 pose에 먼저 도달하면 판정한다.
+
+비교실험의 `summary.json`에는 `stage_task`, `final_stage`를 기록하고,
+`trajectory.npz`의 `stage_orientation_errors`는 활성 IK 후보 기준 각 중간 링크의
+quaternion 오차 norm을 `time`, `q`와 같은 행에 저장한다. 위치 전용·Direct에서는
+orientation 오차 열이 비어 있다. 일반 실행의 trace는 현재 활성 단계의
+`stage_position_error`, `stage_orientation_error`를 저장하며, 위치 전용 중간 단계의
+orientation은 `NaN`이다. 단계 이름은 `link3_pose`처럼 제어 목표를 구분한다.
 
 ## 표본 생성과 공통 모집단
 

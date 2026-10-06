@@ -23,6 +23,7 @@ class PandaControlStatus:
     position_error: float
     orientation_error: float
     minimum_barrier: float
+    stage_orientation_error: float | None = None
 
 
 @dataclass(frozen=True)
@@ -67,3 +68,5 @@ class PandaControlTrace:
     safety_metadata: dict | None = None
     minimum_self_barrier: np.ndarray | None = None
     minimum_self_pair: tuple[str, ...] = ()
+    stage_position_error: np.ndarray | None = None
+    stage_orientation_error: np.ndarray | None = None

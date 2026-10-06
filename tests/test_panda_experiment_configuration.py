@@ -84,6 +84,11 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
 
     def test_cli_overrides_are_saved_and_resolved_yaml_can_be_loaded(self):
         self.data["use_all_ik_candidates"] = True
+        self.data["controller_overrides"]["trajectory"].update(
+            stage_task="pose",
+            stage_orientation_weight=0.2,
+            stage_orientation_tolerance=0.03,
+        )
         self.write()
         settings = load_panda_experiment(
             self.path,
@@ -110,6 +115,9 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.assertTrue(resolved["use_all_ik_candidates"])
         reloaded = load_panda_experiment(destination / "experiment.resolved.yaml")
         self.assertTrue(reloaded.use_all_ik_candidates)
+        self.assertEqual(reloaded.config.trajectory.stage_task, "pose")
+        self.assertEqual(reloaded.config.trajectory.stage_orientation_weight, 0.2)
+        self.assertEqual(reloaded.config.trajectory.stage_orientation_tolerance, 0.03)
         self.assertEqual(reloaded.candidate_policy, "all_nearest_switch_on_stall")
         self.assertEqual(json_value(reloaded.config), json_value(settings.config))
         self.assertEqual(

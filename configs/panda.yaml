@@ -165,12 +165,15 @@ trajectory:
   stop_progress_tolerance: 0.001 # 이 시간 동안 허용오차로 정규화한 목표 오차가 개선되어야 할 최소량
   duration: 90.0 # 최대 시뮬레이션 시간(s)
   integration_period: 0.01 # 제어 및 수치 적분 주기(s)
-  # sequential: 중간 링크 위치를 순차적으로 추종한 뒤 최종 EE pose를 추종한다.
+  # sequential: 중간 링크 목표를 순차적으로 추종한 뒤 최종 EE pose를 추종한다.
   # direct: 처음부터 최종 EE pose CLF만 사용한다. 두 모드 모두 관절각 목표 CLF는 사용하지 않는다.
   mode: sequential
-  # 각 frame의 원점 위치를 중간 목표로 사용한다. link2는 고정되어 있고 link3·link5는 움직인다.
+  # 각 frame 원점을 사용한다. link2 원점은 고정이지만 orientation은 변하며, link3·link5 원점은 움직인다.
   stage_frames: [link3, link5]
+  stage_task: position # 중간 목표: position은 위치만, pose는 위치와 orientation을 함께 제어한다.
   stage_position_tolerance: 0.05 # 중간 링크 위치 목표의 허용오차(m)
+  stage_orientation_weight: 1.0 # pose 중간 단계의 orientation CLF 가중치. 최종 말단 가중치와 별개다.
+  stage_orientation_tolerance: 0.05 # pose 단계 전환 조건: quaternion 오차 벡터 norm = sin(각도/2). 0.05는 약 5.73도다.
   orientation_weight: 1.0 # 최종 pose CLF에서 방향 오차에 곱하는 가중치
   stop_window: 0.5 # 관절 속도 norm의 평균을 계산하는 시간(s). 낮은 속도와 오차 개선 부족이 함께 있어야 정체로 판정한다.
   stop_velocity_tolerance: 0.001 # 정체 판정에 사용하는 평균 관절 속도 norm의 상한(rad/s)

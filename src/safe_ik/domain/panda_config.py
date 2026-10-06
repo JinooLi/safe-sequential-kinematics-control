@@ -182,8 +182,24 @@ class PandaTrajectoryConfig:
     stop_progress_window: float = 2.0
     # Improvement in task error normalized by its goal tolerance.
     stop_progress_tolerance: float = 1e-3
+    stage_task: str = "position"
+    stage_orientation_weight: float = 1.0
+    # Quaternion vector norm sin(theta / 2), not an angle in radians.
+    stage_orientation_tolerance: float = 0.05
 
     def __post_init__(self):
+        if self.stage_task not in ("position", "pose"):
+            raise ValueError("trajectory.stage_task must be position or pose")
+        for name in ("stage_orientation_weight", "stage_orientation_tolerance"):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, Real)
+                or not np.isfinite(value)
+                or value <= 0
+                or (name == "stage_orientation_tolerance" and value >= 1)
+            ):
+                raise ValueError(f"trajectory.{name} has an invalid value: {value}")
         for name in (
             "success_barrier_tolerance",
             "stop_velocity_tolerance",

@@ -250,6 +250,11 @@ def parse_panda_config(data: dict, path: str | Path) -> PandaControllerConfig:
             success_barrier_tolerance=trajectory.get("success_barrier_tolerance", 1e-6),
             stop_progress_window=trajectory.get("stop_progress_window", 2.0),
             stop_progress_tolerance=trajectory.get("stop_progress_tolerance", 1e-3),
+            stage_task=trajectory.get("stage_task", "position"),
+            stage_orientation_weight=trajectory.get("stage_orientation_weight", 1.0),
+            stage_orientation_tolerance=trajectory.get(
+                "stage_orientation_tolerance", 0.05
+            ),
         ),
         qp=PandaQPConfig(
             joint_velocity_weight=_positive(

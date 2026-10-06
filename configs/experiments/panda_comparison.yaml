@@ -25,8 +25,11 @@ controller_overrides:
     integration_period: 0.01 # 제어 및 수치 적분 주기(s). duration은 이 값의 정수배여야 한다.
     clf_rate: 20.0 # CLF 감소율
     clf_slack_weight: 1000.0 # QP 목적함수에서 CLF slack에 부여하는 가중치
-    stage_frames: [link3, link5] # Sequential의 중간 위치 목표 순서. 이후 최종 EE pose를 추종한다.
+    stage_frames: [link3, link5] # Sequential의 중간 링크 목표 순서. 이후 최종 EE pose를 추종한다.
+    stage_task: pose # 이 실험 브랜치의 기본 비교 조건. position으로 바꾸면 기존 위치 전용 방식이다.
     stage_position_tolerance: 0.05 # 중간 링크 위치 목표의 허용오차(m)
+    stage_orientation_weight: 1.0 # 중간 pose CLF의 orientation 가중치. 목표 자세는 선택한 IK의 해당 링크 자세다.
+    stage_orientation_tolerance: 0.05 # 중간 orientation 허용오차: quaternion 벡터 norm. 약 5.73도에 해당한다.
     orientation_weight: 1.0 # 최종 pose CLF에서 방향 오차에 곱하는 가중치
     # 관절 1~7의 속도 크기 제한(rad/s). Direct와 Sequential에 동일하게 적용한다.
     velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]

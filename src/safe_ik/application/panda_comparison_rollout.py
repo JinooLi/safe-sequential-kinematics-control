@@ -22,14 +22,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     maximum_steps = int(round(config.trajectory.duration / period))
     if not np.isclose(maximum_steps * period, config.trajectory.duration):
         raise ValueError("duration must contain an integer number of control periods")
-    stage_targets = [
-        [
-            kin.frame_point_and_jacobian(f, candidate.q)[0]
-            for f in config.trajectory.stage_frames
-        ]
-        for candidate in candidates
-    ]
     states, barriers, samples, stage_errors, state_times = [], [], [], [], []
+    stage_orientation_errors = []
     candidate_indices, candidate_seeds, candidate_events = [], [], []
 
     def record_candidate_state(q):
@@ -38,12 +32,13 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         index = controller.candidate_index if candidates else -1
         candidate_indices.append(index)
         candidate_seeds.append(candidates[index].seed_index if candidates else -1)
-        targets = stage_targets[index] if candidates else []
-        stage_errors.append(
-            [
-                float(np.linalg.norm(kin.frame_point_and_jacobian(f, q)[0] - target))
-                for f, target in zip(config.trajectory.stage_frames, targets)
-            ]
+        errors = [
+            controller.stage_error_norms(q, i)
+            for i in range(len(controller.stage_frames))
+        ]
+        stage_errors.append([position for position, _ in errors])
+        stage_orientation_errors.append(
+            [orientation for _, orientation in errors if orientation is not None]
         )
 
     (
@@ -177,6 +172,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         "qp_solve_time": float(sum(qp_times)),
         "rdf_times": np.asarray(rdf_times).sum(axis=0).tolist(),
         "stage_transitions": events,
+        "stage_task": config.trajectory.stage_task,
+        "final_stage": controller.active_stage_name,
         "candidate_count": len(candidates),
         "candidate_switch_count": controller.candidate_switch_count,
         "candidate_transitions": candidate_events,
@@ -222,6 +219,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         "stage_index": np.asarray(stages, dtype=int),
         "stage_frames": np.asarray(config.trajectory.stage_frames),
         "stage_errors": np.asarray(stage_errors),
+        "stage_orientation_errors": np.asarray(stage_orientation_errors),
+        "stage_task": np.asarray(config.trajectory.stage_task),
         "candidate_index": np.asarray(candidate_indices, dtype=int),
         "candidate_seed_index": np.asarray(candidate_seeds, dtype=int),
         "candidate_seed_indices": np.asarray(

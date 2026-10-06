@@ -199,6 +199,7 @@ def export_analysis(directory, rows, count, duration):
         "candidate_policy",
         "candidate_count",
         "candidate_switch_count",
+        "stage_task",
         "success",
         "goal_reached",
         "reason",
@@ -414,6 +415,7 @@ def _run_locked(
                 result.update(
                     case_id=case["case_id"],
                     method=method,
+                    stage_task=cfg.trajectory.stage_task,
                     ik_available=bool(candidates),
                     candidate_policy=(
                         identity["candidate_policy"]

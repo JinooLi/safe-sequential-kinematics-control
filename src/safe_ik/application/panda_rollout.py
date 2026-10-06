@@ -315,6 +315,7 @@ def run_panda(
     trace_clf_value: list[float] = []
     trace_clf_slack: list[float] = []
     trace_stage_index: list[int] = []
+    trace_stage_position_error, trace_stage_orientation_error = [], []
     trace_barrier_values: list[np.ndarray] = []
     trace_rdf_times, trace_qp_times, trace_qp_status = [], [], []
     trace_self_minimum, trace_self_pair = [], []
@@ -361,6 +362,12 @@ def run_panda(
         trace_clf_value.append(float(diagnostics.clf_value))
         trace_clf_slack.append(float(controller.last_clf_slack))
         trace_stage_index.append(controller.stage_index)
+        trace_stage_position_error.append(controller.last_status.stage_position_error)
+        trace_stage_orientation_error.append(
+            np.nan
+            if controller.last_status.stage_orientation_error is None
+            else controller.last_status.stage_orientation_error
+        )
         trace_barrier_values.append(diagnostics.barrier_values)
         trace_rdf_times.append(
             [
@@ -452,10 +459,9 @@ def run_panda(
         clf_value=np.asarray(trace_clf_value, dtype=float),
         clf_slack=np.asarray(trace_clf_slack, dtype=float),
         stage_index=np.asarray(trace_stage_index, dtype=int),
-        stage_names=tuple(
-            [f"{frame}_position" for frame in controller.stage_frames]
-            + ["end_effector_pose"]
-        ),
+        stage_names=controller.stage_names,
+        stage_position_error=np.asarray(trace_stage_position_error),
+        stage_orientation_error=np.asarray(trace_stage_orientation_error),
         barrier_labels=controller.barrier_labels,
         barrier_values=np.asarray(trace_barrier_values, dtype=float),
         rdf_timings=(

@@ -8,10 +8,13 @@ import numpy as np
 from scipy.linalg import block_diag
 
 from ..domain.ik_contracts import SafeIKCandidate
-from ..domain.interfaces import PoseKinematics, QPSolver
+from ..domain.interfaces import FramePoseKinematics, QPSolver
 from ..domain.panda_config import PandaControllerConfig
 from ..domain.panda_types import PandaControlStatus
-from ..domain.rotations import quaternion_orientation_error_components
+from ..domain.rotations import (
+    quaternion_orientation_error_components,
+    rotation_to_wxyz,
+)
 from ..domain.safety_contracts import SafetyEvaluator
 from ..domain.types import QPProblem, QPStatus, SafetyDiagnostics
 
@@ -22,7 +25,7 @@ class PandaTrajectoryController:
     def __init__(
         self,
         config: PandaControllerConfig,
-        kinematics: PoseKinematics,
+        kinematics: FramePoseKinematics,
         safety: SafetyEvaluator,
         candidates: tuple[SafeIKCandidate, ...],
         solver: QPSolver,
@@ -50,6 +53,19 @@ class PandaTrajectoryController:
                 for frame in self.stage_frames
             )
             for candidate in self.candidates
+        )
+        self._candidate_stage_orientations = (
+            tuple(
+                tuple(
+                    rotation_to_wxyz(
+                        self.kinematics.frame_pose_and_jacobian(frame, candidate.q)[0]
+                    )
+                    for frame in self.stage_frames
+                )
+                for candidate in self.candidates
+            )
+            if config.trajectory.stage_task == "pose"
+            else ()
         )
         self.previous_velocity = np.zeros(config.dof)
         window_samples = max(
@@ -109,8 +125,14 @@ class PandaTrajectoryController:
 
     def _stage_name(self, stage_index: int) -> str:
         if stage_index < len(self.stage_frames):
-            return f"{self.stage_frames[stage_index]}_position"
+            return (
+                f"{self.stage_frames[stage_index]}_{self.config.trajectory.stage_task}"
+            )
         return "end_effector_pose"
+
+    @property
+    def stage_names(self) -> tuple[str, ...]:
+        return tuple(self._stage_name(i) for i in range(len(self.stage_frames) + 1))
 
     def consume_stage_transition_events(self) -> tuple[tuple[str, str, str], ...]:
         """Return and clear stage transitions since the previous control step."""
@@ -131,9 +153,48 @@ class PandaTrajectoryController:
             jacobian,
         )
 
+    def _intermediate_pose_errors(self, q, stage_index):
+        rotation, position, jacobian = self.kinematics.frame_pose_and_jacobian(
+            self.stage_frames[stage_index], q
+        )
+        target = self._candidate_stage_targets[self.candidate_index][stage_index]
+        desired = self._candidate_stage_orientations[self.candidate_index][stage_index]
+        eta, orientation_error = quaternion_orientation_error_components(
+            desired, rotation_to_wxyz(rotation)
+        )
+        return position - target, eta, orientation_error, jacobian
+
+    def stage_error_norms(self, q, stage_index):
+        """Intermediate errors relative to the active IK; orientation is optional."""
+        if self.config.trajectory.stage_task == "pose":
+            position, _, orientation, _ = self._intermediate_pose_errors(q, stage_index)
+            return float(np.linalg.norm(position)), float(np.linalg.norm(orientation))
+        position, _ = self.kinematics.frame_point_and_jacobian(
+            self.stage_frames[stage_index], q
+        )
+        target = self._candidate_stage_targets[self.candidate_index][stage_index]
+        return float(np.linalg.norm(position - target)), None
+
+    @staticmethod
+    def _pose_clf(position_error, eta, orientation_error, jacobian, weight):
+        value = 0.5 * float(position_error @ position_error) + 0.5 * weight * float(
+            orientation_error @ orientation_error
+        )
+        # For DeltaQ = Qd * Qe^-1 and world angular velocity omega,
+        # d(0.5 ||epsilon||^2)/dt = -0.5 eta epsilon^T omega.
+        gradient = position_error @ jacobian[:3] - (
+            0.5 * weight * eta * orientation_error @ jacobian[3:]
+        )
+        return value, gradient, float(np.linalg.norm(position_error))
+
     def _active_clf(self, q):
         """Return task-space CLF value, joint gradient, and position error."""
         if self.stage_index < len(self.stage_frames):
+            if self.config.trajectory.stage_task == "pose":
+                return self._pose_clf(
+                    *self._intermediate_pose_errors(q, self.stage_index),
+                    self.config.trajectory.stage_orientation_weight,
+                )
             frame = self.stage_frames[self.stage_index]
             position, jacobian = self.kinematics.frame_point_and_jacobian(frame, q)
             target = self._candidate_stage_targets[self.candidate_index][
@@ -146,22 +207,20 @@ class PandaTrajectoryController:
                 float(np.linalg.norm(error)),
             )
 
-        position_error, eta, orientation_error, jacobian = self._pose_errors(q)
-        weight = self.config.trajectory.orientation_weight
-        value = 0.5 * float(position_error @ position_error) + 0.5 * weight * float(
-            orientation_error @ orientation_error
+        return self._pose_clf(
+            *self._pose_errors(q), self.config.trajectory.orientation_weight
         )
-        # For DeltaQ = Qd * Qe^-1 and world angular velocity omega,
-        # d(0.5 ||epsilon||^2)/dt = -0.5 eta epsilon^T omega.
-        gradient = position_error @ jacobian[:3] - (
-            0.5 * weight * eta * orientation_error @ jacobian[3:]
-        )
-        return value, gradient, float(np.linalg.norm(position_error))
 
     def _advance_reached_stages(self, q) -> None:
         while self.stage_index < len(self.stage_frames):
-            _, _, position_error = self._active_clf(q)
-            if position_error > self.config.trajectory.stage_position_tolerance:
+            position_error, orientation_error = self.stage_error_norms(
+                q, self.stage_index
+            )
+            if position_error > self.config.trajectory.stage_position_tolerance or (
+                orientation_error is not None
+                and orientation_error
+                > self.config.trajectory.stage_orientation_tolerance
+            ):
                 break
             previous_name = self.active_stage_name
             self.stage_index += 1
@@ -179,9 +238,13 @@ class PandaTrajectoryController:
     def _record_task_progress(self, q) -> None:
         """Record once per control tick, for the active candidate and stage."""
         if self.stage_index < len(self.stage_frames):
-            error = (
-                self._active_clf(q)[2] / self.config.trajectory.stage_position_tolerance
-            )
+            position, orientation = self.stage_error_norms(q, self.stage_index)
+            error = position / self.config.trajectory.stage_position_tolerance
+            if orientation is not None:
+                error = max(
+                    error,
+                    orientation / self.config.trajectory.stage_orientation_tolerance,
+                )
         else:
             position, _, orientation, _ = self._pose_errors(q)
             error = max(
@@ -200,7 +263,15 @@ class PandaTrajectoryController:
         pose_position_error, _, pose_orientation_error, _ = self._pose_errors(q)
         position_error = float(np.linalg.norm(pose_position_error))
         orientation_error = float(np.linalg.norm(pose_orientation_error))
-        _, _, stage_position_error = self._active_clf(q)
+        if self.stage_index < len(self.stage_frames):
+            stage_position_error, stage_orientation_error = self.stage_error_norms(
+                q, self.stage_index
+            )
+        else:
+            stage_position_error, stage_orientation_error = (
+                position_error,
+                orientation_error,
+            )
         joint_error = (
             None if not self.candidates else float(np.linalg.norm(q - self.target_q))
         )
@@ -240,6 +311,7 @@ class PandaTrajectoryController:
             position_error,
             orientation_error,
             minimum_barrier,
+            stage_orientation_error=stage_orientation_error,
         )
 
     def _switch_candidate_if_stalled(self, q) -> bool:
