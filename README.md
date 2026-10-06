@@ -46,4 +46,15 @@ make panda-compare                 # 전용 YAML의 main 설정으로 바로 비
 `OUTPUT=<기존 디렉토리>`를 지정한다. 실행 예시는
 [Panda 실험 프로토콜](docs/experiments/panda_monte_carlo_protocol.md#실행과-재개)에 있다.
 
+저장된 비교 실험은 `panda-replay`로 MuJoCo에서 재생한다. `METHOD`는 `direct` 또는
+`sequential`이며 기본값은 `sequential`이다. 당시 저장한 목표·장애물·관절 궤적을 사용한다.
+
+```bash
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment ARGS="--list"
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment CASE_ID=seed2333_0000 METHOD=sequential
+```
+
+`ARGS="--dry-run"`으로 GUI 없이 입력 파일과 모델을 확인할 수 있다.
+재생은 CUDA 없이 가능하며, 화면을 표시할 수 있는 데스크톱 환경이 필요하다.
+
 기존 긴 README는 [이전 프로젝트 안내](docs/history/project_readme.md)에 보존했다.

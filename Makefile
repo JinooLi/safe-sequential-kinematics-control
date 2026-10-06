@@ -13,6 +13,7 @@ PLANAR_CONFIG ?= configs/planar.yaml
 ARGS ?=
 RESULTS_DIR ?=
 CASE_ID ?=
+METHOD ?= sequential
 TRACE ?=
 OUTPUT ?=
 
@@ -32,7 +33,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
 .DEFAULT_GOAL := help
 .PHONY: panda-train-rdf panda-validate-rdf panda-inspect-mesh panda-prepare-mesh
 .PHONY: panda-gpu-run panda-gpu-view
-.PHONY: panda-compare
+.PHONY: panda-compare panda-replay
 .PHONY: help setup setup-runtime build test check check-format format \
  panda-run panda-view panda-direct panda-direct-view panda-sequential panda-sequential-view panda-plot panda-plot-view \
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
@@ -41,7 +42,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
  run train-rdf visualize-rdf compare-sequential-run compare-sequential-visualize compare-sequential-visualize-all
 
 help: ## Show grouped commands and optional variables
-	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PANDA_EXPERIMENT_CONFIG, PANDA_RDF_DEVICE=cuda|cpu (default cuda), PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode/device overrides take precedence."}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PANDA_EXPERIMENT_CONFIG, PANDA_RDF_DEVICE=cuda|cpu (default cuda), PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, METHOD=direct|sequential, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode/device overrides take precedence."}' $(MAKEFILE_LIST)
 
 ##@ Panda: simulation and control
 panda-inspect-mesh: ## Export standalone HTML highlighting visual-mesh open boundaries
@@ -85,6 +86,9 @@ panda-compare: ## Run YAML main cases directly; ARGS="--dry-run" previews settin
 	$(PANDA_COMPARE) $(OUTPUT_FLAG) $(ARGS)
 
 ##@ Panda: saved control traces (no new simulation)
+panda-replay: ## Replay a saved comparison case; RESULTS_DIR=<...> CASE_ID=<id> METHOD=direct|sequential
+	$(UV) run --locked python -m safe_ik.application.panda_comparison_replay $(RESULTS_FLAG) $(CASE_FLAG) --method "$(METHOD)" $(ARGS)
+
 panda-plot: ## Save diagnostic PNG from TRACE=<Panda trajectory.npz>
 	$(RECORDING) panda $(TRACE_FLAG) $(OUTPUT_FLAG) $(ARGS)
 

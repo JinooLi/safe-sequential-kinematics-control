@@ -190,6 +190,10 @@ stage 완료 여부에 의존하지 않는 목표 도달 판정을 사용하므�
 이 정책은 Direct와 Sequential 양쪽에 적용된다. 일반 실행의 목표 성공 판정은
 `success_barrier_tolerance=1e-6` m을 사용하지만, 비교 실험의 주 성공률은 위의 엄격한
 전체 경로 안전 판정을 유지하고 수치 허용오차 결과를 별도로 보고한다.
+따라서 실험 YAML에서 `success_barrier_tolerance`를 바꿔도 비교 실험의 `success`와
+그 필드로 집계하는 성공률에는 적용되지 않는다. `goal_reached`는 위치·방향 허용오차만
+판정하고, 보조 필드 `success_barrier_tolerance_1e6`도 YAML과 무관하게 $10^{-6}$ m로
+고정되어 있다. 일반 제어기의 `status.success`와 비교 실험의 저장 필드는 서로 다른 기준이다.
 변경된 코드·설정은 manifest에 반영되므로 10월 5일의 기존 결과와 이어 붙이지 않고
 새 출력 디렉토리에서 비교한다.
 
@@ -372,3 +376,35 @@ Make의 기본값이 YAML의 장치를 덮어쓰지는 않는다. CPU 전용 의
 
 2026-10-05의 기준 실험은 파일럿과 본실험 모두 60초를 사용했다. 이후 gain·계산 주기·제한 시간을
 바꾼 실험은 새 출력에 저장하고 기준 실험과 조건을 구분한다. 실행 확인용 smoke test는 주 통계에서 제외한다.
+
+## 저장된 비교 실험 재생
+
+`panda-replay`는 결과 폴더의 `config.yaml`, `cases.jsonl`과 선택한 방법의
+`trajectory.npz`를 읽어 당시 목표·장애물·초기 자세를 복원한다. 현재 실험 YAML을
+사용하거나 IK·RDF·QP를 다시 계산하지 않으며, 기록된 마지막 상태까지 1배속으로
+표시한다. 마지막 자세에서 창이 유지되고, 창을 닫으면 종료한다.
+
+```bash
+# 저장된 케이스 ID와 두 방법의 종료 원인·성공 여부 조회
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment ARGS="--list"
+
+# 같은 케이스의 순차 제어 또는 직접 제어 재생
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment CASE_ID=seed2333_0000 METHOD=sequential
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment CASE_ID=seed2333_0000 METHOD=direct
+
+# GUI 없이 저장 파일과 로봇 모델만 점검
+make panda-replay RESULTS_DIR=outputs/panda_comparison/my_experiment CASE_ID=seed2333_0000 ARGS="--dry-run"
+```
+
+`RESULTS_DIR`는 `cases.jsonl`이 있는 폴더를 지정한다. 과거 캠페인 상위 폴더를
+지정하면 그 아래 `main/`을 자동 선택한다. IK 실패로 궤적이 저장되지 않은 방법은
+실패 원인을 표시하고 종료한다. 재생 시 저장된 성공 여부를 다시 판정하지 않는다.
+
+서버 결과를 로컬로 복사했다면 저장된 로봇 경로가 존재하지 않을 수 있다. 이때는
+현재 checkout의 `assets/robots/panda.xml`을 찾고, 기록된 모델·메시 해시와 비교한다.
+다른 위치에 동일한 모델을 두었다면 `ARGS="--model-path /absolute/path/panda.xml"`로
+지정한다. 설정이나 원본 결과 파일은 수정하지 않는다.
+
+CUDA는 필요 없지만 MuJoCo 창을 표시할 GUI 환경은 필요하다. 디스플레이가 없는 SSH
+세션에서는 목록 조회·파일 점검을 사용하고, 재생은 결과를 복사한 로컬 데스크톱이나
+그래픽 원격 세션에서 실행한다.

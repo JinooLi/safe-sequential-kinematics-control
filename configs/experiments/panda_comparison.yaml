@@ -21,6 +21,7 @@ controller_overrides:
     stage_position_tolerance: 0.05
     orientation_weight: 1.0
     velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]
+    # 일반 제어기의 목표 성공 판정 허용오차(m). 비교 실험의 success는 전체 경로 h >= 0으로 별도 판정한다.
     success_barrier_tolerance: 1.0e-6
     stop_window: 0.5
     stop_velocity_tolerance: 0.001
