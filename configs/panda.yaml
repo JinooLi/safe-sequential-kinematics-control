@@ -5,64 +5,64 @@ robot:
   initial_q: [-1.57079, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]
 
 target:
-  # Base/world-frame target. Vector magnitudes are ignored. The gripper tip's
-  # local +z axis follows approach and its local +y axis follows up.
+  # 목표 위치와 방향은 base/world 좌표계 기준이며, 방향 벡터의 크기는 무시한다.
+  # gripper_tip의 로컬 +z축은 approach, 로컬 +y축은 up 방향을 따른다.
   position: [0.45, 0.45, 0.45]
   orientation:
-    approach: [0.0, 1.0, 0.0] # gripper_tip local +z
-    up: [1.0, 0.0, 0.0] # gripper_tip local +y
-  position_tolerance: 0.01
-  orientation_tolerance: 0.01
+    approach: [0.0, 1.0, 0.0] # gripper_tip의 로컬 +z축 방향
+    up: [1.0, 0.0, 0.0] # gripper_tip의 로컬 +y축 기준 방향
+  position_tolerance: 0.01 # 목표 위치 오차의 허용 norm(m)
+  orientation_tolerance: 0.01 # 오차 quaternion 벡터부의 허용 norm이며, 회전각(rad) 자체는 아님.
 
 safe_ik:
   self_collision_model: capsule # rdf 또는 capsule; 생략/null이면 safety 설정을 따름.
   iteration_number: 1000 # 시드당 최대 반복 횟수; 실제 실행 시간 제한이 아님.
-  # Accept a candidate only after pose and safety conditions remain satisfied
-  # for ceil(duration / 0.01) consecutive iterations (3.0 = 300 iterations).
-  # The internal numerical step stays at 0.01; this is not wall-clock time.
+  # pose와 안전 조건을 ceil(convergence_hold_duration / 0.01)회 연속 만족해야
+  # IK 후보로 채택한다. 3.0이면 300회이며, 실제 실행 시간 3초를 뜻하지 않는다.
+  # IK 내부의 수치 적분 간격은 0.01로 고정되어 있다.
   convergence_hold_duration: 3.0
   workers: 5 # 독립 프로세스 수; 1이면 직렬 실행. seed 수보다 많이 만들지 않음.
-  max_restarts: 20 # 첫번째 seed는 현재 위치에서 시작함.
-  random_seed: 0 # 랜덤 seed를 만들기 위한 seed.
-  damping: 0.001 # damped pseudo inverse 사용
-  pose_gain: 100.0 #
-  softmin_temperature: 10 # log-sum-exp에 있는 그 상수
-  safety_gradient_gain: 10.0 # null space control부의 gain. 이걸로 safety 제어함.
+  max_restarts: 20 # IK 초기 추정값의 개수. 첫 번째는 초기 관절각을 사용한다.
+  random_seed: 0 # 나머지 IK 초기 추정값을 생성할 난수 seed
+  damping: 0.001 # damped pseudoinverse의 정규화 계수
+  pose_gain: 100.0 # IK에서 pose 오차를 줄이는 gain
+  softmin_temperature: 10 # log-sum-exp softmin의 temperature. 작을수록 최소 barrier에 집중한다.
+  safety_gradient_gain: 10.0 # null space에서 안전 gradient를 따라 움직이는 gain
 
 safety:
   self_collision_model: rdf
   rdf:
     artifact: ../models/panda_rdf.npz
-    # Direct CLI default. Panda Make targets override with PANDA_RDF_DEVICE=cuda.
-    runtime_device: cpu # make panda-view PANDA_RDF_DEVICE=cpu for explicit CPU.
-    query_density: 500.0 # m^-2; changing this regenerates query points offline
-    top_k: 2  # null uses all query points
-    sphere_gate: true # Far pairs: sphere barrier only; near pairs: RDF.
-    # Width = fraction * (sum of outer radii - sum of verified bounds - margin).
-    # Must be strictly between 0 and 1; does not change the trained model.
+    # CLI를 직접 실행할 때의 기본 장치. Panda run/view Make 명령은 기본적으로 CUDA를 지정한다.
+    runtime_device: cpu # CPU를 명시하려면 make panda-view PANDA_RDF_DEVICE=cpu를 사용한다.
+    query_density: 500.0 # query point 밀도(m^-2). 변경하려면 offline에서 query point를 다시 생성해야 한다.
+    top_k: 2  # null이면 모든 query point를 사용한다.
+    sphere_gate: true # 먼 링크 쌍에는 sphere barrier를, 가까운 쌍에는 RDF를 사용한다.
+    # 전환 폭 = fraction * (외접구 반지름의 합 - 검증된 bound의 합 - margin).
+    # 0보다 크고 1보다 작아야 하며, 학습된 모델 자체는 바꾸지 않는다.
     sphere_gate_transition_fraction: 0.5
-    softmin_error: 0.005 # m; not subtracted from barrier again
-    # m; runtime allows 0 <= value <= trained physical_margin (this model: 0.030).
-    # Reducing this changes CBF clearance only; trained radii/weights stay fixed.
+    softmin_error: 0.005 # softmin의 최대 근사 오차(m). barrier에서 다시 차감하지 않는다.
+    # 물리적 안전 여유(m). runtime에서는 0 이상, 학습 당시 physical_margin 이하만 허용한다.
+    # 이 값을 낮추면 CBF의 안전 여유만 바뀌고, 학습된 반지름과 weight는 유지된다.
     physical_margin: 0.010
-    # m; overestimation limit AND CBF uncertainty margin (0.040 m total at 0.030).
-    # Also changes training radii; a 5 mm artifact must not be relabeled/reused.
+    # 과대추정 검증 한계이자 CBF의 오차 여유(m). physical_margin과 합산해 barrier에 반영한다.
+    # 학습 반지름에도 영향을 주므로 기존 artifact의 설정값만 바꾸어 재사용할 수 없다.
     error_margin: 0.010
-    # m; separate offline underestimation limit; does NOT alter CBF or radii.
-    # Requires explicit revalidation; never relabel a legacy report as passing.
+    # 별도의 offline 과소추정 검증 한계(m). CBF나 학습 반지름에는 영향을 주지 않는다.
+    # 변경 후에는 다시 검증해야 하며, 기존 report의 통과 여부만 바꾸면 안 된다.
     underestimation_limit: 0.020
     transition_ratio: 0.5
-    cbf_gain: 1.0
+    cbf_gain: 1.0 # RDF 자기 충돌 CBF의 gain
     seed: 0
-  margin: 0.05
-  alpha: 0.3
-  # Explicit self-pair exclusions; obstacle checks remain enabled.
+  margin: 0.05 # capsule 기반 충돌 거리의 안전 여유(m)
+  alpha: 0.3 # 외부 장애물·capsule 자기 충돌·관절 한계 CBF의 gain. RDF 자기 충돌은 위 cbf_gain을 사용한다.
+  # 자기 충돌 검사에서 제외할 쌍. 이 링크들의 외부 장애물 검사는 계속 수행한다.
   self_collision_exclusions:
-    - [link7, gripper] # Fixed hand assembly (capsule backend).
-    - [link6, hand] # User-approved wrist pair exclusion (2026-09-30).
-    - [link5, link7] # 애초에 너무 가까이 있음
-  # Endpoints are expressed in each named frame's local coordinates. Adjacent
-  # capsules are omitted from self-collision pairs; all others are checked.
+    - [link7, gripper] # 고정된 hand 구성 요소 사이의 쌍(capsule backend)
+    - [link6, hand] # 사용자가 승인한 손목 링크 쌍 제외(2026-09-30)
+    - [link5, link7] # 구조적으로 매우 가까운 링크 쌍
+  # 각 끝점의 offset은 지정한 frame의 로컬 좌표계 기준이다.
+  # capsule 자기 충돌 검사에서는 인접 쌍과 위 제외 쌍을 제외한 나머지 쌍을 검사한다.
   capsules:
     - {
         name: base,
@@ -160,31 +160,31 @@ obstacles:
     }
 
 trajectory:
-  success_barrier_tolerance: 1.0e-6
-  stop_progress_window: 2.0
-  stop_progress_tolerance: 0.001
-  duration: 90.0
-  integration_period: 0.01
-  # sequential: link endpoint position stages, then final EE pose.
-  # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
+  success_barrier_tolerance: 1.0e-6 # 일반 실행의 목표 성공 판정에 허용할 barrier 수치 오차(m). CBF 제약은 완화하지 않는다.
+  stop_progress_window: 2.0 # 정체 판정을 위해 목표 오차의 개선을 관찰하는 시간(s)
+  stop_progress_tolerance: 0.001 # 이 시간 동안 허용오차로 정규화한 목표 오차가 개선되어야 할 최소량
+  duration: 90.0 # 최대 시뮬레이션 시간(s)
+  integration_period: 0.01 # 제어 및 수치 적분 주기(s)
+  # sequential: 중간 링크 위치를 순차적으로 추종한 뒤 최종 EE pose를 추종한다.
+  # direct: 처음부터 최종 EE pose CLF만 사용한다. 두 모드 모두 관절각 목표 CLF는 사용하지 않는다.
   mode: sequential
-  # Frame origins: link2 is fixed; link3 and link5 provide moving position goals.
+  # 각 frame의 원점 위치를 중간 목표로 사용한다. link2는 고정되어 있고 link3·link5는 움직인다.
   stage_frames: [link3, link5]
-  stage_position_tolerance: 0.05
-  orientation_weight: 1.0
-  stop_window: 0.5 # seconds; low mean speed plus insufficient task progress triggers a stall.
-  stop_velocity_tolerance: 0.001
-  clf_rate: 20.0
-  clf_slack_weight: 1000.0
-  # One third of Panda's configured nominal limits.
+  stage_position_tolerance: 0.05 # 중간 링크 위치 목표의 허용오차(m)
+  orientation_weight: 1.0 # 최종 pose CLF에서 방향 오차에 곱하는 가중치
+  stop_window: 0.5 # 관절 속도 norm의 평균을 계산하는 시간(s). 낮은 속도와 오차 개선 부족이 함께 있어야 정체로 판정한다.
+  stop_velocity_tolerance: 0.001 # 정체 판정에 사용하는 평균 관절 속도 norm의 상한(rad/s)
+  clf_rate: 20.0 # CLF 감소율
+  clf_slack_weight: 1000.0 # QP 목적함수에서 CLF slack에 부여하는 가중치
+  # 관절 1~7의 속도 크기 제한(rad/s)
   velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]
-  acceleration_limits:
+  acceleration_limits: # 관절 1~7의 가속도 크기 제한(rad/s^2)
     [5.0, 2.5, 3.33333333, 4.16666667, 5.0, 6.66666667, 6.66666667]
 
 qp:
-  joint_velocity_weight: 1.0
-  # OSQP stops at this iteration limit. A larger value avoids treating a
-  # slow-to-converge, slack-feasible first step as an infeasible QP.
+  joint_velocity_weight: 1.0 # QP 목적함수에서 관절 속도의 제곱 norm에 부여하는 가중치
+  # 제어 스텝마다 OSQP가 수행할 최대 반복 횟수. 수렴이 느린 경우 더 많은 반복을 허용한다.
+  # 한도에 도달하면 iteration_limit으로 종료되며, 수학적으로 infeasible임을 뜻하지는 않는다.
   max_iterations: 20000
-  absolute_tolerance: 0.001
-  relative_tolerance: 0.001
+  absolute_tolerance: 0.001 # OSQP eps_abs: 제약 만족도·최적성 잔차의 기본 절대 허용오차
+  relative_tolerance: 0.001 # OSQP eps_rel: 관련 값의 크기에 비례해 추가하는 상대 허용오차
