@@ -14,6 +14,38 @@
 두 실행 YAML의 위치는 유지했다. 따라서 YAML 기준 상대경로인 로봇 asset·모델
 경로도 그대로다. 학습·보관 폴더의 설정은 실행 시 자동으로 합쳐지거나 로드되지 않는다.
 
+## 비교 실험 설정 — `experiments/`
+
+[panda_comparison.yaml](experiments/panda_comparison.yaml)은 Panda 몬테카를로 전용 설정이다.
+`controller_config`에서 공통 로봇 설정을 읽고 `controller_overrides`를 덮어쓴다.
+일반 `make panda-view`는 실험 파일을 읽지 않는다.
+
+| 항목 | 조절하는 것 |
+|---|---|
+| `command` | `pilot`, `run`(본실험만), `campaign`(파일럿 후 본실험) |
+| `pilot`, `main` | 각 단계의 `seeds`, `cases_per_seed`; 장면 수는 두 값의 곱 |
+| `controller_overrides` | gain, 계산 주기, 시간 제한, 단계 순서, 정체 기준, QP 설정 등 |
+| `sampling` | 목표·장애물 위치 범위, 장애물 수·반지름, 초기·목표 안전 여유, 표본 생성 예산 |
+| `validation.subdivisions` | 적분 구간을 나누는 수; 내부 상태의 추가 안전 검사 수는 이 값에서 1을 뺀 값 |
+| `rdf_device` | 계산 장치 `cuda` 또는 `cpu` |
+| `output_root`, `output` | 새 결과의 상위 폴더, 또는 재개할 결과 폴더; `output: null`이면 매번 새 폴더 |
+
+```bash
+make panda-compare ARGS="--dry-run" # 최종 적용 설정 확인, 결과 생성 없음
+make panda-compare                # YAML의 command 실행
+make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yaml
+```
+
+실험 파일을 복사해 조건별로 관리한다. `controller_config`, `output_root`, YAML의 `output`은
+**실험 YAML 위치**를 기준으로 해석한다. `controller_overrides` 안의 모델 경로는
+**공통 제어 YAML 위치**를 기준으로 해석한다. 초기 관절각과 pose 허용오차는 공통 설정을
+따르고 덮어쓸 수 있다. 목표 pose·장애물은 실험의 난수 표본으로 생성한다.
+
+실행 결과에는 원본 `experiment.yaml`, 원본 `controller_source.yaml`, 최종
+`experiment.resolved.yaml`, 합쳐진 `config.yaml`, `resolved_config.json`을 저장한다.
+명령행 재정의도 최종 파일에 반영하며, 원본의 주석과 줄바꿈은 원본 사본에 보존한다.
+입력 설정이나 저장된 사본이 변경되면 같은 결과 폴더에서의 재개를 거부한다.
+
 ## 오프라인 학습 설정 — `training/`
 
 | 파일 | 용도 |

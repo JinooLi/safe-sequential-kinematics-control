@@ -12,6 +12,7 @@ from safe_ik.application.panda_comparison import (
     SceneSafety,
     atomic_json,
     digest,
+    validate_completed_run,
     verify_resume,
 )
 from safe_ik.application.panda_comparison_rollout import comparison_rollout
@@ -112,11 +113,63 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertLess(trace["barrier_values"][-1, 0], 0)
 
+    def test_comparison_keeps_strict_safety_score_separate_from_numeric_tolerance(self):
+        result, _ = self.run_case(Safety(lambda q: 1.0 if q[0] == 0 else -4.43e-11))
+        self.assertTrue(result["goal_reached"])
+        self.assertFalse(result["success"])
+        self.assertTrue(result["success_barrier_tolerance_1e6"])
+
+    def test_single_candidate_continues_slow_progress_until_goal(self):
+        class SlowSolver(Solver):
+            def solve(self, problem):
+                result = super().solve(problem)
+                return replace(result, x=result.x * 1e-4)
+
+        config = replace(
+            self.config,
+            target=replace(
+                self.config.target,
+                position=np.array([0.0105, 0, 0]),
+                position_tolerance=0.01,
+            ),
+            trajectory=replace(self.config.trajectory, mode="sequential", duration=6.0),
+        )
+        candidate = SafeIKCandidate(np.array([0.0105, 0, 0, 0, 0, 0, 0]), 0, 1, 0, 0, 1)
+        runtime = PandaRuntime(Kinematics(), Safety(), SlowSolver(), Plant())
+        result, _ = comparison_rollout(config, runtime, candidate, subdivisions=1)
+        self.assertEqual(result["reason"], "goal_reached")
+        self.assertTrue(result["success"])
+        self.assertGreater(result["elapsed"], config.trajectory.stop_progress_window)
+
     def test_interpolation_detects_crossing_between_safe_samples(self):
         result, _ = self.run_case(Safety(lambda q: (q[0] - 0.01) ** 2 - 0.00003))
         self.assertTrue(result["success"])
         self.assertFalse(result["interpolated_success"])
         self.assertEqual(result["interpolation_checks"], 4)
+
+    def test_saved_validation_uses_configured_subdivision_count(self):
+        runtime = PandaRuntime(Kinematics(), Safety(), Solver(), Plant())
+        result, trace = comparison_rollout(self.config, runtime, subdivisions=3)
+        self.assertEqual(result["interpolation_checks"], 2)
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for method in ("direct", "sequential"):
+                directory = root / "case" / method
+                directory.mkdir(parents=True)
+                np.savez_compressed(directory / "trajectory.npz", **trace)
+                atomic_json(
+                    directory / "summary.json",
+                    {
+                        **result,
+                        "case_id": "case",
+                        "method": method,
+                        "trace_sha256": digest(directory / "trajectory.npz"),
+                    },
+                )
+            cases = [{"case_id": "case", "initial_q": trace["q"][0].tolist()}]
+            validate_completed_run(root, cases, subdivisions=3)
+            with self.assertRaisesRegex(ValueError, "interpolation"):
+                validate_completed_run(root, cases, subdivisions=5)
 
     def test_goal_does_not_require_intermediate_stage_completion(self):
         config = replace(

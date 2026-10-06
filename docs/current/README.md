@@ -2,7 +2,7 @@
 
 이 문서는 목표 pose와 로봇 설정이 어떤 계산을 거쳐 관절 속도와 실행 기록이 되는지 설명한다.
 Panda 7자유도 실행을 중심으로 읽고, RDF 오프라인 학습과 평면 로봇 비교 실험을 연결한다.
-코드 확인 기준은 **2026-10-05, `8ff567a` 기반 의존성 정리 작업트리**다. 아래 설정값은 그 시점의 작업 설정이며,
+전체 구조는 **2026-10-05, `8ff567a` 기반 의존성 정리 작업트리**, 성공·정체 판정은 **2026-10-06 수정**을 반영한다. 아래 설정값은 작업 설정이며,
 실험마다 달라질 수 있다. 설계의 변화와 과거 측정치는 [연구 기록](../history/README.md)에 있다.
 
 ## 전체 흐름
@@ -198,10 +198,50 @@ IK 실패는 `safe_ik.failure_reason`, QP·수치 실패는 `failure`와 QP 상�
 시간 예산 소진이나 정체는 `failure = null`이어도 성공이 아닐 수 있으므로
 `trajectory.success`를 확인한다. QP 실패 시 제어기는 0 속도를 반환하고 실행 루프는 적분 전에 종료한다.
 
-현재 성공 판정은 마지막 단계, 목표 pose 허용오차, 비음수 최소 충돌 장벽을 확인한다.
-RDF 모드의 `status`는 마지막으로 평가한 장벽을 재사용하므로 최종 적분 후 자세에 대한
-새 평가와 동일하다고 가정하면 안 된다. 해석 근거는 [controller.status](../../src/safe_ik/control/panda_controller.py)와
+현재 성공 판정은 마지막 단계, 목표 pose 허용오차, 최소 충돌 장벽
+$h_{\min}\geq-\varepsilon_h$를 확인한다. `trajectory.success_barrier_tolerance`의 기본값은
+$\varepsilon_h=10^{-6}\,\mathrm{m}$이며, 0으로 설정하면 엄격한 비음수 판정이다.
+이는 목표 도달 판정의 수치 허용오차다. QP의 hard CBF, IK 후보 검사, 초기 상태 검사에는
+적용하지 않으며, 기록된 장벽값도 원래 값 그대로 보존한다. `status(q)`는 마지막으로
+평가한 자세와 `q`가 다르면 안전값을 새로 계산한다.
+해석 근거는 [controller.status](../../src/safe_ik/control/panda_controller.py)와
 [기록 루프](../../src/safe_ik/application/panda_rollout.py)에 있다.
+
+## 느린 수렴과 정체의 구분
+
+정체 판정은 현재 관절 속도의 이력과 **현재 단계의 목표 오차 이력**을 받아
+`stalled`를 출력한다. 속도가 작고, 오차의 최솟값도 최근 구간에서 충분히 개선되지
+않았을 때만 정체로 판정한다. 남은 IK 후보가 있으면 교체하고, 없으면 종료한다.
+
+서로 다른 단위를 비교하기 위해 단계 오차를 해당 허용오차로 나눈다.
+중간 단계는 위치만, 마지막 단계와 direct 모드는 위치·자세 중 큰 비율을 사용한다.
+
+$$
+E(q)=\begin{cases}
+\lVert e_{\mathrm{stage}}(q)\rVert/\tau_{\mathrm{stage}}, & \text{중간 단계},\\
+\max\bigl(\lVert e_p(q)\rVert/\tau_p,\lVert e_R(q)\rVert/\tau_R\bigr), & \text{최종 pose}.
+\end{cases}
+$$
+
+현재 단계 시작 이후의 최솟값을 $B_k=\min_{j\leq k}E(q_j)$로 기록한다.
+최근 구간의 개선량 $B_{k-N}-B_k$가 `stop_progress_tolerance`보다 크면
+속도가 작아도 기다린다. 같은 범위에서 반복하는 흔들림은 새로운 개선으로 세지 않는다.
+
+| `trajectory` 설정 | 기본값 | 의미 |
+|---|---:|---|
+| `stop_window` | 0.5 s | 관절 속도 norm의 이동평균 구간 |
+| `stop_velocity_tolerance` | 0.001 rad/s | 낮은 속도 기준 |
+| `stop_progress_window` | 2.0 s | 오차 개선을 관찰하는 구간 |
+| `stop_progress_tolerance` | 0.001 | 허용오차로 나눈 오차의 최소 개선량 |
+
+위치가 최종 오차를 결정하고 위치 허용오차가 10 mm라면, 기본 개선 기준은 2초 동안
+0.01 mm를 넘는 감소다. 두 구간이 모두 채워진 뒤 판정하며, 계산 주기가 바뀌면
+각 구간의 샘플 수를 다시 계산한다. 단계·IK 변경 시 속도와 개선 이력을 함께 초기화한다.
+전체 실행의 `duration` 제한은 계속 적용된다.
+
+`clf_rate`, `clf_slack_weight`, 계산 주기와 속도·가속도 제한은 수렴 속도와 함께 조정해야 한다.
+정체 판정은 gain이나 계산 주기를 자동 변경하지 않는다. 비교 실험에서는 이 값들과
+종료 판정 설정을 함께 저장하고, 한 조건씩 바꿔 조기 종료와 제어 성능의 영향을 구분한다.
 
 ## 현재 작업 설정을 읽는 예
 

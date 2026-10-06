@@ -77,6 +77,12 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
     """Load and validate the dedicated Panda controller configuration."""
     path = Path(path)
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return parse_panda_config(data, path)
+
+
+def parse_panda_config(data: dict, path: str | Path) -> PandaControllerConfig:
+    """Validate a configuration mapping; asset paths are relative to path."""
+    path = Path(path)
     robot = data["robot"]
     target = data["target"]
     ik = data["safe_ik"]
@@ -241,6 +247,9 @@ def load_panda_config(path: str | Path) -> PandaControllerConfig:
             ),
             velocity_limits=velocity_limits,
             acceleration_limits=acceleration_limits,
+            success_barrier_tolerance=trajectory.get("success_barrier_tolerance", 1e-6),
+            stop_progress_window=trajectory.get("stop_progress_window", 2.0),
+            stop_progress_tolerance=trajectory.get("stop_progress_tolerance", 1e-3),
         ),
         qp=PandaQPConfig(
             joint_velocity_weight=_positive(

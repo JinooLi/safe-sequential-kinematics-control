@@ -1,0 +1,49 @@
+# Paths here are relative to this experiment YAML.
+controller_config: ../panda.yaml
+command: campaign # pilot | run (main only) | campaign (pilot then main)
+rdf_device: cuda
+output_root: ../../outputs/panda_comparison
+output: null # null creates a new run; set a directory to resume the same experiment.
+
+pilot:
+  seeds: [20261005]
+  cases_per_seed: 20
+main:
+  seeds: [2332, 2333, 2334, 2335, 2336]
+  cases_per_seed: 60 # 5 seeds × 60 scenes = 300 Direct/Sequential pairs.
+
+# Only these values override controller_config; ordinary panda-view is unaffected.
+# Controller asset paths remain relative to controller_config.
+controller_overrides:
+  trajectory:
+    duration: 90.0
+    integration_period: 0.01
+    clf_rate: 20.0
+    clf_slack_weight: 1000.0
+    stage_frames: [link3, link5]
+    stage_position_tolerance: 0.05
+    orientation_weight: 1.0
+    velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]
+    success_barrier_tolerance: 1.0e-6
+    stop_window: 0.5
+    stop_velocity_tolerance: 0.001
+    stop_progress_window: 2.0
+    stop_progress_tolerance: 0.001
+  qp:
+    absolute_tolerance: 0.001
+    relative_tolerance: 0.001
+
+# Random goals and obstacles replace target pose and obstacles in controller_config.
+# Initial joints and pose tolerances are inherited; they can also be overridden above.
+sampling:
+  workspace_lower: [-0.7, -0.7, 0.1]
+  workspace_upper: [0.7, 0.7, 1.0]
+  obstacle_count: 2
+  obstacle_radius_range: [0.04, 0.10]
+  minimum_target_distance: 0.15
+  joint_limit_margin: 0.1
+  minimum_barrier: 0.005
+  max_proposals_per_seed: 10000
+
+validation:
+  subdivisions: 5 # Split each control interval into 5; check its 4 interior states.

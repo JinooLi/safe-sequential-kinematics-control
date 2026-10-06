@@ -32,4 +32,20 @@ Panda 실행 Make 명령은 기본적으로 CUDA를 선택하므로, CPU를 쓰�
 `PANDA_RDF_DEVICE=cpu`를 명시한다. GUI에는 display가 필요하다.
 세부 옵션의 기준은 [Makefile](Makefile)과 각 명령의 `--help`다.
 
+Panda의 Direct/Sequential 몬테카를로 비교는 다음 명령으로 실행한다.
+
+```bash
+make panda-compare ARGS="--dry-run" # 최종 설정만 확인
+make panda-compare                 # 전용 YAML의 command 실행
+make panda-compare-pilot            # 전용 YAML의 파일럿만 실행
+make panda-compare-campaign         # 전용 YAML의 파일럿 후 본실험 실행
+```
+
+실험 설정은 [전용 YAML](configs/experiments/panda_comparison.yaml)에 모았다.
+파일럿·본실험 표본 수, gain·계산 주기·종료 판정, 장면 생성 범위와 결과 경로를 조절한다.
+다른 실험 파일은 `PANDA_EXPERIMENT_CONFIG=<파일>`로 선택한다. 결과에는 **원본 실험 YAML과
+최종 적용 설정**을 함께 저장한다. 같은 조건으로 재개하려면 YAML의 `output` 또는
+`OUTPUT=<기존 디렉토리>`를 지정한다. 실행 예시는
+[Panda 실험 프로토콜](docs/experiments/panda_monte_carlo_protocol.md#실행과-재개)에 있다.
+
 기존 긴 README는 [이전 프로젝트 안내](docs/history/project_readme.md)에 보존했다.

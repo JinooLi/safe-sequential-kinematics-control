@@ -8,6 +8,7 @@ from scipy.spatial.transform import Rotation
 from scipy.stats import binomtest
 
 from ..domain.panda_config import SphereObstacleConfig
+from ..domain.panda_sampling_config import PandaSamplingConfig
 from ..domain.rotations import quaternion_orientation_error
 from ..domain.spatial_safety import PandaCapsuleSafety
 
@@ -35,37 +36,53 @@ def case_config(base, case):
     )
 
 
-def generate_cases(config, kinematics, self_safety, seeds, cases_per_seed):
+def generate_cases(
+    config,
+    kinematics,
+    self_safety,
+    seeds,
+    cases_per_seed,
+    sampling=PandaSamplingConfig(),
+):
     """Reject scenes before IK/control; never condition on controller outcomes."""
     cases, statistics = [], {}
     p0 = kinematics.pose_and_jacobian(config.initial_q)[0]
     initial_self = self_safety.evaluate(config.initial_q).minimum
-    if not np.isfinite(initial_self) or initial_self < 0.005:
+    if not np.isfinite(initial_self) or initial_self < sampling.minimum_barrier:
         raise ValueError("initial self barrier cannot satisfy sampling margin")
-    lower, upper = kinematics.lower_limits + 0.1, kinematics.upper_limits - 0.1
+    lower = kinematics.lower_limits + sampling.joint_limit_margin
+    upper = kinematics.upper_limits - sampling.joint_limit_margin
+    if np.any(lower >= upper):
+        raise ValueError("sampling joint margin leaves no valid joint range")
     for seed in seeds:
         rng = np.random.default_rng(seed)
         counts = Counter()
         accepted = 0
-        for proposal in range(10000):
+        for proposal in range(sampling.max_proposals_per_seed):
             witness = rng.uniform(lower, upper)
-            centers = rng.uniform([-0.7, -0.7, 0.1], [0.7, 0.7, 1.0], size=(2, 3))
-            radii = rng.uniform(0.04, 0.10, size=2)
+            centers = rng.uniform(
+                sampling.workspace_lower,
+                sampling.workspace_upper,
+                size=(sampling.obstacle_count, 3),
+            )
+            radii = rng.uniform(
+                *sampling.obstacle_radius_range, size=sampling.obstacle_count
+            )
             position, quaternion, _ = kinematics.pose_and_jacobian(witness)
             counts["proposals"] += 1
-            if np.any(position < [-0.7, -0.7, 0.1]) or np.any(
-                position > [0.7, 0.7, 1.0]
+            if np.any(position < sampling.workspace_lower) or np.any(
+                position > sampling.workspace_upper
             ):
                 counts["outside_workspace"] += 1
                 continue
-            if np.linalg.norm(position - p0) < 0.15:
+            if np.linalg.norm(position - p0) < sampling.minimum_target_distance:
                 counts["target_too_close"] += 1
                 continue
             obstacles = tuple(
                 SphereObstacleConfig(
                     f"obstacle{i + 1}", centers[i], float(radii[i]), True
                 )
-                for i in range(2)
+                for i in range(sampling.obstacle_count)
             )
             safety = PandaCapsuleSafety(
                 kinematics,
@@ -75,7 +92,7 @@ def generate_cases(config, kinematics, self_safety, seeds, cases_per_seed):
                 config.safety.self_collision_exclusions,
                 include_self=False,
             )
-            if safety.evaluate(config.initial_q).minimum < 0.005:
+            if safety.evaluate(config.initial_q).minimum < sampling.minimum_barrier:
                 counts["initial_margin"] += 1
                 continue
             goal = self_safety.evaluate(witness)
@@ -84,7 +101,10 @@ def generate_cases(config, kinematics, self_safety, seeds, cases_per_seed):
                 or not np.isfinite(goal.gradients).all()
             ):
                 raise FloatingPointError("nonfinite RDF scene evaluation")
-            if min(goal.minimum, safety.evaluate(witness).minimum) < 0.005:
+            if (
+                min(goal.minimum, safety.evaluate(witness).minimum)
+                < sampling.minimum_barrier
+            ):
                 counts["goal_margin"] += 1
                 continue
             cases.append(

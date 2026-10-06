@@ -17,7 +17,7 @@ from ..domain.types import QPProblem, QPStatus, SafetyDiagnostics
 
 
 class PandaTrajectoryController:
-    """Track safe IK candidates and switch when a moving-average stall occurs."""
+    """Track safe IK candidates; switch only on low speed without task progress."""
 
     def __init__(
         self,
@@ -61,6 +61,18 @@ class PandaTrajectoryController:
             ),
         )
         self.velocity_norms = deque(maxlen=window_samples)
+        progress_samples = max(
+            1,
+            int(
+                np.ceil(
+                    config.trajectory.stop_progress_window
+                    / config.trajectory.integration_period
+                )
+            ),
+        )
+        # N intervals need N+1 states. status() never advances this history.
+        self._progress_best_errors = deque(maxlen=progress_samples + 1)
+        self._best_task_error = float("inf")
         self.qp_infeasible_count = 0
         self.qp_solver_failure_count = 0
         self.qp_infeasible_stopped = False
@@ -157,7 +169,29 @@ class PandaTrajectoryController:
             self._stage_transition_events.append(
                 (previous_name, self.active_stage_name, "target_reached")
             )
-            self.velocity_norms.clear()
+            self._reset_stall_history()
+
+    def _reset_stall_history(self) -> None:
+        self.velocity_norms.clear()
+        self._progress_best_errors.clear()
+        self._best_task_error = float("inf")
+
+    def _record_task_progress(self, q) -> None:
+        """Record once per control tick, for the active candidate and stage."""
+        if self.stage_index < len(self.stage_frames):
+            error = (
+                self._active_clf(q)[2] / self.config.trajectory.stage_position_tolerance
+            )
+        else:
+            position, _, orientation, _ = self._pose_errors(q)
+            error = max(
+                float(np.linalg.norm(position)) / self.config.target.position_tolerance,
+                float(np.linalg.norm(orientation))
+                / self.config.target.orientation_tolerance,
+            )
+        # Repeated oscillations must not count as new progress toward the goal.
+        self._best_task_error = min(self._best_task_error, error)
+        self._progress_best_errors.append(self._best_task_error)
 
     def status(
         self, q, qp_infeasible: bool = False, qp_solver_failed: bool = False
@@ -172,19 +206,22 @@ class PandaTrajectoryController:
         )
         minimum_barrier = (
             self.last_barrier.minimum
-            if self.config.safety.self_collision_model == "rdf"
+            if np.array_equal(q, self.last_barrier_q)
             else self.safety.evaluate(q).minimum
         )
         success = (
             self.stage_index == len(self.stage_frames)
             and position_error <= self.config.target.position_tolerance
             and orientation_error <= self.config.target.orientation_tolerance
-            and minimum_barrier >= 0.0
+            and minimum_barrier >= -self.config.trajectory.success_barrier_tolerance
         )
         stalled = (
             len(self.velocity_norms) == self.velocity_norms.maxlen
             and float(np.mean(self.velocity_norms))
             <= self.config.trajectory.stop_velocity_tolerance
+            and len(self._progress_best_errors) == self._progress_best_errors.maxlen
+            and self._progress_best_errors[0] - self._progress_best_errors[-1]
+            <= self.config.trajectory.stop_progress_tolerance
             and not success
         )
         return PandaControlStatus(
@@ -218,9 +255,10 @@ class PandaTrajectoryController:
             self._stage_transition_events.append(
                 (previous_stage_name, self.active_stage_name, "candidate_switch")
             )
-        self.velocity_norms.clear()
+        self._reset_stall_history()
         self.previous_velocity.fill(0.0)
         self._advance_reached_stages(q)
+        self._record_task_progress(q)
         self.last_status = self.status(q)
         return True
 
@@ -233,6 +271,7 @@ class PandaTrajectoryController:
         self.last_qp_status = "not_run"
         self.last_qp_solve_time = 0.0
         self._advance_reached_stages(q)
+        self._record_task_progress(q)
         self._switch_candidate_if_stalled(q)
         if self.last_status is not None and (
             self.last_status.success or self.last_status.candidates_exhausted

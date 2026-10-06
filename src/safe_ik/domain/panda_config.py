@@ -177,6 +177,28 @@ class PandaTrajectoryConfig:
     clf_slack_weight: float
     velocity_limits: np.ndarray
     acceleration_limits: np.ndarray
+    # Goal acceptance only; does not relax the QP or IK safety constraints.
+    success_barrier_tolerance: float = 1e-6
+    stop_progress_window: float = 2.0
+    # Improvement in task error normalized by its goal tolerance.
+    stop_progress_tolerance: float = 1e-3
+
+    def __post_init__(self):
+        for name in (
+            "success_barrier_tolerance",
+            "stop_velocity_tolerance",
+            "stop_progress_tolerance",
+            "stop_progress_window",
+        ):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, Real)
+                or not np.isfinite(value)
+                or value < 0
+                or (name == "stop_progress_window" and value == 0)
+            ):
+                raise ValueError(f"trajectory.{name} has an invalid value: {value}")
 
     @property
     def control_frequency(self) -> float:

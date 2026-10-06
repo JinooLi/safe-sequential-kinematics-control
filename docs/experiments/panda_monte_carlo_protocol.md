@@ -179,12 +179,19 @@ $$
   보간해 barrier를 재평가한 결과도 모든 case에 대해 별도 보고한다.
   이는 수치적 추가 검사이며 연속 시간의 무충돌 증명이나 독립 mesh 검증은 아니다.
 
-현재 [rollout](../../src/safe_ik/application/panda_rollout.py)은 적분 전 관절각을
-trace에 저장하고, RDF일 때 `status()`는 마지막 barrier를 재사용한다.
-따라서 기존 `summary.json`의 성공값만 모아 위 정의의 성공률로 사용하면 안 된다.
-실험 실행기에는 **최종 상태를 포함한 기록과 새 상태의 안전 재평가**, 그리고
-stage 완료 여부에 의존하지 않는 공통 종료 판정이 필요하다.
-기존 동작을 바꾸는 이 실험용 판정은 설정과 manifest에 명시한다.
+일반 [rollout](../../src/safe_ik/application/panda_rollout.py)은 적분 전 관절각을
+trace에 저장한다. 비교 실행기는 **최종 상태를 포함한 기록과 새 상태의 안전 재평가**,
+stage 완료 여부에 의존하지 않는 목표 도달 판정을 사용하므로 일반 실행의
+`summary.json` 성공값과 구별한다.
+
+2026-10-06 제어기 수정 이후에는 낮은 속도에 더해 최근 목표 오차의 개선도 확인한다.
+기본값은 `stop_progress_window=2.0` s, `stop_progress_tolerance=0.001`이며,
+정규화와 단계별 초기화는 [현재 구현의 정체 판정](../current/README.md#느린-수렴과-정체의-구분)에 설명한다.
+이 정책은 Direct와 Sequential 양쪽에 적용된다. 일반 실행의 목표 성공 판정은
+`success_barrier_tolerance=1e-6` m을 사용하지만, 비교 실험의 주 성공률은 위의 엄격한
+전체 경로 안전 판정을 유지하고 수치 허용오차 결과를 별도로 보고한다.
+변경된 코드·설정은 manifest에 반영되므로 10월 5일의 기존 결과와 이어 붙이지 않고
+새 출력 디렉토리에서 비교한다.
 
 ## 보고할 지표와 해석
 
@@ -295,22 +302,75 @@ IK 준비·탐색·후보 검증 시간을 캐시한 IK를 재사용한 궤적 �
 
 ## 실행과 재개
 
-원격 작업 공간에서 다음 명령은 20개 파일럿 이후 300개 주실험을 순서대로 실행한다.
+실험 설정은 [configs/experiments/panda_comparison.yaml](../../configs/experiments/panda_comparison.yaml)에서
+관리한다. `controller_config`의 공통 로봇 설정에 `controller_overrides`를 덮어쓴다.
+파일럿·본실험 표본 수, 난수 seed, 장면 생성 범위, 적분 구간의 추가 검사 수도 이 파일에서 바꾼다.
+일반 단일 궤적 실행의 설정 파일을 편집하지 않고 실험 조건을 바꿀 수 있다.
+
+`lab-server`에서는 `/home/cdsl/jinoo_ws/safe-inv-clbf-robot-arm-panda-gpu`에서 실행한다.
 
 ```bash
-.venv/bin/python -m safe_ik.application.panda_comparison campaign \
-  --config configs/panda.yaml --rdf-device cuda \
-  --output outputs/panda_comparison/panda_link3_link5_20261005
+# 파일을 편집한 뒤 실제 적용될 설정을 확인한다. 계산·결과 저장은 하지 않는다.
+make panda-compare ARGS="--dry-run"
+
+# YAML의 command 실행: 기본 campaign은 파일럿 후 본실험
+make panda-compare
+
+# 같은 YAML에서 파일럿만 또는 캠페인을 명시적으로 선택
+make panda-compare-pilot
+make panda-compare-campaign
+
+# 다른 조건을 적은 실험 YAML 선택
+make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yaml
+
+# YAML의 output 대신 이 디렉토리에 저장; 같은 명령으로 중단된 실험 재개
+make panda-compare OUTPUT=outputs/panda_comparison/gain20_dt001
+
+# 일회성 재정의: 본실험만, 지정한 표본 수와 시간 제한
+make panda-compare ARGS="run --seeds 2332 --cases-per-seed 10 --duration 90"
 ```
 
-파일럿의 모든 paired 결과와 최종 상태·안전 판정·보간 검사 기록이 일치하고,
-안전 IK를 확보한 case가 하나 이상 있어야 주실험으로 진행한다.
-어느 방법의 성공률이 높은지는 진행 조건으로 사용하지 않는다.
-표본 분포, IK 예산, 제어 이득과 60초 제한을 유지한다.
-오류가 발생하면 캠페인의 `status.json`에 사유를 남기고 중단한다.
-동일 명령으로 재개하면 완료한 결과는 재사용한다. 소스·프로토콜·설정·자산이
-바뀌었거나 저장된 장면·궤적 hash가 맞지 않으면 재개를 거부한다.
+`my_experiment.yaml`은 전용 YAML을 같은 폴더에 복사해서 만든다. 기본 파일은
+파일럿 20개, 본실험 300개, gain 20, 계산 주기 0.01초, 제한 시간 90초다.
+`controller_overrides.trajectory`에서 이득·주기·단계 순서·정체 조건을,
+`controller_overrides.qp`에서 QP 허용오차를 조절한다. `pilot`과 `main`의 장면 수는
+각각 `seeds` 개수와 `cases_per_seed`의 곱이다. 한 장면에서 두 방법을 실행한다.
+캠페인의 표본 수와 seed도 YAML을 따르며 고정된 상수로 덮어쓰지 않는다.
 
-개별 실행은 `run --seeds 20261005 --cases-per-seed 20 --output <directory>`를 사용한다.
-`--duration`은 별도 smoke test에 사용할 수 있으며 해당 조건은 manifest에 남는다.
-파일럿과 본 실험에서는 60초를 사용하고, smoke test는 통계에서 제외한다.
+`output: null`이면 `output_root` 아래 UTC 시간·명령·고유 식별자로 새 디렉토리를 만든다.
+특정 YAML `output`을 지정하면 같은 폴더에서 재개한다. YAML의 입력·출력 경로는
+실험 YAML 기준이며, 명령행 `--output`과 Make `OUTPUT`은 실행 디렉토리 기준이다.
+`--config` 또는 명시적 `PANDA_CONFIG`는 공통 제어 파일을 재정의하고,
+`--rdf-device` 또는 명시적 `PANDA_RDF_DEVICE`는 계산 장치를 재정의한다.
+Make의 기본값이 YAML의 장치를 덮어쓰지는 않는다. CPU 전용 의존성으로 실행하려면
+`PANDA_RDF_DEVICE=cpu`도 지정한다. `ARGS="--help"`로 전체 옵션을 확인한다.
+
+### 결과에 저장되는 설정
+
+캠페인의 최상위 디렉토리와 `pilot/`, `main/`에 다음 파일을 저장한다.
+파일럿 또는 본실험만 실행할 때는 해당 결과 디렉토리에 바로 저장한다.
+
+| 파일 | 내용 |
+|---|---|
+| `experiment.yaml` | 사용자가 선택한 실험 YAML 원본, 주석·줄바꿈 포함 |
+| `controller_source.yaml` | 실제로 읽은 공통 제어 YAML 원본 |
+| `experiment.resolved.yaml` | 명령행 재정의·기본값까지 적용한 배치, 장면 생성, 검증, 출력 설정 |
+| `config.yaml` | 공통 설정과 실험 재정의를 합친 제어 YAML, 모델 경로는 절대 경로 |
+| `resolved_config.json` | 검증된 최종 제어 설정과 파생값 |
+| `manifest.json` | 입력·소스·자산·프로토콜 식별 정보 및 저장 설정 파일의 SHA-256 |
+
+`experiment.resolved.yaml`은 옆의 `config.yaml`을 참조한다. 저장 조건으로 새 실험을
+재현하려면 이 파일과 새 `OUTPUT`을 지정한다. 원본 실험 YAML의 상대 경로는 원래
+위치에서 해석되므로, 결과 디렉토리의 원본 사본을 그대로 실행하는 대신 resolved 파일을 사용한다.
+명령행으로 변경한 seed·시간 제한·장치도 최종 설정에서 확인할 수 있다.
+
+파일럿의 모든 paired 결과와 최종 상태·안전 판정·보간 검사 기록이 일치하고,
+안전 IK를 확보한 case가 하나 이상 있어야 본실험으로 진행한다.
+어느 방법의 성공률이 높은지는 진행 조건으로 사용하지 않는다.
+오류가 발생하면 캠페인의 `status.json`에 사유를 남기고 중단한다.
+같은 출력과 입력으로 재개하면 완료한 결과를 재사용한다. 원본 YAML·소스·프로토콜·자산이
+바뀌거나 저장된 설정·장면·궤적 파일의 hash가 맞지 않으면 재개를 거부한다.
+파일럿 도중 입력 파일을 편집한 경우에도 본실험으로 진행하지 않는다.
+
+2026-10-05의 기준 실험은 파일럿과 본실험 모두 60초를 사용했다. 이후 gain·계산 주기·제한 시간을
+바꾼 실험은 새 출력에 저장하고 기준 실험과 조건을 구분한다. 실행 확인용 smoke test는 주 통계에서 제외한다.

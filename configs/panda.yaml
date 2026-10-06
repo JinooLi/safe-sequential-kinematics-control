@@ -169,8 +169,11 @@ trajectory:
   stage_frames: [link3, link5]
   stage_position_tolerance: 0.05
   orientation_weight: 1.0
-  stop_window: 0.5 # stop_window동안 계속 stop_velocity_tolerance를 넘지 못하면 정지로 판별한다.
+  success_barrier_tolerance: 1.0e-6 # m; goal acceptance only, not CBF relaxation.
+  stop_window: 0.5 # seconds; moving average of the joint velocity norm.
   stop_velocity_tolerance: 0.001
+  stop_progress_window: 2.0 # seconds; low speed alone does not trigger a stall.
+  stop_progress_tolerance: 0.001 # minimum improvement in tolerance-normalized error.
   clf_rate: 10.0
   clf_slack_weight: 1000.0
   # One third of Panda's configured nominal limits.

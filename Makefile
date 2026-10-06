@@ -5,6 +5,7 @@ MPLCONFIGDIR ?= /tmp/safe-inv-clf-matplotlib
 export UV_CACHE_DIR MPLCONFIGDIR
 
 PANDA_CONFIG ?= configs/panda.yaml
+PANDA_EXPERIMENT_CONFIG ?= configs/experiments/panda_comparison.yaml
 # Panda run/view targets default to CUDA. Explicit CPU avoids the CUDA extra.
 # This CLI override takes precedence over safety.rdf.runtime_device in the YAML.
 PANDA_RDF_DEVICE ?= cuda
@@ -17,6 +18,10 @@ OUTPUT ?=
 
 PANDA_CUDA_EXTRA = $(if $(filter cuda,$(PANDA_RDF_DEVICE)),--extra cuda)
 PANDA = $(UV) run --locked $(PANDA_CUDA_EXTRA) safe-ik --config "$(PANDA_CONFIG)" --rdf-device "$(PANDA_RDF_DEVICE)"
+# Only explicit Make overrides supersede the experiment YAML.
+PANDA_COMPARE_CONFIG_FLAG = $(if $(filter-out file default undefined,$(origin PANDA_CONFIG)),--config "$(PANDA_CONFIG)")
+PANDA_COMPARE_DEVICE_FLAG = $(if $(filter-out file default undefined,$(origin PANDA_RDF_DEVICE)),--rdf-device "$(PANDA_RDF_DEVICE)")
+PANDA_COMPARE = $(UV) run --locked $(PANDA_CUDA_EXTRA) python -m safe_ik.application.panda_comparison --experiment-config "$(PANDA_EXPERIMENT_CONFIG)" $(PANDA_COMPARE_CONFIG_FLAG) $(PANDA_COMPARE_DEVICE_FLAG)
 PLANAR = $(UV) run python -m safe_ik.application.planar_run --config "$(PLANAR_CONFIG)"
 RECORDING = $(UV) run python -m safe_ik.application.recording_view
 TRACE_FLAG = $(if $(strip $(TRACE)),--trace "$(TRACE)")
@@ -27,6 +32,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
 .DEFAULT_GOAL := help
 .PHONY: panda-train-rdf panda-validate-rdf panda-inspect-mesh panda-prepare-mesh
 .PHONY: panda-gpu-run panda-gpu-view
+.PHONY: panda-compare panda-compare-pilot panda-compare-campaign
 .PHONY: help setup setup-runtime build test check check-format format \
  panda-run panda-view panda-direct panda-direct-view panda-sequential panda-sequential-view panda-plot panda-plot-view \
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
@@ -35,7 +41,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
  run train-rdf visualize-rdf compare-sequential-run compare-sequential-visualize compare-sequential-visualize-all
 
 help: ## Show grouped commands and optional variables
-	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PANDA_RDF_DEVICE=cuda|cpu (default cuda), PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode/device overrides take precedence."}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; print "Usage: make <target> [ARGS=\"CLI options\"]"} /^##@/ {printf "\n%s\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*##/ {printf "  %-29s %s\n", $$1, $$2} END {print "\nInputs: PANDA_CONFIG, PANDA_EXPERIMENT_CONFIG, PANDA_RDF_DEVICE=cuda|cpu (default cuda), PLANAR_CONFIG, TRACE, RESULTS_DIR, CASE_ID, OUTPUT"; print "All CLI flags can also be passed in ARGS; ARGS=\"--help\" shows command-specific help."; print "GUI targets require a display. RUN targets use the selected YAML; explicit mode/device overrides take precedence."}' $(MAKEFILE_LIST)
 
 ##@ Panda: simulation and control
 panda-inspect-mesh: ## Export standalone HTML highlighting visual-mesh open boundaries
@@ -73,6 +79,16 @@ panda-sequential: ## Headless safe IK followed by sequential CLF-CBF control
 
 panda-sequential-view: ## Compute safe IK/sequential control, then replay and plot
 	$(PANDA) --mode sequential --visualize --show-plot $(ARGS)
+
+##@ Panda: randomized direct/sequential comparison
+panda-compare-pilot: ## Run the pilot batch from PANDA_EXPERIMENT_CONFIG
+	$(PANDA_COMPARE) pilot $(OUTPUT_FLAG) $(ARGS)
+
+panda-compare: ## Run the experiment YAML command; ARGS="--dry-run" previews settings
+	$(PANDA_COMPARE) $(OUTPUT_FLAG) $(ARGS)
+
+panda-compare-campaign: ## Run YAML pilot then main; OUTPUT=<directory> resumes matching results
+	$(PANDA_COMPARE) campaign $(OUTPUT_FLAG) $(ARGS)
 
 ##@ Panda: saved control traces (no new simulation)
 panda-plot: ## Save diagnostic PNG from TRACE=<Panda trajectory.npz>

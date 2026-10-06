@@ -13,9 +13,12 @@ import os
 import platform
 import subprocess
 import tarfile
+from copy import deepcopy
 from dataclasses import asdict, replace
+from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
+from uuid import uuid4
 
 import numpy as np
 import yaml
@@ -23,6 +26,7 @@ import yaml
 from ..adapters.mujoco_plant import MujocoPlant
 from ..adapters.osqp_solver import OSQPSolver
 from ..domain.ik_contracts import SafeIKCandidate
+from ..domain.panda_sampling_config import PandaSamplingConfig
 from ..domain.safety_contracts import BarrierEvaluation
 from ..domain.spatial_safety import PandaCapsuleSafety
 from ..experiments.panda_comparison import (
@@ -34,7 +38,7 @@ from ..experiments.panda_comparison import (
 from .artifacts import _model_resources, json_value, save_run_provenance
 from .panda_comparison_rollout import comparison_rollout
 from .panda_components import build_panda_components
-from .panda_configuration import load_panda_config
+from .panda_experiment_configuration import load_panda_experiment
 from .panda_runtime import PandaRuntime
 from .parallel_ik import panda_ik_search
 from .paths import project_root
@@ -135,15 +139,15 @@ def prepare_ik(config, kin, safety):
     }
 
 
-def fingerprint(config, config_path, seeds, cases_per_seed):
+def fingerprint(config, config_path, seeds, cases_per_seed, *, experiment=None):
     root = project_root()
     source = {
         str(p.relative_to(root)): digest(p)
         for p in sorted((root / "src").rglob("*.py"))
     }
     protocol = root / "docs/experiments/panda_monte_carlo_protocol.md"
-    return {
-        "schema_version": 1,
+    identity = {
+        "schema_version": 2,
         "config": json_value(config),
         "config_sha256": digest(config_path),
         "source_sha256": source,
@@ -158,9 +162,15 @@ def fingerprint(config, config_path, seeds, cases_per_seed):
         "seeds": seeds,
         "cases_per_seed": cases_per_seed,
         "scoring": "fresh_state_first_pose_hit_strict_barrier_joint_limits_v1",
-        "subdivisions": 5,
+        "subdivisions": experiment.subdivisions if experiment else 5,
+        "sampling": json_value(
+            experiment.sampling if experiment else PandaSamplingConfig()
+        ),
         "candidate_policy": "one_nearest_no_switch",
     }
+    if experiment is not None:
+        identity["experiment"] = experiment.identity()
+    return identity
 
 
 def verify_resume(directory, expected):
@@ -205,7 +215,9 @@ def export_analysis(directory, rows, count, duration):
     return analysis
 
 
-def run_experiment(directory, config_path, config, seeds, cases_per_seed):
+def run_experiment(
+    directory, config_path, config, seeds, cases_per_seed, *, experiment=None
+):
     """Persist each IK result and method once; identity checks protect resumes."""
     import fcntl
 
@@ -213,11 +225,17 @@ def run_experiment(directory, config_path, config, seeds, cases_per_seed):
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / ".lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return _run_locked(directory, config_path, config, seeds, cases_per_seed)
+        return _run_locked(
+            directory, config_path, config, seeds, cases_per_seed, experiment=experiment
+        )
 
 
-def _run_locked(directory, config_path, config, seeds, cases_per_seed):
-    identity = fingerprint(config, config_path, seeds, cases_per_seed)
+def _run_locked(
+    directory, config_path, config, seeds, cases_per_seed, *, experiment=None
+):
+    identity = fingerprint(
+        config, config_path, seeds, cases_per_seed, experiment=experiment
+    )
     manifest_path = directory / "manifest.json"
     if manifest_path.exists():
         manifest = verify_resume(directory, identity)
@@ -238,7 +256,11 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
         manifest = {"identity": identity, "environment": environment, "data_sha256": {}}
         atomic_json(manifest_path, manifest)
         root = project_root()
-        raw = yaml.safe_load(Path(config_path).read_text())
+        raw = (
+            deepcopy(experiment.controller_yaml)
+            if experiment is not None
+            else yaml.safe_load(Path(config_path).read_text())
+        )
         raw["safety"]["rdf"]["runtime_device"] = config.safety.rdf.runtime_device
         raw["trajectory"]["duration"] = config.trajectory.duration
         save_run_provenance(
@@ -249,6 +271,12 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
             resources=[config.model_path],
             effective_yaml=raw,
         )
+        if experiment is not None:
+            manifest["data_sha256"].update(experiment.snapshot(directory))
+            manifest["data_sha256"]["resolved_config.json"] = digest(
+                directory / "resolved_config.json"
+            )
+            atomic_json(manifest_path, manifest)
         with tarfile.open(directory / "source_snapshot.tar.gz", "w:gz") as archive:
             for relative in identity["source_sha256"]:
                 archive.add(root / relative, arcname=relative)
@@ -272,7 +300,12 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
         cases = [json.loads(line) for line in cases_path.read_text().splitlines()]
     else:
         cases, sampling = generate_cases(
-            config, kin, self_safety, seeds, cases_per_seed
+            config,
+            kin,
+            self_safety,
+            seeds,
+            cases_per_seed,
+            experiment.sampling if experiment else PandaSamplingConfig(),
         )
         atomic_json(directory / "sampling.json", sampling)
         temporary = cases_path.with_suffix(".jsonl.partial")
@@ -280,9 +313,12 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
             "".join(json.dumps(c, allow_nan=False) + "\n" for c in cases)
         )
         temporary.replace(cases_path)
-        manifest["data_sha256"] = {
-            name: digest(directory / name) for name in ("cases.jsonl", "sampling.json")
-        }
+        manifest["data_sha256"].update(
+            {
+                name: digest(directory / name)
+                for name in ("cases.jsonl", "sampling.json")
+            }
+        )
         atomic_json(manifest_path, manifest)
     if len(cases) != len(seeds) * cases_per_seed or len(
         {c["case_id"] for c in cases}
@@ -350,7 +386,12 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
                         MujocoPlant(method_cfg),
                     )
                     setup_wall = perf_counter() - runtime_start
-                    result, trace = comparison_rollout(method_cfg, runtime, candidate)
+                    result, trace = comparison_rollout(
+                        method_cfg,
+                        runtime,
+                        candidate,
+                        subdivisions=identity["subdivisions"],
+                    )
                     temporary = result_dir / "trajectory.npz.partial"
                     with temporary.open("wb") as file:
                         np.savez_compressed(file, **trace)
@@ -382,7 +423,7 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
                 "pid": os.getpid(),
             },
         )
-    validate_completed_run(directory, cases)
+    validate_completed_run(directory, cases, subdivisions=identity["subdivisions"])
     atomic_json(
         directory / "complete.json",
         {
@@ -393,7 +434,7 @@ def _run_locked(directory, config_path, config, seeds, cases_per_seed):
     return analysis
 
 
-def validate_completed_run(directory, cases):
+def validate_completed_run(directory, cases, *, subdivisions=5):
     """Gate campaigns on artifact integrity, never on which controller wins."""
     for case in cases:
         for method in ("direct", "sequential"):
@@ -432,91 +473,155 @@ def validate_completed_run(directory, cases):
                 )
                 if result["success"] != (reached and safe):
                     raise ValueError("success score disagrees with saved states")
-                if result["interpolation_checks"] != result["steps"] * 4:
+                if result["interpolation_subdivisions"] != subdivisions or result[
+                    "interpolation_checks"
+                ] != result["steps"] * (subdivisions - 1):
                     raise ValueError("incomplete interpolation validation")
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("run", "campaign"))
-    parser.add_argument(
-        "--config", type=Path, default=project_root() / "configs/panda.yaml"
-    )
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--rdf-device", choices=("cpu", "cuda"), default="cuda")
-    parser.add_argument(
-        "--seeds", nargs="+", type=int, default=[2332, 2333, 2334, 2335, 2336]
-    )
-    parser.add_argument("--cases-per-seed", type=int, default=60)
-    parser.add_argument("--duration", type=float)
-    args = parser.parse_args()
-    if (
-        args.cases_per_seed < 1
-        or len(set(args.seeds)) != len(args.seeds)
-        or min(args.seeds) < 0
-    ):
-        parser.error("provide positive case count and unique nonnegative seeds")
-    config = load_panda_config(args.config)
-    config = replace(
-        config,
-        safety=replace(
-            config.safety,
-            rdf=replace(config.safety.rdf, runtime_device=args.rdf_device),
-        ),
-    )
-    if args.duration is not None:
-        if not np.isfinite(args.duration) or args.duration <= 0:
-            parser.error("duration must be positive and finite")
-        config = replace(
-            config, trajectory=replace(config.trajectory, duration=args.duration)
-        )
-    if args.command == "run":
-        run_experiment(
-            args.output, args.config, config, args.seeds, args.cases_per_seed
-        )
-        return
-    # The locked campaign enforces a complete pilot before starting all 300 cases.
+def run_campaign(output, experiment):
+    """Run the configured pilot and main batches under one reproducible identity."""
     import fcntl
 
-    args.output.mkdir(parents=True, exist_ok=True)
-    with (args.output / ".campaign.lock").open("a") as lock:
+    output = Path(output)
+    config, config_path = experiment.config, experiment.config_path
+    pilot_batch, main_batch = experiment.pilot, experiment.main
+    output.mkdir(parents=True, exist_ok=True)
+    with (output / ".campaign.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        try:
+        identity = fingerprint(config, config_path, **main_batch, experiment=experiment)
+        if (output / "manifest.json").exists():
+            verify_resume(output, identity)
+        else:
+            if any(p.name != ".campaign.lock" for p in output.iterdir()):
+                raise ValueError(
+                    "refusing a nonempty campaign directory without manifest"
+                )
+            hashes = experiment.snapshot(output)
+            atomic_json(output / "resolved_config.json", config)
+            hashes["resolved_config.json"] = digest(output / "resolved_config.json")
             atomic_json(
-                args.output / "status.json", {"phase": "pilot", "pid": os.getpid()}
+                output / "manifest.json", {"identity": identity, "data_sha256": hashes}
             )
+        try:
+            atomic_json(output / "status.json", {"phase": "pilot", "pid": os.getpid()})
             pilot = run_experiment(
-                args.output / "pilot", args.config, config, [20261005], 20
+                output / "pilot",
+                config_path,
+                config,
+                **pilot_batch,
+                experiment=experiment,
             )
             if not pilot["complete"] or not pilot["ik_available_pairs"]:
                 raise RuntimeError(
                     "pilot has no eligible paired cases; inspect IK preparation before main"
                 )
-            # Detect edits made while the pilot was running before starting the main run.
+            # Reject source/config changes made while the pilot was running.
             verify_resume(
-                args.output / "pilot", fingerprint(config, args.config, [20261005], 20)
+                output / "pilot",
+                fingerprint(config, config_path, **pilot_batch, experiment=experiment),
             )
             atomic_json(
-                args.output / "status.json",
+                output / "status.json",
                 {"phase": "main", "pid": os.getpid(), "pilot": pilot},
             )
             main_result = run_experiment(
-                args.output / "main",
-                args.config,
+                output / "main",
+                config_path,
                 config,
-                [2332, 2333, 2334, 2335, 2336],
-                60,
+                **main_batch,
+                experiment=experiment,
             )
             atomic_json(
-                args.output / "status.json",
+                output / "status.json",
                 {"phase": "complete", "pilot": pilot, "main": main_result},
             )
         except Exception as exc:
             atomic_json(
-                args.output / "status.json",
+                output / "status.json",
                 {"phase": "stopped", "error": repr(exc), "pid": os.getpid()},
             )
             raise
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "command",
+        nargs="?",
+        choices=("run", "pilot", "campaign"),
+        help="override the experiment YAML command; run uses its main batch",
+    )
+    parser.add_argument(
+        "--experiment-config",
+        type=Path,
+        default=project_root() / "configs/experiments/panda_comparison.yaml",
+    )
+    parser.add_argument(
+        "--config", type=Path, help="override controller_config from experiment YAML"
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="override YAML output (relative to working directory)",
+    )
+    parser.add_argument("--rdf-device", choices=("cpu", "cuda"))
+    parser.add_argument(
+        "--seeds",
+        nargs="+",
+        type=int,
+        help="override main batch, or pilot in pilot mode",
+    )
+    parser.add_argument("--cases-per-seed", type=int)
+    parser.add_argument("--duration", type=float)
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print resolved settings without running or writing results",
+    )
+    args = parser.parse_args(argv)
+    try:
+        experiment = load_panda_experiment(
+            args.experiment_config,
+            controller_path=args.config,
+            command=args.command,
+            device=args.rdf_device,
+            duration=args.duration,
+            seeds=args.seeds,
+            cases_per_seed=args.cases_per_seed,
+            output=args.output,
+        )
+    except (ValueError, TypeError, KeyError, OSError, yaml.YAMLError) as exc:
+        parser.error(str(exc))
+    output = experiment.output
+    if output is None:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
+        output = (
+            experiment.output_root / f"{stamp}_{experiment.command}_{uuid4().hex[:8]}"
+        )
+    if args.dry_run:
+        print(
+            json.dumps(
+                {
+                    "experiment": experiment.resolved(output),
+                    "controller": json_value(experiment.config),
+                },
+                indent=2,
+            )
+        )
+        return
+    print(f"Panda experiment: {output}", flush=True)
+    if experiment.command == "campaign":
+        run_campaign(output, experiment)
+    else:
+        batch = experiment.pilot if experiment.command == "pilot" else experiment.main
+        run_experiment(
+            output,
+            experiment.config_path,
+            experiment.config,
+            **batch,
+            experiment=experiment,
+        )
 
 
 if __name__ == "__main__":
