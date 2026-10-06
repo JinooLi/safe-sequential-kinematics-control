@@ -2,7 +2,7 @@ robot:
   model_path: ../assets/robots/panda.xml
   ee_frame: gripper_tip
   dof: 7
-  initial_q: [0.0, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]
+  initial_q: [-1.57079, 0.0, 0.0, -1.57079, 0.0, 1.57079, -0.7853]
 
 target:
   # Base/world-frame target. Vector magnitudes are ignored. The gripper tip's
@@ -55,7 +55,7 @@ safety:
     cbf_gain: 1.0
     seed: 0
   margin: 0.05
-  alpha: 1.0
+  alpha: 0.3
   # Explicit self-pair exclusions; obstacle checks remain enabled.
   self_collision_exclusions:
     - [link7, gripper] # Fixed hand assembly (capsule backend).
@@ -148,7 +148,7 @@ safety:
 obstacles:
   - {
       name: obstacle1,
-      position: [0.25, 0.0, 0.55],
+      position: [0.25, -0.1, 0.55],
       radius: 0.10,
       enabled: true,
     }
@@ -160,8 +160,11 @@ obstacles:
     }
 
 trajectory:
-  duration: 60.0
-  integration_period: 0.02
+  success_barrier_tolerance: 1.0e-6
+  stop_progress_window: 2.0
+  stop_progress_tolerance: 0.001
+  duration: 90.0
+  integration_period: 0.01
   # sequential: link endpoint position stages, then final EE pose.
   # direct: final EE pose CLF only. Neither mode uses a configuration CLF.
   mode: sequential
@@ -169,15 +172,12 @@ trajectory:
   stage_frames: [link3, link5]
   stage_position_tolerance: 0.05
   orientation_weight: 1.0
-  success_barrier_tolerance: 1.0e-6 # m; goal acceptance only, not CBF relaxation.
-  stop_window: 0.5 # seconds; moving average of the joint velocity norm.
+  stop_window: 0.5 # seconds; low mean speed plus insufficient task progress triggers a stall.
   stop_velocity_tolerance: 0.001
-  stop_progress_window: 2.0 # seconds; low speed alone does not trigger a stall.
-  stop_progress_tolerance: 0.001 # minimum improvement in tolerance-normalized error.
-  clf_rate: 10.0
+  clf_rate: 20.0
   clf_slack_weight: 1000.0
   # One third of Panda's configured nominal limits.
-  velocity_limits: [0.0725, 0.0725, 0.0725, 0.0725, 0.087, 0.087, 0.087]
+  velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]
   acceleration_limits:
     [5.0, 2.5, 3.33333333, 4.16666667, 5.0, 6.66666667, 6.66666667]
 
