@@ -53,6 +53,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
                     "clf_rate": 23.0,
                     "integration_period": 0.01,
                     "duration": 1.0,
+                    "success_barrier_tolerance": 5e-4,
                 },
                 "qp": {"absolute_tolerance": 1e-5},
             },
@@ -74,6 +75,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.assertEqual(settings.output_root, self.root / "results")
         self.assertEqual(settings.config.trajectory.clf_rate, 23)
         self.assertEqual(settings.config.trajectory.integration_period, 0.01)
+        self.assertEqual(settings.config.trajectory.success_barrier_tolerance, 5e-4)
         self.assertEqual(settings.config.qp.absolute_tolerance, 1e-5)
         self.assertEqual(settings.config.safety.rdf.runtime_device, "cpu")
         self.assertEqual(settings.main, self.data["main"])
@@ -118,6 +120,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.assertEqual(reloaded.config.trajectory.stage_task, "pose")
         self.assertEqual(reloaded.config.trajectory.stage_orientation_weight, 0.2)
         self.assertEqual(reloaded.config.trajectory.stage_orientation_tolerance, 0.03)
+        self.assertEqual(reloaded.config.trajectory.success_barrier_tolerance, 5e-4)
         self.assertEqual(reloaded.candidate_policy, "all_nearest_switch_on_stall")
         self.assertEqual(json_value(reloaded.config), json_value(settings.config))
         self.assertEqual(

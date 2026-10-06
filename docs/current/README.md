@@ -231,6 +231,13 @@ $\varepsilon_h=10^{-6}\,\mathrm{m}$이며, 0으로 설정하면 엄격한 비음
 해석 근거는 [controller.status](../../src/safe_ik/control/panda_controller.py)와
 [기록 루프](../../src/safe_ik/application/panda_rollout.py)에 있다.
 
+비교 실험은 `configs/experiments/panda_comparison.yaml`에서 같은 허용치를
+$\varepsilon_h=5\times10^{-4}\,\mathrm{m}=0.5\,\mathrm{mm}$로 덮어쓴다.
+비교 실험의 `success`와 성공률에는 최종 상태까지의 전체 경로에서
+$h_{\min}\geq-\varepsilon_h$인지 적용하며, 보간 검사에도 같은 허용치를 쓴다.
+실제 barrier 값과 허용치 없이 판정한 `success_strict`도 함께 저장한다.
+자세한 기준은 [비교 실험 판정 규칙](../experiments/panda_monte_carlo_protocol.md)에 있다.
+
 ## 느린 수렴과 정체의 구분
 
 정체 판정은 현재 관절 속도의 이력과 **현재 단계의 목표 오차 이력**을 받아

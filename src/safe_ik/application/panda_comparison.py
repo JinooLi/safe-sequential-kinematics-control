@@ -161,7 +161,7 @@ def fingerprint(config, config_path, seeds, cases_per_seed, *, experiment=None):
         "protocol_sha256": digest(protocol),
         "seeds": seeds,
         "cases_per_seed": cases_per_seed,
-        "scoring": "fresh_state_first_pose_hit_strict_barrier_joint_limits_v1",
+        "scoring": "fresh_state_first_pose_hit_configured_barrier_tolerance_joint_limits_v2",
         "subdivisions": experiment.subdivisions if experiment else 5,
         "sampling": json_value(
             experiment.sampling if experiment else PandaSamplingConfig()
@@ -201,6 +201,12 @@ def export_analysis(directory, rows, count, duration):
         "candidate_switch_count",
         "stage_task",
         "success",
+        "success_barrier_tolerance",
+        "success_strict",
+        "safety_violation",
+        "safety_violation_strict",
+        "interpolated_success",
+        "interpolated_success_strict",
         "goal_reached",
         "reason",
         "completion_time",
@@ -378,8 +384,11 @@ def _run_locked(
                 if method == "sequential" and not candidates:
                     result = {
                         "success": False,
+                        "success_barrier_tolerance": cfg.trajectory.success_barrier_tolerance,
+                        "success_strict": False,
                         "goal_reached": False,
                         "safety_violation": False,
+                        "safety_violation_strict": False,
                         "reason": ik["reason"],
                         "completion_time": None,
                         "candidate_count": 0,
@@ -443,7 +452,12 @@ def _run_locked(
                 "pid": os.getpid(),
             },
         )
-    validate_completed_run(directory, cases, subdivisions=identity["subdivisions"])
+    validate_completed_run(
+        directory,
+        cases,
+        subdivisions=identity["subdivisions"],
+        barrier_tolerance=config.trajectory.success_barrier_tolerance,
+    )
     atomic_json(
         directory / "complete.json",
         {
@@ -454,7 +468,7 @@ def _run_locked(
     return analysis
 
 
-def validate_completed_run(directory, cases, *, subdivisions=5):
+def validate_completed_run(directory, cases, *, subdivisions=5, barrier_tolerance=None):
     """Check saved result integrity independently of controller success rates."""
     for case in cases:
         for method in ("direct", "sequential"):
@@ -462,6 +476,14 @@ def validate_completed_run(directory, cases, *, subdivisions=5):
             result = json.loads((root / "summary.json").read_text())
             if result["case_id"] != case["case_id"] or result["method"] != method:
                 raise ValueError("result identity mismatch")
+            # Historical results without this field used strict nonnegative scoring.
+            tolerance = result.get("success_barrier_tolerance", 0.0)
+            if (
+                not np.isfinite(tolerance)
+                or tolerance < 0
+                or (barrier_tolerance is not None and tolerance != barrier_tolerance)
+            ):
+                raise ValueError("success barrier tolerance mismatch")
             if not result.get("trace_sha256"):
                 if (
                     method != "sequential"
@@ -488,11 +510,19 @@ def validate_completed_run(directory, cases, *, subdivisions=5):
                     raise ValueError("initial state mismatch")
                 reached = bool(trace["goal_reached"][-1])
                 safe = bool(
-                    trace["barrier_values"].min() >= 0
+                    trace["barrier_values"].min() >= -tolerance
                     and trace["joint_margin"].min() >= 0
                 )
                 if result["success"] != (reached and safe):
                     raise ValueError("success score disagrees with saved states")
+                dense_safe = bool(
+                    result["interpolated_minimum_barrier"] >= -tolerance
+                    and trace["joint_margin"].min() >= 0
+                )
+                if result["interpolated_success"] != (reached and dense_safe):
+                    raise ValueError(
+                        "interpolated success score disagrees with saved minimum"
+                    )
                 if result["interpolation_subdivisions"] != subdivisions or result[
                     "interpolation_checks"
                 ] != result["steps"] * (subdivisions - 1):

@@ -114,11 +114,110 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertLess(trace["barrier_values"][-1, 0], 0)
 
-    def test_comparison_keeps_strict_safety_score_separate_from_numeric_tolerance(self):
+    def test_comparison_keeps_strict_safety_score_separate_from_configured_tolerance(
+        self,
+    ):
         result, _ = self.run_case(Safety(lambda q: 1.0 if q[0] == 0 else -4.43e-11))
         self.assertTrue(result["goal_reached"])
-        self.assertFalse(result["success"])
+        self.assertTrue(result["success"])
+        self.assertFalse(result["success_strict"])
+        self.assertFalse(result["safety_violation"])
+        self.assertTrue(result["safety_violation_strict"])
         self.assertTrue(result["success_barrier_tolerance_1e6"])
+
+    def test_configured_tolerance_scores_whole_path_for_both_methods_and_barrier_types(
+        self,
+    ):
+        for mode in ("direct", "sequential"):
+            config = replace(
+                self.config,
+                target=replace(self.config.target, position=np.array([0.04, 0, 0])),
+                trajectory=replace(
+                    self.config.trajectory,
+                    mode=mode,
+                    duration=0.04,
+                    success_barrier_tolerance=5e-4,
+                ),
+            )
+            candidate = SafeIKCandidate(
+                np.array([0.04, 0, 0, 0, 0, 0, 0]), 0, 1, 0, 0, 1
+            )
+            for label in ("self_test", "obstacle_test"):
+                for minimum, success in (
+                    (-0.00049, True),
+                    (-0.0005, True),
+                    (-0.00051, False),
+                ):
+                    with self.subTest(mode=mode, label=label, minimum=minimum):
+                        result, trace = self.run_case(
+                            Safety(
+                                lambda q: minimum if 0 < q[0] < 0.04 else 1.0, label
+                            ),
+                            config,
+                            candidate,
+                        )
+                        self.assertTrue(result["goal_reached"])
+                        self.assertEqual(result["success"], success)
+                        self.assertEqual(result["interpolated_success"], success)
+                        self.assertEqual(result["safety_violation"], not success)
+                        self.assertFalse(result["success_strict"])
+                        self.assertFalse(result["interpolated_success_strict"])
+                        self.assertFalse(result["success_barrier_tolerance_1e6"])
+                        self.assertEqual(result["success_barrier_tolerance"], 5e-4)
+                        self.assertEqual(result["minimum_barrier"], minimum)
+                        self.assertEqual(trace["barrier_values"][1, 0], minimum)
+                        self.assertGreater(trace["barrier_values"][-1, 0], 0)
+
+    def test_zero_tolerance_requires_nonnegative_barriers(self):
+        config = replace(
+            self.config,
+            trajectory=replace(self.config.trajectory, success_barrier_tolerance=0),
+        )
+        result, _ = self.run_case(
+            Safety(lambda q: 1.0 if q[0] == 0 else -1e-12), config
+        )
+        self.assertTrue(result["goal_reached"])
+        self.assertFalse(result["success"])
+        self.assertFalse(result["interpolated_success"])
+        self.assertTrue(result["safety_violation"])
+
+    def test_barrier_tolerance_does_not_relax_goal_or_joint_limits(self):
+        config = replace(
+            self.config,
+            trajectory=replace(self.config.trajectory, success_barrier_tolerance=5e-4),
+        )
+        unreachable = replace(
+            config, target=replace(config.target, position=np.ones(3))
+        )
+        safety = Safety(lambda q: 1.0 if q[0] == 0 else -0.0004)
+        result, _ = self.run_case(safety, unreachable)
+        self.assertFalse(result["goal_reached"])
+        self.assertFalse(result["success"])
+        kin = Kinematics()
+        kin.upper_limits = np.full(7, 0.0199)
+        runtime = PandaRuntime(kin, safety, Solver(), Plant())
+        result, _ = comparison_rollout(config, runtime)
+        self.assertTrue(result["goal_reached"])
+        self.assertLess(result["minimum_joint_margin"], 0)
+        self.assertFalse(result["success"])
+        self.assertFalse(result["interpolated_success"])
+        self.assertTrue(result["safety_violation"])
+
+    def test_interpolation_applies_same_tolerance_between_recorded_states(self):
+        config = replace(
+            self.config,
+            trajectory=replace(self.config.trajectory, success_barrier_tolerance=5e-4),
+        )
+        for minimum, success in ((-0.0005, True), (-0.00051, False)):
+            with self.subTest(minimum=minimum):
+                result, _ = self.run_case(
+                    Safety(lambda q: minimum if 0 < q[0] < 0.02 else 1.0), config
+                )
+                self.assertTrue(result["success"])
+                self.assertTrue(result["success_strict"])
+                self.assertEqual(result["interpolated_success"], success)
+                self.assertFalse(result["interpolated_success_strict"])
+                self.assertEqual(result["interpolated_minimum_barrier"], minimum)
 
     def test_single_candidate_continues_slow_progress_until_goal(self):
         class SlowSolver(Solver):
@@ -255,8 +354,18 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertEqual(result["interpolation_checks"], 4)
 
     def test_saved_validation_uses_configured_subdivision_count(self):
-        runtime = PandaRuntime(Kinematics(), Safety(), Solver(), Plant())
-        result, trace = comparison_rollout(self.config, runtime, subdivisions=3)
+        config = replace(
+            self.config,
+            trajectory=replace(self.config.trajectory, success_barrier_tolerance=5e-4),
+        )
+        runtime = PandaRuntime(
+            Kinematics(),
+            Safety(lambda q: 1.0 if q[0] == 0 else -0.0005),
+            Solver(),
+            Plant(),
+        )
+        result, trace = comparison_rollout(config, runtime, subdivisions=3)
+        self.assertTrue(result["success"])
         self.assertEqual(result["interpolation_checks"], 2)
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -274,7 +383,9 @@ class PandaComparisonTest(unittest.TestCase):
                     },
                 )
             cases = [{"case_id": "case", "initial_q": trace["q"][0].tolist()}]
-            validate_completed_run(root, cases, subdivisions=3)
+            validate_completed_run(root, cases, subdivisions=3, barrier_tolerance=5e-4)
+            with self.assertRaisesRegex(ValueError, "tolerance mismatch"):
+                validate_completed_run(root, cases, subdivisions=3, barrier_tolerance=0)
             with self.assertRaisesRegex(ValueError, "interpolation"):
                 validate_completed_run(root, cases, subdivisions=5)
 

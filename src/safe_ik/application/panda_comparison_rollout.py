@@ -123,6 +123,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     joint_minimum = min(s["joint_margin"] for s in samples)
     minimum = float(values.min())
     goal_reached = samples[-1]["goal_reached"]
+    barrier_tolerance = config.trajectory.success_barrier_tolerance
+    safety_violation = bool(minimum < -barrier_tolerance or joint_minimum < 0)
     mask = np.asarray([label.startswith("self_") for label in barrier.labels])
     velocities = np.asarray(commands, dtype=float).reshape(-1, config.dof)
     used = velocities[np.asarray(applied, dtype=bool)]
@@ -131,11 +133,14 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     )
     summary = {
         "goal_reached": goal_reached,
-        "success": bool(goal_reached and minimum >= 0 and joint_minimum >= 0),
+        "success": bool(goal_reached and not safety_violation),
+        "success_barrier_tolerance": barrier_tolerance,
+        "success_strict": bool(goal_reached and minimum >= 0 and joint_minimum >= 0),
         "success_barrier_tolerance_1e6": bool(
             goal_reached and minimum >= -1e-6 and joint_minimum >= 0
         ),
-        "safety_violation": bool(minimum < 0 or joint_minimum < 0),
+        "safety_violation": safety_violation,
+        "safety_violation_strict": bool(minimum < 0 or joint_minimum < 0),
         "reason": reason,
         "steps": steps,
         "state_count": len(states),
@@ -203,6 +208,11 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             "interpolation_checks": checks,
             "interpolation_subdivisions": subdivisions,
             "interpolated_success": bool(
+                goal_reached
+                and dense_minimum >= -barrier_tolerance
+                and joint_minimum >= 0
+            ),
+            "interpolated_success_strict": bool(
                 goal_reached and dense_minimum >= 0 and joint_minimum >= 0
             ),
             "validation_wall_time": perf_counter() - validation_start,

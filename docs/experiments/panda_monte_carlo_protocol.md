@@ -232,14 +232,17 @@ $$
 \theta\le2\arcsin(0.01)\approx0.0200\ \mathrm{rad}\approx1.146^\circ.
 $$
 
-**실험 실행기의 공통 판정 규칙**은 다음으로 제안한다.
+**실험 실행기의 공통 판정 규칙**은 다음과 같다.
 
 - 초기 상태와 매 적분 후 실제 상태에서 위치·방향 오차를 계산한다. 두 허용오차에
   처음 들어오면 방법이나 현재 stage에 관계없이 목표 도달로 기록하고 종료한다.
   단계 번호와 별도로 최종 과제의 도달 여부를 측정한다.
 - 안전 조건을 포함한 성공은 도달 시점까지 모든 기록 상태에서 활성 barrier가
-  0 이상이고 관절 한계를 지킨 경우다. 비교와 저장에는 원래 실수값을 그대로 사용한다.
-  추가로 $-10^{-6}$ m까지 허용한 수치 민감도 결과를 병기하되 주 성공률과 섞지 않는다.
+  $h\geq-\varepsilon_h$이고 관절 한계를 지킨 경우다. 실험 YAML의
+  `controller_overrides.trajectory.success_barrier_tolerance`가 $\varepsilon_h$이며,
+  현재 설정은 $5\times10^{-4}\,\mathrm{m}=0.5\,\mathrm{mm}$다. 경계값도 성공에 포함한다.
+  비교와 저장에는 원래 barrier 값을 그대로 사용하며, `success_strict`에는
+  허용치 없이 $h\geq0$으로 판정한 결과를 별도로 남긴다.
 - 외부 장애물과 자기 충돌의 최소 barrier를 따로 저장한다. 검사 제외 쌍까지
   안전하다고 해석하지 않는다. 도달했으나 안전 조건을 위반한 경우도 따로 집계한다.
 - 정지, QP 실패, 시간 초과는 현재 정책을 유지하되 두 방법에 같은 종료 의미를 적용한다.
@@ -256,15 +259,23 @@ stage 완료 여부에 의존하지 않는 목표 도달 판정을 사용하므�
 2026-10-06 제어기 수정 이후에는 낮은 속도에 더해 최근 목표 오차의 개선도 확인한다.
 기본값은 `stop_progress_window=2.0` s, `stop_progress_tolerance=0.001`이며,
 정규화와 단계별 초기화는 [현재 구현의 정체 판정](../current/README.md#느린-수렴과-정체의-구분)에 설명한다.
-이 정책은 Direct와 Sequential 양쪽에 적용된다. 일반 실행의 목표 성공 판정은
-`success_barrier_tolerance=1e-6` m을 사용하지만, 비교 실험의 주 성공률은 위의 엄격한
-전체 경로 안전 판정을 유지하고 수치 허용오차 결과를 별도로 보고한다.
-따라서 실험 YAML에서 `success_barrier_tolerance`를 바꿔도 비교 실험의 `success`와
-그 필드로 집계하는 성공률에는 적용되지 않는다. `goal_reached`는 위치·방향 허용오차만
-판정하고, 보조 필드 `success_barrier_tolerance_1e6`도 YAML과 무관하게 $10^{-6}$ m로
-고정되어 있다. 일반 제어기의 `status.success`와 비교 실험의 저장 필드는 서로 다른 기준이다.
-변경된 코드·설정은 manifest에 반영되므로 10월 5일의 기존 결과와 이어 붙이지 않고
-새 출력 디렉토리에서 비교한다.
+이 정책은 Direct와 Sequential 양쪽에 적용된다.
+
+비교 실험의 `success`, 성공률, `safety_violation`, `interpolated_success`에는 모두
+설정된 `success_barrier_tolerance`를 적용한다. `safety_violation`은 전체 기록 상태 중
+$h<-\varepsilon_h$이거나 관절 한계를 위반한 경우다. 보간 검사의 성공은 기록 상태와
+보간 상태 모두에 같은 허용치를 적용하며 주 성공과 별도로 저장한다.
+`success_strict`, `safety_violation_strict`, `interpolated_success_strict`는
+허용치 없는 판정이다. 결과 JSON과 CSV에는 사용한 `success_barrier_tolerance`도 남긴다.
+기존 보조 필드 `success_barrier_tolerance_1e6`는 계속 $10^{-6}\,\mathrm{m}$로 고정한다.
+
+`goal_reached`는 위치·방향 허용오차만 판정한다. 일반 제어기의 `status.success`는
+현재 자세와 stage를 확인하지만 비교 실험의 `success`는 전체 기록 경로를 확인한다.
+일반 실행의 `configs/panda.yaml`과 설정 생략 시 기본값은 여전히 $10^{-6}\,\mathrm{m}$이며,
+비교 실험 YAML에서 $0.5\,\mathrm{mm}$로 덮어쓴다. 이 허용치는 성공 판정에만 적용하고,
+QP의 CBF 제약, IK 후보 검증, 장면 생성 및 관절 한계는 완화하지 않는다.
+변경된 코드·설정은 manifest에 반영되므로 기존 결과와 이어 붙이지 않고 새 출력
+디렉토리에서 비교한다. 저장된 과거 결과의 성공값과 설정은 자동으로 바꾸지 않는다.
 
 ## 보고할 지표와 해석
 
