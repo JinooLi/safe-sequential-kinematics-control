@@ -63,8 +63,6 @@ class PandaExperimentSettings:
     config_path: Path
     config: PandaControllerConfig
     controller_yaml: dict
-    command: str
-    pilot: dict
     main: dict
     sampling: PandaSamplingConfig
     subdivisions: int
@@ -72,7 +70,7 @@ class PandaExperimentSettings:
     output: Path | None
 
     def identity(self):
-        # Check the live inputs too, so edits during a pilot cannot change its main run.
+        # Check live inputs before recording the experiment identity or snapshots.
         if self.path.read_bytes().decode("utf-8") != self.source_yaml:
             raise ValueError("experiment YAML changed since loading")
         if self.config_path.read_bytes().decode("utf-8") != self.controller_source_yaml:
@@ -80,8 +78,6 @@ class PandaExperimentSettings:
         return {
             "experiment_sha256": _hash(self.source_yaml),
             "controller_sha256": _hash(self.controller_source_yaml),
-            "command": self.command,
-            "pilot": self.pilot,
             "main": self.main,
             "sampling": json_value(self.sampling),
             "subdivisions": self.subdivisions,
@@ -90,11 +86,9 @@ class PandaExperimentSettings:
     def resolved(self, output):
         return {
             "controller_config": "config.yaml",
-            "command": self.command,
             "rdf_device": self.config.safety.rdf.runtime_device,
             "output_root": str(self.output_root),
             "output": str(Path(output).resolve()),
-            "pilot": self.pilot,
             "main": self.main,
             "sampling": json_value(self.sampling),
             "validation": {"subdivisions": self.subdivisions},
@@ -128,7 +122,6 @@ def load_panda_experiment(
     path,
     *,
     controller_path=None,
-    command=None,
     device=None,
     duration=None,
     seeds=None,
@@ -141,11 +134,9 @@ def load_panda_experiment(
         yaml.safe_load(source),
         (
             "controller_config",
-            "command",
             "rdf_device",
             "output_root",
             "output",
-            "pilot",
             "main",
             "sampling",
             "validation",
@@ -180,24 +171,17 @@ def load_panda_experiment(
     steps = config.trajectory.duration / config.trajectory.integration_period
     if not np.isclose(round(steps), steps):
         raise ValueError("duration must contain an integer number of control periods")
-    command = command if command is not None else data.get("command", "campaign")
-    if command not in ("run", "pilot", "campaign"):
-        raise ValueError("command must be run, pilot or campaign")
-    pilot = _batch(
-        data.get("pilot", {"seeds": [20261005], "cases_per_seed": 20}), "pilot"
-    )
     main = _batch(
         data.get(
             "main", {"seeds": [2332, 2333, 2334, 2335, 2336], "cases_per_seed": 60}
         ),
         "main",
     )
-    batch = pilot if command == "pilot" else main
     if seeds is not None:
-        batch["seeds"] = seeds
+        main["seeds"] = seeds
     if cases_per_seed is not None:
-        batch["cases_per_seed"] = cases_per_seed
-    _batch(batch, command)
+        main["cases_per_seed"] = cases_per_seed
+    _batch(main, "main")
     sampling_data = _mapping(
         data.get("sampling", {}), PandaSamplingConfig.__dataclass_fields__, "sampling"
     )
@@ -206,9 +190,7 @@ def load_panda_experiment(
     subdivisions = validation.get("subdivisions", 5)
     if type(subdivisions) is not int or subdivisions < 1:
         raise ValueError("validation.subdivisions must be a positive integer")
-    if sampling.max_proposals_per_seed < max(
-        pilot["cases_per_seed"], main["cases_per_seed"]
-    ):
+    if sampling.max_proposals_per_seed < main["cases_per_seed"]:
         raise ValueError("sampling proposal budget is smaller than cases_per_seed")
     output_root = (
         path.parent / data.get("output_root", "../../outputs/panda_comparison")
@@ -225,8 +207,6 @@ def load_panda_experiment(
         config_path,
         config,
         raw,
-        command,
-        pilot,
         main,
         sampling,
         subdivisions,

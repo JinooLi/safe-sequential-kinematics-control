@@ -79,9 +79,9 @@ Direct는 IK 정보를 제어에 쓰지 않으므로, 이 비교에는 **IK로 �
 
 ## 표본 생성과 공통 모집단
 
-파일럿은 seed `20261005`로 20개, 주실험은 seed `2332`부터 `2336`까지 각각
+주실험은 seed `2332`부터 `2336`까지 각각
 60개씩 총 **300개 독립 case**를 제안한다. 각 case에 두 방법을 적용하므로
-최대 600개 궤적이다. 파일럿 case는 본 통계에 포함하지 않는다.
+최대 600개 궤적이다. 실행기는 YAML의 `main`에 설정한 장면만 바로 실행한다.
 300개는 초기 규모이며 검정력 계산으로 확정한 표본 수는 아니다.
 
 | 항목 | 주실험 제안값 |
@@ -125,8 +125,8 @@ IK 초기값이나 Sequential의 목표 관절각으로 전달하지 않는다.
    Sequential의 IK 실패는 전체 과정 실패로 포함한다. IK 확보율 $K/300$도 제시한다.
 
 탐색 예산 안에서 해를 못 찾은 결과를 기하학적으로 도달 불가능하다는 증명으로
-분류하지 않는다. 파일럿에서 $K$가 지나치게 작으면 표본 분포나 IK 예산을 검토하되,
-주실험 시작 전에 수정 조건과 seed를 확정한다.
+분류하지 않는다. $K$가 지나치게 작으면 IK 확보율과 함께 보고하고,
+표본 분포나 IK 예산을 바꾼 후속 실험은 조건과 seed를 별도로 확정한다.
 
 ## 공통 설정과 성공 판정
 
@@ -278,12 +278,12 @@ Panda에는 [전용 실행기](../../src/safe_ik/application/panda_comparison.py
 처음에는 GPU 궤적 worker 1개와 IK CPU worker 5개로 실행한다.
 프로세스별 CUDA 문맥과 모델 중복 적재를 피하도록 궤적 worker가 모델을 유지하고,
 case마다 초기 상태, 장애물, QP·controller 내부 상태를 초기화한다.
-다중 GPU worker는 파일럿에서 메모리와 처리량을 측정한 뒤 정한다.
+다중 GPU worker는 메모리와 처리량을 측정한 뒤 정한다.
 Direct/Sequential 실행 순서는 case별로 균형 있게 교대하며 GUI와 영상 생성은 끈다.
 GPU warm-up은 측정 전에 끝내고 CUDA 작업 완료를 보장한 시간과 전체 wall time을 구분한다.
 
-캠페인 디렉토리는 `outputs/panda_comparison/<run_id>/`이며,
-아래 산출물을 `pilot/`과 `main/`에 각각 저장한다.
+실험 디렉토리는 `outputs/panda_comparison/<run_id>/`이며,
+아래 산출물을 이 디렉토리에 바로 저장한다.
 
 | 산출물 | 내용 |
 |---|---|
@@ -304,7 +304,7 @@ IK 준비·탐색·후보 검증 시간을 캐시한 IK를 재사용한 궤적 �
 
 실험 설정은 [configs/experiments/panda_comparison.yaml](../../configs/experiments/panda_comparison.yaml)에서
 관리한다. `controller_config`의 공통 로봇 설정에 `controller_overrides`를 덮어쓴다.
-파일럿·본실험 표본 수, 난수 seed, 장면 생성 범위, 적분 구간의 추가 검사 수도 이 파일에서 바꾼다.
+표본 수, 난수 seed, 장면 생성 범위, 적분 구간의 추가 검사 수도 이 파일에서 바꾼다.
 일반 단일 궤적 실행의 설정 파일을 편집하지 않고 실험 조건을 바꿀 수 있다.
 
 `lab-server`에서는 `/home/cdsl/jinoo_ws/safe-inv-clbf-robot-arm-panda-gpu`에서 실행한다.
@@ -313,12 +313,8 @@ IK 준비·탐색·후보 검증 시간을 캐시한 IK를 재사용한 궤적 �
 # 파일을 편집한 뒤 실제 적용될 설정을 확인한다. 계산·결과 저장은 하지 않는다.
 make panda-compare ARGS="--dry-run"
 
-# YAML의 command 실행: 기본 campaign은 파일럿 후 본실험
+# YAML의 main 설정으로 바로 비교 실험 실행
 make panda-compare
-
-# 같은 YAML에서 파일럿만 또는 캠페인을 명시적으로 선택
-make panda-compare-pilot
-make panda-compare-campaign
 
 # 다른 조건을 적은 실험 YAML 선택
 make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yaml
@@ -326,18 +322,23 @@ make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yam
 # YAML의 output 대신 이 디렉토리에 저장; 같은 명령으로 중단된 실험 재개
 make panda-compare OUTPUT=outputs/panda_comparison/gain20_dt001
 
-# 일회성 재정의: 본실험만, 지정한 표본 수와 시간 제한
-make panda-compare ARGS="run --seeds 2332 --cases-per-seed 10 --duration 90"
+# 일회성 재정의: 지정한 표본 수와 시간 제한
+make panda-compare ARGS="--seeds 2332 --cases-per-seed 10 --duration 90"
 ```
 
 `my_experiment.yaml`은 전용 YAML을 같은 폴더에 복사해서 만든다. 기본 파일은
-파일럿 20개, 본실험 300개, gain 20, 계산 주기 0.01초, 제한 시간 90초다.
+300개 장면, gain 20, 계산 주기 0.01초, 제한 시간 90초다.
 `controller_overrides.trajectory`에서 이득·주기·단계 순서·정체 조건을,
-`controller_overrides.qp`에서 QP 허용오차를 조절한다. `pilot`과 `main`의 장면 수는
-각각 `seeds` 개수와 `cases_per_seed`의 곱이다. 한 장면에서 두 방법을 실행한다.
-캠페인의 표본 수와 seed도 YAML을 따르며 고정된 상수로 덮어쓰지 않는다.
+`controller_overrides.qp`에서 QP 허용오차를 조절한다. `main`의 장면 수는
+`seeds` 개수와 `cases_per_seed`의 곱이다. 한 장면에서 두 방법을 실행한다.
+예를 들어 시드 5개와 `cases_per_seed: 1`이면 정확히 5개 장면, 최대 10개 궤적이다.
 
-`output: null`이면 `output_root` 아래 UTC 시간·명령·고유 식별자로 새 디렉토리를 만든다.
+2026-10-06부터 파일럿과 캠페인 실행 경로를 제거했다. 기존 실험 YAML에서는
+`command`와 `pilot` 항목을 제거하고, 명령행의 `run`도 생략한다.
+사후 보간 안전 검사는 별도 설정인 `validation.subdivisions`로 조절한다.
+이 값이 1이면 추가 보간 검사를 생략하고, 제어 중 CBF와 기록 상태의 안전 판정은 수행한다.
+
+`output: null`이면 `output_root` 아래 UTC 시간·`run`·고유 식별자로 새 디렉토리를 만든다.
 특정 YAML `output`을 지정하면 같은 폴더에서 재개한다. YAML의 입력·출력 경로는
 실험 YAML 기준이며, 명령행 `--output`과 Make `OUTPUT`은 실행 디렉토리 기준이다.
 `--config` 또는 명시적 `PANDA_CONFIG`는 공통 제어 파일을 재정의하고,
@@ -347,8 +348,7 @@ Make의 기본값이 YAML의 장치를 덮어쓰지는 않는다. CPU 전용 의
 
 ### 결과에 저장되는 설정
 
-캠페인의 최상위 디렉토리와 `pilot/`, `main/`에 다음 파일을 저장한다.
-파일럿 또는 본실험만 실행할 때는 해당 결과 디렉토리에 바로 저장한다.
+실험 결과 디렉토리에 다음 파일을 저장한다.
 
 | 파일 | 내용 |
 |---|---|
@@ -364,13 +364,11 @@ Make의 기본값이 YAML의 장치를 덮어쓰지는 않는다. CPU 전용 의
 위치에서 해석되므로, 결과 디렉토리의 원본 사본을 그대로 실행하는 대신 resolved 파일을 사용한다.
 명령행으로 변경한 seed·시간 제한·장치도 최종 설정에서 확인할 수 있다.
 
-파일럿의 모든 paired 결과와 최종 상태·안전 판정·보간 검사 기록이 일치하고,
-안전 IK를 확보한 case가 하나 이상 있어야 본실험으로 진행한다.
-어느 방법의 성공률이 높은지는 진행 조건으로 사용하지 않는다.
-오류가 발생하면 캠페인의 `status.json`에 사유를 남기고 중단한다.
+`progress.json`에 완료한 장면 수를 기록한다. 모든 paired 결과와 최종 상태·안전 판정·
+보간 검사 기록이 일치하면 `complete.json`을 저장한다. IK 실패 장면도 실패 결과로 기록한다.
 같은 출력과 입력으로 재개하면 완료한 결과를 재사용한다. 원본 YAML·소스·프로토콜·자산이
 바뀌거나 저장된 설정·장면·궤적 파일의 hash가 맞지 않으면 재개를 거부한다.
-파일럿 도중 입력 파일을 편집한 경우에도 본실험으로 진행하지 않는다.
+파일럿 제거 전 결과는 보존하고, 변경한 코드로 실행할 때는 새 출력 디렉토리를 사용한다.
 
 2026-10-05의 기준 실험은 파일럿과 본실험 모두 60초를 사용했다. 이후 gain·계산 주기·제한 시간을
 바꾼 실험은 새 출력에 저장하고 기준 실험과 조건을 구분한다. 실행 확인용 smoke test는 주 통계에서 제외한다.

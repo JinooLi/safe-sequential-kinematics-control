@@ -36,13 +36,11 @@ Panda의 Direct/Sequential 몬테카를로 비교는 다음 명령으로 실행�
 
 ```bash
 make panda-compare ARGS="--dry-run" # 최종 설정만 확인
-make panda-compare                 # 전용 YAML의 command 실행
-make panda-compare-pilot            # 전용 YAML의 파일럿만 실행
-make panda-compare-campaign         # 전용 YAML의 파일럿 후 본실험 실행
+make panda-compare                 # 전용 YAML의 main 설정으로 바로 비교 실험 실행
 ```
 
 실험 설정은 [전용 YAML](configs/experiments/panda_comparison.yaml)에 모았다.
-파일럿·본실험 표본 수, gain·계산 주기·종료 판정, 장면 생성 범위와 결과 경로를 조절한다.
+표본 수, gain·계산 주기·종료 판정, 장면 생성 범위와 결과 경로를 조절한다.
 다른 실험 파일은 `PANDA_EXPERIMENT_CONFIG=<파일>`로 선택한다. 결과에는 **원본 실험 YAML과
 최종 적용 설정**을 함께 저장한다. 같은 조건으로 재개하려면 YAML의 `output` 또는
 `OUTPUT=<기존 디렉토리>`를 지정한다. 실행 예시는

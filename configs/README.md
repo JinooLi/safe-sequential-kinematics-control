@@ -22,8 +22,7 @@
 
 | 항목 | 조절하는 것 |
 |---|---|
-| `command` | `pilot`, `run`(본실험만), `campaign`(파일럿 후 본실험) |
-| `pilot`, `main` | 각 단계의 `seeds`, `cases_per_seed`; 장면 수는 두 값의 곱 |
+| `main` | `seeds`, `cases_per_seed`; 전체 장면 수는 시드 개수 × 시드당 장면 수 |
 | `controller_overrides` | gain, 계산 주기, 시간 제한, 단계 순서, 정체 기준, QP 설정 등 |
 | `sampling` | 목표·장애물 위치 범위, 장애물 수·반지름, 초기·목표 안전 여유, 표본 생성 예산 |
 | `validation.subdivisions` | 적분 구간을 나누는 수; 내부 상태의 추가 안전 검사 수는 이 값에서 1을 뺀 값 |
@@ -32,7 +31,7 @@
 
 ```bash
 make panda-compare ARGS="--dry-run" # 최종 적용 설정 확인, 결과 생성 없음
-make panda-compare                # YAML의 command 실행
+make panda-compare                # YAML의 main 설정으로 바로 비교 실험 실행
 make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yaml
 ```
 
@@ -45,6 +44,10 @@ make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yam
 `experiment.resolved.yaml`, 합쳐진 `config.yaml`, `resolved_config.json`을 저장한다.
 명령행 재정의도 최종 파일에 반영하며, 원본의 주석과 줄바꿈은 원본 사본에 보존한다.
 입력 설정이나 저장된 사본이 변경되면 같은 결과 폴더에서의 재개를 거부한다.
+
+기존 실험 파일을 새 실행기에 사용할 때는 `command`와 `pilot` 항목을 제거한다.
+`main`의 표본 수와 seed는 그대로 사용하며, 결과는 선택한 출력 폴더에 바로 저장한다.
+변경 전 코드로 실행한 결과는 보존하고 새 실험은 새 출력 폴더에서 시작한다.
 
 ## 오프라인 학습 설정 — `training/`
 

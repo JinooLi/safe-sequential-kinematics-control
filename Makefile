@@ -32,7 +32,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
 .DEFAULT_GOAL := help
 .PHONY: panda-train-rdf panda-validate-rdf panda-inspect-mesh panda-prepare-mesh
 .PHONY: panda-gpu-run panda-gpu-view
-.PHONY: panda-compare panda-compare-pilot panda-compare-campaign
+.PHONY: panda-compare
 .PHONY: help setup setup-runtime build test check check-format format \
  panda-run panda-view panda-direct panda-direct-view panda-sequential panda-sequential-view panda-plot panda-plot-view \
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
@@ -81,14 +81,8 @@ panda-sequential-view: ## Compute safe IK/sequential control, then replay and pl
 	$(PANDA) --mode sequential --visualize --show-plot $(ARGS)
 
 ##@ Panda: randomized direct/sequential comparison
-panda-compare-pilot: ## Run the pilot batch from PANDA_EXPERIMENT_CONFIG
-	$(PANDA_COMPARE) pilot $(OUTPUT_FLAG) $(ARGS)
-
-panda-compare: ## Run the experiment YAML command; ARGS="--dry-run" previews settings
+panda-compare: ## Run YAML main cases directly; ARGS="--dry-run" previews settings
 	$(PANDA_COMPARE) $(OUTPUT_FLAG) $(ARGS)
-
-panda-compare-campaign: ## Run YAML pilot then main; OUTPUT=<directory> resumes matching results
-	$(PANDA_COMPARE) campaign $(OUTPUT_FLAG) $(ARGS)
 
 ##@ Panda: saved control traces (no new simulation)
 panda-plot: ## Save diagnostic PNG from TRACE=<Panda trajectory.npz>

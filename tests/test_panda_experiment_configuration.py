@@ -1,4 +1,4 @@
-"""Experiment settings, exact input snapshots, and campaign resume guarantees."""
+"""Experiment settings, exact input snapshots, and resume guarantees."""
 
 import json
 import unittest
@@ -7,6 +7,7 @@ from copy import deepcopy
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
@@ -16,11 +17,11 @@ from safe_ik.application.artifacts import json_value
 from safe_ik.application.panda_comparison import (
     atomic_json,
     main,
-    run_campaign,
     verify_resume,
 )
 from safe_ik.application.panda_experiment_configuration import load_panda_experiment
 from safe_ik.domain.panda_sampling_config import PandaSamplingConfig
+from safe_ik.domain.safety_contracts import BarrierEvaluation
 from safe_ik.experiments.panda_comparison import generate_cases
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,10 +44,8 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.data = {
             "controller_config": "../controller.yaml",
             "rdf_device": "cpu",
-            "command": "campaign",
             "output_root": "../results",
             "output": None,
-            "pilot": {"seeds": [7, 8], "cases_per_seed": 2},
             "main": {"seeds": [19], "cases_per_seed": 3},
             "controller_overrides": {
                 "trajectory": {
@@ -76,7 +75,6 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.assertEqual(settings.config.trajectory.integration_period, 0.01)
         self.assertEqual(settings.config.qp.absolute_tolerance, 1e-5)
         self.assertEqual(settings.config.safety.rdf.runtime_device, "cpu")
-        self.assertEqual(settings.pilot, self.data["pilot"])
         self.assertEqual(settings.main, self.data["main"])
         self.assertEqual(settings.sampling.obstacle_count, 3)
         self.assertEqual(settings.subdivisions, 3)
@@ -84,7 +82,6 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
     def test_cli_overrides_are_saved_and_resolved_yaml_can_be_loaded(self):
         settings = load_panda_experiment(
             self.path,
-            command="pilot",
             device="cuda",
             duration=2.0,
             seeds=[21],
@@ -103,8 +100,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         resolved = yaml.safe_load(
             (destination / "experiment.resolved.yaml").read_text()
         )
-        self.assertEqual(resolved["pilot"], {"seeds": [21], "cases_per_seed": 4})
-        self.assertEqual(resolved["main"], self.data["main"])
+        self.assertEqual(resolved["main"], {"seeds": [21], "cases_per_seed": 4})
         self.assertEqual(resolved["rdf_device"], "cuda")
         reloaded = load_panda_experiment(destination / "experiment.resolved.yaml")
         self.assertEqual(json_value(reloaded.config), json_value(settings.config))
@@ -144,7 +140,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
 
     def test_invalid_batches_sampling_and_validation_are_rejected(self):
         for section, key, value in (
-            ("pilot", "seeds", []),
+            ("main", "seeds", []),
             ("main", "seeds", [1, 1]),
             ("main", "seeds", [True]),
             ("main", "cases_per_seed", 0),
@@ -184,7 +180,6 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         output = StringIO()
         with (
             patch("safe_ik.application.panda_comparison.run_experiment") as run,
-            patch("safe_ik.application.panda_comparison.run_campaign") as campaign,
             redirect_stdout(output),
         ):
             main(
@@ -199,68 +194,91 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
                 ]
             )
         run.assert_not_called()
-        campaign.assert_not_called()
         self.assertFalse(destination.exists())
         self.assertEqual(
             json.loads(output.getvalue())["controller"]["trajectory"]["duration"], 2
         )
 
-    def test_campaign_uses_yaml_batches_and_seals_root_snapshots(self):
-        settings = load_panda_experiment(self.path)
-        destination = self.root / "campaign"
-
-        def fingerprint(config, config_path, seeds, cases_per_seed, *, experiment):
-            return {
-                "settings": experiment.identity(),
-                "seeds": seeds,
-                "count": cases_per_seed,
-            }
-
-        def run(directory, config_path, config, seeds, cases_per_seed, *, experiment):
-            directory.mkdir()
-            atomic_json(
-                directory / "manifest.json",
-                {
-                    "identity": fingerprint(
-                        config,
-                        config_path,
-                        seeds,
-                        cases_per_seed,
-                        experiment=experiment,
-                    ),
-                    "data_sha256": experiment.snapshot(directory),
-                },
+    def test_cli_runs_requested_cases_even_without_ik_and_resumes_saved_results(self):
+        self.data["main"] = {"seeds": [19, 20], "cases_per_seed": 1}
+        self.write()
+        destination = self.root / "results"
+        args = ["--experiment-config", str(self.path), "--output", str(destination)]
+        kin = SimpleNamespace(
+            lower_limits=np.full(7, -10.0),
+            upper_limits=np.full(7, 10.0),
+            pose_and_jacobian=lambda q: (q[:3], np.array([1, 0, 0, 0]), np.eye(6, 7)),
+        )
+        safety = SimpleNamespace(
+            evaluate=lambda q: BarrierEvaluation(
+                ("self_test",), np.ones(1), np.zeros((1, 7))
             )
-            return {"complete": True, "ik_available_pairs": 1}
+        )
 
+        def cases(config, kin, safety, seeds, cases_per_seed, sampling):
+            return [
+                {
+                    "case_id": f"seed{seed}_{i:04d}",
+                    "initial_q": config.initial_q.tolist(),
+                    "target_position": config.initial_q[:3].tolist(),
+                    "target_quaternion": [1, 0, 0, 0],
+                    "obstacles": [],
+                    "ik_seed": seed + i,
+                }
+                for seed in seeds
+                for i in range(cases_per_seed)
+            ], {}
+
+        module = "safe_ik.application.panda_comparison"
         with (
+            patch(f"{module}.build_panda_components", return_value=(kin, safety)),
+            patch(f"{module}.generate_cases", side_effect=cases),
+            patch(f"{module}.scene_safety", return_value=safety),
             patch(
-                "safe_ik.application.panda_comparison.fingerprint",
-                side_effect=fingerprint,
+                f"{module}.MujocoPlant",
+                side_effect=lambda config: SimpleNamespace(
+                    q=config.initial_q, time=0.0
+                ),
             ),
             patch(
-                "safe_ik.application.panda_comparison.run_experiment", side_effect=run
-            ) as runner,
+                f"{module}.prepare_ik",
+                return_value={
+                    "selected": None,
+                    "reason": "ik_budget_exhausted",
+                    "wall_time": 0.0,
+                },
+            ) as prepare,
+            redirect_stdout(StringIO()),
         ):
-            run_campaign(destination, settings)
+            main(args)
+            analysis = json.loads((destination / "analysis.json").read_text())
+            self.assertTrue(analysis["complete"])
+            self.assertEqual(analysis["completed_pairs"], 2)
+            self.assertEqual(analysis["ik_available_pairs"], 0)
+            self.assertEqual(analysis["all_scenes"]["direct"]["success_count"], 2)
+            self.assertTrue((destination / "complete.json").exists())
             self.assertEqual(
-                [c.kwargs["seeds"] for c in runner.call_args_list], [[7, 8], [19]]
-            )
-            self.assertEqual(
-                [c.kwargs["cases_per_seed"] for c in runner.call_args_list], [2, 3]
+                {p.name for p in destination.iterdir() if p.is_dir()},
+                {"seed19_0000", "seed20_0000"},
             )
             self.assertEqual(
                 (destination / "experiment.yaml").read_bytes(), self.path.read_bytes()
             )
+            trace = destination / "seed19_0000/direct/trajectory.npz"
+            saved_time = trace.stat().st_mtime_ns
+            main(args)
+            self.assertEqual(trace.stat().st_mtime_ns, saved_time)
+            self.assertEqual(prepare.call_count, 2)
+            manifest = json.loads((destination / "manifest.json").read_text())
+            verify_resume(destination, manifest["identity"])
             self.assertEqual(
-                json.loads((destination / "status.json").read_text())["phase"],
-                "complete",
+                manifest["identity"]["experiment"]["main"], self.data["main"]
             )
             self.data["main"]["cases_per_seed"] = 4
             self.write()
             with self.assertRaisesRegex(ValueError, "settings changed"):
-                run_campaign(destination, load_panda_experiment(self.path))
-            self.assertEqual(runner.call_count, 2)
+                main(args)
+            self.assertEqual(prepare.call_count, 2)
 
     def test_sampler_uses_configured_bounds_radii_and_obstacle_count(self):
         class Kinematics:
@@ -269,8 +287,6 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
 
             def pose_and_jacobian(self, q):
                 return q[:3], np.array([1, 0, 0, 0]), np.eye(6, 7)
-
-        from safe_ik.domain.safety_contracts import BarrierEvaluation
 
         class Safety:
             def evaluate(self, q):
