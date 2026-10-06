@@ -47,6 +47,9 @@ class PandaComparisonReplayTest(unittest.TestCase):
             "obstacles": [
                 {"name": "obstacle1", "position": [0.2, -0.3, 0.4], "radius": 0.07},
                 {"name": "obstacle2", "position": [-0.2, 0.3, 0.6], "radius": 0.09},
+                {"name": "obstacle3", "position": [0.4, 0.1, 0.5], "radius": 0.05},
+                {"name": "obstacle4", "position": [-0.3, -0.2, 0.7], "radius": 0.06},
+                {"name": "obstacle5", "position": [0.1, 0.4, 0.8], "radius": 0.08},
             ],
         }
         (self.directory / "cases.jsonl").write_text(json.dumps(self.case) + "\n")
@@ -103,10 +106,12 @@ class PandaComparisonReplayTest(unittest.TestCase):
             geom = mujoco.mj_name2id(
                 plant.model, mujoco.mjtObj.mjOBJ_GEOM, f"obstacle_geom{index}"
             )
+            self.assertGreaterEqual(geom, 0)
             np.testing.assert_array_equal(
                 plant.model.geom_pos[geom], obstacle["position"]
             )
             self.assertEqual(plant.model.geom_size[geom, 0], obstacle["radius"])
+            self.assertGreater(plant.model.geom_rgba[geom, 3], 0.0)
 
     def test_cli_passes_all_recorded_states_including_final_state_without_writing(self):
         before = {p: digest(p) for p in self.root.rglob("*") if p.is_file()}

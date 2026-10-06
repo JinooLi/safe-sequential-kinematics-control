@@ -11,18 +11,26 @@ from ..domain.panda_config import PandaControllerConfig
 
 class MujocoPlant:
     def __init__(self, config: PandaControllerConfig):
-        self.model = mujoco.MjModel.from_xml_path(str(config.model_path))
+        spec = mujoco.MjSpec.from_file(str(config.model_path))
+        # Replace the XML placeholders in memory so every scene can have its
+        # own obstacle count without changing the saved model's file hash.
+        for geom in list(spec.worldbody.geoms):
+            if geom.name.startswith("obstacle_geom"):
+                spec.delete(geom)
+        for index, obstacle in enumerate(config.obstacles, start=1):
+            spec.worldbody.add_geom(
+                name=f"obstacle_geom{index}",
+                type=mujoco.mjtGeom.mjGEOM_SPHERE,
+                pos=obstacle.position,
+                size=[obstacle.radius, 0.0, 0.0],
+                rgba=[0.8, 0.1, 0.1, 0.6 if obstacle.enabled else 0.0],
+                contype=0,
+                conaffinity=0,
+            )
+        self.model = spec.compile()
         goal_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "goal_marker")
         if goal_id >= 0:
             self.model.site_pos[goal_id] = config.target.position
-        for index, obstacle in enumerate(config.obstacles, start=1):
-            geom_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_GEOM, f"obstacle_geom{index}"
-            )
-            if geom_id >= 0:
-                self.model.geom_pos[geom_id] = obstacle.position
-                self.model.geom_size[geom_id, 0] = obstacle.radius
-                self.model.geom_rgba[geom_id, 3] = 0.6 if obstacle.enabled else 0.0
         self.data = mujoco.MjData(self.model)
         self.data.qpos[:] = config.initial_q
         mujoco.mj_forward(self.model, self.data)
