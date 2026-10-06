@@ -68,6 +68,15 @@ class PandaExperimentSettings:
     subdivisions: int
     output_root: Path
     output: Path | None
+    use_all_ik_candidates: bool = False
+
+    @property
+    def candidate_policy(self):
+        return (
+            "all_nearest_switch_on_stall"
+            if self.use_all_ik_candidates
+            else "one_nearest_no_switch"
+        )
 
     def identity(self):
         # Check live inputs before recording the experiment identity or snapshots.
@@ -81,6 +90,7 @@ class PandaExperimentSettings:
             "main": self.main,
             "sampling": json_value(self.sampling),
             "subdivisions": self.subdivisions,
+            "use_all_ik_candidates": self.use_all_ik_candidates,
         }
 
     def resolved(self, output):
@@ -90,6 +100,7 @@ class PandaExperimentSettings:
             "output_root": str(self.output_root),
             "output": str(Path(output).resolve()),
             "main": self.main,
+            "use_all_ik_candidates": self.use_all_ik_candidates,
             "sampling": json_value(self.sampling),
             "validation": {"subdivisions": self.subdivisions},
             "controller_overrides": {},
@@ -138,6 +149,7 @@ def load_panda_experiment(
             "output_root",
             "output",
             "main",
+            "use_all_ik_candidates",
             "sampling",
             "validation",
             "controller_overrides",
@@ -182,6 +194,9 @@ def load_panda_experiment(
     if cases_per_seed is not None:
         main["cases_per_seed"] = cases_per_seed
     _batch(main, "main")
+    use_all_ik_candidates = data.get("use_all_ik_candidates", False)
+    if type(use_all_ik_candidates) is not bool:
+        raise ValueError("use_all_ik_candidates must be true or false")
     sampling_data = _mapping(
         data.get("sampling", {}), PandaSamplingConfig.__dataclass_fields__, "sampling"
     )
@@ -212,4 +227,5 @@ def load_panda_experiment(
         subdivisions,
         output_root,
         destination,
+        use_all_ik_candidates=use_all_ik_candidates,
     )

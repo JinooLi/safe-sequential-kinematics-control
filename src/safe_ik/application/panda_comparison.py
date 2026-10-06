@@ -147,7 +147,7 @@ def fingerprint(config, config_path, seeds, cases_per_seed, *, experiment=None):
     }
     protocol = root / "docs/experiments/panda_monte_carlo_protocol.md"
     identity = {
-        "schema_version": 2,
+        "schema_version": 3,
         "config": json_value(config),
         "config_sha256": digest(config_path),
         "source_sha256": source,
@@ -166,7 +166,9 @@ def fingerprint(config, config_path, seeds, cases_per_seed, *, experiment=None):
         "sampling": json_value(
             experiment.sampling if experiment else PandaSamplingConfig()
         ),
-        "candidate_policy": "one_nearest_no_switch",
+        "candidate_policy": (
+            experiment.candidate_policy if experiment else "one_nearest_no_switch"
+        ),
     }
     if experiment is not None:
         identity["experiment"] = experiment.identity()
@@ -194,6 +196,9 @@ def export_analysis(directory, rows, count, duration):
         "case_id",
         "method",
         "ik_available",
+        "candidate_policy",
+        "candidate_count",
+        "candidate_switch_count",
         "success",
         "goal_reached",
         "reason",
@@ -336,10 +341,13 @@ def _run_locked(
             print(f"[{index + 1}/{len(cases)}] {case['case_id']} IK start", flush=True)
             ik = prepare_ik(cfg, kin, scene_safety(cfg, kin, self_safety))
             atomic_json(ik_path, ik)
-        candidate = (
-            SafeIKCandidate(**{**ik["selected"], "q": np.asarray(ik["selected"]["q"])})
-            if ik["selected"]
-            else None
+        prepared = (
+            ik["accepted_candidates"]
+            if experiment is not None and experiment.use_all_ik_candidates
+            else [ik["selected"]] if ik["selected"] else []
+        )
+        candidates = tuple(
+            SafeIKCandidate(**{**item, "q": np.asarray(item["q"])}) for item in prepared
         )
         methods = (
             ("direct", "sequential") if index % 2 == 0 else ("sequential", "direct")
@@ -359,19 +367,24 @@ def _run_locked(
                     raise ValueError("cached trajectory hash mismatch")
             else:
                 print(
-                    f"[{index + 1}/{len(cases)}] {case['case_id']} {method} start; IK={candidate is not None}",
+                    f"[{index + 1}/{len(cases)}] {case['case_id']} {method} start; "
+                    f"IK={bool(candidates)}, policy={identity['candidate_policy']}",
                     flush=True,
                 )
                 method_cfg = replace(
                     cfg, trajectory=replace(cfg.trajectory, mode=method)
                 )
-                if method == "sequential" and candidate is None:
+                if method == "sequential" and not candidates:
                     result = {
                         "success": False,
                         "goal_reached": False,
                         "safety_violation": False,
                         "reason": ik["reason"],
                         "completion_time": None,
+                        "candidate_count": 0,
+                        "candidate_switch_count": 0,
+                        "candidate_transitions": [],
+                        "final_candidate_seed_index": None,
                     }
                 else:
                     runtime_start = perf_counter()
@@ -389,7 +402,7 @@ def _run_locked(
                     result, trace = comparison_rollout(
                         method_cfg,
                         runtime,
-                        candidate,
+                        candidates,
                         subdivisions=identity["subdivisions"],
                     )
                     temporary = result_dir / "trajectory.npz.partial"
@@ -401,7 +414,12 @@ def _run_locked(
                 result.update(
                     case_id=case["case_id"],
                     method=method,
-                    ik_available=candidate is not None,
+                    ik_available=bool(candidates),
+                    candidate_policy=(
+                        identity["candidate_policy"]
+                        if method == "sequential"
+                        else "not_used"
+                    ),
                     ik_wall_time=ik["wall_time"] if method == "sequential" else 0.0,
                     ik_sha256=digest(ik_path),
                 )

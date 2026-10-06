@@ -8,13 +8,13 @@ from ..control.panda_controller import PandaTrajectoryController
 from ..experiments.panda_comparison import measure_state
 
 
-def comparison_rollout(config, runtime, candidate=None, *, subdivisions=5):
+def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     if subdivisions < 1:
         raise ValueError("subdivisions must be positive")
     kin, safety, plant = runtime.kinematics, runtime.safety, runtime.plant
-    candidates = () if config.trajectory.mode == "direct" else (candidate,)
-    if candidates == (None,):
-        raise ValueError("sequential rollout needs a prepared candidate")
+    candidates = () if config.trajectory.mode == "direct" else tuple(candidates)
+    if config.trajectory.mode == "sequential" and not candidates:
+        raise ValueError("sequential rollout needs prepared candidates")
     controller = PandaTrajectoryController(
         config, kin, safety, candidates, runtime.solver
     )
@@ -22,15 +22,30 @@ def comparison_rollout(config, runtime, candidate=None, *, subdivisions=5):
     maximum_steps = int(round(config.trajectory.duration / period))
     if not np.isclose(maximum_steps * period, config.trajectory.duration):
         raise ValueError("duration must contain an integer number of control periods")
-    stage_targets = (
+    stage_targets = [
         [
             kin.frame_point_and_jacobian(f, candidate.q)[0]
             for f in config.trajectory.stage_frames
         ]
-        if candidate is not None
-        else []
-    )
+        for candidate in candidates
+    ]
     states, barriers, samples, stage_errors, state_times = [], [], [], [], []
+    candidate_indices, candidate_seeds, candidate_events = [], [], []
+
+    def record_candidate_state(q):
+        # Record the candidate chosen for this state, including a switch in
+        # get_velocity(). Final states without a command keep the active one.
+        index = controller.candidate_index if candidates else -1
+        candidate_indices.append(index)
+        candidate_seeds.append(candidates[index].seed_index if candidates else -1)
+        targets = stage_targets[index] if candidates else []
+        stage_errors.append(
+            [
+                float(np.linalg.norm(kin.frame_point_and_jacobian(f, q)[0] - target))
+                for f, target in zip(config.trajectory.stage_frames, targets)
+            ]
+        )
+
     (
         commands,
         command_times,
@@ -58,20 +73,31 @@ def comparison_rollout(config, runtime, candidate=None, *, subdivisions=5):
                 for key in ("distance", "selection", "gradient")
             ]
         )
-        stage_errors.append(
-            [
-                float(np.linalg.norm(kin.frame_point_and_jacobian(f, q)[0] - target))
-                for f, target in zip(config.trajectory.stage_frames, stage_targets)
-            ]
-        )
         # The final integrated state is evaluated before timeout and without a stage gate.
         if sample["goal_reached"]:
+            record_candidate_state(q)
             reason = "goal_reached"
             break
         if steps == maximum_steps:
+            record_candidate_state(q)
             reason = "timeout"
             break
+        previous_candidate = controller.candidate_index
         velocity = controller.get_velocity(q)
+        record_candidate_state(q)
+        if controller.candidate_index != previous_candidate:
+            candidate_events.append(
+                {
+                    "time": float(plant.time - initial_time),
+                    "previous_index": previous_candidate,
+                    "next_index": controller.candidate_index,
+                    "previous_seed_index": candidates[previous_candidate].seed_index,
+                    "next_seed_index": candidates[
+                        controller.candidate_index
+                    ].seed_index,
+                    "reason": "stalled",
+                }
+            )
         status = controller.last_status
         commands.append(velocity.copy())
         command_times.append(float(plant.time - initial_time))
@@ -151,6 +177,10 @@ def comparison_rollout(config, runtime, candidate=None, *, subdivisions=5):
         "qp_solve_time": float(sum(qp_times)),
         "rdf_times": np.asarray(rdf_times).sum(axis=0).tolist(),
         "stage_transitions": events,
+        "candidate_count": len(candidates),
+        "candidate_switch_count": controller.candidate_switch_count,
+        "candidate_transitions": candidate_events,
+        "final_candidate_seed_index": candidate_seeds[-1] if candidates else None,
     }
     # Offline interpolation is reported separately from sampled primary success.
     validation_start = perf_counter()
@@ -192,6 +222,14 @@ def comparison_rollout(config, runtime, candidate=None, *, subdivisions=5):
         "stage_index": np.asarray(stages, dtype=int),
         "stage_frames": np.asarray(config.trajectory.stage_frames),
         "stage_errors": np.asarray(stage_errors),
+        "candidate_index": np.asarray(candidate_indices, dtype=int),
+        "candidate_seed_index": np.asarray(candidate_seeds, dtype=int),
+        "candidate_seed_indices": np.asarray(
+            [candidate.seed_index for candidate in candidates], dtype=int
+        ),
+        "candidate_q": np.asarray([candidate.q for candidate in candidates]).reshape(
+            -1, config.dof
+        ),
         "clf_value": np.asarray(clf_values),
         "clf_slack": np.asarray(slacks),
         "qp_time": np.asarray(qp_times),

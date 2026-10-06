@@ -97,7 +97,8 @@ class PandaComparisonTest(unittest.TestCase):
         runtime = PandaRuntime(
             Kinematics(), safety or Safety(), Solver(status), Plant()
         )
-        return comparison_rollout(config or self.config, runtime, candidate)
+        candidates = () if candidate is None else (candidate,)
+        return comparison_rollout(config or self.config, runtime, candidates)
 
     def test_goal_on_final_step_is_counted_and_recorded(self):
         result, trace = self.run_case()
@@ -136,10 +137,116 @@ class PandaComparisonTest(unittest.TestCase):
         )
         candidate = SafeIKCandidate(np.array([0.0105, 0, 0, 0, 0, 0, 0]), 0, 1, 0, 0, 1)
         runtime = PandaRuntime(Kinematics(), Safety(), SlowSolver(), Plant())
-        result, _ = comparison_rollout(config, runtime, candidate, subdivisions=1)
+        result, _ = comparison_rollout(config, runtime, (candidate,), subdivisions=1)
         self.assertEqual(result["reason"], "goal_reached")
         self.assertTrue(result["success"])
         self.assertGreater(result["elapsed"], config.trajectory.stop_progress_window)
+
+    def test_stalled_candidate_switches_and_records_new_targets(self):
+        class StageStallsSolver(Solver):
+            def solve(self, problem):
+                result = super().solve(problem)
+                # No motion for the first intermediate target. Once the second
+                # candidate reaches its stages, allow motion to the final pose.
+                return replace(result, x=np.zeros(8)) if problem.A[0, 3] else result
+
+        config = replace(
+            self.config,
+            trajectory=replace(
+                self.config.trajectory,
+                mode="sequential",
+                duration=0.2,
+                stop_window=0.04,
+                stop_progress_window=0.04,
+            ),
+        )
+        first = SafeIKCandidate(np.array([0.02, 0, 0, 0.5, 0, 0, 0]), 4, 1, 0, 0, 1)
+        second = replace(first, q=np.array([0.02, 0, 0, 0, 0, 0, 1]), seed_index=8)
+        for candidates in ((first,), (first, second)):
+            with self.subTest(candidate_count=len(candidates)):
+                runtime = PandaRuntime(
+                    Kinematics(), Safety(), StageStallsSolver(), Plant()
+                )
+                result, trace = comparison_rollout(
+                    config, runtime, candidates, subdivisions=1
+                )
+                self.assertEqual(result["candidate_count"], len(candidates))
+                if len(candidates) == 1:
+                    self.assertEqual(result["reason"], "stalled")
+                    self.assertEqual(result["candidate_switch_count"], 0)
+                    np.testing.assert_array_equal(trace["candidate_seed_index"], 4)
+                else:
+                    self.assertTrue(result["success"])
+                    self.assertEqual(result["candidate_switch_count"], 1)
+                    self.assertEqual(result["final_candidate_seed_index"], 8)
+                    (event,) = result["candidate_transitions"]
+                    self.assertAlmostEqual(event["time"], 0.04)
+                    self.assertEqual(event["previous_seed_index"], 4)
+                    self.assertEqual(event["next_seed_index"], 8)
+                    np.testing.assert_array_equal(
+                        trace["candidate_index"], [0, 0, 1, 1]
+                    )
+                    np.testing.assert_array_equal(
+                        trace["candidate_seed_index"], [4, 4, 8, 8]
+                    )
+                    np.testing.assert_allclose(trace["stage_errors"][:2], 0.5)
+                    np.testing.assert_allclose(trace["stage_errors"][2:], 0.0)
+                    np.testing.assert_array_equal(
+                        trace["candidate_q"], [first.q, second.q]
+                    )
+                    self.assertAlmostEqual(result["elapsed"], 0.06)
+
+    def test_candidate_switches_at_same_stage_are_logged_and_share_time_budget(self):
+        class StoppedSolver(Solver):
+            def solve(self, problem):
+                return replace(super().solve(problem), x=np.zeros(8))
+
+        first = SafeIKCandidate(np.array([0.02, 0, 0, 0.5, 0, 0, 0]), 4, 1, 0, 0, 1)
+        candidates = (first, replace(first, q=first.q * 2, seed_index=8))
+        for duration, reason, elapsed in (
+            (0.06, "timeout", 0.06),
+            (0.2, "stalled", 0.08),
+        ):
+            config = replace(
+                self.config,
+                trajectory=replace(
+                    self.config.trajectory,
+                    mode="sequential",
+                    duration=duration,
+                    stop_window=0.04,
+                    stop_progress_window=0.04,
+                ),
+            )
+            runtime = PandaRuntime(Kinematics(), Safety(), StoppedSolver(), Plant())
+            result, trace = comparison_rollout(
+                config, runtime, candidates, subdivisions=1
+            )
+            with self.subTest(duration=duration):
+                self.assertEqual(result["reason"], reason)
+                self.assertAlmostEqual(result["elapsed"], elapsed)
+                self.assertEqual(result["candidate_switch_count"], 1)
+                self.assertEqual(len(result["candidate_transitions"]), 1)
+                self.assertEqual(result["stage_transitions"], [])
+                np.testing.assert_allclose(trace["stage_errors"][-1], 1.0)
+
+    def test_direct_ignores_ik_candidates(self):
+        candidate = SafeIKCandidate(np.ones(7), 4, 1, 0, 0, 1)
+        runtime = PandaRuntime(Kinematics(), Safety(), Solver(), Plant())
+        result, trace = comparison_rollout(
+            self.config, runtime, (candidate,), subdivisions=1
+        )
+        self.assertTrue(result["success"])
+        self.assertEqual(result["candidate_count"], 0)
+        self.assertEqual(result["candidate_switch_count"], 0)
+        np.testing.assert_array_equal(trace["candidate_index"], [-1, -1])
+
+    def test_sequential_requires_prepared_candidates(self):
+        config = replace(
+            self.config, trajectory=replace(self.config.trajectory, mode="sequential")
+        )
+        runtime = PandaRuntime(Kinematics(), Safety(), Solver(), Plant())
+        with self.assertRaisesRegex(ValueError, "prepared candidates"):
+            comparison_rollout(config, runtime)
 
     def test_interpolation_detects_crossing_between_safe_samples(self):
         result, _ = self.run_case(Safety(lambda q: (q[0] - 0.01) ** 2 - 0.00003))

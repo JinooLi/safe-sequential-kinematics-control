@@ -71,7 +71,29 @@ Panda에서는 이러한 **도달률과 시간의 교환 관계가 재현되는�
 한 case의 초기 상태, 목표 pose, 장애물, CBF, QP, 속도·가속도 제한, 제한 시간은 같다.
 IK 후보의 거리는 현재 구현처럼 관절각 벡터의 유클리드 거리로 정하며,
 동률이면 seed 인덱스로 순서를 고정한다. 후보와 순서를 저장해 실행 순서에 영향받지 않게 한다.
-주실험은 정지 시 다른 IK 해로 바꾸는 기능을 끄고, 후보 변경의 효과는 추가 비교에서 측정한다.
+주실험은 `use_all_ik_candidates: false`로 정지 시 다른 IK 해로 바꾸는 기능을 끄고,
+후보 변경의 효과는 `true`인 별도 실행으로 측정한다.
+
+실험 YAML 최상위의 `use_all_ik_candidates`로 후보 범위를 선택한다. 생략하면 `false`다.
+
+| 값 | Sequential에 전달하는 후보 | 정체 시 동작 |
+|---|---|---|
+| `false` | 초기 관절각에 가장 가까운 검증 후보 하나 | `stalled`로 종료 |
+| `true` | 검증을 통과한 후보 전체, 같은 거리·seed 기준 순서 | 다음 후보의 첫 단계부터 진행, 마지막 후보도 정체되면 종료 |
+
+`true`여도 IK 탐색을 추가로 실행하지 않으며, 검증에서 탈락한 후보는 전달하지 않는다.
+후보 변경 시 정체 이력을 초기화하지만, 방법별 전체 `duration`은 초기화하지 않는다.
+QP 실패는 기존처럼 종료한다. Direct는 두 설정 모두 IK 후보를 제어에 사용하지 않는다.
+정책은 `experiment.resolved.yaml`과 `manifest.json`에 저장되며, 변경된 정책으로 기존
+결과 폴더를 재개할 수 없다. 조건별 결과는 새 폴더에 저장한다.
+
+각 방법의 `summary.json`에는 `candidate_policy`, `candidate_count`,
+`candidate_switch_count`, `candidate_transitions`, `final_candidate_seed_index`가 기록된다.
+전환 기록에는 시뮬레이션 시각과 이전·다음 후보의 인덱스 및 seed가 포함된다.
+`trajectory.npz`의 `candidate_index`, `candidate_seed_index`는 초기·최종 상태를 포함한
+`time`, `q`와 행이 일치하며, `stage_errors`는 그 행의 활성 후보를 기준으로 계산한다.
+전환 스텝에는 새 후보를 기록한다. 후보 목록은 `candidate_seed_indices`, `candidate_q`에
+보존한다. Direct의 후보 인덱스·seed는 `-1`이고, 중간 목표 오차는 빈 열이다.
 
 Direct는 IK 정보를 제어에 쓰지 않으므로, 이 비교에는 **IK로 정한 중간 목표의 정보와
 순차 제어의 효과가 함께 포함**된다. 순차화 자체의 고유 기여까지 주장하려면
@@ -276,7 +298,8 @@ $\max_j |q_j^*-q_{0,j}|/\dot q_{j,\max}$도 기록한다.
 Panda에는 [전용 실행기](../../src/safe_ik/application/panda_comparison.py)를 추가했다.
 [표본과 분석](../../src/safe_ik/experiments/panda_comparison.py),
 [공통 판정 rollout](../../src/safe_ik/application/panda_comparison_rollout.py)을 분리했다.
-준비한 IK 결과를 case별로 저장하고 선택한 후보 하나를 기존 Panda 제어기에 전달한다.
+준비한 IK 결과를 case별로 저장하고 `use_all_ik_candidates`에 따라 선택한 후보 하나
+또는 검증된 후보 전체를 기존 Panda 제어기에 전달한다.
 실행마다 IK를 다시 구해 비교 대상의 목표가 달라지지 않도록 한다.
 
 처음에는 GPU 궤적 worker 1개와 IK CPU worker 5개로 실행한다.

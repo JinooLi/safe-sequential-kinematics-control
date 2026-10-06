@@ -16,6 +16,7 @@ import yaml
 from safe_ik.application.artifacts import json_value
 from safe_ik.application.panda_comparison import (
     atomic_json,
+    fingerprint,
     main,
     verify_resume,
 )
@@ -78,8 +79,12 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         self.assertEqual(settings.main, self.data["main"])
         self.assertEqual(settings.sampling.obstacle_count, 3)
         self.assertEqual(settings.subdivisions, 3)
+        self.assertFalse(settings.use_all_ik_candidates)
+        self.assertEqual(settings.candidate_policy, "one_nearest_no_switch")
 
     def test_cli_overrides_are_saved_and_resolved_yaml_can_be_loaded(self):
+        self.data["use_all_ik_candidates"] = True
+        self.write()
         settings = load_panda_experiment(
             self.path,
             device="cuda",
@@ -102,7 +107,10 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
         )
         self.assertEqual(resolved["main"], {"seeds": [21], "cases_per_seed": 4})
         self.assertEqual(resolved["rdf_device"], "cuda")
+        self.assertTrue(resolved["use_all_ik_candidates"])
         reloaded = load_panda_experiment(destination / "experiment.resolved.yaml")
+        self.assertTrue(reloaded.use_all_ik_candidates)
+        self.assertEqual(reloaded.candidate_policy, "all_nearest_switch_on_stall")
         self.assertEqual(json_value(reloaded.config), json_value(settings.config))
         self.assertEqual(
             set(hashes),
@@ -124,6 +132,29 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
             load_panda_experiment(self.path, output="somewhere").output,
             Path("somewhere").resolve(),
         )
+
+    def test_candidate_policy_requires_boolean_and_prevents_changed_policy_resume(self):
+        settings = load_panda_experiment(self.path)
+        original = fingerprint(settings.config, self.base, [19], 3, experiment=settings)
+        directory = self.root / "saved"
+        directory.mkdir()
+        atomic_json(directory / "manifest.json", {"identity": original})
+        for value in ("false", 0, None, "all"):
+            self.data["use_all_ik_candidates"] = value
+            self.write()
+            with (
+                self.subTest(value=value),
+                self.assertRaisesRegex(ValueError, "true or false"),
+            ):
+                load_panda_experiment(self.path)
+        self.data["use_all_ik_candidates"] = True
+        self.write()
+        settings = load_panda_experiment(self.path)
+        changed = fingerprint(settings.config, self.base, [19], 3, experiment=settings)
+        self.assertEqual(changed["candidate_policy"], "all_nearest_switch_on_stall")
+        self.assertTrue(changed["experiment"]["use_all_ik_candidates"])
+        with self.assertRaisesRegex(ValueError, "settings changed"):
+            verify_resume(directory, changed)
 
     def test_typo_in_experiment_or_controller_override_is_rejected(self):
         for mutate in (
@@ -244,6 +275,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
                 f"{module}.prepare_ik",
                 return_value={
                     "selected": None,
+                    "accepted_candidates": [],
                     "reason": "ik_budget_exhausted",
                     "wall_time": 0.0,
                 },
@@ -309,6 +341,97 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
             for obstacle in case["obstacles"]:
                 self.assertTrue(0.02 <= obstacle["radius"] <= 0.03)
                 self.assertTrue(np.all(np.abs(obstacle["position"]) <= 1))
+
+    def test_cli_passes_only_selected_or_all_accepted_candidates(self):
+        self.data["main"] = {"seeds": [19], "cases_per_seed": 1}
+        kin = SimpleNamespace(
+            lower_limits=np.full(7, -10.0),
+            upper_limits=np.full(7, 10.0),
+            pose_and_jacobian=lambda q: (q[:3], np.array([1, 0, 0, 0]), np.eye(6, 7)),
+            frame_point_and_jacobian=lambda f, q: (q[:3], np.eye(6, 7)[:3]),
+        )
+        safety = SimpleNamespace(
+            evaluate=lambda q: BarrierEvaluation(
+                ("self_test",), np.ones(1), np.zeros((1, 7))
+            )
+        )
+
+        def cases(config, *args):
+            return [
+                {
+                    "case_id": "seed19_0000",
+                    "initial_q": config.initial_q.tolist(),
+                    "target_position": config.initial_q[:3].tolist(),
+                    "target_quaternion": [1, 0, 0, 0],
+                    "obstacles": [],
+                    "ik_seed": 19,
+                }
+            ], {}
+
+        def prepared(config, *args):
+            candidates = [
+                {
+                    "q": (config.initial_q + 0.1 * i).tolist(),
+                    "seed_index": seed,
+                    "iterations": 1,
+                    "position_error": 0,
+                    "orientation_error": 0,
+                    "minimum_barrier": 1,
+                }
+                for i, seed in enumerate((4, 8, 2), 1)
+            ]
+            return {
+                "selected": candidates[0],
+                "accepted_candidates": candidates[:2],
+                "raw_candidates": candidates,
+                "reason": None,
+                "wall_time": 0,
+            }
+
+        module = "safe_ik.application.panda_comparison"
+        for use_all in (False, True):
+            self.data["use_all_ik_candidates"] = use_all
+            self.write()
+            destination = self.root / f"results-{use_all}"
+            with (
+                self.subTest(use_all=use_all),
+                patch(f"{module}.build_panda_components", return_value=(kin, safety)),
+                patch(f"{module}.generate_cases", side_effect=cases),
+                patch(f"{module}.scene_safety", return_value=safety),
+                patch(
+                    f"{module}.MujocoPlant",
+                    side_effect=lambda c: SimpleNamespace(q=c.initial_q, time=0.0),
+                ),
+                patch(f"{module}.prepare_ik", side_effect=prepared) as prepare,
+                redirect_stdout(StringIO()),
+            ):
+                main(
+                    [
+                        "--experiment-config",
+                        str(self.path),
+                        "--output",
+                        str(destination),
+                    ]
+                )
+                prepare.assert_called_once()
+                for method in ("direct", "sequential"):
+                    folder = destination / "seed19_0000" / method
+                    result = json.loads((folder / "summary.json").read_text())
+                    expected = [] if method == "direct" else [4, 8] if use_all else [4]
+                    self.assertEqual(result["candidate_count"], len(expected))
+                    self.assertEqual(result["candidate_switch_count"], 0)
+                    self.assertEqual(
+                        result["candidate_policy"],
+                        (
+                            "not_used"
+                            if method == "direct"
+                            else load_panda_experiment(self.path).candidate_policy
+                        ),
+                    )
+                    with np.load(folder / "trajectory.npz") as trace:
+                        np.testing.assert_array_equal(
+                            trace["candidate_seed_indices"], expected
+                        )
 
 
 if __name__ == "__main__":
