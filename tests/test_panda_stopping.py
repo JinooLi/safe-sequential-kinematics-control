@@ -135,6 +135,7 @@ class PandaStoppingTest(unittest.TestCase):
                     if controller.last_status.success:
                         break
                     q += period * velocity
+                    controller.record_applied_velocity(velocity)
                 self.assertTrue(controller.last_status.success)
 
     def test_slow_orientation_progress_also_prevents_stall(self):
@@ -150,7 +151,9 @@ class PandaStoppingTest(unittest.TestCase):
         controller = self.controller(config, solver=Solver(joint=6))
         q = np.zeros(7)
         for _ in range(200):
-            q += config.trajectory.integration_period * controller.get_velocity(q)
+            velocity = controller.get_velocity(q)
+            q += config.trajectory.integration_period * velocity
+            controller.record_applied_velocity(velocity)
             self.assertFalse(controller.last_status.stalled)
         self.assertFalse(controller.last_status.success)
 
@@ -166,6 +169,7 @@ class PandaStoppingTest(unittest.TestCase):
                 controller.get_velocity(q)
                 for _ in range(3):
                     self.assertFalse(controller.status(q).stalled)
+                controller.record_applied_velocity(np.zeros(7))
             controller.get_velocity(q)
             self.assertTrue(controller.last_status.candidates_exhausted)
 
@@ -177,6 +181,7 @@ class PandaStoppingTest(unittest.TestCase):
             controller.get_velocity(q)
             if controller.last_status.stalled:
                 break
+            controller.record_applied_velocity(np.zeros(7))
         self.assertTrue(controller.last_status.stalled)
 
     def test_reached_stages_reset_progress_and_velocity_history(self):
@@ -192,11 +197,12 @@ class PandaStoppingTest(unittest.TestCase):
         controller = self.controller(config, candidates=(candidate,))
         for _ in range(100):
             controller.get_velocity(np.zeros(7))
+            controller.record_applied_velocity(np.zeros(7))
         controller.get_velocity(candidate.q)
         self.assertEqual(controller.active_stage_name, "end_effector_pose")
         self.assertFalse(controller.last_status.stalled)
         self.assertEqual(len(controller._progress_best_errors), 1)
-        self.assertEqual(len(controller.velocity_norms), 1)
+        self.assertEqual(len(controller.applied_velocity_norms), 0)
 
     def test_real_stall_switches_candidate_and_resets_progress(self):
         config = replace(
@@ -209,11 +215,53 @@ class PandaStoppingTest(unittest.TestCase):
         controller = self.controller(config, candidates=candidates)
         for _ in range(101):
             controller.get_velocity(np.zeros(7))
+            controller.record_applied_velocity(np.zeros(7))
         self.assertEqual(controller.candidate_index, 1)
         self.assertEqual(controller.candidate_switch_count, 1)
         self.assertFalse(controller.last_status.stalled)
         self.assertEqual(len(controller._progress_best_errors), 1)
         self.assertAlmostEqual(controller._best_task_error, 4.0)
+
+    def test_applied_motion_drives_stall_without_changing_command_acceleration_history(
+        self,
+    ):
+        for actual_speed, stalled in ((0.0, True), (0.1, False)):
+            config = replace(
+                self.config,
+                trajectory=replace(
+                    self.config.trajectory,
+                    stop_window=0.04,
+                    stop_progress_window=0.04,
+                    acceleration_limits=np.full(7, 0.1),
+                ),
+            )
+            solver = Solver()
+            controller = self.controller(config, solver=solver)
+            for _ in range(2):
+                command = controller.get_velocity(np.zeros(7))
+                actual = np.zeros(7)
+                actual[0] = actual_speed
+                controller.record_applied_velocity(actual)
+                np.testing.assert_array_equal(
+                    controller.previous_command_velocity, command
+                )
+                np.testing.assert_array_equal(controller.last_applied_velocity, actual)
+            controller.get_velocity(np.zeros(7))
+            self.assertEqual(controller.last_status.stalled, stalled)
+            if not stalled:
+                delta = config.trajectory.acceleration_limits[0] * 0.02
+                self.assertAlmostEqual(solver.problems[-1].upper[-7], 1e-4 + delta)
+
+    def test_unapplied_commands_do_not_fill_motion_window(self):
+        controller = self.controller()
+        for _ in range(150):
+            controller.get_velocity(np.zeros(7))
+        self.assertFalse(controller.last_status.stalled)
+        self.assertEqual(len(controller.applied_velocity_norms), 0)
+        for invalid in (np.zeros(6), np.full(7, np.nan), np.full(7, np.inf)):
+            with self.assertRaises(ValueError):
+                controller.record_applied_velocity(invalid)
+        self.assertEqual(len(controller.applied_velocity_norms), 0)
 
     def test_invalid_stopping_parameters_are_rejected(self):
         for field in (

@@ -67,7 +67,8 @@ class PandaTrajectoryController:
             if config.trajectory.stage_task == "pose"
             else ()
         )
-        self.previous_velocity = np.zeros(config.dof)
+        self.previous_command_velocity = np.zeros(config.dof)
+        self.last_applied_velocity = np.zeros(config.dof)
         window_samples = max(
             1,
             int(
@@ -76,7 +77,7 @@ class PandaTrajectoryController:
                 )
             ),
         )
-        self.velocity_norms = deque(maxlen=window_samples)
+        self.applied_velocity_norms = deque(maxlen=window_samples)
         progress_samples = max(
             1,
             int(
@@ -231,9 +232,21 @@ class PandaTrajectoryController:
             self._reset_stall_history()
 
     def _reset_stall_history(self) -> None:
-        self.velocity_norms.clear()
+        self.applied_velocity_norms.clear()
         self._progress_best_errors.clear()
         self._best_task_error = float("inf")
+
+    def record_applied_velocity(self, velocity) -> None:
+        """Record measured motion once after each completed integration interval.
+
+        Command generation alone is not evidence of motion. Keep the command
+        history used by the QP acceleration bounds separate from this feedback.
+        """
+        velocity = np.asarray(velocity, dtype=float)
+        if velocity.shape != (self.config.dof,) or not np.isfinite(velocity).all():
+            raise ValueError("applied velocity must be a finite vector of length dof")
+        self.last_applied_velocity = velocity.copy()
+        self.applied_velocity_norms.append(float(np.linalg.norm(velocity)))
 
     def _record_task_progress(self, q) -> None:
         """Record once per control tick, for the active candidate and stage."""
@@ -287,8 +300,8 @@ class PandaTrajectoryController:
             and minimum_barrier >= -self.config.trajectory.success_barrier_tolerance
         )
         stalled = (
-            len(self.velocity_norms) == self.velocity_norms.maxlen
-            and float(np.mean(self.velocity_norms))
+            len(self.applied_velocity_norms) == self.applied_velocity_norms.maxlen
+            and float(np.mean(self.applied_velocity_norms))
             <= self.config.trajectory.stop_velocity_tolerance
             and len(self._progress_best_errors) == self._progress_best_errors.maxlen
             and self._progress_best_errors[0] - self._progress_best_errors[-1]
@@ -328,7 +341,7 @@ class PandaTrajectoryController:
                 (previous_stage_name, self.active_stage_name, "candidate_switch")
             )
         self._reset_stall_history()
-        self.previous_velocity.fill(0.0)
+        self.previous_command_velocity.fill(0.0)
         self._advance_reached_stages(q)
         self._record_task_progress(q)
         self.last_status = self.status(q)
@@ -393,8 +406,12 @@ class PandaTrajectoryController:
         velocity_lower = -trajectory.velocity_limits
         velocity_upper = trajectory.velocity_limits
         delta = trajectory.acceleration_limits * trajectory.integration_period
-        velocity_lower = np.maximum(velocity_lower, self.previous_velocity - delta)
-        velocity_upper = np.minimum(velocity_upper, self.previous_velocity + delta)
+        velocity_lower = np.maximum(
+            velocity_lower, self.previous_command_velocity - delta
+        )
+        velocity_upper = np.minimum(
+            velocity_upper, self.previous_command_velocity + delta
+        )
         for joint in range(self.config.dof):
             row = np.zeros(self.config.dof + 1)
             row[joint] = 1.0
@@ -430,7 +447,6 @@ class PandaTrajectoryController:
             self.qp_infeasible_stopped = True
             self.last_clf_slack = np.nan
             velocity = np.zeros(self.config.dof)
-            self.velocity_norms.append(0.0)
             self.last_status = self.status(
                 q,
                 qp_infeasible=qp_infeasible,
@@ -439,9 +455,8 @@ class PandaTrajectoryController:
             return velocity
 
         velocity = np.asarray(result.x[: self.config.dof], dtype=float)
-        self.previous_velocity = velocity.copy()
+        self.previous_command_velocity = velocity.copy()
         self.last_clf_slack = float(result.x[-1])
-        self.velocity_norms.append(float(np.linalg.norm(velocity)))
         self.last_status = self.status(q)
         return velocity
 

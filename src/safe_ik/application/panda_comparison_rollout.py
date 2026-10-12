@@ -56,7 +56,7 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     start, initial_time = perf_counter(), plant.time
     steps = 0
     while True:
-        q = plant.q
+        q = plant.q.copy()
         barrier = safety.evaluate(q)
         sample = measure_state(config, kin, q, barrier)
         states.append(q.copy())
@@ -119,9 +119,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             raise FloatingPointError("nonfinite control command")
         plant.advance(velocity, period)
         applied[-1] = True
-        applied_velocities[-1] = np.asarray(
-            getattr(plant, "last_applied_velocity", velocity), dtype=float
-        ).copy()
+        applied_velocities[-1] = (plant.q - q) / period
+        controller.record_applied_velocity(applied_velocities[-1])
         joint_limit_clips[-1] = np.asarray(
             getattr(plant, "last_joint_limit_clipped", joint_limit_clips[-1]),
             dtype=bool,

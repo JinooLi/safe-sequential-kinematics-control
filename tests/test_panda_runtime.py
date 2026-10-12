@@ -3,6 +3,7 @@
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import numpy as np
 
@@ -11,6 +12,7 @@ from safe_ik.application.panda_rollout import run_panda
 from safe_ik.application.panda_runtime import PandaRuntime
 from safe_ik.domain.spatial_safety import BarrierEvaluation
 from safe_ik.domain.types import QPSolution, QPStatus
+from safe_ik.logging.panda_results import save_panda_control_trace
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -88,6 +90,8 @@ class PandaRuntimeTest(unittest.TestCase):
         self.assertAlmostEqual(result.elapsed, 0.1)
         self.assertEqual(result.trace.q.shape, (2, 7))
         np.testing.assert_allclose(result.trace.command, 0.01)
+        np.testing.assert_allclose(result.trace.applied_velocity, 0.01)
+        self.assertTrue(result.trace.command_applied.all())
         self.assertAlmostEqual(result.total_qp_solve_time, 0.004)
 
     def test_failure_stops_without_integrating_and_survives_final_status_query(self):
@@ -99,6 +103,7 @@ class PandaRuntimeTest(unittest.TestCase):
         self.assertEqual(result.qp_infeasible_count, 0)
         self.assertEqual(runtime.plant.commands, [])
         self.assertEqual(result.elapsed, 0.0)
+        self.assertFalse(result.trace.command_applied.any())
         np.testing.assert_array_equal(result.final_q, self.config.initial_q)
 
     def test_caller_can_stop_before_any_control_step(self):
@@ -106,3 +111,38 @@ class PandaRuntimeTest(unittest.TestCase):
         self.assertEqual(result.steps, 0)
         self.assertEqual(result.trace.q.shape, (0, 7))
         self.assertEqual(result.elapsed, 0.0)
+
+    def test_blocked_plant_stalls_despite_nonzero_commands_and_exports_both_velocities(
+        self,
+    ):
+        class BlockedPlant(EulerPlant):
+            def advance(self, velocity, period):
+                self.commands.append(velocity.copy())
+                self.time += period
+
+        config = replace(
+            self.config,
+            trajectory=replace(
+                self.config.trajectory,
+                duration=0.5,
+                stop_window=0.1,
+                stop_progress_window=0.1,
+            ),
+        )
+        runtime = self.runtime()
+        runtime.plant = BlockedPlant(config.initial_q)
+        result = run_panda(config, runtime)
+        self.assertTrue(result.status.stalled)
+        self.assertLess(result.elapsed, config.trajectory.duration)
+        self.assertGreater(np.linalg.norm(result.trace.command[0]), 0.001)
+        np.testing.assert_array_equal(result.trace.applied_velocity, 0)
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "trace.npz"
+            save_panda_control_trace(result.trace, path)
+            with np.load(path) as saved:
+                np.testing.assert_array_equal(
+                    saved["applied_velocity"], result.trace.applied_velocity
+                )
+                np.testing.assert_array_equal(
+                    saved["command_applied"], result.trace.command_applied
+                )

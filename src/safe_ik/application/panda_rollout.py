@@ -311,6 +311,8 @@ def run_panda(
     maximum_clf_slack = 0.0
     trace_q: list[np.ndarray] = []
     trace_command: list[np.ndarray] = []
+    trace_applied_velocity: list[np.ndarray] = []
+    trace_command_applied: list[bool] = []
     trace_time: list[float] = []
     trace_clf_value: list[float] = []
     trace_clf_slack: list[float] = []
@@ -324,7 +326,7 @@ def run_panda(
     def step():
         nonlocal control_effort, minimum_barrier, total_qp_solve_time, maximum_clf_slack
         nonlocal failure
-        q = plant.q
+        q = plant.q.copy()
         try:
             velocity = controller.get_velocity(q)
         except (
@@ -358,6 +360,8 @@ def run_panda(
         diagnostics = controller.safety_diagnostics(q)
         trace_q.append(q.copy())
         trace_command.append(velocity.copy())
+        trace_applied_velocity.append(np.zeros(config.dof))
+        trace_command_applied.append(False)
         trace_time.append(float(plant.time))
         trace_clf_value.append(float(diagnostics.clf_value))
         trace_clf_slack.append(float(controller.last_clf_slack))
@@ -411,6 +415,9 @@ def run_panda(
             }
             return False
         plant.advance(velocity, period)
+        trace_applied_velocity[-1] = (plant.q - q) / period
+        trace_command_applied[-1] = True
+        controller.record_applied_velocity(trace_applied_velocity[-1])
         status = controller.last_status
         return not (
             status is not None and (status.success or status.candidates_exhausted)
@@ -455,6 +462,10 @@ def run_panda(
     trace = PandaControlTrace(
         q=np.asarray(trace_q, dtype=float).reshape(-1, config.dof),
         command=np.asarray(trace_command, dtype=float).reshape(-1, config.dof),
+        applied_velocity=np.asarray(trace_applied_velocity, dtype=float).reshape(
+            -1, config.dof
+        ),
+        command_applied=np.asarray(trace_command_applied, dtype=bool),
         time=np.asarray(trace_time, dtype=float),
         clf_value=np.asarray(trace_clf_value, dtype=float),
         clf_slack=np.asarray(trace_clf_slack, dtype=float),

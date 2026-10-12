@@ -38,6 +38,16 @@ def save_panda_control_trace(trace: PandaControlTrace | None, path: str | Path) 
         **({"q": trace.q} if trace.q is not None else {}),
         **({"command": trace.command} if trace.command is not None else {}),
         **(
+            {"applied_velocity": trace.applied_velocity}
+            if trace.applied_velocity is not None
+            else {}
+        ),
+        **(
+            {"command_applied": trace.command_applied}
+            if trace.command_applied is not None
+            else {}
+        ),
+        **(
             {
                 "rdf_timings": trace.rdf_timings,
                 "rdf_timing_columns": np.array(["distance", "selection", "gradient"]),

@@ -70,3 +70,5 @@ class PandaControlTrace:
     minimum_self_pair: tuple[str, ...] = ()
     stage_position_error: np.ndarray | None = None
     stage_orientation_error: np.ndarray | None = None
+    applied_velocity: np.ndarray | None = None
+    command_applied: np.ndarray | None = None

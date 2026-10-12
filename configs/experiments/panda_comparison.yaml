@@ -38,7 +38,7 @@ controller_overrides:
     # 0이면 엄격한 비음수 판정이다. 실제 barrier 값과 허용치 없는 *_strict 결과도 함께 저장한다.
     success_barrier_tolerance: 0.001
     # 낮은 평균 속도와 목표 오차의 개선 부족이 함께 나타날 때 정체로 판정한다.
-    stop_window: 0.5 # 관절 속도 norm의 평균을 계산하는 시간(s)
+    stop_window: 0.5 # 실제 적용 관절 속도 norm의 평균을 계산하는 시간(s)
     stop_velocity_tolerance: 0.001 # 정체 판정에 사용하는 평균 관절 속도 norm의 상한(rad/s)
     stop_progress_window: 0.5 # 정체 판정을 위해 목표 오차의 개선을 관찰하는 시간(s)
     stop_progress_tolerance: 0.001 # 이 시간 동안 허용오차로 정규화한 목표 오차가 개선되어야 할 최소량

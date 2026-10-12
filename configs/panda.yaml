@@ -176,7 +176,7 @@ trajectory:
   stage_orientation_weight: 1.0 # pose 중간 단계의 orientation CLF 가중치. 최종 말단 가중치와 별개다.
   stage_orientation_tolerance: 0.05 # pose 단계 전환 조건: quaternion 오차 벡터 norm = sin(각도/2). 0.05는 약 5.73도다.
   orientation_weight: 1.0 # 최종 pose CLF에서 방향 오차에 곱하는 가중치
-  stop_window: 0.5 # 관절 속도 norm의 평균을 계산하는 시간(s). 낮은 속도와 오차 개선 부족이 함께 있어야 정체로 판정한다.
+  stop_window: 0.5 # 실제 적용 관절 속도 norm의 평균을 계산하는 시간(s). 낮은 속도와 오차 개선 부족이 함께 있어야 정체로 판정한다.
   stop_velocity_tolerance: 0.001 # 정체 판정에 사용하는 평균 관절 속도 norm의 상한(rad/s)
   clf_rate: 20.0 # CLF 감소율
   clf_slack_weight: 5000.0 # QP 목적함수에서 CLF slack에 부여하는 가중치

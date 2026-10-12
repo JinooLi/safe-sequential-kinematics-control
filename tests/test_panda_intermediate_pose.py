@@ -169,7 +169,9 @@ class PandaIntermediatePoseTest(unittest.TestCase):
         controller = self.controller(solver=FixedVelocity(1e-4))
         q = self.config.initial_q.copy()
         for _ in range(100):
-            q += self.config.trajectory.integration_period * controller.get_velocity(q)
+            velocity = controller.get_velocity(q)
+            q += self.config.trajectory.integration_period * velocity
+            controller.record_applied_velocity(velocity)
             self.assertFalse(controller.last_status.stalled)
         self.assertEqual(controller.candidate_switch_count, 0)
         self.assertEqual(controller.stage_index, 0)

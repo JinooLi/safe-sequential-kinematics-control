@@ -153,6 +153,23 @@ class PandaComparisonTest(unittest.TestCase):
         )
         self.assertLess(result["applied_control_effort"], result["control_effort"])
 
+        # A longer run must detect the physical stop despite outward QP commands.
+        config = replace(
+            config,
+            trajectory=replace(
+                config.trajectory,
+                duration=0.2,
+                stop_window=0.04,
+                stop_progress_window=0.04,
+            ),
+        )
+        runtime = PandaRuntime(kin, Safety(), Solver(), MujocoPlant(config))
+        result, trace = comparison_rollout(config, runtime, subdivisions=1)
+        self.assertEqual(result["reason"], "stalled")
+        self.assertAlmostEqual(result["elapsed"], 0.06)
+        np.testing.assert_array_equal(trace["command"][:3, 0], 1.0)
+        np.testing.assert_array_equal(trace["applied_velocity"][1:3], 0.0)
+
     def test_newly_unsafe_final_state_is_not_success(self):
         result, trace = self.run_case(Safety(lambda q: 0.01 - q[0]))
         self.assertTrue(result["goal_reached"])
