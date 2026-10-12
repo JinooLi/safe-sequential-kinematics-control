@@ -617,10 +617,12 @@ class PandaRDFIntegrationTest(unittest.TestCase):
         np.testing.assert_array_equal(problem.A[1:3, -1], 0)
         calls = safety.evaluate.call_count
         controller.safety_diagnostics(config.initial_q)
+        self.assertEqual(safety.evaluate.call_count, calls)
         controller.status(config.initial_q + 0.001)
-        self.assertEqual(
-            safety.evaluate.call_count, calls
-        )  # no post-integration RDF check
+        self.assertEqual(safety.evaluate.call_count, calls + 1)
+        np.testing.assert_array_equal(
+            safety.evaluate.call_args.args[0], config.initial_q + 0.001
+        )
 
 
 if __name__ == "__main__":

@@ -355,6 +355,7 @@ class PandaExperimentConfigurationTest(unittest.TestCase):
 
     def test_cli_passes_only_selected_or_all_accepted_candidates(self):
         self.data["main"] = {"seeds": [19], "cases_per_seed": 1}
+        self.data["controller_overrides"]["trajectory"]["stage_task"] = "position"
         kin = SimpleNamespace(
             lower_limits=np.full(7, -10.0),
             upper_limits=np.full(7, 10.0),

@@ -32,6 +32,19 @@ class MujocoPlant:
         if goal_id >= 0:
             self.model.site_pos[goal_id] = config.target.position
         self.data = mujoco.MjData(self.model)
+        scalar = np.isin(
+            self.model.jnt_type,
+            (mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE),
+        )
+        limited = np.flatnonzero(scalar & self.model.jnt_limited.astype(bool))
+        self._limit_qpos = self.model.jnt_qposadr[limited]
+        self._limit_dofs = self.model.jnt_dofadr[limited]
+        self._lower, self._upper = self.model.jnt_range[limited].T.copy()
+        initial = np.asarray(config.initial_q)[self._limit_qpos]
+        if np.any(initial < self._lower) or np.any(initial > self._upper):
+            raise ValueError("initial joint positions exceed model limits")
+        self.last_joint_limit_clipped = np.zeros(self.model.nv, dtype=bool)
+        self.last_applied_velocity = np.zeros(self.model.nv)
         self.data.qpos[:] = config.initial_q
         mujoco.mj_forward(self.model, self.data)
 
@@ -44,8 +57,27 @@ class MujocoPlant:
         return float(self.data.time)
 
     def advance(self, velocity: np.ndarray, period: float) -> None:
+        velocity = np.asarray(velocity, dtype=float)
+        if velocity.shape != (self.model.nv,) or not np.isfinite(velocity).all():
+            raise ValueError("joint velocity must be finite and match model nv")
+        if not np.isfinite(period) or period <= 0:
+            raise ValueError("integration period must be finite and positive")
+        previous = self.data.qpos[self._limit_qpos].copy()
         self.data.qvel[:] = velocity
         mujoco.mj_integratePos(self.model, self.data.qpos, self.data.qvel, period)
+        # Kinematic integration does not enforce MuJoCo's dynamic joint limits.
+        # Model an ideal position stop independently of the controller's CBFs.
+        proposed = self.data.qpos[self._limit_qpos].copy()
+        bounded = np.clip(proposed, self._lower, self._upper)
+        clipped = proposed != bounded
+        self.data.qpos[self._limit_qpos] = bounded
+        self.last_joint_limit_clipped.fill(False)
+        self.last_joint_limit_clipped[self._limit_dofs] = clipped
+        self.last_applied_velocity = velocity.copy()
+        self.last_applied_velocity[self._limit_dofs[clipped]] = (
+            bounded[clipped] - previous[clipped]
+        ) / period
+        self.data.qvel[:] = self.last_applied_velocity
         self.data.time += period
         mujoco.mj_forward(self.model, self.data)
 

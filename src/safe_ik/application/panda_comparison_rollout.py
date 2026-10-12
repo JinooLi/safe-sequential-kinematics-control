@@ -52,6 +52,7 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         qp_status,
     ) = ([] for _ in range(8))
     rdf_times, events = [], []
+    applied_velocities, joint_limit_clips = [], []
     start, initial_time = perf_counter(), plant.time
     steps = 0
     while True:
@@ -106,6 +107,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             for a, b, c in controller.consume_stage_transition_events()
         )
         applied.append(False)
+        applied_velocities.append(np.zeros(config.dof))
+        joint_limit_clips.append(np.zeros(config.dof, dtype=bool))
         if status and (status.qp_infeasible or status.qp_solver_failed):
             reason = "qp_infeasible" if status.qp_infeasible else "qp_solver_failure"
             break
@@ -116,6 +119,13 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             raise FloatingPointError("nonfinite control command")
         plant.advance(velocity, period)
         applied[-1] = True
+        applied_velocities[-1] = np.asarray(
+            getattr(plant, "last_applied_velocity", velocity), dtype=float
+        ).copy()
+        joint_limit_clips[-1] = np.asarray(
+            getattr(plant, "last_joint_limit_clipped", joint_limit_clips[-1]),
+            dtype=bool,
+        ).copy()
         steps += 1
     rollout_wall = perf_counter() - start
     values, q_array = np.asarray(barriers), np.asarray(states)
@@ -128,6 +138,14 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
     mask = np.asarray([label.startswith("self_") for label in barrier.labels])
     velocities = np.asarray(commands, dtype=float).reshape(-1, config.dof)
     used = velocities[np.asarray(applied, dtype=bool)]
+    actual_velocities = np.asarray(applied_velocities, dtype=float).reshape(
+        -1, config.dof
+    )
+    clipped_joints = np.asarray(joint_limit_clips, dtype=bool).reshape(-1, config.dof)
+    actual_used = actual_velocities[np.asarray(applied, dtype=bool)]
+    actual_acceleration = (
+        np.diff(np.vstack([np.zeros((1, config.dof)), actual_used]), axis=0) / period
+    )
     acceleration = (
         np.diff(np.vstack([np.zeros((1, config.dof)), used]), axis=0) / period
     )
@@ -156,6 +174,33 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             float(values[:, ~mask].min()) if (~mask).any() else None
         ),
         "control_effort": float(np.linalg.norm(used, axis=1).sum() * period),
+        "applied_control_effort": float(
+            np.linalg.norm(actual_used, axis=1).sum() * period
+        ),
+        "joint_limit_clipping_steps": int(np.any(clipped_joints, axis=1).sum()),
+        "joint_limit_clipping_counts": clipped_joints.sum(axis=0).tolist(),
+        "max_applied_velocity_excess": (
+            float(
+                max(
+                    0.0, np.max(np.abs(actual_used) - config.trajectory.velocity_limits)
+                )
+            )
+            if actual_used.size
+            else 0.0
+        ),
+        "max_applied_acceleration_excess": (
+            float(
+                max(
+                    0.0,
+                    np.max(
+                        np.abs(actual_acceleration)
+                        - config.trajectory.acceleration_limits
+                    ),
+                )
+            )
+            if actual_acceleration.size
+            else 0.0
+        ),
         "max_velocity_excess": (
             float(max(0.0, np.max(np.abs(used) - config.trajectory.velocity_limits)))
             if used.size
@@ -226,6 +271,8 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         "command_time": np.asarray(command_times),
         "command": velocities,
         "command_applied": np.asarray(applied, dtype=bool),
+        "applied_velocity": actual_velocities,
+        "joint_limit_clipped": clipped_joints,
         "stage_index": np.asarray(stages, dtype=int),
         "stage_frames": np.asarray(config.trajectory.stage_frames),
         "stage_errors": np.asarray(stage_errors),

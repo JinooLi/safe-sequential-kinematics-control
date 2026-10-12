@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
+from safe_ik.adapters.mujoco_plant import MujocoPlant
+from safe_ik.adapters.panda_kinematics import PandaKinematics
 from safe_ik.application.panda_comparison import (
     SceneSafety,
     atomic_json,
@@ -87,7 +89,12 @@ class PandaComparisonTest(unittest.TestCase):
                 position_tolerance=0.001,
             ),
             trajectory=replace(
-                config.trajectory, mode="direct", duration=0.02, integration_period=0.02
+                config.trajectory,
+                mode="direct",
+                duration=0.02,
+                integration_period=0.02,
+                stage_task="position",
+                stage_frames=("link3", "link5"),
             ),
         )
 
@@ -107,6 +114,44 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertEqual(len(trace["q"]), 2)
         np.testing.assert_array_equal(trace["q"][-1], result["final_q"])
         self.assertAlmostEqual(result["completion_time"], 0.02)
+
+    def test_joint_stop_records_actual_motion_without_hiding_requested_command(self):
+        config = load_panda_config(ROOT / "tests/fixtures/panda.yaml")
+        model_kin = PandaKinematics(config.model_path, config.ee_frame)
+        initial = config.initial_q.copy()
+        initial[0] = model_kin.upper_limits[0] - 1e-4
+        config = replace(
+            config,
+            initial_q=initial,
+            target=replace(
+                config.target,
+                position=initial[:3] + [0.02, 0, 0],
+                quaternion=np.array([1.0, 0, 0, 0]),
+                position_tolerance=0.001,
+            ),
+            trajectory=replace(
+                config.trajectory,
+                mode="direct",
+                duration=0.04,
+                integration_period=0.02,
+                success_barrier_tolerance=0.001,
+            ),
+        )
+        kin = Kinematics()
+        kin.lower_limits = model_kin.lower_limits
+        kin.upper_limits = model_kin.upper_limits
+        runtime = PandaRuntime(kin, Safety(), Solver(), MujocoPlant(config))
+        result, trace = comparison_rollout(config, runtime, subdivisions=1)
+        self.assertEqual(result["reason"], "timeout")
+        self.assertEqual(result["minimum_joint_margin"], 0.0)
+        self.assertEqual(result["joint_limit_clipping_steps"], 2)
+        self.assertEqual(result["joint_limit_clipping_counts"], [2, 0, 0, 0, 0, 0, 0])
+        np.testing.assert_array_equal(trace["command"][:, 0], [1.0, 1.0])
+        np.testing.assert_allclose(trace["applied_velocity"][:, 0], [0.005, 0.0])
+        np.testing.assert_allclose(
+            np.diff(trace["q"], axis=0), trace["applied_velocity"] * 0.02
+        )
+        self.assertLess(result["applied_control_effort"], result["control_effort"])
 
     def test_newly_unsafe_final_state_is_not_success(self):
         result, trace = self.run_case(Safety(lambda q: 0.01 - q[0]))
@@ -348,7 +393,13 @@ class PandaComparisonTest(unittest.TestCase):
             comparison_rollout(config, runtime)
 
     def test_interpolation_detects_crossing_between_safe_samples(self):
-        result, _ = self.run_case(Safety(lambda q: (q[0] - 0.01) ** 2 - 0.00003))
+        config = replace(
+            self.config,
+            trajectory=replace(self.config.trajectory, success_barrier_tolerance=0.0),
+        )
+        result, _ = self.run_case(
+            Safety(lambda q: (q[0] - 0.01) ** 2 - 0.00003), config=config
+        )
         self.assertTrue(result["success"])
         self.assertFalse(result["interpolated_success"])
         self.assertEqual(result["interpolation_checks"], 4)

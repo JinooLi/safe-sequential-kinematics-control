@@ -8,24 +8,24 @@ output: null # null이면 새 결과 폴더를 생성한다. 같은 코드·설�
 # false: 초기 관절각에 가장 가까운 검증 후보 하나만 사용하며, 정체되면 종료한다.
 # true: 검증 후보 전체를 가까운 순서로 전달하고, 정체되면 다음 후보의 첫 단계부터 진행한다.
 # 후보가 바뀌어도 전체 duration은 초기화하지 않는다. 정책을 바꾸면 새 결과 폴더로 실행한다.
-use_all_ik_candidates: false
+use_all_ik_candidates: true
 
 # 아래 장면들로 직접 제어와 순차 제어의 성공률·도달 시간·안전성을 비교한다.
 main:
-  seeds: [2332, 2333, 2334, 2335, 2336] # 장면 생성용 난수 시드이며, IK 탐색의 초기 자세 수와는 별개다.
-  # 예: 시드 5개에 cases_per_seed가 60이면 300케이스이며, 두 방법을 합해 최대 600개 궤적이다.
-  cases_per_seed: 60 # 전체 장면 수 = 시드 개수 × 시드당 장면 수. 장면마다 두 방법을 비교한다.
+  seeds: [2332] # 장면 생성용 난수 시드이며, IK 탐색의 초기 자세 수와는 별개다.
+  # 기존 전체 비교 실험과 같은 seed2332의 300장면이며, 두 방법을 합해 최대 600개 궤적이다.
+  cases_per_seed: 300 # 전체 장면 수 = 시드 개수 × 시드당 장면 수. 장면마다 두 방법을 비교한다.
 
 # 아래 값만 공통 제어 설정에 덮어쓴다. 일반 panda-view 실행에는 적용하지 않는다.
 # 이 항목 안의 로봇·학습 모델 경로는 controller_config 파일이 있는 디렉토리를 기준으로 해석한다.
 # 여기에 명시한 항목은 공통 panda.yaml에서 값을 바꿔도 실험에서는 아래 값이 적용된다.
 controller_overrides:
   trajectory:
-    duration: 90.0 # 방법별 최대 시뮬레이션 시간(s). 실제 계산 시간의 제한은 아니다.
-    integration_period: 0.01 # 제어 및 수치 적분 주기(s). duration은 이 값의 정수배여야 한다.
+    duration: 150.0 # 방법별 최대 시뮬레이션 시간(s). 실제 계산 시간의 제한은 아니다.
+    integration_period: 0.02 # 제어 및 수치 적분 주기(s). duration은 이 값의 정수배여야 한다.
     clf_rate: 20.0 # CLF 감소율
-    clf_slack_weight: 1000.0 # QP 목적함수에서 CLF slack에 부여하는 가중치
-    stage_frames: [link3, link5] # Sequential의 중간 링크 목표 순서. 이후 최종 EE pose를 추종한다.
+    clf_slack_weight: 5000.0 # QP 목적함수에서 CLF slack에 부여하는 가중치
+    stage_frames: [link4, link5] # Sequential의 중간 링크 목표 순서. 이후 최종 EE pose를 추종한다.
     stage_task: pose # 이 실험 브랜치의 기본 비교 조건. position으로 바꾸면 기존 위치 전용 방식이다.
     stage_position_tolerance: 0.05 # 중간 링크 위치 목표의 허용오차(m)
     stage_orientation_weight: 1.0 # 중간 pose CLF의 orientation 가중치. 목표 자세는 선택한 IK의 해당 링크 자세다.
@@ -33,19 +33,21 @@ controller_overrides:
     orientation_weight: 1.0 # 최종 pose CLF에서 방향 오차에 곱하는 가중치
     # 관절 1~7의 속도 크기 제한(rad/s). Direct와 Sequential에 동일하게 적용한다.
     velocity_limits: [0.145, 0.145, 0.145, 0.145, 0.175, 0.175, 0.175]
-    # 성공 판정에 허용할 안전 margin 침범량(m). 0.0005 m = 0.5 mm이며 CBF 제약은 완화하지 않는다.
+    # 성공 판정에 허용할 안전 margin 침범량(m). 0.001 m = 1 mm이며 CBF 제약은 완화하지 않는다.
     # success·성공률·보간 성공 판정에 적용한다. 전체 기록의 h >= -허용치와 관절 한계 준수가 필요하다.
     # 0이면 엄격한 비음수 판정이다. 실제 barrier 값과 허용치 없는 *_strict 결과도 함께 저장한다.
-    success_barrier_tolerance: 0.0005
+    success_barrier_tolerance: 0.001
     # 낮은 평균 속도와 목표 오차의 개선 부족이 함께 나타날 때 정체로 판정한다.
     stop_window: 0.5 # 관절 속도 norm의 평균을 계산하는 시간(s)
     stop_velocity_tolerance: 0.001 # 정체 판정에 사용하는 평균 관절 속도 norm의 상한(rad/s)
-    stop_progress_window: 2.0 # 정체 판정을 위해 목표 오차의 개선을 관찰하는 시간(s)
+    stop_progress_window: 0.5 # 정체 판정을 위해 목표 오차의 개선을 관찰하는 시간(s)
     stop_progress_tolerance: 0.001 # 이 시간 동안 허용오차로 정규화한 목표 오차가 개선되어야 할 최소량
   qp:
     # OSQP의 수렴 판정 기준이다. 충돌 거리나 목표 위치의 허용오차를 뜻하지 않는다.
     absolute_tolerance: 0.001 # eps_abs: 제약 만족도·최적성 잔차의 기본 절대 허용오차
     relative_tolerance: 0.001 # eps_rel: 관련 값의 크기에 비례해 추가하는 상대 허용오차
+  safety:
+    alpha: 0.2 # 장애물·관절 한계 CBF gain. RDF 자기 충돌 cbf_gain은 공통 설정의 1.0을 유지한다.
 
 # 목표 위치·자세와 장애물은 공통 제어 설정 대신 난수로 생성한 장면의 값을 사용한다.
 # 초기 관절각과 목표 위치·자세 허용오차는 공통 설정을 따르며, 위 항목에서 덮어쓸 수도 있다.
@@ -54,8 +56,8 @@ sampling:
   # 구형 장애물의 중심은 같은 범위에서 균등 표본 추출한다. 좌표 순서는 world 기준 [x, y, z]다.
   workspace_lower: [-0.7, -0.7, 0.1] # 목표 위치·장애물 중심 범위의 하한(m)
   workspace_upper: [0.7, 0.7, 1.0] # 목표 위치·장애물 중심 범위의 상한(m)
-  obstacle_count: 2 # 장면마다 생성할 구형 장애물 개수
-  obstacle_radius_range: [0.04, 0.10] # 장애물 반지름을 균등 표본 추출할 [최솟값, 최댓값](m)
+  obstacle_count: 10 # 장면마다 생성할 구형 장애물 개수
+  obstacle_radius_range: [0.10, 0.20] # 장애물 반지름을 균등 표본 추출할 [최솟값, 최댓값](m)
   minimum_target_distance: 0.15 # 초기 EE 위치와 목표 EE 위치 사이의 최소 거리(m)
   joint_limit_margin: 0.1 # 목표 관절각을 표본 추출할 때 각 관절의 상·하한에서 제외할 여유(rad)
   minimum_barrier: 0.005 # 장면 채택 시 초기 자세와 목표 생성용 관절각에서 요구하는 최소 barrier(m)
