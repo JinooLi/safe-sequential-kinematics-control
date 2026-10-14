@@ -1,0 +1,66 @@
+# Fixed-IK link selection pilot: 10 eligible contexts x 10 link pairs.
+# No-IK scenes are retained separately; replenish for up to three rounds.
+# The base seed increments on each replenishment round.
+controller_config: ../panda.yaml
+rdf_device: cuda
+output_root: ../../outputs/panda_link_dataset
+output: null
+use_all_ik_candidates: false
+main:
+  seeds:
+  - 20261014
+  cases_per_seed: 10
+controller_overrides:
+  trajectory:
+    duration: 120.0
+    integration_period: 0.02
+    clf_rate: 20.0
+    clf_slack_weight: 5000.0
+    stage_frames:
+    - link4
+    - link5
+    stage_task: pose
+    stage_position_tolerance: 0.05
+    stage_orientation_weight: 1.0
+    stage_orientation_tolerance: 0.05
+    orientation_weight: 1.0
+    velocity_limits:
+    - 0.145
+    - 0.145
+    - 0.145
+    - 0.145
+    - 0.175
+    - 0.175
+    - 0.175
+    success_barrier_tolerance: 0.001
+    stop_window: 0.5
+    stop_velocity_tolerance: 0.001
+    stop_progress_window: 0.5
+    stop_progress_tolerance: 0.001
+  qp:
+    absolute_tolerance: 0.001
+    relative_tolerance: 0.001
+  safety:
+    alpha: 0.2
+  safe_ik:
+    workers: 2
+sampling:
+  workspace_lower:
+  - -0.7
+  - -0.7
+  - 0.1
+  workspace_upper:
+  - 0.7
+  - 0.7
+  - 1.0
+  obstacle_count: 10
+  obstacle_radius_range:
+  - 0.1
+  - 0.2
+  minimum_target_distance: 0.15
+  joint_limit_margin: 0.1
+  minimum_barrier: 0.005
+  max_proposals_per_seed: 10000
+  randomize_initial_q: true
+validation:
+  subdivisions: 5
