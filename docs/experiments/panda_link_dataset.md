@@ -67,3 +67,52 @@ joint margin under the existing model, not a hardware collision guarantee.
 For training, keep every pair belonging to a context in the same data split.
 The ten labels within one context are not ten independent scenes. The pilot is
 for validating data and estimating costs; it is not a success-rate benchmark.
+
+## 1,000-context campaign
+
+```bash
+sbatch scripts/panda_link_dataset_1000.sbatch
+```
+
+This submits **one** job requesting four GPUs, 15 CPUs and a 72-hour wall limit.
+It creates 1,000 new eligible contexts (10,000 trajectories), in 20 consecutive
+batches of 50 contexts. Only one batch runs at a time, with the same 16 rollout
+workers. The pilot YAML/controller/scientific settings are preserved in resolved
+input snapshots. Batch seeds begin at 2026101500 and advance by three, reserving
+distinct seeds for each batch's three possible IK replenishment rounds. The
+earlier ten-context pilot is not included in the new dataset. Neither batching
+nor replenishment filters contexts based on trajectory success.
+
+The 10-context pilot took 21 min 34 s and used about 392 MB, suggesting roughly
+36 hours and 39 GB for 1,000 contexts. These are small-sample extrapolations;
+scene difficulty, GPU type and scheduling overhead affect actual costs.
+
+Outputs are under `outputs/panda_link_dataset/production-1000-JOBID/`:
+
+- `inputs/`: fixed controller and per-batch experiment configurations.
+- `campaign.json`: requested size/resources, code/model/input hashes, batch seeds,
+  commands, PIDs, job IDs and attempt history.
+- `progress.json`: completed totals plus current batch progress, refreshed while
+  the child runs. `active_output` identifies that batch's directory.
+- `batch-000-attempt-01/`, etc.: independent pilot-format datasets, trajectory
+  files and verified completion markers, usable as each batch finishes.
+- At full completion, root `dataset.npz`, `contexts.jsonl`, `results.csv` and
+  `results.json` combine all batches; `complete.json` records counts and hashes.
+  The final success array has shape `[1000, 10]`; numerical errors remain masked.
+  Trajectories stay inside their batch directories.
+
+A failed batch stops the job before the next batch starts. After the previous
+Slurm job has stopped, resume explicitly using the **original** output path:
+
+```bash
+PANDA_DATASET_OUTPUT=/absolute/path/to/production-1000-ORIGINAL_JOBID \
+PANDA_DATASET_RESUME=1 sbatch scripts/panda_link_dataset_1000.sbatch
+```
+
+Resume checks the code/config/model identity and every completed batch's data
+hashes. Complete batches are reused. An incomplete batch is rerun from its fixed
+seed in a new attempt directory; partial files are preserved. Thus an interruption
+can cost at most the current 50-context batch, not the entire campaign. There is
+no automatic retry, requeue or recurring monitor, and a campaign lock prevents
+two coordinators from writing the same campaign. Resources are released when the
+Slurm job ends.
