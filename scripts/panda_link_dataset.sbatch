@@ -18,4 +18,4 @@ export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 .venv/bin/python -m safe_ik.application.panda_link_dataset \
   --experiment configs/experiments/panda_link_dataset.yaml \
   --output "outputs/panda_link_dataset/pilot-${SLURM_JOB_ID}" \
-  --gpus 4 --cpus 15
+  --gpus 4 --cpus 15 --workers-per-gpu 4

@@ -7,10 +7,22 @@ uv sync --locked --extra cuda --python 3.11 --no-dev
 sbatch scripts/panda_link_dataset.sbatch
 ```
 
-The pilot requests one node with four available GPUs and 15 CPUs. Four persistent
-workers each own one GPU and process independent contexts. Each worker uses two
-CPU IK search subprocesses; BLAS/OpenMP threads are limited to one. This changes
-execution scheduling only, not the IK seed/iteration budget or control equations.
+The pilot requests one node with four available GPUs and 15 CPUs. Preparation
+first uses one worker per GPU, each with two CPU IK search subprocesses. It finds
+one shared IK per context, then shuts down that pool. Rollouts use four persistent
+workers per GPU: up to 16 independent trajectories run concurrently. Each task
+is one context/link pair, so ten contexts provide 100 schedulable tasks rather
+than limiting concurrency to ten. Every pair reuses its context's fixed IK;
+rollout workers never launch additional IK searches. GPU assignments round-robin
+over Slurm's allocated devices, including GPU UUIDs.
+
+BLAS/OpenMP and Torch CPU threads are limited to one. The 16 rollout processes
+share the 15 allocated CPU cores (plus a mostly idle coordinator); 16 processes
+do not imply 16 reserved cores. CPU kinematics/QP work, offline safety validation
+and GPU contention can limit the speedup. GPU utilization alone is not a measure
+of end-to-end throughput. This changes execution scheduling only, not the IK
+seed/iteration budget, control equations or five-subdivision safety validation.
+Use `--workers-per-gpu 1` for the four-worker layout, or `4` (default) for 16.
 The Slurm wall limit is four hours; each trajectory's simulated limit is 120 s.
 
 `configs/experiments/panda_link_dataset.yaml` fixes the current controller values
@@ -33,13 +45,16 @@ Outputs under `outputs/panda_link_dataset/pilot-JOBID/`:
   `success[N,10]`, and `label_valid[N,10]`. Load with `allow_pickle=False`.
   Invalid numerical solver results are masked and have label -1, not failure 0.
 - `results.csv` / `results.json`: one row per context/pair, including termination,
-  success, safety and timing. Normal timeout/stall/infeasibility have valid labels.
+  success, safety, GPU, PID and start/end timestamps for concurrency checks.
+  Normal timeout/stall/infeasibility have valid labels.
 - `CASE/linkI_linkJ/trajectory.npz`: full trajectory and applied/commanded speeds.
 - `manifest.json`: code/model/config/data hashes, exact configuration snapshots,
   software/GPU environment and sampling rejection statistics.
 - `timing.json`: total elapsed generation time, serial sampling time, parallel
-  processing time, and summed per-task IK/control/interpolation times. Summed
+  IK and rollout phase times, and summed per-task IK/control/interpolation times. Summed
   times overlap across workers and must not be added to elapsed wall time.
+- `progress.json`: preparation/rollout phase and counts, updated after every task.
+  Only the coordinator writes shared context/progress metadata.
 - `complete.json`: validated context/rollout counts and manifest hash.
 
 Primary success is first final EE pose hit within the current position and

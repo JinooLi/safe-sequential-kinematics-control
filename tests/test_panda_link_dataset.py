@@ -2,11 +2,15 @@
 
 import json
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from time import perf_counter
+from unittest.mock import patch
 
 import numpy as np
 
+from safe_ik.application import panda_link_dataset as dataset
 from safe_ik.application.artifacts import json_value
 from safe_ik.application.panda_experiment_configuration import load_panda_experiment
 from safe_ik.application.panda_link_dataset import (
@@ -19,6 +23,147 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LinkDatasetTests(unittest.TestCase):
+    def test_gpu_sharing_and_pair_tasks_support_more_workers_than_contexts(self):
+        visible = ["GPU-a", "GPU-b", "GPU-c", "GPU-d"]
+        self.assertEqual(dataset.gpu_assignments(visible, 4), visible * 4)
+        self.assertEqual(dataset.gpu_assignments(visible, 1), visible)
+        for invalid in (0, -1, 1.5, True):
+            with self.assertRaises(ValueError):
+                dataset.gpu_assignments(visible, invalid)
+        for invalid in ([], [""], ["0", " 0 "]):
+            with self.assertRaises(ValueError):
+                dataset.gpu_assignments(invalid, 4)
+        contexts = [
+            dict(case_id=str(i), ik_available=True, selected_ik={"q": [i] * 7})
+            for i in range(10)
+        ]
+        tasks = dataset.pair_tasks(
+            contexts + [dict(case_id="excluded", ik_available=False)]
+        )
+        self.assertEqual(len(tasks), 100)
+        self.assertEqual(len({(c["case_id"], p) for c, p in tasks}), 100)
+        for c, _ in tasks:
+            self.assertIs(c["selected_ik"], contexts[int(c["case_id"])]["selected_ik"])
+
+    def test_coordinator_collects_all_pairs_with_concurrent_workers(self):
+        contexts = [dict(case_id=str(i), ik_available=True) for i in range(10)]
+
+        def finish(task):
+            context, pair = task
+            return dict(case_id=context["case_id"], pair=list(pair), task_wall_time=2)
+
+        with TemporaryDirectory() as temp:
+            output = Path(temp)
+            for context in contexts:
+                (output / context["case_id"]).mkdir()
+            with patch.object(dataset, "evaluate_pair", side_effect=finish):
+                with ThreadPoolExecutor(max_workers=16) as pool:
+                    rows = dataset.collect_pairs(pool, contexts, output, perf_counter())
+            self.assertEqual(len(rows), 100)
+            progress = json.loads((output / "progress.json").read_text())
+            self.assertEqual(progress["completed_rollouts"], 100)
+            self.assertEqual(progress["completed_contexts"], 10)
+            for context in contexts:
+                directory = output / context["case_id"]
+                self.assertEqual(
+                    json.loads((directory / "progress.json").read_text()),
+                    {"completed_pairs": 10},
+                )
+                self.assertEqual(
+                    json.loads((directory / "context.json").read_text())[
+                        "summed_pair_wall_time"
+                    ],
+                    20,
+                )
+
+    def test_independent_pairs_use_shared_ik_without_search_or_overwrite(self):
+        experiment = load_panda_experiment(
+            ROOT / "configs/experiments/panda_link_dataset.yaml"
+        )
+        initial = experiment.config.initial_q.copy()
+        selected = dict(
+            q=initial.tolist(),
+            seed_index=2,
+            iterations=5,
+            position_error=0.0,
+            orientation_error=0.0,
+            minimum_barrier=0.1,
+        )
+        context = dict(
+            case_id="test",
+            ik_available=True,
+            selected_ik=selected,
+            initial_q=initial.tolist(),
+            ik_seed=4,
+            obstacles=[],
+            target_position=[0.1, 0.2, 0.3],
+            target_quaternion=[1, 0, 0, 0],
+        )
+        received = []
+
+        def rollout(config, runtime, candidates, *, subdivisions):
+            received.append((config, candidates, subdivisions))
+            result = dict(
+                candidate_count=1,
+                candidate_switch_count=0,
+                final_q=initial,
+                state_count=2,
+                elapsed=0.02,
+                reason="stalled",
+                success=False,
+                goal_reached=False,
+                interpolation_checks=4,
+            )
+            trace = dict(
+                q=np.array([initial, initial]),
+                time=np.array([0, 0.02]),
+                candidate_q=np.array([candidates[0].q]),
+                stage_frames=np.array(config.trajectory.stage_frames),
+                candidate_index=np.zeros(2, int),
+                barrier_values=np.array([[0.01], [0.01]]),
+                joint_margin=np.array([0.1, 0.1]),
+                goal_reached=np.array([False, False]),
+            )
+            return result, trace
+
+        with TemporaryDirectory() as temp:
+            output = Path(temp)
+            directory = output / "test"
+            directory.mkdir()
+            dataset.atomic_json(directory / "case.json", context)
+            dataset.atomic_json(directory / "ik.json", {"selected": selected})
+            with (
+                patch.object(
+                    dataset,
+                    "_worker",
+                    (experiment, object(), object(), output, "GPU-a"),
+                ),
+                patch.object(dataset, "prepare_ik") as search,
+                patch.object(dataset, "scene_safety"),
+                patch.object(dataset, "MujocoPlant"),
+                patch.object(dataset, "OSQPSolver"),
+                patch.object(dataset, "comparison_rollout", side_effect=rollout),
+            ):
+                for pair in LINK_PAIRS:
+                    row = dataset.evaluate_pair((context, pair))
+                    self.assertEqual(row["candidate_switch_count"], 0)
+                    self.assertEqual(row["gpu"], "GPU-a")
+                search.assert_not_called()
+                with self.assertRaises(FileExistsError):
+                    dataset.evaluate_pair((context, LINK_PAIRS[0]))
+                dataset.atomic_json(
+                    directory / "ik.json", {"selected": dict(selected, seed_index=3)}
+                )
+                with self.assertRaisesRegex(ValueError, "prepared IK differs"):
+                    dataset.evaluate_pair((context, LINK_PAIRS[0]))
+            self.assertEqual(len(received), 10)
+            for config, candidates, subdivisions in received:
+                self.assertEqual(len(candidates), 1)
+                np.testing.assert_array_equal(candidates[0].q, initial)
+                np.testing.assert_array_equal(config.initial_q, initial)
+                self.assertEqual(config.trajectory.duration, 120)
+                self.assertEqual(subdivisions, 5)
+
     def test_pilot_conditions(self):
         pilot = load_panda_experiment(
             ROOT / "configs/experiments/panda_link_dataset.yaml"
