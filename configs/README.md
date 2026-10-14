@@ -59,6 +59,35 @@ make panda-compare PANDA_EXPERIMENT_CONFIG=configs/experiments/my_experiment.yam
 **공통 제어 YAML 위치**를 기준으로 해석한다. 초기 관절각과 pose 허용오차는 공통 설정을
 따르고 덮어쓸 수 있다. 목표 pose·장애물은 실험의 난수 표본으로 생성한다.
 
+시작 자세도 무작위로 생성하려면 복사한 실험 YAML의 `sampling`에
+`randomize_initial_q: true`를 추가한다. 기본값은 `false`여서 기존 고정 시작 자세와
+난수 장면을 유지한다. 무작위 모드는 관절 한계에서 `joint_limit_margin`만큼 안쪽인
+범위에서 7개 관절각을 균등 추출한다. 이는 end-effector pose의 균등 분포는 아니다.
+시작 상태의 자기 충돌·장애물 barrier가 모두 `minimum_barrier` 이상인 장면만 채택한다.
+기존 기본 여유는 관절 0.1rad, barrier 0.005m이며, 성공 판정의 1mm 허용오차는
+시작 안전 검사에 사용하지 않는다. 목표와의 최소 거리는 각 장면의 시작 EE 위치에서
+계산한다. 시작·목표가 안전하다는 조건은 둘 사이의 경로 존재나 제어 성공을 보장하지 않는다.
+
+아래는 IK를 고정한 120초 데이터 생성 조건을 위한 **기존 실험 YAML의 변경 항목**이다.
+전체 YAML이나 10개 링크 조합의 병렬 실행기는 아니며, 장면 수·조합·출력 경로는 별도로 정한다.
+
+```yaml
+use_all_ik_candidates: false
+controller_overrides:
+  trajectory:
+    duration: 120.0
+sampling:
+  randomize_initial_q: true
+  joint_limit_margin: 0.1
+  minimum_barrier: 0.005
+```
+
+채택된 시작 관절각은 `cases.jsonl`의 `initial_q`, 안전 검사 수치는 무작위 모드의
+`initial_safety`에 저장한다. 거절 사유와 횟수는 `sampling.json`에 남기며,
+생성 예산이 소진되면 안전 여유를 낮추지 않고 중단한다. 같은 장면을 여러 링크 조합으로
+비교할 때는 저장된 장면과 IK를 공유한다. seed별 생성은 다른 seed의 처리 순서와 무관하지만,
+같은 seed를 작업마다 처음부터 다시 생성하면 중복되므로 장면 생성과 실행 배분을 구분한다.
+
 실행 결과에는 원본 `experiment.yaml`, 원본 `controller_source.yaml`, 최종
 `experiment.resolved.yaml`, 합쳐진 `config.yaml`, `resolved_config.json`을 저장한다.
 명령행 재정의도 최종 파일에 반영하며, 원본의 주석과 줄바꿈은 원본 사본에 보존한다.

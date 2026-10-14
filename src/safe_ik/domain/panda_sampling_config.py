@@ -15,8 +15,11 @@ class PandaSamplingConfig:
     joint_limit_margin: float = 0.1
     minimum_barrier: float = 0.005
     max_proposals_per_seed: int = 10000
+    randomize_initial_q: bool = False
 
     def __post_init__(self):
+        if type(self.randomize_initial_q) is not bool:
+            raise ValueError("sampling.randomize_initial_q must be true or false")
         for name, length in (
             ("workspace_lower", 3),
             ("workspace_upper", 3),

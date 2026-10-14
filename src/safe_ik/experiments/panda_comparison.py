@@ -46,10 +46,11 @@ def generate_cases(
 ):
     """Reject scenes before IK/control; never condition on controller outcomes."""
     cases, statistics = [], {}
-    p0 = kinematics.pose_and_jacobian(config.initial_q)[0]
-    initial_self = self_safety.evaluate(config.initial_q).minimum
-    if not np.isfinite(initial_self) or initial_self < sampling.minimum_barrier:
-        raise ValueError("initial self barrier cannot satisfy sampling margin")
+    if not sampling.randomize_initial_q:
+        p0 = kinematics.pose_and_jacobian(config.initial_q)[0]
+        initial_self = _scene_barrier_minimum(self_safety, config.initial_q)
+        if initial_self < sampling.minimum_barrier:
+            raise ValueError("initial self barrier cannot satisfy sampling margin")
     lower = kinematics.lower_limits + sampling.joint_limit_margin
     upper = kinematics.upper_limits - sampling.joint_limit_margin
     if np.any(lower >= upper):
@@ -59,6 +60,12 @@ def generate_cases(
         counts = Counter()
         accepted = 0
         for proposal in range(sampling.max_proposals_per_seed):
+            # The default path consumes no extra RNG draws, preserving old scenes.
+            initial_q = (
+                rng.uniform(lower, upper)
+                if sampling.randomize_initial_q
+                else config.initial_q
+            )
             witness = rng.uniform(lower, upper)
             centers = rng.uniform(
                 sampling.workspace_lower,
@@ -69,6 +76,8 @@ def generate_cases(
                 *sampling.obstacle_radius_range, size=sampling.obstacle_count
             )
             position, quaternion, _ = kinematics.pose_and_jacobian(witness)
+            if sampling.randomize_initial_q:
+                p0 = kinematics.pose_and_jacobian(initial_q)[0]
             counts["proposals"] += 1
             if np.any(position < sampling.workspace_lower) or np.any(
                 position > sampling.workspace_upper
@@ -78,6 +87,11 @@ def generate_cases(
             if np.linalg.norm(position - p0) < sampling.minimum_target_distance:
                 counts["target_too_close"] += 1
                 continue
+            if sampling.randomize_initial_q:
+                initial_self = _scene_barrier_minimum(self_safety, initial_q)
+                if initial_self < sampling.minimum_barrier:
+                    counts["initial_self_margin"] += 1
+                    continue
             obstacles = tuple(
                 SphereObstacleConfig(
                     f"obstacle{i + 1}", centers[i], float(radii[i]), True
@@ -92,17 +106,15 @@ def generate_cases(
                 config.safety.self_collision_exclusions,
                 include_self=False,
             )
-            if safety.evaluate(config.initial_q).minimum < sampling.minimum_barrier:
+            initial_obstacle = _scene_barrier_minimum(safety, initial_q)
+            if initial_obstacle < sampling.minimum_barrier:
                 counts["initial_margin"] += 1
                 continue
-            goal = self_safety.evaluate(witness)
             if (
-                not np.isfinite(goal.values).all()
-                or not np.isfinite(goal.gradients).all()
-            ):
-                raise FloatingPointError("nonfinite RDF scene evaluation")
-            if (
-                min(goal.minimum, safety.evaluate(witness).minimum)
+                min(
+                    _scene_barrier_minimum(self_safety, witness),
+                    _scene_barrier_minimum(safety, witness),
+                )
                 < sampling.minimum_barrier
             ):
                 counts["goal_margin"] += 1
@@ -115,7 +127,7 @@ def generate_cases(
                     "ik_seed": int(
                         np.random.SeedSequence([seed, accepted, 1]).generate_state(1)[0]
                     ),
-                    "initial_q": config.initial_q.tolist(),
+                    "initial_q": initial_q.tolist(),
                     "witness_q": witness.tolist(),
                     "target_position": position.tolist(),
                     "target_quaternion": quaternion.tolist(),
@@ -129,6 +141,17 @@ def generate_cases(
                     ],
                 }
             )
+            if sampling.randomize_initial_q:
+                cases[-1]["initial_safety"] = {
+                    "self_minimum_barrier": initial_self,
+                    "obstacle_minimum_barrier": initial_obstacle,
+                    "joint_margin": float(
+                        min(
+                            np.min(initial_q - kinematics.lower_limits),
+                            np.min(kinematics.upper_limits - initial_q),
+                        )
+                    ),
+                }
             accepted += 1
             if accepted == cases_per_seed:
                 break
@@ -137,6 +160,17 @@ def generate_cases(
         if accepted != cases_per_seed:
             raise RuntimeError(f"sampling budget exhausted: {statistics}")
     return cases, statistics
+
+
+def _scene_barrier_minimum(safety, q):
+    evaluation = safety.evaluate(q)
+    if not (
+        np.isfinite(evaluation.values).all()
+        and np.isfinite(evaluation.gradients).all()
+        and np.isfinite(evaluation.minimum)
+    ):
+        raise FloatingPointError("nonfinite scene safety evaluation")
+    return evaluation.minimum
 
 
 def measure_state(config, kinematics, q, barrier):
