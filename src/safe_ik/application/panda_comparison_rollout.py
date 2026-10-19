@@ -52,6 +52,7 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         qp_status,
     ) = ([] for _ in range(8))
     rdf_times, events = [], []
+    qp_messages = []
     applied_velocities, joint_limit_clips = [], []
     start, initial_time = perf_counter(), plant.time
     steps = 0
@@ -102,6 +103,7 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         clf_values.append(controller.safety_diagnostics(q).clf_value)
         qp_times.append(controller.last_qp_solve_time)
         qp_status.append(controller.last_qp_status)
+        qp_messages.append(controller.last_qp_message)
         events.extend(
             {"time": plant.time - initial_time, "previous": a, "next": b, "reason": c}
             for a, b, c in controller.consume_stage_transition_events()
@@ -159,6 +161,11 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         "safety_violation": safety_violation,
         "safety_violation_strict": bool(minimum < 0 or joint_minimum < 0),
         "reason": reason,
+        "qp_failure_message": (
+            controller.last_qp_message
+            if reason in {"qp_infeasible", "qp_solver_failure"}
+            else None
+        ),
         "steps": steps,
         "state_count": len(states),
         "elapsed": float(times[-1]),
@@ -289,6 +296,7 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
         "clf_slack": np.asarray(slacks),
         "qp_time": np.asarray(qp_times),
         "qp_status": np.asarray(qp_status),
+        "qp_message": np.asarray(qp_messages, dtype=str),
         "rdf_times": np.asarray(rdf_times),
         **{key: np.asarray([s[key] for s in samples]) for key in samples[0]},
     }

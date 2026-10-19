@@ -320,6 +320,7 @@ def run_panda(
     trace_stage_position_error, trace_stage_orientation_error = [], []
     trace_barrier_values: list[np.ndarray] = []
     trace_rdf_times, trace_qp_times, trace_qp_status = [], [], []
+    trace_qp_messages = []
     trace_self_minimum, trace_self_pair = [], []
     failure = None
 
@@ -381,6 +382,7 @@ def run_panda(
         )
         trace_qp_times.append(controller.last_qp_solve_time)
         trace_qp_status.append(controller.last_qp_status)
+        trace_qp_messages.append(controller.last_qp_message)
         self_value, self_pair = self_minimum(controller.last_barrier)
         trace_self_minimum.append(float("nan") if self_value is None else self_value)
         trace_self_pair.append(self_pair or "")
@@ -409,6 +411,7 @@ def run_panda(
                 "time": float(plant.time),
                 "q": q.tolist(),
                 "solver_status": controller.last_qp_status,
+                "detail": controller.last_qp_message,
                 "barriers": dict(
                     zip(diagnostics.barrier_labels, diagnostics.barrier_values.tolist())
                 ),
@@ -482,6 +485,7 @@ def run_panda(
         ),
         qp_time=np.asarray(trace_qp_times),
         qp_status=tuple(trace_qp_status),
+        qp_message=tuple(trace_qp_messages),
         safety_metadata=metadata,
         minimum_self_barrier=np.asarray(trace_self_minimum),
         minimum_self_pair=tuple(trace_self_pair),

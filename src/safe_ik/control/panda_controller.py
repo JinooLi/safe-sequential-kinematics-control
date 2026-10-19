@@ -96,6 +96,7 @@ class PandaTrajectoryController:
         self.last_qp_solve_time = 0.0
         self.last_clf_slack = 0.0
         self.last_qp_status = "not_run"
+        self.last_qp_message = ""
         self.last_barrier = self.safety.evaluate(config.initial_q)
         self.last_barrier_q = config.initial_q.copy()
         if config.safety.self_collision_model == "rdf" and np.any(
@@ -431,12 +432,14 @@ class PandaTrajectoryController:
         )
         result = self.solver.solve(problem)
         self.last_qp_solve_time = result.solve_time
+        self.last_qp_message = result.message
         solver_status = result.status
         if solver_status == QPStatus.SOLVED and (
             np.asarray(result.x).shape != (self.config.dof + 1,)
             or not np.isfinite(result.x).all()
         ):
             solver_status = QPStatus.FAILED
+            self.last_qp_message = "invalid_qp_solution: wrong shape or nonfinite x"
         self.last_qp_status = solver_status.value
         if solver_status != QPStatus.SOLVED:
             qp_infeasible = solver_status == QPStatus.INFEASIBLE

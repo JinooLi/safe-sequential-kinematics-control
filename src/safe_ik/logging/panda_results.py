@@ -57,6 +57,7 @@ def save_panda_control_trace(trace: PandaControlTrace | None, path: str | Path) 
         ),
         **({"qp_time": trace.qp_time} if trace.qp_time is not None else {}),
         qp_status=np.asarray(trace.qp_status, dtype=str),
+        qp_message=np.asarray(trace.qp_message, dtype=str),
         safety_metadata=np.array(json.dumps(trace.safety_metadata)),
         **(
             {

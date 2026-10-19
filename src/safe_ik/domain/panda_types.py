@@ -72,3 +72,4 @@ class PandaControlTrace:
     stage_orientation_error: np.ndarray | None = None
     applied_velocity: np.ndarray | None = None
     command_applied: np.ndarray | None = None
+    qp_message: tuple[str, ...] = ()
