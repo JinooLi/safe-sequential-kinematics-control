@@ -1,0 +1,2 @@
+# Preserve the audited artifact bytes, including the CSV's original CRLF.
+* -text

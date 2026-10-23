@@ -1,0 +1,245 @@
+robot:
+  model_path: /gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/assets/robots/panda.xml
+  ee_frame: gripper_tip
+  dof: 7
+  initial_q:
+  - -1.57079
+  - 0.0
+  - 0.0
+  - -1.57079
+  - 0.0
+  - 1.57079
+  - -0.7853
+target:
+  position:
+  - 0.45
+  - 0.45
+  - 0.45
+  orientation:
+    approach:
+    - 0.0
+    - 1.0
+    - 0.0
+    up:
+    - 1.0
+    - 0.0
+    - 0.0
+  position_tolerance: 0.01
+  orientation_tolerance: 0.01
+safe_ik:
+  self_collision_model: capsule
+  iteration_number: 1000
+  convergence_hold_duration: 3.0
+  workers: 2
+  max_restarts: 20
+  random_seed: 0
+  damping: 0.001
+  pose_gain: 100.0
+  softmin_temperature: 10
+  safety_gradient_gain: 10.0
+safety:
+  self_collision_model: rdf
+  rdf:
+    artifact: /gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/models/panda_rdf.npz
+    runtime_device: cuda
+    query_density: 500.0
+    top_k: 2
+    sphere_gate: true
+    sphere_gate_transition_fraction: 0.5
+    softmin_error: 0.005
+    physical_margin: 0.01
+    error_margin: 0.01
+    underestimation_limit: 0.02
+    transition_ratio: 0.5
+    cbf_gain: 1.0
+    seed: 0
+  margin: 0.05
+  alpha: 0.2
+  self_collision_exclusions:
+  - - link7
+    - gripper
+  - - link6
+    - hand
+  - - link5
+    - link7
+  capsules:
+  - name: base
+    start_frame: link0
+    end_frame: link0
+    start_offset:
+    - 0.0667
+    - -0.0037
+    - 0.1167
+    end_offset:
+    - -0.1561
+    - 0.0013
+    - 0.004
+    radius: 0.04
+  - name: link1
+    start_frame: link1
+    end_frame: link1
+    start_offset:
+    - -0.0072
+    - 0.0447
+    - -0.1985
+    end_offset:
+    - 0.0017
+    - -0.1113
+    - 0.0439
+    radius: 0.025
+  - name: link2
+    start_frame: link2
+    end_frame: link2
+    start_offset:
+    - -0.0006
+    - 0.0447
+    - 0.1101
+    end_offset:
+    - 0.0015
+    - -0.2024
+    - -0.0413
+    radius: 0.025
+  - name: link3
+    start_frame: link3
+    end_frame: link3
+    start_offset:
+    - 0.1167
+    - 0.0923
+    - 0.0309
+    end_offset:
+    - -0.0549
+    - -0.0402
+    - -0.0994
+    radius: 0.025
+  - name: link4
+    start_frame: link4
+    end_frame: link4
+    start_offset:
+    - 0.0345
+    - -0.0304
+    - 0.0932
+    end_offset:
+    - -0.1367
+    - 0.1036
+    - -0.0406
+    radius: 0.025
+  - name: link5
+    start_frame: link5
+    end_frame: link5
+    start_offset:
+    - 0.005
+    - -0.0043
+    - -0.2769
+    end_offset:
+    - 0.0031
+    - 0.1165
+    - 0.0423
+    radius: 0.025
+  - name: link6
+    start_frame: link6
+    end_frame: link6
+    start_offset:
+    - -0.0444
+    - -0.0152
+    - 0.0313
+    end_offset:
+    - 0.1291
+    - 0.0458
+    - -0.0076
+    radius: 0.025
+  - name: link7
+    start_frame: link7
+    end_frame: link7
+    start_offset:
+    - -0.0363
+    - -0.0395
+    - 0.0796
+    end_offset:
+    - 0.0613
+    - 0.0633
+    - 0.0858
+    radius: 0.02
+  - name: hand
+    start_frame: hand
+    end_frame: hand
+    start_offset:
+    - -0.0003
+    - -0.1044
+    - 0.0204
+    end_offset:
+    - 0.0009
+    - 0.1011
+    - 0.025
+    radius: 0.02
+  - name: gripper
+    start_frame: hand
+    end_frame: gripper_tip
+    start_offset:
+    - 0.0
+    - 0.0
+    - 0.04
+    end_offset:
+    - 0.0
+    - 0.0
+    - 0.0
+    radius: 0.02
+obstacles:
+- name: obstacle1
+  position:
+  - 0.25
+  - -0.1
+  - 0.55
+  radius: 0.1
+  enabled: true
+- name: obstacle2
+  position:
+  - 0.25
+  - -0.35
+  - 0.45
+  radius: 0.1
+  enabled: true
+trajectory:
+  success_barrier_tolerance: 0.001
+  stop_progress_window: 0.5
+  stop_progress_tolerance: 0.001
+  duration: 150.0
+  integration_period: 0.02
+  mode: sequential
+  stage_frames:
+  - link1
+  - link2
+  - link3
+  - link4
+  - link5
+  - link6
+  - link7
+  stage_task: pose
+  stage_position_tolerance: 0.05
+  stage_orientation_weight: 1.0
+  stage_orientation_tolerance: 0.05
+  orientation_weight: 1.0
+  stop_window: 0.5
+  stop_velocity_tolerance: 0.001
+  clf_rate: 20.0
+  clf_slack_weight: 5000.0
+  velocity_limits:
+  - 0.145
+  - 0.145
+  - 0.145
+  - 0.145
+  - 0.175
+  - 0.175
+  - 0.175
+  acceleration_limits:
+  - 5.0
+  - 2.5
+  - 3.33333333
+  - 4.16666667
+  - 5.0
+  - 6.66666667
+  - 6.66666667
+qp:
+  joint_velocity_weight: 1.0
+  max_iterations: 20000
+  absolute_tolerance: 0.001
+  relative_tolerance: 0.001

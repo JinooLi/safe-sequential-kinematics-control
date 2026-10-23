@@ -1,0 +1,69 @@
+{
+  "created_utc": "2026-10-23T06:06:24.564802+00:00",
+  "purpose": "rerun Direct and all-link Sequential for 150 s on the same 1000 validation scenes",
+  "count": 1000,
+  "rollouts": 2000,
+  "groups": 2,
+  "group_pairs": [
+    500,
+    500
+  ],
+  "group_rollouts": [
+    1000,
+    1000
+  ],
+  "simulation_seconds": 150,
+  "stage_frames": [
+    "link1",
+    "link2",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7"
+  ],
+  "methods": [
+    "direct",
+    "sequential"
+  ],
+  "candidate_policy": {
+    "direct": "no_candidate",
+    "sequential": "one_saved_no_switch"
+  },
+  "total_gpus": 8,
+  "total_cpus": 34,
+  "total_workers": 32,
+  "workers_per_gpu": 4,
+  "source_policy": "exact archived runtime and QP of both 120 s references; duration alone changes within each method",
+  "no_new_scenes": true,
+  "no_ik_search": true,
+  "test_scenes": 0,
+  "numerical_errors": "failure, retained in denominator",
+  "pilot": "first 8 paired scenes per group: 16 scenes / 32 rollouts retained; both groups must verify before production",
+  "references_120s": {
+    "direct": {
+      "root": "/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_direct_validation/validation-1000-20261020T020700Z",
+      "complete_sha256": "c0ac5c9e8d60c56d09d53f4e32213c56c7442e6abc15f51fa359bea719e4e3d0",
+      "manifest": "manifest.json",
+      "successes": 456
+    },
+    "sequential": {
+      "root": "/gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_all_links_validation/validation-1000-20261023T052037Z",
+      "complete_sha256": "420983a4635ba24807b92b80e8b2f5f7a4bb06376c89c4a5058e1c58626808f9",
+      "manifest": "group-0/manifest.json",
+      "successes": 590
+    }
+  },
+  "input_sha256": {
+    "preparation.json": "0c7fd78931ff4a28c4d08ff9936029f4cef317a98e1ea8d5dea32299881e01cf",
+    "evaluate_150s.py": "ae0e36b22ca3ab5064859e647b53d11ce6193b385dc8cf440270855a23192f3f",
+    "run_150s.sbatch": "2c70977afba07a09ae4441b80c03fbc0ca1ccf8f4673f01d5259bcc0d4991eb8",
+    "direct_150s.yaml": "ad5653f98e5bfbcf0cc1f45500036548244c13e3a294e034a9ec6e25a303015a",
+    "sequential_150s.yaml": "ae45a277e033049fac38f6ce989c45092d9e474c1ef884b04e217494e8b2d12f"
+  },
+  "excluded_nodes": [
+    "n057"
+  ],
+  "retry_of": "/gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_all_links_validation/validation-1000-150s-20261023T055640Z",
+  "retry_reason": "n057 exposes only 3 CUDA devices despite a Slurm four-GPU allocation; exclude that node and use two healthy four-GPU groups"
+}
