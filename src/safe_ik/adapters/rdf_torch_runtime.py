@@ -225,3 +225,74 @@ class TorchRDFPairs:
         if not np.isfinite(result).all() or not np.all(result[:, -1] == 1):
             raise ValueError("nonfinite CUDA RDF distance/barrier/gradient")
         return result[:, 0].copy(), result[:, 1:-1].copy()
+
+    def evaluate_values_batch(self, poses, active, *, pair_chunk_size=64):
+        """Batch independent states/pairs without Jacobians or spatial gradients.
+
+        Bound temporary polynomial tensors by active pair count, not by the
+        number of states supplied by the caller. Keep float64/top-k/tie policy.
+        """
+        torch = self.torch
+        if len(poses) != len(active) or pair_chunk_size < 1:
+            raise ValueError("invalid RDF value batch")
+        output = [np.empty(len(rows)) for rows in active]
+        entries = [
+            (s, j, int(row))
+            for s, rows in enumerate(active)
+            for j, row in enumerate(rows)
+        ]
+        if not entries:
+            return output
+        packed = np.stack(
+            [[np.column_stack((p[n][0], p[n][1])) for n in self.names] for p in poses]
+        )
+        if not np.isfinite(packed).all():
+            raise ValueError("nonfinite RDF frame pose")
+        with torch.inference_mode():
+            frames = torch.as_tensor(packed, dtype=torch.float64, device=self.device)
+            for offset in range(0, len(entries), pair_chunk_size):
+                chunk = entries[offset : offset + pair_chunk_size]
+                states = torch.tensor([s for s, _, _ in chunk], device=self.device)
+                rows = torch.tensor([r for _, _, r in chunk], device=self.device)
+                targets = self.target[rows]
+                source = frames[states, self.source[rows]]
+                target = frames[states, targets]
+                world = (
+                    self.points[rows] @ source[..., :3].transpose(-1, -2)
+                    + source[:, None, :, 3]
+                )
+                local = (world - target[:, None, :, 3]) @ target[..., :3]
+                distance, _ = self._field(local, targets, gradient=False)
+                valid = self.positions[None] < self.lengths[rows, None]
+                finite = (torch.isfinite(distance) | ~valid).all(-1)
+                distance = torch.where(
+                    valid, distance, torch.full_like(distance, float("inf"))
+                )
+                k = self.options.top_k
+                if k is not None:
+                    ids = torch.argsort(distance, dim=-1, stable=True)[
+                        :, : min(k, distance.shape[1])
+                    ]
+                    distance = distance.gather(1, ids)
+                count = self.lengths[rows].clamp(max=distance.shape[1])
+                beta = (
+                    torch.log(count.to(torch.float64).clamp(min=2))
+                    / self.options.softmin_error
+                )
+                minimum = distance.min(-1).values
+                value = (
+                    minimum
+                    - torch.logsumexp(
+                        -beta[:, None] * (distance - minimum[:, None]), dim=-1
+                    )
+                    / beta
+                    - self.options.effective_margin
+                )
+                result = (
+                    torch.stack((value, finite.to(torch.float64)), dim=1).cpu().numpy()
+                )
+                if not np.isfinite(result).all() or not np.all(result[:, 1] == 1):
+                    raise ValueError("nonfinite CUDA RDF barrier")
+                for (s, j, _), v in zip(chunk, result[:, 0]):
+                    output[s][j] = v
+        return output

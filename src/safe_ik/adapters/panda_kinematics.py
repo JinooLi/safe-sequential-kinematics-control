@@ -28,6 +28,7 @@ class PandaKinematics:
             self.frame_ids[name] = frame_id
         self.ee_frame = str(ee_frame)
         self._cached_q: np.ndarray | None = None
+        self._jacobians_ready = False
 
     @property
     def lower_limits(self) -> np.ndarray:
@@ -37,16 +38,34 @@ class PandaKinematics:
     def upper_limits(self) -> np.ndarray:
         return np.asarray(self.model.upperPositionLimit, dtype=float).copy()
 
-    def update(self, q) -> None:
+    def update(self, q, *, jacobians=True) -> None:
         q = np.asarray(q, dtype=float)
         if q.shape != (7,):
             raise ValueError("Panda q must have shape (7,)")
         if self._cached_q is not None and np.array_equal(q, self._cached_q):
+            if jacobians and not self._jacobians_ready:
+                pin.computeJointJacobians(self.model, self.data, q)
+                self._jacobians_ready = True
             return
         pin.forwardKinematics(self.model, self.data, q)
-        pin.computeJointJacobians(self.model, self.data, q)
+        if jacobians:
+            pin.computeJointJacobians(self.model, self.data, q)
         pin.updateFramePlacements(self.model, self.data)
         self._cached_q = q.copy()
+        self._jacobians_ready = jacobians
+
+    def frame_pose(self, frame_name, q):
+        """Forward kinematics only, for safety checks that need no derivatives."""
+        self.update(q, jacobians=False)
+        placement = self.data.oMf[self.frame_ids[frame_name]]
+        return (
+            np.asarray(placement.rotation).copy(),
+            np.asarray(placement.translation).copy(),
+        )
+
+    def frame_point(self, frame_name, q, local_offset):
+        rotation, origin = self.frame_pose(frame_name, q)
+        return origin + rotation @ np.asarray(local_offset)
 
     def pose_and_jacobian(self, q):
         """Return gripper-tip position, quaternion, and world-aligned 6D J."""

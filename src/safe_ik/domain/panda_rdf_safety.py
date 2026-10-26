@@ -7,7 +7,12 @@ import numpy as np
 from .interfaces import FramePoseKinematics
 from .panda_rdf import relative_point_jacobian, soft_min, top_indices
 from .panda_rdf_gate import SpherePairGate
-from .safety_contracts import BarrierEvaluation, evaluate_softmin
+from .safety_contracts import (
+    BarrierEvaluation,
+    BarrierValues,
+    barrier_values_batch,
+    evaluate_softmin,
+)
 
 _LINK_ORDER = {f"link{i}": i for i in range(8)} | {"hand": 8}
 
@@ -74,6 +79,66 @@ class PandaRDFSafety:
     def softmin(self, q, temperature: float):
         """Compatibility wrapper; the IK loop aggregates an existing evaluation."""
         return evaluate_softmin(self, q, temperature)
+
+    def evaluate_values_batch(self, states, *, batch_size=8):
+        """Value-only endpoint/audit checks; never populate the controller cache."""
+        if batch_size < 1:
+            raise ValueError("batch_size must be positive")
+        result = []
+        states = list(states)
+        pose = getattr(
+            self.kinematics, "frame_pose", self.kinematics.frame_pose_and_jacobian
+        )
+        labels = tuple(f"self_{a}_{b}" for a, b in self.pairs)
+        for offset in range(0, len(states), batch_size):
+            chunk = states[offset : offset + batch_size]
+            poses = [{name: pose(name, q) for name in self.models} for q in chunk]
+            gates = [
+                (
+                    self.sphere_gate.evaluate_values(p)
+                    if self.sphere_gate
+                    else (np.zeros(len(self.pairs)), np.ones(len(self.pairs)))
+                )
+                for p in poses
+            ]
+            active = [np.flatnonzero(w > 0) for _, w in gates]
+            if self.pair_evaluator is not None:
+                values = self.pair_evaluator.evaluate_values_batch(poses, active)
+            else:
+                values = []
+                for p, rows in zip(poses, active):
+                    current = []
+                    for row in rows:
+                        source, target = self.query_pairs[row]
+                        world = self.queries[source] @ p[source][0].T + p[source][1]
+                        local = (world - p[target][1]) @ p[target][0]
+                        distance, _ = self.models[target].query(local, gradient=False)
+                        chosen = top_indices(distance, self.options.top_k)
+                        value, _ = soft_min(
+                            distance[chosen], self.options.softmin_error
+                        )
+                        current.append(value - self.options.effective_margin)
+                    values.append(current)
+            obstacles = (
+                barrier_values_batch(self.obstacles, chunk)
+                if self.obstacles
+                else [None] * len(chunk)
+            )
+            for rows, rdf, (sphere, weight), obstacle in zip(
+                active, values, gates, obstacles
+            ):
+                combined = sphere.copy()
+                combined[rows] = (1 - weight[rows]) * sphere[rows] + weight[
+                    rows
+                ] * np.asarray(rdf)
+                names = labels
+                if obstacle is not None:
+                    combined = np.concatenate((combined, obstacle.values))
+                    names += obstacle.labels
+                if not np.isfinite(combined).all():
+                    raise ValueError("nonfinite Panda RDF barrier")
+                result.append(BarrierValues(names, combined))
+        return result
 
     def evaluate(self, q):
         q = np.asarray(q, dtype=float)

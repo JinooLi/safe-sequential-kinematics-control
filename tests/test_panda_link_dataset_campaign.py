@@ -1,6 +1,7 @@
 """Batch boundaries, scientific settings and restart/integrity behavior."""
 
 import json
+import os
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -83,6 +84,13 @@ def fake_batch(command, **kwargs):
 
 
 class DatasetCampaignTests(unittest.TestCase):
+    def setUp(self):
+        # Synthetic child attempts must not inherit the live test allocation ID.
+        environment = patch.dict(os.environ)
+        environment.start()
+        self.addCleanup(environment.stop)
+        os.environ.pop("SLURM_JOB_ID", None)
+
     def test_resume_rejects_an_active_previous_allocation(self):
         with patch.object(
             campaign.subprocess, "check_output", return_value="RUNNING\n"
@@ -91,6 +99,20 @@ class DatasetCampaignTests(unittest.TestCase):
                 campaign.require_previous_job_stopped({"slurm_job_id": "123"})
         with patch.object(campaign.subprocess, "check_output", return_value=""):
             campaign.require_previous_job_stopped({"slurm_job_id": "123"})
+
+    def test_resume_uses_accounting_when_old_job_left_squeue(self):
+        import subprocess
+
+        missing = subprocess.CalledProcessError(1, ["squeue"])
+        with patch.object(
+            campaign.subprocess, "check_output", side_effect=[missing, "COMPLETED|\n"]
+        ):
+            campaign.require_previous_job_stopped({"slurm_job_id": "123"})
+        with patch.object(
+            campaign.subprocess, "check_output", side_effect=[missing, "RUNNING|\n"]
+        ):
+            with self.assertRaisesRegex(RuntimeError, "cannot verify"):
+                campaign.require_previous_job_stopped({"slurm_job_id": "123"})
 
     def test_batch_count_seed_ranges_and_frozen_controller(self):
         plan = campaign.batch_plan(1000, 50, 2026101500)
@@ -115,7 +137,7 @@ class DatasetCampaignTests(unittest.TestCase):
                     json_value(settings.config), json_value(experiment.config)
                 )
                 self.assertEqual(settings.sampling, experiment.sampling)
-                self.assertEqual(settings.subdivisions, 5)
+                self.assertEqual(settings.subdivisions, 1)
                 self.assertFalse(settings.use_all_ik_candidates)
             campaign.verify_inputs(metadata, experiment, root)
             (root / metadata["batches"][0]["config"]).write_text("changed")
@@ -142,6 +164,33 @@ class DatasetCampaignTests(unittest.TestCase):
             complete = json.loads((output / "complete.json").read_text())
             for name, expected in complete["data_sha256"].items():
                 self.assertEqual(campaign.digest(output / name), expected)
+
+    def test_expanded_replenishment_seeds_are_disjoint_and_forwarded(self):
+        spec = dict(request(9000, 50), groups=3, ik_replenishment_rounds=100)
+        plans = [campaign.campaign_plan(dict(spec, group_index=i)) for i in range(3)]
+        seeds = [
+            s for plan in plans for b in plan for s in range(b["seed"], b["seed"] + 100)
+        ]
+        self.assertEqual(len(seeds), 18000)
+        self.assertEqual(len(set(seeds)), len(seeds))
+        # Historical request files retain their original three-seed stride.
+        self.assertEqual(
+            campaign.campaign_plan(request())[1]["seed"], request()["seed"] + 3
+        )
+        with TemporaryDirectory() as temp:
+            with patch.object(
+                campaign.subprocess, "Popen", side_effect=fake_batch
+            ) as run:
+                campaign.execute_campaign(
+                    EXPERIMENT,
+                    Path(temp) / "campaign",
+                    dict(request(), ik_replenishment_rounds=100),
+                )
+            for call in run.call_args_list:
+                command = call.args[0]
+                self.assertEqual(
+                    command[command.index("--ik-replenishment-rounds") + 1], "100"
+                )
 
     def test_failed_batch_stops_and_resume_preserves_attempt_and_completed_batches(
         self,

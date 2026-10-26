@@ -63,4 +63,6 @@ sampling:
   max_proposals_per_seed: 10000
   randomize_initial_q: true
 validation:
-  subdivisions: 5
+  # Reuse barrier values at every integration state, including the final state.
+  # No extra interpolated states or post-rollout geometry evaluations.
+  subdivisions: 1

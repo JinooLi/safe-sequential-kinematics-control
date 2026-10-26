@@ -104,8 +104,10 @@ def parse_panda_config(data: dict, path: str | Path) -> PandaControllerConfig:
     rdf_config = PandaRDFConfig(**rdf_options)
     trajectory = data["trajectory"]
     trajectory_mode = str(trajectory.get("mode", "sequential")).lower()
-    if trajectory_mode not in {"sequential", "direct"}:
-        raise ValueError("trajectory.mode must be 'sequential' or 'direct'")
+    if trajectory_mode not in {"sequential", "direct", "joint_clf"}:
+        raise ValueError(
+            "trajectory.mode must be 'sequential', 'direct' or 'joint_clf'"
+        )
     stage_frames = tuple(map(str, trajectory.get("stage_frames", ())))
     if trajectory_mode == "sequential" and not stage_frames:
         raise ValueError("trajectory.stage_frames must not be empty in sequential mode")

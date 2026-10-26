@@ -1,4 +1,4 @@
-"""Sequential task-space CLF and hard-CBF trajectory controller for Panda."""
+"""Task-space or IK-configuration CLF with hard-CBF constraints for Panda."""
 
 from __future__ import annotations
 
@@ -126,6 +126,8 @@ class PandaTrajectoryController:
         return self._stage_name(self.stage_index)
 
     def _stage_name(self, stage_index: int) -> str:
+        if self.config.trajectory.mode == "joint_clf":
+            return "joint_configuration"
         if stage_index < len(self.stage_frames):
             return (
                 f"{self.stage_frames[stage_index]}_{self.config.trajectory.stage_task}"
@@ -190,7 +192,12 @@ class PandaTrajectoryController:
         return value, gradient, float(np.linalg.norm(position_error))
 
     def _active_clf(self, q):
-        """Return task-space CLF value, joint gradient, and position error."""
+        """Return active CLF value, joint gradient, and active error norm."""
+        if self.config.trajectory.mode == "joint_clf":
+            # Panda's bounded revolute joints use ordinary angle differences,
+            # not wrapping across a physical joint limit. V has no 1/2 factor.
+            error = np.asarray(q, dtype=float) - self.target_q
+            return float(error @ error), 2.0 * error, float(np.linalg.norm(error))
         if self.stage_index < len(self.stage_frames):
             if self.config.trajectory.stage_task == "pose":
                 return self._pose_clf(

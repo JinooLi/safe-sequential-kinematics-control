@@ -8,14 +8,16 @@ from ..control.panda_controller import PandaTrajectoryController
 from ..experiments.panda_comparison import measure_state
 
 
-def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
+def comparison_rollout(
+    config, runtime, candidates=(), *, subdivisions=5, controller_factory=None
+):
     if subdivisions < 1:
         raise ValueError("subdivisions must be positive")
     kin, safety, plant = runtime.kinematics, runtime.safety, runtime.plant
     candidates = () if config.trajectory.mode == "direct" else tuple(candidates)
     if config.trajectory.mode == "sequential" and not candidates:
         raise ValueError("sequential rollout needs prepared candidates")
-    controller = PandaTrajectoryController(
+    controller = (controller_factory or PandaTrajectoryController)(
         config, kin, safety, candidates, runtime.solver
     )
     period = config.trajectory.integration_period
@@ -258,6 +260,11 @@ def comparison_rollout(config, runtime, candidates=(), *, subdivisions=5):
             "interpolated_worst_pair": dense_label,
             "interpolation_checks": checks,
             "interpolation_subdivisions": subdivisions,
+            "safety_validation_mode": (
+                "iteration_states"
+                if subdivisions == 1
+                else "iteration_and_interpolated_states"
+            ),
             "interpolated_success": bool(
                 goal_reached
                 and dense_minimum >= -barrier_tolerance

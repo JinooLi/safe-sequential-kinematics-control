@@ -109,3 +109,10 @@ class SpherePairGate:
         return SphereGateEvaluation(
             length - self.clearance_sums, gradient, weight, slope[:, None] * gradient
         )
+
+    def evaluate_values(self, poses):
+        offsets = np.stack([poses[n][0] @ c for n, c in zip(self.names, self.centers)])
+        centers = offsets + np.stack([poses[n][1] for n in self.names])
+        length = np.linalg.norm(centers[self.right] - centers[self.left], axis=1)
+        t = np.clip((self.outer_sums - length) / self.widths, 0.0, 1.0)
+        return length - self.clearance_sums, t * t * (3 - 2 * t)

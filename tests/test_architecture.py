@@ -17,6 +17,7 @@ ALLOWED_LAYERS = {
     "adapters": {"domain"},
     "logging": {"domain"},
     "experiments": {"domain"},
+    "learning": set(),
     "visualization": {"domain", "logging", "experiments"},
     "application": {
         "domain",
@@ -25,6 +26,7 @@ ALLOWED_LAYERS = {
         "logging",
         "experiments",
         "visualization",
+        "learning",
     },
 }
 

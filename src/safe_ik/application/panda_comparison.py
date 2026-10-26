@@ -27,7 +27,11 @@ from ..adapters.mujoco_plant import MujocoPlant
 from ..adapters.osqp_solver import OSQPSolver
 from ..domain.ik_contracts import SafeIKCandidate
 from ..domain.panda_sampling_config import PandaSamplingConfig
-from ..domain.safety_contracts import BarrierEvaluation
+from ..domain.safety_contracts import (
+    BarrierEvaluation,
+    BarrierValues,
+    barrier_values_batch,
+)
 from ..domain.spatial_safety import PandaCapsuleSafety
 from ..experiments.panda_comparison import (
     case_config,
@@ -79,6 +83,15 @@ class SceneSafety:
         self.q = np.array(q, copy=True)
         return self.result
 
+    def evaluate_values_batch(self, states):
+        states = list(states)
+        own = barrier_values_batch(self.self_safety, states)
+        obstacle = barrier_values_batch(self.obstacle_safety, states)
+        return [
+            BarrierValues(a.labels + b.labels, np.concatenate((a.values, b.values)))
+            for a, b in zip(own, obstacle)
+        ]
+
 
 def scene_safety(config, kin, self_safety):
     return SceneSafety(
@@ -94,7 +107,7 @@ def scene_safety(config, kin, self_safety):
     )
 
 
-def prepare_ik(config, kin, safety):
+def prepare_ik(config, kin, safety, *, values_only=False):
     start = perf_counter()
     ik_kin, ik_safety = build_panda_components(
         config, self_collision_model=config.ik_self_collision_model
@@ -102,8 +115,13 @@ def prepare_ik(config, kin, safety):
     with panda_ik_search(config, ik_kin, ik_safety) as search:
         raw = search.solve(config.initial_q, require_safe=True)
     accepted, checks = [], []
-    for candidate in sorted(raw.candidates, key=lambda c: c.seed_index):
-        barrier = safety.evaluate(candidate.q)
+    candidates = sorted(raw.candidates, key=lambda c: c.seed_index)
+    barriers = (
+        barrier_values_batch(safety, [c.q for c in candidates])
+        if values_only
+        else (safety.evaluate(c.q) for c in candidates)
+    )
+    for candidate, barrier in zip(candidates, barriers):
         # Recheck pose and joint limits as well as RDF endpoint safety.
         sample = measure_state(config, kin, candidate.q, barrier)
         passed = (

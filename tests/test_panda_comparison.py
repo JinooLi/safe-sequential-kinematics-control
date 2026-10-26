@@ -421,6 +421,22 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertFalse(result["interpolated_success"])
         self.assertEqual(result["interpolation_checks"], 4)
 
+    def test_iteration_only_checks_never_evaluate_between_states(self):
+        queried = []
+
+        def barrier(q):
+            queried.append(q[0])
+            return (q[0] - 0.01) ** 2 - 0.00003
+
+        runtime = PandaRuntime(Kinematics(), Safety(barrier), Solver(), Plant())
+        result, trace = comparison_rollout(self.config, runtime, subdivisions=1)
+        self.assertEqual(result["safety_validation_mode"], "iteration_states")
+        self.assertEqual(result["interpolation_checks"], 0)
+        self.assertTrue(result["success"])
+        self.assertEqual(result["interpolated_success"], result["success"])
+        self.assertEqual(set(queried), set(trace["q"][:, 0]))
+        self.assertEqual(set(queried), {0.0, 0.02})
+
     def test_saved_validation_uses_configured_subdivision_count(self):
         config = replace(
             self.config,

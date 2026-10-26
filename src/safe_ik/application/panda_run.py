@@ -91,7 +91,7 @@ def main():
         resources=[config.model_path],
         effective_yaml=raw,
     )
-    if config.trajectory.mode == "sequential":
+    if config.trajectory.mode != "direct":
         workers = min(config.safe_ik.workers, config.safe_ik.max_restarts)
         execution = "serial" if workers == 1 else f"{workers} worker processes"
         print(

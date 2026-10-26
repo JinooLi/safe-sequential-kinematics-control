@@ -13,6 +13,7 @@ flowchart TD
     A --> V["visualization: 그래프와 재생"]
     A --> E["experiments: 표본화와 분석"]
     A --> L["logging: 기록과 저장"]
+    A --> N["learning: 링크 선택 모델과 학습 데이터"]
     A --> D["domain: 공통 계약과 수학"]
     V --> E
     V --> L
@@ -26,6 +27,7 @@ flowchart TD
 | 계층 | import를 허용하는 다른 계층 |
 |---|---|
 | `domain` | 없음 |
+| `learning` | 없음; 같은 계층의 모델·데이터 모듈만 사용 |
 | `control`, `adapters`, `logging`, `experiments` | `domain` |
 | `visualization` | `domain`, `logging`, `experiments` |
 | `application` | 위 모든 계층 |
@@ -74,6 +76,11 @@ panda_setup → parallel_ik → panda_components
 
 worker에서 함수를 늦게 import하는 이유는 프로세스별 backend 초기화다.
 조립 모듈로 돌아가는 순환 의존은 없다.
+
+데이터 생성의 `panda_link_dataset_campaign`은 `panda_link_dataset_pipeline`에
+검증·진행 기록 함수를 전달한다. Pipeline은 campaign 모듈을 역으로 import하지 않는다.
+`learning`은 NumPy·SciPy·Torch로 모델과 데이터 처리를 구현하며, 실행·제어·시뮬레이터
+계층을 import하지 않는다. 학습 실행과 결과 저장은 `application`이 조립한다.
 
 ## 기록과 표시
 

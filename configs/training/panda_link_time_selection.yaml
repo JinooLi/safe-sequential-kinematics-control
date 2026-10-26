@@ -1,0 +1,21 @@
+# Same 21,423 training scenes and fixed 1,000 + 1,000 holdouts as the baseline.
+# The unchanged small backbone outputs a softmax distribution over ten pairs.
+dataset_sha256: 31a1d0aaa720345b497cd3830b25492ffb4ebd7ed33547d128da54bc35f5b212
+numerical_error_policy: failure
+split:
+  seed: 20261016
+  train: 21423
+  validation: 1000
+  test: 1000
+  file: frozen_split.json
+  sha256: 4c4753ce75c1c764495dd4421681a8347341c66275a6a310ece7f2e1efde13a0
+objective:
+  name: negative_log_discounted_success_mass
+  time_scale_seconds: 120.0
+training:
+  seeds: [11, 23, 37, 53, 71]
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 64
+  max_epochs: 500
+  patience: 50

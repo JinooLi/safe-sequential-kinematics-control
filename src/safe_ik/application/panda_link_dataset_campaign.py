@@ -15,23 +15,50 @@ import yaml
 from .artifacts import json_value
 from .panda_comparison import atomic_json, digest, fingerprint
 from .panda_experiment_configuration import load_panda_experiment
-from .panda_link_dataset import LINK_PAIRS, export_dataset, utc_now
+from .panda_link_dataset import (
+    DEFAULT_IK_REPLENISHMENT_ROUNDS,
+    LINK_PAIRS,
+    export_dataset,
+    utc_now,
+)
 
 
-def batch_plan(total_contexts, batch_size, seed):
+def batch_plan(total_contexts, batch_size, seed, ik_replenishment_rounds=3):
     if any(type(n) is not int or n < 1 for n in (total_contexts, batch_size)):
         raise ValueError("context count and batch size must be positive integers")
     if type(seed) is not int or seed < 0:
         raise ValueError("base seed must be a nonnegative integer")
-    # Each batch may use three consecutive seeds for no-IK replenishment.
+    if type(ik_replenishment_rounds) is not int or ik_replenishment_rounds < 1:
+        raise ValueError("IK replenishment rounds must be a positive integer")
+    # Reserve every possible replenishment seed, including unused rounds.
     return [
         dict(
             index=i,
-            seed=seed + 3 * i,
+            seed=seed + ik_replenishment_rounds * i,
             contexts=min(batch_size, total_contexts - offset),
         )
         for i, offset in enumerate(range(0, total_contexts, batch_size))
     ]
+
+
+def campaign_plan(request):
+    # Requests written before this option reserved three seeds per batch.
+    plan = batch_plan(
+        request["total_contexts"],
+        request["batch_size"],
+        request["seed"],
+        request.get("ik_replenishment_rounds", 3),
+    )
+    groups, index = request.get("groups", 1), request.get("group_index", 0)
+    if (
+        type(groups) is not int
+        or type(index) is not int
+        or not 1 <= groups <= len(plan)
+        or not 0 <= index < groups
+    ):
+        raise ValueError("invalid GPU group count/index")
+    # Partition global batches, never restart the seed sequence for each group.
+    return plan[index::groups]
 
 
 def identity(experiment):
@@ -85,9 +112,7 @@ def prepare_campaign(experiment, output, request):
     inputs = output / "inputs"
     inputs.mkdir()
     experiment.snapshot(inputs)
-    batches = batch_plan(
-        request["total_contexts"], request["batch_size"], request["seed"]
-    )
+    batches = campaign_plan(request)
     for batch in batches:
         config = experiment.resolved(output)
         config["main"] = dict(seeds=[batch["seed"]], cases_per_seed=batch["contexts"])
@@ -114,17 +139,24 @@ def prepare_campaign(experiment, output, request):
 def publish_progress(output, campaign):
     completed = [b for b in campaign["batches"] if b["status"] == "completed"]
     active = {}
+    preparing = {}
     if campaign.get("active_output"):
         path = output / campaign["active_output"] / "progress.json"
         if path.exists():
             active = json.loads(path.read_text())
+    if campaign.get("preparing_output"):
+        path = output / campaign["preparing_output"] / "progress.json"
+        if path.exists():
+            preparing = json.loads(path.read_text())
     atomic_json(output / "campaign.json", campaign)
     atomic_json(
         output / "progress.json",
         dict(
             status=campaign["status"],
-            total_contexts=campaign["request"]["total_contexts"],
-            total_rollouts=campaign["request"]["total_contexts"] * len(LINK_PAIRS),
+            total_contexts=sum(b["contexts"] for b in campaign["batches"]),
+            global_contexts=campaign["request"]["total_contexts"],
+            total_rollouts=sum(b["contexts"] for b in campaign["batches"])
+            * len(LINK_PAIRS),
             completed_batches=len(completed),
             total_batches=len(campaign["batches"]),
             completed_contexts=sum(b["contexts"] for b in completed)
@@ -133,6 +165,8 @@ def publish_progress(output, campaign):
             + active.get("completed_rollouts", 0),
             active_batch_progress=active,
             active_output=campaign.get("active_output"),
+            preparing_output=campaign.get("preparing_output"),
+            preparation_progress=preparing,
             updated_utc=utc_now(),
         ),
     )
@@ -141,16 +175,55 @@ def publish_progress(output, campaign):
 def require_previous_job_stopped(attempt):
     job_id = attempt.get("slurm_job_id")
     if job_id:
-        states = subprocess.check_output(
-            ["squeue", "--noheader", "--jobs", str(job_id), "--format=%T"], text=True
-        ).strip()
+        try:
+            states = subprocess.check_output(
+                ["squeue", "--noheader", "--jobs", str(job_id), "--format=%T"],
+                text=True,
+            ).strip()
+        except subprocess.CalledProcessError:
+            # Slurm purges completed jobs from squeue. Require accounting proof
+            # of a terminal state instead of assuming a query error means idle.
+            history = subprocess.check_output(
+                [
+                    "sacct",
+                    "-X",
+                    "--noheader",
+                    "--jobs",
+                    str(job_id),
+                    "--format=State",
+                    "--parsable2",
+                ],
+                text=True,
+            ).strip()
+            terminal = {
+                "COMPLETED",
+                "CANCELLED",
+                "FAILED",
+                "TIMEOUT",
+                "NODE_FAIL",
+                "OUT_OF_MEMORY",
+                "PREEMPTED",
+                "BOOT_FAIL",
+                "DEADLINE",
+                "REVOKED",
+            }
+            if not history or any(
+                line.strip().split("|")[0].split()[0] not in terminal
+                for line in history.splitlines()
+            ):
+                raise RuntimeError(f"cannot verify previous Slurm job {job_id} stopped")
+            return
         if states:
             raise RuntimeError(f"previous Slurm job {job_id} is still active: {states}")
 
 
 def execute_campaign(experiment_path, output, request, *, resume=False):
     experiment = load_panda_experiment(experiment_path)
-    batch_plan(request["total_contexts"], request["batch_size"], request["seed"])
+    campaign_plan(request)
+    if request.get("prefetch_ik"):
+        from .panda_link_dataset_pipeline import validate_resources
+
+        validate_resources(request, experiment.config.safe_ik.workers)
     if resume:
         if not (output / "campaign.json").is_file():
             raise ValueError("resume requires an existing campaign.json")
@@ -189,7 +262,20 @@ def execute_campaign(experiment_path, output, request, *, resume=False):
         publish_progress(output, campaign)
         contexts, rows = [], []
         try:
-            for batch in campaign["batches"]:
+            if request.get("prefetch_ik"):
+                from .panda_link_dataset_pipeline import execute_pipeline
+
+                contexts, rows = execute_pipeline(
+                    experiment,
+                    output,
+                    campaign,
+                    identity=identity,
+                    publish_progress=publish_progress,
+                    require_previous_job_stopped=require_previous_job_stopped,
+                    verified_batch=verified_batch,
+                    verify_inputs=verify_inputs,
+                )
+            for batch in ([] if request.get("prefetch_ik") else campaign["batches"]):
                 verify_inputs(campaign, experiment, output)
                 expected_identity = identity(
                     load_panda_experiment(output / batch["config"])
@@ -233,6 +319,8 @@ def execute_campaign(experiment_path, output, request, *, resume=False):
                         str(request["cpus"]),
                         "--workers-per-gpu",
                         str(request["workers_per_gpu"]),
+                        "--ik-replenishment-rounds",
+                        str(request.get("ik_replenishment_rounds", 3)),
                     ]
                     attempt = dict(
                         output=str(directory.relative_to(output)),
@@ -246,7 +334,7 @@ def execute_campaign(experiment_path, output, request, *, resume=False):
                     campaign["active_output"] = attempt["output"]
                     publish_progress(output, campaign)
                     print(
-                        f"batch {batch['index'] + 1}/{len(campaign['batches'])}: {directory}",
+                        f"global batch {batch['index']}: {directory}",
                         flush=True,
                     )
                     with subprocess.Popen(command, stdin=subprocess.DEVNULL) as process:
@@ -279,7 +367,7 @@ def execute_campaign(experiment_path, output, request, *, resume=False):
                 raise ValueError("duplicate scene identity across batches")
             verify_inputs(campaign, experiment, output)
             counts = export_dataset(output, contexts, rows)
-            if counts["contexts"] != request["total_contexts"]:
+            if counts["contexts"] != sum(b["contexts"] for b in campaign["batches"]):
                 raise ValueError("campaign context count mismatch")
             campaign.update(status="completed", finished_utc=utc_now(), counts=counts)
             publish_progress(output, campaign)
@@ -317,6 +405,15 @@ def main():
     parser.add_argument("--gpus", type=int, default=4)
     parser.add_argument("--cpus", type=int, default=15)
     parser.add_argument("--workers-per-gpu", type=int, default=4)
+    parser.add_argument("--prefetch-ik", action="store_true")
+    parser.add_argument("--ik-context-workers", type=int, default=2)
+    parser.add_argument(
+        "--ik-replenishment-rounds",
+        type=int,
+        default=DEFAULT_IK_REPLENISHMENT_ROUNDS,
+    )
+    parser.add_argument("--groups", type=int, default=1)
+    parser.add_argument("--group-index", type=int, default=0)
     parser.add_argument(
         "--resume",
         action="store_true",
@@ -332,6 +429,11 @@ def main():
             "gpus",
             "cpus",
             "workers_per_gpu",
+            "prefetch_ik",
+            "ik_context_workers",
+            "ik_replenishment_rounds",
+            "groups",
+            "group_index",
         )
     }
     execute_campaign(

@@ -177,7 +177,7 @@ def measure_state(config, kinematics, q, barrier):
     if not (
         np.isfinite(q).all()
         and np.isfinite(barrier.values).all()
-        and np.isfinite(barrier.gradients).all()
+        and np.isfinite(getattr(barrier, "gradients", ())).all()
     ):
         raise FloatingPointError("nonfinite trajectory state or barrier")
     position, quaternion, _ = kinematics.pose_and_jacobian(q)

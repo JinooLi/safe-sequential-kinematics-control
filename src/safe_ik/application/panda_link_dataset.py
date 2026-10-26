@@ -42,6 +42,7 @@ from .panda_runtime import PandaRuntime
 from .paths import project_root
 
 LINK_PAIRS = tuple(combinations(range(2, 7), 2))
+DEFAULT_IK_REPLENISHMENT_ROUNDS = 100
 _worker = None
 
 
@@ -62,6 +63,17 @@ def write_jsonl(path, rows):
         "".join(json.dumps(json_value(r), allow_nan=False) + "\n" for r in rows)
     )
     temporary.replace(path)
+
+
+def replenishment_plan(contexts, target, base_seed, round_limit):
+    """Recheck the remaining IK deficit after each round; reserve distinct seeds."""
+    if type(round_limit) is not int or round_limit < 1:
+        raise ValueError("IK replenishment rounds must be a positive integer")
+    for round_index in range(round_limit):
+        deficit = target - sum(c["ik_available"] for c in contexts)
+        if deficit <= 0:
+            return
+        yield base_seed + round_index, deficit
 
 
 def gpu_assignments(visible, workers_per_gpu):
@@ -175,7 +187,7 @@ def prepare_context(case):
     atomic_json(directory / "case.json", case)
     cfg = case_config(experiment.config, case)
     print(f"{case['case_id']}: IK start on GPU {gpu}", flush=True)
-    ik = prepare_ik(cfg, kin, scene_safety(cfg, kin, self_safety))
+    ik = prepare_ik(cfg, kin, scene_safety(cfg, kin, self_safety), values_only=True)
     atomic_json(directory / "ik.json", ik)
     context = dict(
         **case,
@@ -352,6 +364,9 @@ def export_dataset(output, contexts, rows):
         "minimum_barrier",
         "minimum_joint_margin",
         "interpolated_success",
+        "safety_validation_mode",
+        "interpolation_subdivisions",
+        "interpolation_checks",
         "candidate_switch_count",
         "rollout_wall_time",
         "validation_wall_time",
@@ -376,9 +391,21 @@ def export_dataset(output, contexts, rows):
     )
 
 
-def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
+def run(
+    experiment_path,
+    output,
+    gpu_count,
+    cpu_count,
+    workers_per_gpu=4,
+    *,
+    phase="all",
+    ik_context_workers=None,
+    ik_replenishment_rounds=DEFAULT_IK_REPLENISHMENT_ROUNDS,
+):
     start = perf_counter()
     started = utc_now()
+    if type(ik_replenishment_rounds) is not int or ik_replenishment_rounds < 1:
+        raise ValueError("IK replenishment rounds must be a positive integer")
     experiment = load_panda_experiment(experiment_path)
     if experiment.use_all_ik_candidates or not experiment.sampling.randomize_initial_q:
         raise ValueError("dataset requires random initial q and a single fixed IK")
@@ -388,8 +415,12 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
         )
     if experiment.config.safety.rdf.runtime_device != "cuda":
         raise ValueError("parallel GPU dataset runner requires rdf_device: cuda")
-    # IK subprocesses run only in the preparation phase, never in rollout workers.
-    required_cpus = 1 + gpu_count * (1 + experiment.config.safe_ik.workers)
+    if phase not in ("all", "prepare", "rollout"):
+        raise ValueError("unknown dataset phase")
+    ik_context_workers = gpu_count if ik_context_workers is None else ik_context_workers
+    if not 1 <= ik_context_workers <= gpu_count:
+        raise ValueError("IK context workers must be between one and GPU count")
+    required_cpus = 1 + ik_context_workers * (1 + experiment.config.safe_ik.workers)
     if gpu_count < 1 or cpu_count < required_cpus:
         raise ValueError(f"need at least {required_cpus} CPUs for this worker layout")
     if int(os.environ.get("SLURM_CPUS_PER_TASK", cpu_count)) < cpu_count:
@@ -406,6 +437,8 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
     ):
         os.environ[name] = "1"
     threadpool_limits(limits=1)
+    if phase == "rollout":
+        return run_prepared_rollouts(experiment, output, visible, workers_per_gpu)
     output.mkdir(parents=True, exist_ok=False)
     root = project_root()
     identity = fingerprint(
@@ -431,7 +464,9 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
         cpus=cpu_count,
         workers_per_gpu=workers_per_gpu,
         rollout_workers=rollout_workers,
-        ik_context_workers=gpu_count,
+        ik_context_workers=ik_context_workers,
+        ik_replenishment_rounds=ik_replenishment_rounds,
+        candidate_validation="values_only_batched_float64",
         ik_workers_per_context=experiment.config.safe_ik.workers,
         scheduling_unit="context_link_pair",
         rollout_workers_share_allocated_cpus=rollout_workers > cpu_count,
@@ -452,17 +487,18 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
     target = experiment.main["cases_per_seed"]
     base_seed = experiment.main["seeds"][0]
     try:
-        with worker_pool(visible, 1, experiment.path, output, "preparation") as pool:
-            for round_index in range(3):
-                deficit = target - sum(c["ik_available"] for c in contexts)
-                if not deficit:
-                    break
+        with worker_pool(
+            visible[:ik_context_workers], 1, experiment.path, output, "preparation"
+        ) as pool:
+            for sampling_seed, deficit in replenishment_plan(
+                contexts, target, base_seed, ik_replenishment_rounds
+            ):
                 phase_start = perf_counter()
                 batch, sampling = generate_cases(
                     experiment.config,
                     kin,
                     self_safety,
-                    [base_seed + round_index],
+                    [sampling_seed],
                     deficit,
                     experiment.sampling,
                 )
@@ -470,9 +506,7 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
                 cases.extend(batch)
                 write_jsonl(output / "cases.jsonl", cases)
                 manifest["sampling_rounds"].append(
-                    dict(
-                        seed=base_seed + round_index, count=deficit, statistics=sampling
-                    )
+                    dict(seed=sampling_seed, count=deficit, statistics=sampling)
                 )
                 manifest["data_sha256"]["cases.jsonl"] = digest(output / "cases.jsonl")
                 atomic_json(output / "manifest.json", manifest)
@@ -500,8 +534,112 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
         )
         if sum(c["ik_available"] for c in contexts) != target:
             raise RuntimeError(
-                "IK search replenishment budget exhausted before rollouts"
+                f"IK search replenishment budget exhausted after {ik_replenishment_rounds} "
+                f"rounds: {sum(c['ik_available'] for c in contexts)}/{target} prepared; "
+                "all preparation artifacts preserved"
             )
+        if (
+            fingerprint(
+                experiment.config,
+                experiment.config_path,
+                experiment.main["seeds"],
+                target,
+                experiment=experiment,
+            )
+            != identity
+        ):
+            raise RuntimeError("source/config/resources changed during preparation")
+        atomic_json(
+            output / "preparation.json",
+            dict(
+                identity=identity,
+                manifest_sha256=digest(output / "manifest.json"),
+                elapsed_wall_time=perf_counter() - start,
+                sampler_setup_seconds=setup_wall,
+                sampling_seconds=sampling_wall,
+                parallel_ik_seconds=ik_wall,
+                data_sha256={
+                    str(p.relative_to(output)): digest(p)
+                    for p in output.rglob("*")
+                    if p.is_file() and p.name not in ("manifest.json", "progress.json")
+                },
+            ),
+        )
+        atomic_json(
+            output / "progress.json",
+            dict(
+                phase="prepared",
+                prepared_contexts=target,
+                completed_contexts=0,
+                completed_rollouts=0,
+                updated_utc=utc_now(),
+            ),
+        )
+        # Release the sampler's GPU model before the rollout pool starts.
+        del kin, self_safety
+        if phase == "all":
+            return run_prepared_rollouts(experiment, output, visible, workers_per_gpu)
+
+    except BaseException as exc:
+        atomic_json(
+            output / "failed.json",
+            dict(
+                error=repr(exc), utc=utc_now(), elapsed_wall_time=perf_counter() - start
+            ),
+        )
+        raise
+
+
+def verified_preparation(experiment, output):
+    prepared = json.loads((output / "preparation.json").read_text())
+    expected = fingerprint(
+        experiment.config,
+        experiment.config_path,
+        experiment.main["seeds"],
+        experiment.main["cases_per_seed"],
+        experiment=experiment,
+    )
+    if prepared["identity"] != expected:
+        raise ValueError("prepared source/config/model identity changed")
+    if digest(output / "manifest.json") != prepared["manifest_sha256"]:
+        raise ValueError("prepared manifest changed")
+    for name, value in prepared["data_sha256"].items():
+        if digest(output / name) != value:
+            raise ValueError(f"prepared data changed: {name}")
+    contexts = [
+        json.loads(line)
+        for line in (output / "contexts.jsonl").read_text().splitlines()
+    ]
+    if (
+        len({c["case_id"] for c in contexts}) != len(contexts)
+        or sum(c["ik_available"] for c in contexts) != experiment.main["cases_per_seed"]
+    ):
+        raise ValueError("prepared context count/identity mismatch")
+    return prepared, contexts
+
+
+def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
+    prepared, contexts = verified_preparation(experiment, output)
+    manifest = json.loads((output / "manifest.json").read_text())
+    if (
+        manifest["gpus"] != len(visible)
+        or manifest["workers_per_gpu"] != workers_per_gpu
+    ):
+        raise ValueError("rollout resources differ from prepared manifest")
+    # One-shot claim: interrupted attempts are preserved, never overwritten.
+    with (output / ".rollout.claim").open("x") as claim:
+        claim.write(str(os.getpid()))
+    identity = prepared["identity"]
+    started = manifest["started_utc"]
+    start = (
+        perf_counter()
+        - (datetime.now(timezone.utc) - datetime.fromisoformat(started)).total_seconds()
+    )
+    setup_wall = prepared["sampler_setup_seconds"]
+    sampling_wall = prepared["sampling_seconds"]
+    ik_wall = prepared["parallel_ik_seconds"]
+    target = experiment.main["cases_per_seed"]
+    try:
         phase_start = perf_counter()
         atomic_json(
             output / "progress.json",
@@ -576,12 +714,7 @@ def run(experiment_path, output, gpu_count, cpu_count, workers_per_gpu=4):
         )
         print(json.dumps(dict(**counts, **timing)), flush=True)
     except BaseException as exc:
-        atomic_json(
-            output / "failed.json",
-            dict(
-                error=repr(exc), utc=utc_now(), elapsed_wall_time=perf_counter() - start
-            ),
-        )
+        atomic_json(output / "failed.json", dict(error=repr(exc), utc=utc_now()))
         raise
 
 
@@ -597,6 +730,14 @@ def main():
         default=4,
         help="independent rollout processes per allocated GPU (default: 4)",
     )
+    parser.add_argument("--phase", choices=("all", "prepare", "rollout"), default="all")
+    parser.add_argument("--ik-context-workers", type=int)
+    parser.add_argument(
+        "--ik-replenishment-rounds",
+        type=int,
+        default=DEFAULT_IK_REPLENISHMENT_ROUNDS,
+        help="maximum sampling rounds to replace no-IK scenes (default: 100)",
+    )
     args = parser.parse_args()
     run(
         args.experiment,
@@ -604,6 +745,9 @@ def main():
         args.gpus,
         args.cpus,
         args.workers_per_gpu,
+        phase=args.phase,
+        ik_context_workers=args.ik_context_workers,
+        ik_replenishment_rounds=args.ik_replenishment_rounds,
     )
 
 

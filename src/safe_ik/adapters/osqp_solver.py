@@ -11,6 +11,10 @@ import scipy.sparse as sparse
 from ..domain.types import QPProblem, QPSolution, QPStatus
 
 
+class _ConstraintViolation(ValueError):
+    """A finite solved vector needs a more accurate primal solution."""
+
+
 class OSQPSolver:
     def __init__(
         self,
@@ -26,6 +30,7 @@ class OSQPSolver:
         self.relative_tolerance = float(relative_tolerance)
         self._P = None
         self._shape = None
+        self._objective_scale = 1.0
 
     @staticmethod
     def _full_pattern_csc(matrix: np.ndarray):
@@ -108,7 +113,7 @@ class OSQPSolver:
             if bad.size:
                 index = int(bad[np.argmax((residual - tolerance)[bad])])
                 row = int(rows[index])
-                raise ValueError(
+                raise _ConstraintViolation(
                     f"qp_constraint_violation: row={row} side={side} "
                     f"value={values[row]:.12g} bound={bounds[row]:.12g} "
                     f"residual={residual[index]:.12g} "
@@ -129,9 +134,13 @@ class OSQPSolver:
             ):
                 self._initialized = False
                 self._solver = osqp.OSQP()
+                # A common positive objective factor leaves the minimizer and
+                # every constraint unchanged. Keep a large CLF penalty from
+                # setting the numerical scale of the entire dual problem.
+                self._objective_scale = max(1.0, float(np.max(np.abs(P))))
                 self._solver.setup(
-                    P=sparse.csc_matrix(P),
-                    q=q,
+                    P=sparse.csc_matrix(P / self._objective_scale),
+                    q=q / self._objective_scale,
                     A=A,
                     l=lower,
                     u=upper,
@@ -139,13 +148,40 @@ class OSQPSolver:
                     max_iter=self.max_iterations,
                     eps_abs=self.absolute_tolerance,
                     eps_rel=self.relative_tolerance,
+                    scaled_termination=False,
+                    polishing=True,
+                    # Avoid a timing-dependent adaptation interval across hosts.
+                    adaptive_rho_interval=50,
                 )
                 self._P = P.copy()
                 self._shape = A.shape
                 self._initialized = True
             else:
-                self._checked_update(q, lower, upper, A)
+                self._checked_update(q / self._objective_scale, lower, upper, A)
+                # The preceding call may have used the remaining iteration
+                # budget with an absolute-only refinement tolerance.
+                self._solver.update_settings(
+                    eps_rel=self.relative_tolerance, max_iter=self.max_iterations
+                )
             result = self._solver.solve(raise_error=False)
+            refined = False
+            if int(result.info.status_val) == 1:
+                try:
+                    self._check_solution(
+                        np.asarray(result.x, dtype=float), dense_A, lower, upper
+                    )
+                except _ConstraintViolation:
+                    # OSQP's global relative stopping scale can be dominated by
+                    # CLF slack. Continue this same QP from its current iterates
+                    # with a stricter primal bound, without applying the rejected
+                    # vector or increasing the configured total iteration budget.
+                    used = int(getattr(result.info, "iter", self.max_iterations))
+                    remaining = self.max_iterations - used
+                    if self.absolute_tolerance <= 0.0 or remaining <= 0:
+                        raise
+                    self._solver.update_settings(eps_rel=0.0, max_iter=remaining)
+                    result = self._solver.solve(raise_error=False)
+                    refined = True
             status = {
                 1: QPStatus.SOLVED,
                 3: QPStatus.INFEASIBLE,
@@ -165,7 +201,8 @@ class OSQPSolver:
                 status,
                 x,
                 perf_counter() - start,
-                str(result.info.status),
+                str(result.info.status)
+                + ("; absolute constraint refinement" if refined else ""),
             )
         except Exception as error:
             self._initialized = False

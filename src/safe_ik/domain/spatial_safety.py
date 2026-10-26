@@ -8,7 +8,12 @@ import numpy as np
 
 from .interfaces import PoseKinematics
 from .panda_config import CapsuleConfig, SphereObstacleConfig
-from .safety_contracts import BarrierEvaluation, SafetyEvaluator, evaluate_softmin
+from .safety_contracts import (
+    BarrierEvaluation,
+    BarrierValues,
+    SafetyEvaluator,
+    evaluate_softmin,
+)
 
 
 @dataclass(frozen=True)
@@ -159,3 +164,44 @@ class PandaCapsuleSafety:
     def softmin(self, q, temperature: float):
         """Compatibility wrapper; reuse evaluation.softmin() within an iteration."""
         return evaluate_softmin(self, q, temperature)
+
+    def evaluate_values_batch(self, states):
+        result = []
+        for q in states:
+
+            def point(frame, offset):
+                if hasattr(self.kinematics, "frame_point"):
+                    return self.kinematics.frame_point(frame, q, offset)
+                return self.kinematics.frame_point_and_jacobian(frame, q, offset)[0]
+
+            endpoints = [
+                (point(c.start_frame, c.start_offset), point(c.end_frame, c.end_offset))
+                for c in self.capsules
+            ]
+            labels, values = [], []
+            for obstacle in self.obstacles:
+                for c, (start, end) in zip(self.capsules, endpoints):
+                    t = _point_segment_parameter(obstacle.position, start, end)
+                    distance, _ = _unit_or_default(
+                        (1 - t) * start + t * end - obstacle.position
+                    )
+                    labels.append(f"{obstacle.name}_{c.name}")
+                    values.append(distance - c.radius - obstacle.radius - self.margin)
+            for i in range(len(endpoints) if self.include_self else 0):
+                for j in range(i + 2, len(endpoints)):
+                    left, right = self.capsules[i], self.capsules[j]
+                    if (
+                        frozenset((left.name, right.name))
+                        in self.self_collision_exclusions
+                    ):
+                        continue
+                    a, b = endpoints[i]
+                    c, d = endpoints[j]
+                    s, t = _segment_parameters(a, b, c, d)
+                    distance, _ = _unit_or_default(
+                        (1 - s) * a + s * b - ((1 - t) * c + t * d)
+                    )
+                    labels.append(f"self_{left.name}_{right.name}")
+                    values.append(distance - left.radius - right.radius - self.margin)
+            result.append(BarrierValues(tuple(labels), np.asarray(values)))
+        return result

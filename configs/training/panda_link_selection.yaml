@@ -1,0 +1,19 @@
+# Fixed model: small 1-head cross-attention, hidden dropout 0.1.
+# AdamW; BCE + 3 * successful-mass loss; validation success then BCE selects epochs.
+# Weight decay is decoupled from the task loss; model/loss variants are not supported.
+dataset_sha256: a18ec7ac6e28535d6f3af1be6849e89f0a65015de77cd488a527c1da9849fe9a
+numerical_error_policy: failure
+split:
+  seed: 20261016
+  train: 8700
+  validation: 150
+  test: 150
+  file: frozen_split.json
+  sha256: 4a734f7f547edbbc295b7f85365892074a3296f877f1c1c9cba3458ee60a643f
+training:
+  seeds: [11, 23, 37, 53, 71]
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 64
+  max_epochs: 500
+  patience: 50

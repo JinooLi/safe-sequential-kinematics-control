@@ -23,6 +23,33 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class LinkDatasetTests(unittest.TestCase):
+    def test_replenishment_continues_after_three_rounds_and_keeps_no_ik_records(self):
+        # Production failure: 47/50, then 49/50, then still 49/50.
+        contexts = []
+        rounds = dataset.replenishment_plan(contexts, 50, 1000, 100)
+        for expected, available in [
+            ((1000, 50), 47),
+            ((1001, 3), 2),
+            ((1002, 1), 0),
+            ((1003, 1), 1),
+        ]:
+            self.assertEqual(next(rounds), expected)
+            contexts.extend({"ik_available": i < available} for i in range(expected[1]))
+        self.assertEqual(list(rounds), [])
+        self.assertEqual(sum(c["ik_available"] for c in contexts), 50)
+        self.assertEqual(sum(not c["ik_available"] for c in contexts), 5)
+
+    def test_replenishment_stops_at_reserved_seed_boundary(self):
+        contexts = []
+        rounds = dataset.replenishment_plan(contexts, 1, 1000, 4)
+        for seed in range(1000, 1004):
+            self.assertEqual(next(rounds), (seed, 1))
+            contexts.append({"ik_available": False})
+        self.assertEqual(list(rounds), [])
+        for limit in (0, -1, True, 1.5):
+            with self.assertRaises(ValueError):
+                list(dataset.replenishment_plan([], 1, 1000, limit))
+
     def test_gpu_sharing_and_pair_tasks_support_more_workers_than_contexts(self):
         visible = ["GPU-a", "GPU-b", "GPU-c", "GPU-d"]
         self.assertEqual(dataset.gpu_assignments(visible, 4), visible * 4)
@@ -112,7 +139,7 @@ class LinkDatasetTests(unittest.TestCase):
                 reason="stalled",
                 success=False,
                 goal_reached=False,
-                interpolation_checks=4,
+                interpolation_checks=subdivisions - 1,
             )
             trace = dict(
                 q=np.array([initial, initial]),
@@ -162,7 +189,7 @@ class LinkDatasetTests(unittest.TestCase):
                 np.testing.assert_array_equal(candidates[0].q, initial)
                 np.testing.assert_array_equal(config.initial_q, initial)
                 self.assertEqual(config.trajectory.duration, 120)
-                self.assertEqual(subdivisions, 5)
+                self.assertEqual(subdivisions, 1)
 
     def test_pilot_conditions(self):
         pilot = load_panda_experiment(

@@ -9,14 +9,18 @@ import numpy as np
 
 
 @dataclass(frozen=True)
-class BarrierEvaluation:
+class BarrierValues:
     labels: tuple[str, ...]
     values: np.ndarray
-    gradients: np.ndarray
 
     @property
     def minimum(self) -> float:
         return float(np.min(self.values)) if self.values.size else float("inf")
+
+
+@dataclass(frozen=True)
+class BarrierEvaluation(BarrierValues):
+    gradients: np.ndarray
 
     def softmin(self, temperature: float) -> tuple[float, np.ndarray]:
         """Aggregate this evaluation without querying geometry or kinematics.
@@ -38,6 +42,17 @@ class BarrierEvaluation:
 
 class SafetyEvaluator(Protocol):
     def evaluate(self, q: np.ndarray) -> BarrierEvaluation: ...
+
+
+def barrier_values_batch(evaluator, states):
+    """Use a value-only backend when available; retain other evaluator contracts."""
+    states = list(states)
+    if not states:
+        return []
+    method = getattr(evaluator, "evaluate_values_batch", None)
+    if method is not None:
+        return method(states)
+    return [BarrierValues(e.labels, e.values) for e in map(evaluator.evaluate, states)]
 
 
 def evaluate_softmin(

@@ -3,7 +3,7 @@
 #SBATCH --partition=gpu1,gpu2,gpu6
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
+#SBATCH --cpus-per-task=25
 #SBATCH --gres=gpu:4
 #SBATCH --mem=64G
 #SBATCH --time=3-00:00:00
@@ -18,8 +18,8 @@ export PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}"
 dataset_args=(
   --experiment configs/experiments/panda_link_dataset.yaml
   --output "${PANDA_DATASET_OUTPUT:-outputs/panda_link_dataset/production-1000-${SLURM_JOB_ID}}"
-  --total-contexts 1000 --batch-size 50 --seed 2026101500
-  --gpus 4 --cpus 15 --workers-per-gpu 4
+  --total-contexts "${PANDA_DATASET_CONTEXTS:-1000}" --batch-size "${PANDA_DATASET_BATCH_SIZE:-50}" --seed "${PANDA_DATASET_SEED:-2026101700}"
+  --gpus 4 --cpus 25 --workers-per-gpu 4 --prefetch-ik --ik-context-workers 2
 )
 if [[ "${PANDA_DATASET_RESUME:-0}" == "1" ]]; then
   dataset_args+=(--resume)
