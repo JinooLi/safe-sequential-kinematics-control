@@ -1140,3 +1140,221 @@ Sequential의 성공률 향상에 기여할 수 있는 메커니즘을 뒷받침
 - EE 분할 실험에서는 모든 중간 목표의 실현 가능성을 보장하지 못했으며, 100장면은
   1,000장면에서 뽑은 부분집합이다. 두 결과를 독립적인 반복 실험이나 단일 코드 버전의
   통합 통계처럼 제시하지 않는다. 통계적 성공률 차이는 이 평가 집합에 대한 결과로 보고한다.
+
+## Corrected-QP paired 1,000-scene rerun (2026-10-26)
+
+At the user's request, UBAI array `1049162` was submitted at
+**2026-10-26 15:27:53 KST** to rerun Direct and all-link Sequential on the
+same 1,000 validation scenes, with a total 150-second budget per rollout.
+This is a new 2,000-trajectory campaign; the historical results are preserved.
+
+To isolate the QP implementation change, the 95-file historical runtime is
+copied and **only `src/safe_ik/adapters/osqp_solver.py` is replaced** with the
+version in commit `984540b`. Its SHA256 is
+`b9dc3ca80dfef5f962008def5441aacba605899c3f57717d17398fb336b92ee7`;
+the historical adapter SHA256 is
+`0d20009733c28b0200453f4e3b25d3cc651cf7a23bdf8c52c7f8da0b5c7759c5`.
+All other runtime files, saved initial states, goals, obstacles, IK candidates,
+split, model assets and recorded library versions are verified unchanged.
+Both effective configurations exactly match the respective historical 150 s
+YAML snapshots. Sequential uses link1–link7 followed by the EE target, with one
+saved IK and no switching; Direct uses no IK candidate. No scene is excluded.
+
+The existing paired runner is adapted to compare corrected versus historical
+QP outcomes at the same duration. A diagnostic wrapper records returned QP
+statuses, successful refinements and failed QP matrices without changing
+solver inputs or returned solutions. Numerical failures remain failures.
+
+The allocation is two three-GPU groups: n066 (RTX 6000 Ada) and n026 (A10),
+13 CPUs and 12 workers per group, four workers per GPU. Each scene's two
+methods stay in the same group. Both GPU tensor probes and all 15 solver
+contract tests per group passed. The first eight pairs per group are retained
+as a 16-scene / 32-rollout pilot. Both pilots passed identity, trajectory,
+safety-scoring and no-IK-switch validation, and both groups entered production.
+The pilot has zero initial-step QP failures and three later numerical QP
+failures (two Direct, one Sequential), all retained in the denominator.
+These are startup checks, not final comparative success rates.
+
+UBAI campaign:
+`outputs/panda_all_links_validation/validation-1000-150s-corrected-qp-20261026T061835Z/`.
+Local preparation and verification records:
+`outputs/panda_link_selection/all_links_comparison/validation-1000-150s-corrected-qp-20261026T061835Z/`.
+`plan.json`, `preparation.json`, `preflight.json`, `submission.json` and
+`startup_verification.json` record the sealed inputs and startup checks.
+Final completion requires 1,000 validated scenes and 2,000 rollouts in
+`run/complete.json`, plus the corresponding aggregate analysis and file hashes.
+
+### Completed results and verification
+
+The campaign finished at **2026-10-26 16:40:01 KST**, about 71 minutes after
+the workers started. Both Slurm array tasks completed with exit code `0:0`.
+The final seal records 1,000 validated scenes and 2,000 rollouts;
+`analysis.json` reports `complete=true`. An independent read of all **6,134
+sealed files (8,748,652,459 bytes)** found no SHA256 mismatches. The aggregate
+JSON files and scene-level comparison CSV were copied to the local campaign's
+`run/` directory and their hashes and unique scene counts checked again.
+`final_verification.json` records this audit.
+
+| Outcome | Direct | All-link Sequential |
+| --- | ---: | ---: |
+| Safe success | 446 / 1,000 (44.6%) | 596 / 1,000 (59.6%) |
+| Goal reached, but safety criterion violated | 3 | 1 |
+| Timeout | 432 | 278 |
+| Stalled | 47 | 105 |
+| Numerical QP failure | 71 | 20 |
+| QP reported infeasible | 1 | 0 |
+| Mean completion time among safe successes | 29.09 s | 52.73 s |
+
+These outcome rows partition all 1,000 scenes per method; numerical errors
+remain failures in the denominator. The four goal-reaching safety failures
+exceed the 1 mm barrier tolerance, with no joint-range violation. They are
+included in goal-reached totals (449 Direct, 597 Sequential), but not successes.
+
+On matched scenes, both methods succeeded in 321 scenes, only Sequential in
+275, only Direct in 125, and neither in 279. Sequential's success-rate gain is
+**15.0 percentage points**, with paired bootstrap 95% CI **11.3–18.8 points**
+and exact McNemar p = **4.73e-14**. Among the same 321 common successes, mean
+completion times are Direct **27.94 s** and Sequential **47.97 s**, a **20.04 s**
+increase. The per-method successful-time means above use different scene sets.
+
+| Method | Historical QP safe success | Corrected QP safe success | Change | Paired 95% CI for change |
+| --- | ---: | ---: | ---: | ---: |
+| Direct | 45.8% (458) | 44.6% (446) | -1.2 pp | -2.8 to +0.4 pp |
+| All-link Sequential | 59.4% (594) | 59.6% (596) | +0.2 pp | -1.5 to +1.9 pp |
+
+Thus the corrected-QP experiment preserves the aggregate Sequential advantage;
+it does not show that the QP change itself improves either method's success rate.
+Historical versus corrected outcomes are not identical: Direct loses 37 prior
+successes and gains 25, while Sequential loses 37 and gains 39.
+
+Numerical-failure counts rise from 1 to 71 for Direct and from 5 to 20 for
+Sequential. Diagnostic messages identify all 71 Direct numerical failures as
+`qp_constraint_violation` despite backend `solved`; the additional Direct
+failure is a separately reported `primal infeasible` after absolute refinement.
+Sequential has 17 constraint-validation rejections, one iteration limit and
+two `solved inaccurate` results. The historical solver lacked the independent
+row validation, so its error count is not measured under the same acceptance
+rule. These observations do not mean all rejected QPs are mathematically
+infeasible, and stricter checks alone should not be described as worse
+optimization performance. Failed QP matrices are retained for investigation.
+
+The prior 260/124-scene constraint-activity analysis belongs to the historical
+QP trajectories. The corrected experiment's 275/125 discordant-scene sets would
+need their own trajectory analysis before transferring those mechanism counts.
+
+## Sequential prefix to Direct comparison (2026-10-27)
+
+At the user's request, UBAI array **1050172** was submitted at
+**2026-10-27 13:14:58 KST** to compare switching to Direct immediately after
+completing each intermediate link stage, with **150 seconds total per scene**.
+The fixed 1,000 validation contexts, selected IK, initial configurations, goals,
+obstacles, controller settings and all 95 runtime source files are copied from
+the corrected-QP campaign above. No new IK search or candidate switching is used.
+
+The six new arms configure `stage_frames` as link1 through linkK, for K=1..6.
+The original controller then naturally uses its final EE pose CLF, which is the
+same objective and QP as Direct. Each arm is one uninterrupted rollout from the
+original initial state: the clock, OSQP instance and previous command used for
+acceleration limits are preserved. Only the existing per-stage stall history is
+reset on a target transition, as in the original Sequential controller. There is
+no additional 150-second allowance after switching. Link7-to-Direct is already
+the original all-link Sequential, and K=0 is the original Direct; their sealed
+corrected-QP results (596 and 446 successes respectively) are reused.
+
+Thus the experiment contains **6,000 new rollouts and 2,000 reused baseline
+outcomes**, eight conditions on the same 1,000 scenes. The primary success
+denominator is 1,000 for every condition. An arm that fails before reaching its
+switch stage remains a failure. The original stage-independent final EE goal
+test is retained: a trajectory reaching the final goal early can succeed before
+its configured switch. Numerical errors also remain in the denominator.
+Separate fields record whether switching occurred, switch time and state,
+previous commanded/applied velocity, remaining time, prefix safety and post-switch
+outcome. Conditional success among switched scenes is explicitly descriptive of
+a selected subset, not a replacement for the primary all-scene rate.
+
+Four focused contract tests verify identical QP inputs before the switch,
+identity with Direct's QP afterward, preservation of the acceleration reference,
+the total clock, and early final-goal scoring. The 15 existing corrected-solver
+tests are also retained. Remote preflight passed input/source/asset/package
+hashes and checks that only the configured stage list differs from the baseline.
+Each group first runs two assigned scenes under all six arms (12 scenes and
+72 rollouts across the six groups, retained in production). Before continuing,
+it validates trace scoring and compares prefix states and commands up to the
+earlier switch across arms. Structural errors stop the experiment; ordinary
+timeout/stall and numerical QP failure outcomes are retained.
+
+Six one-GPU groups request five CPUs and four simulation workers each, for
+**6 GPUs, 30 CPUs and 24 concurrent workers**. The six-hour Slurm limit applies
+to wall time; the simulation budget remains 150 seconds. GPUs were available
+one per node at submission, so this allocation avoids waiting for three GPUs
+on the same node. Node n057 remains excluded after its earlier device mismatch.
+
+Local and UBAI campaign relative path:
+`outputs/panda_sequential_prefix_comparison/validation1000-150s-20261027T040906Z/`.
+`prefix_plan.json` records inputs and protocol; `prefix_submission.json` records
+the job. New data, group progress, pilot checks and final comparison are under
+`prefix_run/`. Completion requires `prefix_run/complete.json` validating all
+1,000 scenes and 6,000 new rollouts plus a complete aggregate analysis. This
+entry describes submission and preflight, not final experimental results.
+
+### Startup verification
+
+At **2026-10-27 13:22 KST**, all six groups passed the 19 contract tests and
+their 12-rollout pilot, and entered production. The allocated nodes are n009
+and n013 (RTX 3090), n059/n015/n024 (A10), and n088 (RTX A6000). All 72 pilot
+rollouts passed trace, input identity, scoring and total-budget checks. Across
+the six prefix conditions the common-prefix states and commands were identical.
+An additional comparison against the archived full-Sequential trajectories for
+the same 12 scenes also found **maximum absolute state difference 0.0 and command
+difference 0.0** before each switch (or common terminal state if no switch).
+`archived_prefix_pilot_check.json` records all 72 checks and validates the source
+trajectory hashes against the previous campaign seal.
+
+`prefix_startup_verification.json` records all six running groups, passed pilots,
+and absence of a runner abort. Its 13:21 KST snapshot reports 140/6,000 new
+rollouts complete. These are startup observations, not final success rates.
+
+### Completed prefix comparison
+
+All six array tasks completed with exit code `0:0`. The final seal was written
+at **2026-10-27 16:47:57 KST**, validating 1,000 scenes, 6,000 new rollouts and
+2,000 reused baseline outcomes. The runner sealed 18,228 files after trajectory
+validation; `analysis.json` reports `complete=true`. The aggregate JSON files,
+8,000-row comparison CSV and completion seal were copied locally. Their hashes
+match the remote seal, and an independent recount confirms all success counts,
+identical 1,000 scene IDs and every matched-outcome contingency table.
+`prefix_run/local_final_verification.json` records this aggregate audit; it does
+not claim an additional local audit of the raw remote trajectories.
+
+| Condition | Safe successes / 1,000 | Success rate | Change from Direct |
+| --- | ---: | ---: | ---: |
+| Direct from the initial state | 446 | 44.6% | — |
+| Complete link1, then Direct | 446 | 44.6% | 0.0 pp |
+| Complete link1–2, then Direct | 488 | 48.8% | +4.2 pp |
+| Complete link1–3, then Direct | 522 | 52.2% | +7.6 pp |
+| Complete link1–4, then Direct | 549 | 54.9% | +10.3 pp |
+| Complete link1–5, then Direct | 599 | 59.9% | +15.3 pp |
+| Complete link1–6, then Direct | 595 | 59.5% | +14.9 pp |
+| Full Sequential: link1–7, then final EE | 596 | 59.6% | +15.0 pp |
+
+Every row includes failures before reaching its configured switch stage and
+uses the same 150-second total budget and whole-trajectory safety criterion.
+Direct and full Sequential reuse the sealed corrected-QP baseline. Thus
+"after link5" means completing all stages link1 through link5 in order, rather
+than selecting link5 alone.
+
+The observed success rate rises through the link5 prefix and is similar for
+prefix lengths 5–7. Link5-to-Direct exceeds full Sequential by only three scenes
+(+0.3 pp; paired bootstrap 95% CI -1.1 to +1.8 pp, exact McNemar p=0.784).
+They share 571 successes; 28 succeed only after switching at link5 and 25 only
+under full Sequential. These data establish neither superiority nor equivalence
+between those two conditions. The threshold comparisons are exploratory and
+confidence intervals are not adjusted for multiple comparisons.
+
+This intervention supports the interpretation that intermediate link tasks can
+prepare a state from which final EE control succeeds more often. In this sample,
+the link1–5 prefix retains approximately the observed full-Sequential advantage.
+It does not isolate joint-limit avoidance as the cause, prove that every stage
+helps each scene, or show that link6 and link7 are universally unnecessary.
+Changed paths, elapsed prefix time and remaining control time are all part of
+the intervention.
