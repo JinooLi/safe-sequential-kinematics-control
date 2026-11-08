@@ -1,0 +1,133 @@
+{
+  "verified_utc": "2026-11-02T12:32:39.397614+00:00",
+  "audit": "Independent success derivation from saved position/orientation errors, all collision barriers, joint margins, and solver status",
+  "checked_scene_summaries": 1000,
+  "checked_traces": 1000,
+  "all_links_successes": 552,
+  "all_links_scenes": 1000,
+  "all_links_success_rate": 0.552,
+  "all_trace_stage_frames": [
+    "link1",
+    "link2",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7"
+  ],
+  "uniform_pair_successes": 5520,
+  "uniform_pair_outcomes": 10000,
+  "uniform_expected_success_rate": 0.552,
+  "invalid_pair_labels_counted_as_failure": 26,
+  "pair_names": [
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      2,
+      6
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      3,
+      5
+    ],
+    [
+      3,
+      6
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      4,
+      6
+    ],
+    [
+      5,
+      6
+    ]
+  ],
+  "pair_success_counts": [
+    539,
+    546,
+    578,
+    528,
+    535,
+    587,
+    560,
+    564,
+    553,
+    530
+  ],
+  "scenes_with_different_all_link_outcome_and_uniform_expectation": 560,
+  "all_success_uniform_not_certain": 297,
+  "all_failure_uniform_positive": 263,
+  "all_only_pairwise": 1107,
+  "two_only_pairwise": 1107,
+  "examples": {
+    "all_success_all_pairs_fail": [
+      {
+        "case_id": "seed2026120021_0043",
+        "all_link_success": true,
+        "successful_two_link_pairs": 0
+      },
+      {
+        "case_id": "seed2026120033_0046",
+        "all_link_success": true,
+        "successful_two_link_pairs": 0
+      },
+      {
+        "case_id": "seed2026120039_0042",
+        "all_link_success": true,
+        "successful_two_link_pairs": 0
+      }
+    ],
+    "all_failure_all_pairs_succeed": [
+      {
+        "case_id": "seed2026120003_0018",
+        "all_link_success": false,
+        "successful_two_link_pairs": 10
+      },
+      {
+        "case_id": "seed2026120003_0025",
+        "all_link_success": false,
+        "successful_two_link_pairs": 10
+      },
+      {
+        "case_id": "seed2026120021_0028",
+        "all_link_success": false,
+        "successful_two_link_pairs": 10
+      }
+    ]
+  },
+  "termination_reasons": {
+    "stalled": 165,
+    "timeout": 265,
+    "goal_reached": 564,
+    "qp_solver_failure": 5,
+    "qp_infeasible": 1
+  },
+  "source_sha256": {
+    "run/sequential_results.json": "e93cbf8aaeff1ba3f2f12198ddaf0fce24d162ee5a47158badd50e6c8bf864a7",
+    "dataset.npz": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6",
+    "split.csv": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283"
+  },
+  "all_link_succeeds_all_ten_pairs_fail": 13,
+  "all_link_fails_all_ten_pairs_succeed": 12,
+  "published_table_and_figure_match": true,
+  "audit_script_sha256": "9dc0c826b66ab0aea5de26014d2ac8705259713ef598d32ceb460a2d4fd98391"
+}

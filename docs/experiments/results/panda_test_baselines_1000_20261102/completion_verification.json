@@ -1,0 +1,49 @@
+{
+  "verified_utc": "2026-11-02T12:04:59.666198+00:00",
+  "scenes": 1000,
+  "rollouts": 2000,
+  "exact_existing_test_partition": true,
+  "validation_overlap": 0,
+  "simulation_seconds": 120,
+  "archived_controller_and_effective_configs_verified": true,
+  "trace_scoring": "Each trajectory checked on the compute node and re-read during group completion and merge",
+  "downloaded_artifact_hashes_verified": true,
+  "numerical_errors_retained_as_failures": true,
+  "job_id": "1058692",
+  "remote_campaign": "/gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_test_baselines/test-1000-20261102T101359Z-r1",
+  "remote_complete_sha256": "c54ef9dd24f57c0db195c4663ea13c2ff4b50e018d25c1d63f71edde2f751989",
+  "methods": {
+    "direct": {
+      "rollouts": 1000,
+      "successes": 455,
+      "success_rate": 0.455,
+      "goal_reached": 464,
+      "numerical_errors": 2,
+      "unsafe_goal_reached": 9,
+      "termination_reasons": {
+        "timeout": 449,
+        "stalled": 83,
+        "goal_reached": 464,
+        "qp_infeasible": 2,
+        "qp_solver_failure": 2
+      },
+      "successful_completion_time_mean": 25.256043956043904
+    },
+    "sequential": {
+      "rollouts": 1000,
+      "successes": 552,
+      "success_rate": 0.552,
+      "goal_reached": 564,
+      "numerical_errors": 5,
+      "unsafe_goal_reached": 12,
+      "termination_reasons": {
+        "stalled": 165,
+        "timeout": 265,
+        "goal_reached": 564,
+        "qp_solver_failure": 5,
+        "qp_infeasible": 1
+      },
+      "successful_completion_time_mean": 49.75619565217539
+    }
+  }
+}

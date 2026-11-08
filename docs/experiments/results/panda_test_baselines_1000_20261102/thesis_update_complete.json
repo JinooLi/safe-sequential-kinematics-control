@@ -1,0 +1,29 @@
+{
+  "completed_utc": "2026-11-02T12:05:10.219789+00:00",
+  "stage": "/tmp/panda-test-thesis-complete-jugp6seq",
+  "figure": "4.3",
+  "table": "4.4",
+  "counts": {
+    "direct": 455,
+    "all_link_sequential": 552
+  },
+  "scenes": 1000,
+  "updated_sha256": {
+    "sections/Results/Panda.tex": "11079d2f34da99e49e3a50a801b2b94bc314b99c44397bc45de74331a6187c90",
+    "scripts/build_recent_panda_figures.py": "7395569c685c5db26f1c734b0a4f76c499fd9da581cee8d84a532bccc8ec0607",
+    "sections/appendix.tex": "8840766892f0d1dcdcba2c7e23ac40cb1b7357443aa66bc7f68b771ae601d874",
+    "figs/panda_sequence_selection.pdf": "7873fbb8a04800387f03e622c260008512c43d721bfd8b0d2a8afed59c76946c",
+    "figs/panda_sequence_selection.png": "632711ee840faeb634332d5198e5d77924cadc2cfe6bdad54d569d782a9da1de",
+    "draft-evidence/recent-panda/figure_audit.json": "a2c1ed1e42111695e578e69ba92e5ca03ce7f6e361fe4f163686f5d7b5043f4d",
+    "draft-evidence/recent-panda/provenance.json": "bb84e24a7241108ce0539eecbb88498269ea4718ff349fbbc5c16846e4c2b65d",
+    "draft-evidence/recent-panda/test_baselines_analysis.json": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3",
+    "draft-evidence/recent-panda/test_baselines_comparison.csv": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869",
+    "draft-evidence/recent-panda/test_baselines_verification.json": "f4a08dda7d5b51586a3c1197f7497830656e4ce5d41ea2584ad5e498043313d6",
+    "draft-evidence/recent-panda/test_baselines_plan.json": "a04226760a5ce9298ef66eea11279906bc44f08c65182479d8d74a9eb891a922",
+    "draft-evidence/recent-panda/test_baselines_submission.json": "060fb56774140fdf1bc70353b241976f68ae35d99051bc9e3fbd7c6e51683b0f",
+    "draft-evidence/recent-panda/test_baselines_paired_comparisons.json": "8c9671cc19ef081bde2e63c80de164388cd334022f77ba7c437b49476a6d470d",
+    "build/main.pdf": "14ca1ffc653e684cda14f3e2d4dd86cac1e196c41e65ffc2ddd68a9e56417e91"
+  },
+  "pdf": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.pdf",
+  "backup": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/thesis_backup"
+}

@@ -1,0 +1,12 @@
+{
+  "verified_utc": "2026-11-02T12:25:39.203050+00:00",
+  "source_and_figure_hashes_match_completion_report": true,
+  "current_pdf_text_matches_verified_build": true,
+  "pdf_sha256": "d51af2405b761e4dc3711972c97f005c63c0c33251f10e5e9b806fe54598703e",
+  "figure_visual_review": "passed",
+  "test_successes": {
+    "direct": 455,
+    "all_link_sequential": 552
+  },
+  "scenes_per_method": 1000
+}

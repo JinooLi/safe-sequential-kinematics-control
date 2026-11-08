@@ -1,0 +1,24 @@
+{
+  "purpose": "Direct and all-link Sequential on the exact existing 1000 Test scenes",
+  "dataset_sha256": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6",
+  "split_sha256": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283",
+  "original_contexts_sha256": "8b49d63a7ab2d85b8c456ade9d8b52a8e216f742b3c4e17eb97a3f61133fb319",
+  "source_contexts": "/gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_link_dataset/evaluation-2000-20261019T030326Z/contexts.jsonl",
+  "count": 1000,
+  "split": "test",
+  "test_scenes": 1000,
+  "source_policy": "exact archived runtime, QP and 120 s settings matching historical validation and two-link labels",
+  "created_utc": "2026-11-02T10:21:46.934220+00:00",
+  "simulation_seconds": 120,
+  "input_sha256": {
+    "dataset.npz": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6",
+    "split.csv": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283",
+    "contexts.jsonl": "76581d6384f8e0c8abae71eebe3178001ca15ef2ad55f0a2917191ae4265cfeb",
+    "reference_labels.npz": "4dbda90972d649db95ce52ae55beec08f98b57afd1d8593425b884dca666ba61",
+    "config.yaml": "b7f3e9ca4272e7b78e7337e98d24a8d6b61fa25863847e2b74768ff1b98ba131",
+    "reference_manifest.json": "ee2696411051d671356e537ba882a8c715b7e10a5eee8381028f3023e93436b9",
+    "source_snapshot.tar.gz": "b2ff8d710fce529297dbcff921c925d199b938d9b2dbd4c3d92bd07dd28a251e",
+    "evaluate_direct.py": "b10de336ec0f8745dfd8f5e4c1595a48a5f6791233260380709beb719282db43",
+    "prepare_remote.py": "0954e56fd53276cf256df06f66889532d018af245e8ced2c027092823e96a316"
+  }
+}

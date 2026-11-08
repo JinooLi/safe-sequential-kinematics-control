@@ -1,0 +1,86 @@
+{
+  "created_utc": "2026-11-02T10:21:46.934220+00:00",
+  "purpose": "Fill missing Test baselines in thesis Figure 4.3 and Table 4.4",
+  "count": 1000,
+  "rollouts": 2000,
+  "groups": 10,
+  "group_pairs": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+  ],
+  "group_rollouts": [
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200,
+    200
+  ],
+  "simulation_seconds": 120,
+  "stage_frames": [
+    "link1",
+    "link2",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7"
+  ],
+  "methods": [
+    "direct",
+    "sequential"
+  ],
+  "candidate_policy": {
+    "direct": "no_candidate",
+    "sequential": "one_saved_no_switch"
+  },
+  "total_gpus": 10,
+  "total_cpus": 20,
+  "total_workers": 20,
+  "workers_per_gpu": 2,
+  "source_policy": "exact archived runtime, QP and 120 s settings matching historical validation and two-link labels",
+  "no_new_scenes": true,
+  "no_ik_search": true,
+  "no_training": true,
+  "test_scenes": 1000,
+  "replaces_pending_job": "1058687",
+  "resource_change_reason": "No free four-GPU nodes. Single-GPU shards can run independently as resources become available.",
+  "numerical_errors": "failure, retained in denominator",
+  "pilot": "First 2 paired Test scenes per strided group; all 20 scenes retained. Each group verifies its own pilot before continuing independently.",
+  "references_120s": {
+    "direct": {
+      "root": "/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_direct_validation/validation-1000-20261020T020700Z",
+      "complete_sha256": "c0ac5c9e8d60c56d09d53f4e32213c56c7442e6abc15f51fa359bea719e4e3d0",
+      "manifest": "manifest.json",
+      "successes": 456
+    },
+    "sequential": {
+      "root": "/gpfs/home1/jinu1423/workspace/safe-inv-clbf-robot-arm/outputs/panda_all_links_validation/validation-1000-20261023T052037Z",
+      "complete_sha256": "420983a4635ba24807b92b80e8b2f5f7a4bb06376c89c4a5058e1c58626808f9",
+      "manifest": "group-0/manifest.json",
+      "successes": 590
+    }
+  },
+  "excluded_nodes": [
+    "n057"
+  ],
+  "input_sha256": {
+    "preparation.json": "d6f4b49561431f588eca3a48f28522a5519787457923191183bfa32c4fd21e64",
+    "evaluate_test.py": "7a193a8280b3a728f07a4058391a837c35917b92270e4547eb04446352552c66",
+    "run_test.sbatch": "109bc7f2348b6eb3f6092f4333812ac3e88bd358973892bf16a346d8e3e83607",
+    "direct_120s.yaml": "5facf568779b34a53b237ed260ff41e93386116f158c6740de96a0afbfe49d58",
+    "sequential_120s.yaml": "7b78b1a1793315d0da24d045ac70155b0a442cd5d19c91c2ba1e01692fac17d5"
+  }
+}
