@@ -82,7 +82,7 @@ def _save_trajectory(path: Path, recorder: Recorder, link_lengths):
         "active_xy": arrays["ee"][:, :2],
         "barrier": arrays["barrier"],
     }
-    for key in ("u", "clf", "active_link", "clf_slack", "qp_solve_time"):
+    for key in ("u", "clf", "clf_by_link", "active_link", "clf_slack", "qp_solve_time"):
         if key in arrays:
             saved[key] = arrays[key]
     np.savez_compressed(

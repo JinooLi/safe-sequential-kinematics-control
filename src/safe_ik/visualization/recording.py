@@ -32,6 +32,7 @@ def plot(arrays, barrier_labels, path=None, show=False):
             "ee_yaw",
             "u",
             "clf",
+            "clf_by_link",
             "barrier",
             "active_link",
             "clf_slack",
@@ -108,7 +109,7 @@ def show_gui(arrays, barrier_labels):
 
     plot_keys = [
         key
-        for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "barrier")
+        for key in ("q", "dq", "ee", "ee_yaw", "u", "clf", "clf_by_link", "barrier")
         if key in arrays
     ]
     if not plot_keys:

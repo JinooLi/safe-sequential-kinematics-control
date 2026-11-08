@@ -19,11 +19,12 @@ class QPProblem:
 
 @dataclass(frozen=True)
 class SafetyDiagnostics:
-    """Barrier values in a stable, explicitly named order."""
+    """Named barriers, active CLF, and optional per-link CLF diagnostics."""
 
     barrier_labels: tuple[str, ...]
     barrier_values: np.ndarray
     clf_value: float | None = None
+    clf_by_link: np.ndarray | None = None
 
     def __post_init__(self):
         values = np.asarray(self.barrier_values, dtype=float).reshape(-1)
@@ -32,6 +33,10 @@ class SafetyDiagnostics:
                 "barrier_labels and barrier_values must have the same length"
             )
         object.__setattr__(self, "barrier_values", values.copy())
+        if self.clf_by_link is not None:
+            object.__setattr__(
+                self, "clf_by_link", np.asarray(self.clf_by_link, dtype=float).copy()
+            )
 
 
 @dataclass(frozen=True)

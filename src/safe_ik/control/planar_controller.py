@@ -1,7 +1,11 @@
 import numpy as np
 from scipy.linalg import block_diag
 
-from ..domain.goal_configuration import GoalConfiguration, solve_goal_configurations
+from ..domain.goal_configuration import (
+    GoalConfiguration,
+    joint_positions,
+    solve_goal_configurations,
+)
 from ..domain.interfaces import QPSolver
 from ..domain.planar_config import ControllerConfig
 from ..domain.rdf import PlanarBernsteinRobot
@@ -95,6 +99,7 @@ class QPController:
         self.velocity_tolerance = sequence.velocity_tolerance
         self.barrier_tolerance = sequence.barrier_tolerance
         self.final_yaw_weight = sequence.final_yaw_weight
+        self.link_lengths = safety_config.link_lengths
         self.last_end_effector_switch_reason = None
         self.stage_switch_reasons: list[str] = []
         self.qp_infeasible_count = 0
@@ -389,7 +394,29 @@ class QPController:
             tuple(self.barrier_labels),
             barrier_values,
             clf_value=clf_value,
+            clf_by_link=self.task_clf_values(q),
         )
+
+    def task_clf_values(self, q):
+        """Evaluate every fixed sequential target at the same robot state.
+
+        Inactive tasks are diagnostics only. Intermediate links use position
+        error; the last link also uses the configured yaw term. This method
+        never selects a different IK or advances the controller's stage.
+        """
+        if self.selected_goal_configuration is None:
+            return None
+        positions = joint_positions(q, self.link_lengths)
+        errors = positions - self.selected_goal_configuration.joint_positions
+        values = 2.0 * self.clf_weight * np.sum(errors**2, axis=1)
+        yaw_difference = np.sum(q) - self.ee_orientation
+        values[-1] += (
+            2.0
+            * self.clf_weight
+            * self.final_yaw_weight
+            * (1.0 - np.cos(yaw_difference))
+        )
+        return values
 
     def zero_input(self):
         """모든 관절 actuator에 0 명령을 보낸다.

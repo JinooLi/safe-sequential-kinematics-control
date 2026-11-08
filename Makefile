@@ -39,6 +39,7 @@ CASE_FLAG = $(if $(strip $(CASE_ID)),--case-id "$(CASE_ID)")
  planar-run planar-view planar-direct planar-direct-view planar-sequential planar-sequential-view \
  planar-compare planar-compare-plot planar-compare-plot-all planar-train-rdf planar-rdf planar-rdf-view \
  planar-record-plot planar-record-view planar-record-gui planar-record-csv \
+ planar-lyapunov \
  run train-rdf visualize-rdf compare-sequential-run compare-sequential-visualize compare-sequential-visualize-all
 
 help: ## Show grouped commands and optional variables
@@ -135,6 +136,9 @@ planar-rdf-view: ## Save and display distance-field plot
 	$(UV) run safe-ik-visualize-rdf --config "$(PLANAR_CONFIG)" $(OUTPUT_FLAG) --show $(ARGS)
 
 ##@ Planar: saved Recorder data (no new simulation)
+planar-lyapunov: ## Plot each link's Lyapunov function and active stages; TRACE=<...>
+	$(RECORDING) planar --action lyapunov $(TRACE_FLAG) $(OUTPUT_FLAG) $(ARGS)
+
 planar-record-plot: ## Save plot from TRACE=<planar trajectory.npz>
 	$(RECORDING) planar $(TRACE_FLAG) $(OUTPUT_FLAG) $(ARGS)
 

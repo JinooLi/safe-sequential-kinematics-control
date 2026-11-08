@@ -308,3 +308,25 @@ YAML 내부 모델 경로는 YAML 파일 위치를 기준으로 해석한다. �
 비교 실험은 안전한 IK 분기가 있는 사례를 골라 두 방법에 같은 조건을 제공한다.
 구현의 회귀 예시는 [Panda 파이프라인 테스트](../../tests/test_panda_pipeline.py),
 [제어 테스트](../../tests/test_sequential_control.py), [RDF 연결 테스트](../../tests/test_panda_rdf_integration.py)에 있다.
+
+평면 Sequential 실행은 모든 링크의 Lyapunov 함수를 매 기록 시점에 평가한다.
+선택된 안전 IK의 링크 끝점을 $p_i^*$, 현재 끝점을 $p_i(q)$라 하면,
+중간 링크는 $V_i=2w\|p_i(q)-p_i^*\|^2$이며, 마지막 링크는
+$V_3=2w[\|p_3(q)-p_3^*\|^2+\beta(1-\cos(\psi(q)-\psi^*))]$이다.
+$w$는 `safety.clf_weight`, $\beta$는 `sequential_end_effector.final_yaw_weight`다.
+`trajectory.npz`의 `clf_by_link` 및 CSV의 `V_link1`~`V_link3`에 저장하며,
+기존 `clf`에는 활성 단계의 값이 유지된다. 제어에서 비활성인 함수도 평가하므로,
+다른 단계를 수행하는 동안 그 값이 증가할 수 있다.
+
+```bash
+make planar-sequential
+# 위 명령이 출력한 실행 폴더를 지정한다. PNG는 plots/lyapunov.png에 자동 저장된다.
+make planar-lyapunov TRACE=outputs/planar/<run-id>/trajectory.npz
+make planar-lyapunov TRACE=outputs/planar/<run-id>/trajectory.npz OUTPUT=outputs/lyapunov.svg
+```
+
+그래프는 링크별로 축을 분리하고, 전체 궤적의 함수 값은 얇은 파선,
+실제 QP에서 활성화된 구간은 굵은 실선으로 표시한다. 세로 점선은 단계 전환이며,
+하단에는 활성 링크를 표시한다. 새 필드가 없는 이전 기록은 일반 그래프와 CSV로
+계속 읽을 수 있지만, 세 함수의 전체 이력을 그리려면 새로 기록해야 한다.
+평면 비교 실험의 새 Sequential NPZ에도 같은 필드를 저장한다.

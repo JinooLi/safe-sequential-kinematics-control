@@ -11,6 +11,7 @@ from ..adapters.osqp_solver import OSQPSolver
 from ..adapters.planar_kinematics import RobotInterface
 from ..control.planar_controller import QPController
 from ..logging.recorder import Recorder
+from ..visualization.planar_lyapunov import plot_planar_lyapunov
 from ..visualization.recording import plot, show_gui
 from .artifacts import create_run_directory, save_run_provenance
 from .paths import default_resource, project_root
@@ -120,6 +121,8 @@ def main():
         path=directory / "plots/control.png",
         show=args.show_plot,
     )
+    if "clf_by_link" in recorder.arrays():
+        plot_planar_lyapunov(recorder.arrays(), path=directory / "plots/lyapunov.png")
     print(f"run artifacts: {directory}")
     if args.recording_gui:
         show_gui(recorder.arrays(), recorder.barrier_labels)

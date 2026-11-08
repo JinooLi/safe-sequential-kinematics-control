@@ -30,6 +30,7 @@ class Recorder:
             "ee_yaw": [],
             "u": [],
             "clf": [],
+            "clf_by_link": [],
             "barrier": [],
             "active_link": [],
             "clf_slack": [],
@@ -49,6 +50,7 @@ class Recorder:
         self._data["ee_yaw"].append(float(step.end_effector_yaw))
         self._data["u"].append(np.asarray(step.command, dtype=float).copy())
         self._data["clf"].append(step.safety.clf_value)
+        self._data["clf_by_link"].append(step.safety.clf_by_link)
         self._data["barrier"].append(step.safety.barrier_values.copy())
         self._data["active_link"].append(step.active_link)
         self._data["clf_slack"].append(step.clf_slack)
@@ -123,6 +125,7 @@ class Recorder:
                 "ee_yaw",
                 "u",
                 "clf",
+                "clf_by_link",
                 "barrier",
                 "active_link",
                 "clf_slack",

@@ -8,6 +8,7 @@ import numpy as np
 from ..domain.panda_types import PandaControlTrace
 from ..logging.recorder import Recorder
 from ..visualization.panda import save_panda_control_plot
+from ..visualization.planar_lyapunov import plot_planar_lyapunov
 from ..visualization.recording import plot, show_gui
 
 
@@ -21,7 +22,7 @@ def main():
         command.add_argument("--show", action="store_true")
         if robot == "planar":
             command.add_argument(
-                "--action", choices=("plot", "gui", "csv"), default="plot"
+                "--action", choices=("plot", "gui", "csv", "lyapunov"), default="plot"
             )
     args = parser.parse_args()
     if args.robot == "panda":
@@ -40,6 +41,16 @@ def main():
             parser.error("trace contains no control samples")
     else:
         recorder = Recorder.from_npz(args.trace)
+        if args.action == "lyapunov":
+            output = args.output or args.trace.with_name(
+                args.trace.stem + "_lyapunov.png"
+            )
+            try:
+                plot_planar_lyapunov(recorder.arrays(), output, show=args.show)
+            except ValueError as error:
+                parser.error(str(error))
+            print(f"Saved: {output}")
+            return
         if args.action == "gui":
             show_gui(recorder.arrays(), recorder.barrier_labels)
             return
