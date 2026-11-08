@@ -1,0 +1,364 @@
+{
+  "main_slides": 36,
+  "appendix_slides": 21,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "slides": [
+    {
+      "page": 1,
+      "label": "title",
+      "title": "Title",
+      "seconds": 15,
+      "user_outline": "Title",
+      "progress_part": null
+    },
+    {
+      "page": 2,
+      "label": "motivation-goal",
+      "title": "Safe Goal Reaching for Autonomous Workstations",
+      "seconds": 25,
+      "user_outline": "1. Motivation",
+      "progress_part": "Motivation",
+      "thesis_section": "Research Background"
+    },
+    {
+      "page": 3,
+      "label": "motivation",
+      "title": "Safe Motion in Cluttered Workspaces",
+      "seconds": 30,
+      "user_outline": "1. Motivation",
+      "progress_part": "Motivation",
+      "thesis_section": "Research Background"
+    },
+    {
+      "page": 4,
+      "label": "background-clf",
+      "title": "Kinematic Control and Goal-Error Reduction",
+      "seconds": 40,
+      "user_outline": "2. Background: CLF–CBF QP",
+      "progress_part": "Background",
+      "thesis_section": "Control Lyapunov Function"
+    },
+    {
+      "page": 5,
+      "label": "background-cbf",
+      "title": "Background (2/3): CBF for Safety",
+      "seconds": 40,
+      "user_outline": "2. Background: CLF–CBF QP",
+      "progress_part": "Background",
+      "thesis_section": "Control Barrier Function"
+    },
+    {
+      "page": 6,
+      "label": "background-qp",
+      "title": "QP-Based Kinematic Control",
+      "seconds": 45,
+      "user_outline": "2. Background: CLF–CBF QP",
+      "progress_part": "Background",
+      "thesis_section": "CLF-CBF QP"
+    },
+    {
+      "page": 7,
+      "label": "literature",
+      "title": "Related Work: Challenges in Goal Reaching",
+      "seconds": 40,
+      "user_outline": "2. Literature review",
+      "progress_part": "Background",
+      "thesis_section": "Local Minima and Deadlock in CLF-CBF QP"
+    },
+    {
+      "page": 8,
+      "label": "planar-direct",
+      "title": "A Naive Trial: Direct End-Effector Tracking",
+      "seconds": 30,
+      "user_outline": "3-1. Planar baseline",
+      "progress_part": "Planar",
+      "thesis_section": "Local Minima and Deadlock in CLF-CBF QP"
+    },
+    {
+      "page": 9,
+      "label": "human-inspiration",
+      "title": "Human-Inspired Intuition: Reposition Before Reaching",
+      "seconds": 20,
+      "user_outline": "제안 방법의 설계 직관",
+      "progress_part": "Planar",
+      "thesis_section": "Research Objectives"
+    },
+    {
+      "page": 10,
+      "label": "thesis-outline",
+      "title": "Thesis Roadmap: From Problem to Method",
+      "seconds": 15,
+      "user_outline": "논문 목차와 발표 경로",
+      "progress_part": "Planar",
+      "thesis_section": "Research Objectives"
+    },
+    {
+      "page": 11,
+      "label": "planar-scene",
+      "title": "Proposed Method: Initial State, Goal, and Obstacles",
+      "seconds": 15,
+      "user_outline": "3-2. Planar method: inputs and IK targets",
+      "progress_part": "Planar",
+      "thesis_section": "Intermediate Targets and Sequential Tasks"
+    },
+    {
+      "page": 12,
+      "label": "planar-setup",
+      "title": "Proposed Method: IK-Derived Intermediate Link Targets",
+      "seconds": 10,
+      "user_outline": "3-2. Planar method: inputs and IK targets",
+      "progress_part": "Planar",
+      "thesis_section": "Intermediate Targets and Sequential Tasks"
+    },
+    {
+      "page": 13,
+      "label": "planar-sequential",
+      "title": "Sequential: Link 1 Subtask",
+      "seconds": 20,
+      "user_outline": "3-2. Proposed planar method",
+      "progress_part": "Planar",
+      "thesis_section": "CLF-CBF QP-Based Kinematic Control"
+    },
+    {
+      "page": 14,
+      "label": "planar-link2",
+      "title": "Sequential: Link 2 Subtask",
+      "seconds": 20,
+      "user_outline": "3-2. Proposed planar method",
+      "progress_part": "Planar",
+      "thesis_section": "CLF-CBF QP-Based Kinematic Control"
+    },
+    {
+      "page": 15,
+      "label": "planar-ee",
+      "title": "Sequential: End-Effector Subtask",
+      "seconds": 20,
+      "user_outline": "3-2. Proposed planar method",
+      "progress_part": "Planar",
+      "thesis_section": "CLF-CBF QP-Based Kinematic Control"
+    },
+    {
+      "page": 16,
+      "label": "planar-clf",
+      "title": "Planar CLFs: One QP and One CLF at Each Stage",
+      "seconds": 15,
+      "user_outline": "3-2. Proposed planar method",
+      "progress_part": "Planar",
+      "thesis_section": "Intermediate Position Tasks and Final Pose Task"
+    },
+    {
+      "page": 17,
+      "label": "algorithm-overview",
+      "title": "One Sequential Algorithm, Model-Specific Functions",
+      "seconds": 25,
+      "user_outline": "공통 Sequential 알고리즘",
+      "progress_part": "Planar",
+      "thesis_section": "Sequential Kinematic Control Framework"
+    },
+    {
+      "page": 18,
+      "label": "planar-results",
+      "title": "Planar Results: Direct 72.00% / Sequential 84.33%",
+      "seconds": 35,
+      "user_outline": "3-3. Planar results",
+      "progress_part": "Planar",
+      "thesis_section": "System 1: 3-DOF Planar Model"
+    },
+    {
+      "page": 19,
+      "label": "planar-why",
+      "title": "Resolving Deadlock through Task Transition",
+      "seconds": 45,
+      "user_outline": "3-4. Planar mechanism",
+      "progress_part": "Planar",
+      "thesis_section": "Paired Outcomes and an Illustrative Trajectory"
+    },
+    {
+      "page": 20,
+      "label": "panda-extension",
+      "title": "Extension to a 7-DOF Spatial Manipulator",
+      "seconds": 25,
+      "user_outline": "4. Spatial Manipulator extension",
+      "progress_part": "Spatial",
+      "thesis_section": "Extension to the 7-DOF Spatial Manipulator"
+    },
+    {
+      "page": 21,
+      "label": "panda-rdf",
+      "title": "Self-Collision CBFs from RDF",
+      "seconds": 55,
+      "user_outline": "4-1. RDF",
+      "progress_part": "Spatial",
+      "thesis_section": "RDF-Based Construction of CBF"
+    },
+    {
+      "page": 22,
+      "label": "panda-ik",
+      "title": "Spatial IK: Target Search with Null-Space Updates",
+      "seconds": 60,
+      "user_outline": "4-2. Null-space IK",
+      "progress_part": "Spatial",
+      "thesis_section": "Multi-Start IK with a Safety-Aware Null-Space Update"
+    },
+    {
+      "page": 23,
+      "label": "panda-clf",
+      "title": "Spatial CLFs: Position and Orientation",
+      "seconds": 40,
+      "user_outline": "4-3. Spatial Manipulator CLF",
+      "progress_part": "Spatial",
+      "thesis_section": "All-Link Sequence and Spatial Pose Tasks"
+    },
+    {
+      "page": 24,
+      "label": "all-links",
+      "title": "All-link Sequential: Spatial Manipulator Results",
+      "seconds": 45,
+      "user_outline": "4-4. All-link Sequential",
+      "progress_part": "Spatial",
+      "thesis_section": "Effect of All-Link Sequential Control"
+    },
+    {
+      "page": 25,
+      "label": "time-cost",
+      "title": "The Completion-Time Cost of All-link Sequential Control",
+      "seconds": 30,
+      "user_outline": "5. Motion-time cost",
+      "progress_part": "Spatial",
+      "thesis_section": "Effect of All-Link Sequential Control"
+    },
+    {
+      "page": 26,
+      "label": "two-links",
+      "title": "Reduction to Two Intermediate Link Tasks",
+      "seconds": 50,
+      "user_outline": "6. Two-link selection",
+      "progress_part": "Spatial",
+      "thesis_section": "Two-Link Reduction: Completion Time and Success"
+    },
+    {
+      "page": 27,
+      "label": "oracle",
+      "title": "Link-Pair Selection: A Potential Upper Bound near 80%",
+      "seconds": 40,
+      "user_outline": "7. Oracle bound near 80%",
+      "progress_part": "Learning",
+      "thesis_section": "Two-Link Reduction: Completion Time and Success"
+    },
+    {
+      "page": 28,
+      "label": "selector-training",
+      "title": "Training Labels and Losses",
+      "seconds": 50,
+      "user_outline": "8. Learning",
+      "progress_part": "Learning",
+      "thesis_section": "Training Objective and Sequence Selection"
+    },
+    {
+      "page": 29,
+      "label": "selector-features",
+      "title": "Learned Selection (1/2): Predicting Success Scores",
+      "seconds": 25,
+      "user_outline": "8. Learning",
+      "progress_part": "Learning",
+      "thesis_section": "Network Architecture"
+    },
+    {
+      "page": 30,
+      "label": "selector-model",
+      "title": "Learned Selection (2/2): From Selected Tasks to the QP",
+      "seconds": 30,
+      "user_outline": "8. Learning",
+      "progress_part": "Learning",
+      "thesis_section": "Network Architecture"
+    },
+    {
+      "page": 31,
+      "label": "test-success",
+      "title": "Test Results: Goal-Reaching Success Rates",
+      "seconds": 50,
+      "user_outline": "9. Results",
+      "progress_part": "Results",
+      "thesis_section": "Recovery Through Learned Link Selection"
+    },
+    {
+      "page": 32,
+      "label": "test-time",
+      "title": "Shorter Completion Time with Fewer Subtasks",
+      "seconds": 30,
+      "user_outline": "9. Results",
+      "progress_part": "Results",
+      "thesis_section": "Two-Link Reduction: Completion Time and Success"
+    },
+    {
+      "page": 33,
+      "label": "learning-why",
+      "title": "An Episode Recovered by Learned Selection",
+      "seconds": 45,
+      "user_outline": "10. Why selection helps",
+      "progress_part": "Results",
+      "thesis_section": "Recovery Through Learned Link Selection"
+    },
+    {
+      "page": 34,
+      "label": "conclusion",
+      "title": "Conclusions: Safe Control and Learned Sequencing",
+      "seconds": 30,
+      "user_outline": "Conclusions",
+      "progress_part": "Results",
+      "thesis_section": "Conclusion"
+    },
+    {
+      "page": 35,
+      "label": "future-work",
+      "title": "Future Work: From Simulation to Robot Experiments",
+      "seconds": 30,
+      "user_outline": "추가 검증과 실제 로봇 적용",
+      "progress_part": "Results",
+      "thesis_section": "Interpretation and Limitations"
+    },
+    {
+      "page": 36,
+      "label": "questions",
+      "title": "Thank you",
+      "seconds": 0,
+      "user_outline": "Questions",
+      "progress_part": "Results"
+    }
+  ],
+  "bibliography_continuation_pages": 3,
+  "progress_parts": [
+    {
+      "name": "Motivation",
+      "first_page": 2,
+      "last_page": 3
+    },
+    {
+      "name": "Background",
+      "first_page": 4,
+      "last_page": 7
+    },
+    {
+      "name": "Planar",
+      "first_page": 8,
+      "last_page": 19
+    },
+    {
+      "name": "Spatial",
+      "first_page": 20,
+      "last_page": 26
+    },
+    {
+      "name": "Learning",
+      "first_page": 27,
+      "last_page": 30
+    },
+    {
+      "name": "Results",
+      "first_page": 31,
+      "last_page": 36
+    }
+  ],
+  "appendix_contents_page": 37
+}

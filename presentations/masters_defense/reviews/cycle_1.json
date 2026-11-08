@@ -1,0 +1,117 @@
+{
+  "cycle": 1,
+  "reviewers": [
+    "defense_science_review",
+    "defense_delivery_review"
+  ],
+  "status": "revised_and_reassessed_in_cycle_2",
+  "items": [
+    {
+      "id": "S1",
+      "priority": "P1",
+      "reviewed_slides": [
+        7,
+        11,
+        12
+      ],
+      "critique": "평면과 Panda의 단계 전환 규칙 차이가 본문에서 숨겨짐.",
+      "change": "7쪽에 두 로봇의 전환·종료 규칙을 직접 대조하고, 평면 전환이 목표 달성을 뜻하지 않을 수 있음을 명시."
+    },
+    {
+      "id": "S2",
+      "priority": "P1",
+      "reviewed_slides": [
+        15,
+        18,
+        21
+      ],
+      "critique": "단계 축소의 시간은 고정 쌍, 성공률 손실은 균등 선택으로 비교 기준이 바뀜.",
+      "change": "15쪽을 전체 링크 대 고정 (3,5)의 성공률·시간 표로 통일; oracle을 사후 상한으로 표시하고 결론에서 단계 축소와 선택 효과를 분리."
+    },
+    {
+      "id": "S3",
+      "priority": "P1",
+      "reviewed_slides": [
+        3,
+        7,
+        12
+      ],
+      "critique": "실제 자세는 부록에만 있고 사례 11의 yaw 정체가 제대로 설명되지 않음.",
+      "change": "7쪽에 실제 단계별 자세, 12쪽에 직접/순차 실제 자세와 yaw 곡선을 넣음; 전체 4개 진단 곡선은 A1으로 이동."
+    },
+    {
+      "id": "S4",
+      "priority": "P2",
+      "reviewed_slides": [
+        2,
+        5,
+        10,
+        21
+      ],
+      "critique": "저자 공헌과 기존 CLF-CBF/RDF 기반 기법의 경계가 화면에 드러나지 않음.",
+      "change": "2쪽 공헌 명시, 5쪽 설계 상자 강조, 10쪽 기존 CBF 불변성 논리 적용으로 명명."
+    },
+    {
+      "id": "S5",
+      "priority": "P2",
+      "reviewed_slides": [
+        3,
+        14
+      ],
+      "critique": "정체 대응 동기와 실제 stall 증가가 연결되지 않음.",
+      "change": "14쪽에 timeout 448→254, stall 86→144를 표시하여 전체 도달 성공과 정체 감소를 구분."
+    },
+    {
+      "id": "D1",
+      "priority": "P1",
+      "reviewed_slides": [
+        5,
+        6,
+        7,
+        12,
+        23
+      ],
+      "critique": "중간 링크 추종에 따라 실제 팔 배치가 어떻게 변하는지 보이지 않음.",
+      "change": "실제 저장된 전환 직전 자세 3개를 7쪽에, 직접/순차 장면을 12쪽 본문에 배치."
+    },
+    {
+      "id": "D2",
+      "priority": "P1",
+      "reviewed_slides": [
+        15
+      ],
+      "critique": "시간과 성공률 비교 기준의 혼용.",
+      "change": "동일 고정 쌍 기준: 59.00%→57.60%, 47.13s→36.45s; 균등 기대값은 별도 보조 기준."
+    },
+    {
+      "id": "D3",
+      "priority": "P2",
+      "reviewed_slides": [
+        17
+      ],
+      "critique": "다중 레이블의 필요성을 55초 안에 수식으로만 이해해야 함.",
+      "change": "실제 Validation 장면의 10개 레이블 표로 교체하고 상세 손실·seed/epoch는 새 보충 A8로 이동."
+    },
+    {
+      "id": "D4",
+      "priority": "P2",
+      "reviewed_slides": [
+        18
+      ],
+      "critique": "가장 중요한 결과가 Validation/Test 10개 막대에 분산됨.",
+      "change": "Test 4개 막대로 단순화하고 고정 쌍 대비 +2.20%p 및 95% CI를 같은 슬라이드에 표시."
+    },
+    {
+      "id": "D5",
+      "priority": "P2",
+      "reviewed_slides": [
+        13
+      ],
+      "critique": "일반 Panda 모델 사진은 실제 장애물 환경의 난이도를 보여주지 못함.",
+      "change": "저장된 평가 장면의 q0·장애물10개·목표좌표축을 정적 시각화; 장면 ID와 프레임 연결선 표현 명시."
+    }
+  ],
+  "reviewed_revision_sha256": "82c89c1ab17734be52c5a862c9ba8a849f1b534f75ca98ddd9c75096dffb29b1",
+  "revised_pdf_sha256": "4a17c9249d0c7187fbee49fb54ecde8b1aad9ffddbba81a49ed7da7dd02ffcae",
+  "second_review_assessment": "S1–S5 및 D2–D5 해결 확인. D1의 실제 자세 표현은 개선됐으며 2차에서 잘림·목표점 추가 보완."
+}

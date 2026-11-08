@@ -1,0 +1,75 @@
+{
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF",
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "source_sha256": {
+    "case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312",
+    "case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8",
+    "panda_example.json": "f0052b4acf0efe065b4f6fd01f93db633be6a49b9c1981d570305dec5ff9ae50"
+  },
+  "screen_style": "No episode labels, timing values, numeric axis ticks or scale bars",
+  "recorded_geometry": {
+    "case_id": 30,
+    "snapshots_seconds": [
+      2.1279999999999872,
+      6.873999999999465,
+      18.226000000000777
+    ],
+    "direct_snapshot_seconds": 18.226000000000777,
+    "direct_position_error_m": 2.4063806913888715,
+    "direct_final_failure_reason": "qp_infeasible",
+    "selected_ik_targets_verified": true,
+    "all_geometry_inside_common_axes": true,
+    "obstacle_halo": "Nominal 0.08 m geometric margin; not exact RDF contours"
+  },
+  "clf_shapes": {
+    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p,ee||^2+w_psi(1-cos(e_psi))), w_V,w_psi>0",
+    "coordinates": "Intermediate tasks: planar position-error coordinates; EE: position-error norm and yaw error",
+    "illustrative_weights": {
+      "w_V": 1.0,
+      "w_psi": 0.5
+    },
+    "archived_trajectory_weights": {
+      "w_V": 10,
+      "w_psi": 0.5
+    },
+    "numeric_ticks": false,
+    "titles": false,
+    "task_colors": {
+      "1": "#0072B2",
+      "2": "#E69F00",
+      "ee": "#009E73"
+    },
+    "constraint_and_formula_labels": "Added in native TeX by the calling slide, outside these surface assets"
+  },
+  "panda_scene": {
+    "case_id": "seed2026120000_0007",
+    "obstacle_count": 10,
+    "saved_frame_names": [
+      "link0",
+      "link1",
+      "link2",
+      "link3",
+      "link4",
+      "link5",
+      "link6",
+      "link7",
+      "gripper_tip"
+    ],
+    "source_dataset_sha256": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6",
+    "source_model_sha256": "dc003017680e3446429f3c38f8aff532be59800abdadbb5dea22a61b72f987c9",
+    "target_rotation_orthogonality_verified": true,
+    "rendering": "Saved initial frame connections and spherical obstacles; triad denotes target EE pose, not a goal robot configuration",
+    "robot_lines_are_not_collision_geometry": true,
+    "numeric_axes_ticks_or_case_labels": false
+  },
+  "figure_files": [
+    "concept_planar_direct",
+    "concept_planar_stages",
+    "concept_clf_1",
+    "concept_clf_2",
+    "concept_clf_ee",
+    "concept_panda_scene"
+  ]
+}

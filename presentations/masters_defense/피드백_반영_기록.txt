@@ -1,0 +1,194 @@
+발표자료 피드백 반영 기록
+기준: feedback.md의 44개 항목 / 2026-11-07
+
+본문 36쪽 + Appendix 21쪽 = 총 57쪽. 발화 1,140초 + 전환·호흡 60초.
+원본 쪽수는 feedback.md 작성 당시 자료 기준, 새 쪽수는 이번 57쪽 구성 기준.
+Beamer는 영어, 대본·질의응답·이 기록은 한국어.
+
+근거를 확인하여 조정한 사항
+
+Shared workspace는 실제 학술용어이며 사람과 로봇 또는 복수 로봇이 물리적 작업공간을 공유하는 상황에 사용. 본 연구의 정적 장애물 실험은 human–robot collaboration을 평가하지 않으므로 Cluttered Workspaces로 교체.
+
+Goncalves의 기본 이론은 짝수 차원의 skew-symmetric orthonormal Omega를 가정. 홀수 차원에는 singular Omega를 사용하는 별도 확장이 존재. T=Omega N이 0인데 beta>0인 경우 circulation 제약이 불가능하므로 feasibility에 추가 주의가 필요. 원전은 4-DOF planar arm과 15차원 다중로봇을 실험. 따라서 기존 연구가 manipulator에 적용되지 않았다는 주장은 하지 않음. 본 연구의 차이는 IK와 kinematic chain에서 intermediate link task를 구성한다는 점.
+
+사람의 어깨·팔 재배치는 설계 직관으로 제시하며 모든 사람의 보편적 순서나 실험적으로 입증된 법칙이라는 주장은 배제.
+
+공통 QP·sequence 구조는 유지하되 모델별 transition/termination policy를 구분. Planar는 중간 단계 boundary stall/infeasibility에서 stage advance가 가능하지만 Spatial은 종료. 정확한 규칙은 A5.
+
+RDF는 geometry representation이며 surface queries, soft-min, margins, relative gradients로 self-collision safety function 구성. 근사 geometry, finite queries, top-K 변경 등에 대해 전역 안전 인증을 주장하지 않음. 외부 구형 장애물에는 capsule 기반 제약 사용.
+
+Preset(3,5)는 Train에서 선정한 두-link sequence. 학습은 사전 정의 ascending-order 후보 10개 중 선택. +2.20pp의 95% paired CI[-0.30,4.70]는 0을 포함하므로 추가 성공률 개선은 불확실. 시간 이득은 stage reduction과 구분.
+
+본문의 safely는 기록된 collision·joint-limit·solver 기준을 통과한 성공을 간결하게 표현한 것. 정확한 mesh clearance나 연속 물리궤적의 안전 인증을 뜻하지 않음.
+
+글씨 크기 적용 범위
+본문·부제·도식·진행표시는 10pt, 표지·슬라이드 제목은 14.4pt로 두 계층 적용. 그림은 pdfLaTeX의 Latin Modern을 사용하고 각 그림 내부 label·축·legend에 단일 source 크기 적용. 일반 그래프 22pt, concept/recovery 24pt, RDF schematic 30pt는 그림 삽입 시 축소됨. 삽입 배율이 다르므로 최종 PDF의 모든 글자가 정확히 두 point size만 가지는 것은 아님. 수식 첨자는 정상적인 TeX 크기 규칙 유지.
+
+44개 항목별 반영
+01. 발표 제목 — 원본 1쪽 → 1쪽 [title]
+    Learned Link Selection을 Supervised Learning-based Subtask Sequencing으로 변경. 실제 학습 범위는 미리 정한 후보 sequence의 선택으로 유지.
+02. 학교 로고 — 원본 1쪽 → 1쪽 [title]
+    CDSL 연구실 로고 옆에 UoS 학교 로고를 같은 높이로 배치.
+03. 글씨 크기 규칙 — 원본 전체 → 전체 문서
+    본문·부제·도식·진행표시 10pt, 표지·슬라이드 제목 14.4pt의 두 계층 적용. 그림 내부는 LaTeX 글꼴과 단일 source 크기를 사용하되 삽입 배율에 따른 실제 크기 차이가 존재. PDF의 모든 glyph가 정확히 두 크기뿐이라는 뜻은 아님.
+04. Shared workspace 의미 — 원본 3쪽 → 3쪽 [motivation]
+    실제 학술용어인 공동 작업공간의 의미와 출처 설명. 정적 장애물 실험 범위에 맞춰 Cluttered Workspaces로 교체.
+05. 실제 응용 동기 — 원본 2,3쪽 → 2쪽 [motivation-goal], 3쪽 [motivation]
+    Self-driving laboratories, Laboratory automation, Industrial manipulation 추가. Burger et al. 원전을 BibTeX로 인용.
+06. 핵심 문장 위치와 색 — 원본 전체 → 전체 문서
+    takeaway 상자를 각 슬라이드 본문 위쪽으로 이동하고 검은색 굵은 글씨로 설정. 16쪽 Stage-wise CLF constraint와 17쪽 Shared QP 핵심 문장도 상단 배치.
+07. Kinematic control 선행 설명 — 원본 4쪽 → 4쪽 [background-clf]
+    Joint velocity를 입력으로 하는 kinematic control과 q_dot=u를 CLF 설명 전에 명시.
+08. CLF 제목과 기호 정의 — 원본 4쪽 → 4쪽 [background-clf]
+    Control Lyapunov Function (CLF)을 그래프 위에 배치하고 q=joint angles, u=joint velocity, e=task error 정의.
+09. Interior 표현 교체 — 원본 5쪽 → 5쪽 [background-cbf]
+    h>0에서 CBF constraint 안의 장애물 접근을 허용한다는 표현으로 변경.
+10. Safe set 집합 표기 — 원본 5쪽 → 5쪽 [background-cbf]
+    C={q | h(q)>=0}로 집합을 명시하고 경계 조건과 구분.
+11. QP 명칭과 인용 — 원본 6쪽 → 6쪽 [background-qp]
+    QP-Based Kinematic Control로 제목·본문 변경, Ames 인용을 제목에 배치.
+12. 관련 연구 제목 — 원본 7쪽 → 7쪽 [literature]
+    Related Work: Challenges in Goal Reaching으로 변경.
+13. 로봇팔 특화 task 구성 — 원본 7쪽 → 7쪽 [literature]
+    일반적인 CLF/QP 수정과 IK-derived link tasks를 대비. Goncalves에도 4-DOF arm 실험이 있으므로 manipulator 적용이 없다는 주장은 배제. A17에서 짝수 기본 이론과 홀수 확장 구분.
+14. Direct 시도의 한계 — 원본 8쪽 → 8쪽 [planar-direct]
+    A Naive Trial: Direct End-Effector Tracking으로 제목 변경.
+15. 사람 동작에서 얻은 직관 — 원본 8쪽 → 9쪽 [human-inspiration]
+    새 9쪽에 초기 자세→어깨 재배치→손 reaching 도식 추가. 보편적인 생체 동작 법칙이 아닌 design intuition으로 표현.
+16. 초기 설정 통합과 논문 목차 — 원본 9,10쪽 → 10쪽 [thesis-outline], 11쪽 [planar-scene]
+    기존 initial pose와 task specification을 새 11쪽에 통합. 그 앞 새 10쪽에 Thesis Roadmap 추가.
+17. 논문 section 부제 — 원본 전체 → 전체 문서
+    Chapter 번호·제목 대신 대응하는 논문 section/subsection 제목을 부제로 사용.
+18. EE 마커 확대 — 원본 10쪽 → 11쪽 [planar-scene]
+    Progressive planar 그림의 EE 목표 별을 24pt, 활성 EE 목표를 28pt source 크기로 확대. 저장 configuration과 공통 시야는 유지.
+19. 실행 단계별 QP — 원본 12,13,14쪽 → 13쪽 [planar-sequential], 14쪽 [planar-link2], 15쪽 [planar-ee]
+    오른쪽 CLF 개형 제거 후 6쪽과 동일한 taskqp 식 사용. V1/V2/Vee에 해당하는 CLF constraint만 단계별 색으로 강조.
+20. 전환 명칭 — 원본 15쪽 → 16쪽 [planar-clf]
+    QP 연결 화살표의 Normal switch를 Subtask transition으로 교체.
+21. CLF 용어 통일 — 원본 전체 → 전체 문서
+    CLF decrease condition 대신 CLF constraint 사용.
+22. Stage별 CLF 표현 — 원본 15쪽 → 16쪽 [planar-clf]
+    Stage-wise CLF constraint로 변경.
+23. 공통 알고리즘 개요 — 원본 15쪽 → 17쪽 [algorithm-overview]
+    새 17쪽에 IK→link subtasks→active CLF QP→joint velocity 흐름과 planar/spatial 비교표 추가. 공통 QP 구조와 모델별 함수·transition/termination policy를 구분.
+24. Spatial Manipulator 표기 — 원본 전체 → 전체 문서
+    청중용 제목·본문·그림의 Panda를 Spatial Manipulator로 변경. 진행표시는 Spatial로 축약. 원본 데이터·코드 식별자와 실제 mesh provenance의 Panda 명칭 유지.
+25. Planar 평가 집합 — 원본 16쪽 → 18쪽 [planar-results]
+    300 IK-admitted episodes를 300 IK episodes로 변경. IK 조건부 집합이라는 의미는 대본 유지.
+26. Paired 결과 명확화 — 원본 16쪽 → 18쪽 [planar-results]
+    Success on the same 300 episodes로 변경. Sequential only / Direct only / Net success gain 명시.
+27. Planar 성공 기준 — 원본 16쪽 → 18쪽 [planar-results]
+    Success: EE goal reached safely within 35 s로 간결화. 실제 집계의 목표 pose·기록된 안전 조건은 대본 유지.
+28. Task Transition 제목 — 원본 17쪽 → 19쪽 [planar-why]
+    Resolving Deadlock through Task Transition으로 제목 변경.
+29. 본문 episode 번호 제거 — 원본 17쪽 → 19쪽 [planar-why]
+    본문 CLF 시간 그래프·설명에서 episode 30 표기 제거. 원자료 provenance와 A10 진단 자료의 식별자는 유지.
+30. 교착 문제와 해결 연결 — 원본 17쪽 → 19쪽 [planar-why]
+    Direct의 non-goal equilibrium과 task 전환에 따른 운동 방향 변경, 일시적 EE error 증가 허용을 연결. 전역 수렴이나 모든 교착 해소를 주장하지 않음.
+31. Spatial 확장의 문제 — 원본 18쪽 → 20쪽 [panda-extension]
+    3D position/orientation, 복잡한 link 형상, 상대 link 운동, redundant IK 문제를 제시해 다음 RDF·IK·CLF 슬라이드와 연결.
+32. RDF 원전 인용 — 원본 19쪽 → 21쪽 [panda-rdf]
+    Self-Collision CBFs from RDF 제목에 Li et al. 원전 인용.
+33. Clearance barrier 교체 — 원본 19쪽 → 21쪽 [panda-rdf]
+    3. Construct h_ab(q)로 바꿔 RDF query값과 제어용 안전 함수 구성을 구분.
+34. RDF에서 CBF로의 추가 구성 — 원본 19쪽 → 21쪽 [panda-rdf]
+    Soft-min aggregation, physical/error margins, 상대 link 운동을 반영한 joint-space gradients 명시.
+35. Spatial 평가 집합 — 원본 22쪽 → 24쪽 [all-links]
+    1,000 IK episodes로 변경.
+36. Spatial 성공 기준 — 원본 22쪽 → 24쪽 [all-links]
+    Success: EE goal reached safely within 120 s로 간결화. 단순 goal hit와 안전 검사를 통과한 성공의 차이는 대본·질의응답 유지.
+37. 44.48초 강조 — 원본 23쪽 → 25쪽 [time-cost]
+    본문 44.48 s와 비교 그림 label을 빨간색 굵은 글씨로 강조.
+38. Fixed 명칭 명확화 — 원본 24쪽 → 26쪽 [two-links], 27쪽 [oracle], 31쪽 [test-success], 33쪽 [learning-why]
+    Fixed (3,5)를 Preset pair (3,5)로 변경. Train 최고 성공률로 선정하고 Validation/Test에서 고정했다는 기준 유지.
+39. 변화량 강조와 단위 — 원본 24쪽 → 26쪽 [two-links]
+    Change 행 -1.40%p 및 -22.67%를 빨간색 굵은 글씨로 표시. 수식 숫자에도 boldmath를 적용해 실제 굵은 글씨로 표시.
+40. BCE 풀어쓰기 — 원본 26쪽 → 28쪽 [selector-training]
+    Binary Cross Entropy를 식 위 설명에 사용. 수식의 BCE 아래첨자는 정의된 약어로 유지.
+41. Cross-attention 강조 — 원본 27쪽 → 29쪽 [selector-features], 30쪽 [selector-model]
+    두 연속 네트워크 도식의 Cross-attention을 빨간색 굵은 글씨로 표시. 29쪽에도 상단 핵심 상자를 추가하여 30쪽과 네트워크 도식의 위치를 일치시킴.
+42. 논문 sequence 기호 — 원본 28쪽 → 30쪽 [selector-model]
+    후보 S_k 및 선택 sequence S_{hat k(z)} 사용. 임의 순열 학습이 아닌 사전 정의 후보 선택이라는 의미 유지.
+43. 시간 비교의 초점 — 원본 30쪽 → 32쪽 [test-time]
+    본문에서 Preset 비교를 제거하고 All-link와 Learned의 공동 성공 Test 467개에 집중. 같은 단계 수의 Preset 비교는 A6에 유지해 학습 자체의 추가 속도 이득과 구분.
+44. 추가 검증 구체화 — 원본 32쪽 → 34쪽 [conclusion], 35쪽 [future-work]
+    결론 다음 새 35쪽에 corrected QP·frozen selector·새 episode 평가, online latency, 실제 로봇 검증을 별도 제시.
+
+원본 본문 → 새 쪽수 / label
+01 [title] → 01 [title] / 유지 또는 수정
+02 [motivation-goal] → 02 [motivation-goal] / 유지 또는 수정
+03 [motivation] → 03 [motivation] / 유지 또는 수정
+04 [background-clf] → 04 [background-clf] / 유지 또는 수정
+05 [background-cbf] → 05 [background-cbf] / 유지 또는 수정
+06 [background-qp] → 06 [background-qp] / 유지 또는 수정
+07 [literature] → 07 [literature] / 유지 또는 수정
+08 [planar-direct] → 08 [planar-direct] / 유지 또는 수정
+09 [planar-initial] → 11 [planar-scene] / 통합
+10 [planar-scene] → 11 [planar-scene] / 통합
+11 [planar-setup] → 12 [planar-setup] / 유지 또는 수정
+12 [planar-sequential] → 13 [planar-sequential] / 유지 또는 수정
+13 [planar-link2] → 14 [planar-link2] / 유지 또는 수정
+14 [planar-ee] → 15 [planar-ee] / 유지 또는 수정
+15 [planar-clf] → 16 [planar-clf] / 유지 또는 수정
+16 [planar-results] → 18 [planar-results] / 유지 또는 수정
+17 [planar-why] → 19 [planar-why] / 유지 또는 수정
+18 [panda-extension] → 20 [panda-extension] / 유지 또는 수정
+19 [panda-rdf] → 21 [panda-rdf] / 유지 또는 수정
+20 [panda-ik] → 22 [panda-ik] / 유지 또는 수정
+21 [panda-clf] → 23 [panda-clf] / 유지 또는 수정
+22 [all-links] → 24 [all-links] / 유지 또는 수정
+23 [time-cost] → 25 [time-cost] / 유지 또는 수정
+24 [two-links] → 26 [two-links] / 유지 또는 수정
+25 [oracle] → 27 [oracle] / 유지 또는 수정
+26 [selector-training] → 28 [selector-training] / 유지 또는 수정
+27 [selector-features] → 29 [selector-features] / 유지 또는 수정
+28 [selector-model] → 30 [selector-model] / 유지 또는 수정
+29 [test-success] → 31 [test-success] / 유지 또는 수정
+30 [test-time] → 32 [test-time] / 유지 또는 수정
+31 [learning-why] → 33 [learning-why] / 유지 또는 수정
+32 [conclusion] → 34 [conclusion] / 유지 또는 수정
+33 [questions] → 36 [questions] / 유지 또는 수정
+
+새 본문 슬라이드
+9쪽 [human-inspiration]
+10쪽 [thesis-outline]
+17쪽 [algorithm-overview]
+35쪽 [future-work]
+
+Appendix 쪽수 대응
+Contents: 원본 34 → 새 37쪽
+A1: 원본 35 → 새 38쪽
+A2: 원본 36 → 새 39쪽
+A3: 원본 37 → 새 40쪽
+A4: 원본 38 → 새 41쪽
+A5: 원본 39 → 새 42쪽
+A6: 원본 40 → 새 43쪽
+A7: 원본 41,42,43 → 새 44,45,46,47쪽
+A8: 원본 44 → 새 48쪽
+A9: 원본 45 → 새 49쪽
+A10: 원본 46 → 새 50쪽
+A11: 원본 47 → 새 51쪽
+A12: 원본 48 → 새 52쪽
+A13: 원본 49 → 새 53쪽
+A14: 원본 50 → 새 54쪽
+A15: 원본 51 → 새 55쪽
+A16: 원본 52 → 새 56쪽
+A17: 원본 신규 → 새 57쪽
+
+출처
+사람과 로봇이 같은 작업공간을 사용하는 collaborative robotics의 공식 용례
+https://committee.iso.org/news/2016/03/Ref2057.html
+Shared Workspace를 제목·실험 맥락에 사용한 RSS 2024 원전
+https://www.roboticsproceedings.org/rss20/p029.pdf
+자율실험실에서 시료와 실험장비를 다루는 로봇 응용
+https://www.nature.com/articles/s41586-020-2442-2
+§III 짝수 차원 기본 이론, §IV-C 홀수 차원 확장, §V-A 4-DOF arm, §V-B 15차원 실험
+https://arxiv.org/html/2307.09901v1
+Bernstein polynomial 기반 robot distance field
+https://arxiv.org/abs/2307.00533
+Soft-min을 이용한 CBF candidate 합성
+https://arxiv.org/abs/2309.06647
+
+검토 범위
+44개 항목의 source-level 대응 및 과학적 의미 확인. 최종 main/presenter 빌드와 내용·배치 검증은 부모 에이전트의 완료 통보 확인. 세부 검증 결과는 별도 build 기록 참조. 실제 폴더 발행 기록은 build/feedback_revision/published.json 참조. 실험 데이터 수치 유지, 새로운 rollout이나 학습 없음.
+그림 변경과 원본 데이터 해시는 evidence/feedback_figure_audit.json 참조.

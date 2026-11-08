@@ -1,0 +1,246 @@
+석사 졸업 발표 구성 — 20분, 영어 슬라이드 / 한국어 발표 대본
+발표 제목: Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing
+
+목표 발화 1,140초 + 전환과 호흡 60초.
+본문 36장 + 보충 자료 21페이지 = 청중용 57페이지.
+발표자용 93페이지. Appendix 목차와 A1–A17 포함; A7 참고문헌은 4페이지.
+
+구성 원칙
+- 자율실험실·제조 작업의 안전한 목표 도달에서 시작하며, 성능 수치는 결과 장에서 제시.
+- Kinematic control의 상태·입력·task error를 정의한 뒤 CLF, CBF, QP를 설명.
+- 기존 방법의 한계 → 사람의 팔 배치에서 얻은 설계 직관 → 논문 목차 → 제안 방법 순서.
+- 초기 상태·목표·장애물은 한 장, IK 목표는 다음 장에 제시. 실행 단계에서는 동일 QP의 활성 CLF constraint만 강조.
+- 공통 알고리즘을 먼저 정리한 뒤 모델별 IK, CLF, 거리 기반 CBF의 차이를 설명.
+- 용어: Spatial Manipulator / Preset pair (3,5) / CLF constraint / subtask transition.
+- 핵심 메시지는 필요한 슬라이드의 상단에 검은 글자로 배치. 슬라이드 글자 크기 규칙은 본문 10pt, 제목 14.4pt.
+- 부제는 논문의 실제 section 또는 subsection 제목. Conclusion과 Bibliography는 별도 표제; 기종명만 Spatial Manipulator로 표기.
+- 점 진행 표시는 본문 6개 구간. 표지는 제외하며 보충 자료는 별도 목차와 복귀 링크 사용.
+- 성공 기준과 수치·근사 모델의 가정은 한국어 대본 및 질의응답 메모에 보존.
+
+본문 슬라이드: 페이지 / 제목 / 발표 시간 / 논문 section
+
+01. Title
+    00:00–00:15 (15초)
+    진행 표시: 표지 제외
+
+02. Safe Goal Reaching for Autonomous Workstations
+    00:15–00:40 (25초)
+    진행 표시: Motivation
+    부제: Research Background
+
+03. Safe Motion in Cluttered Workspaces
+    00:40–01:10 (30초)
+    진행 표시: Motivation
+    부제: Research Background
+
+04. Kinematic Control and Goal-Error Reduction
+    01:10–01:50 (40초)
+    진행 표시: Background
+    부제: Control Lyapunov Function
+
+05. Background (2/3): CBF for Safety
+    01:50–02:30 (40초)
+    진행 표시: Background
+    부제: Control Barrier Function
+
+06. QP-Based Kinematic Control
+    02:30–03:15 (45초)
+    진행 표시: Background
+    부제: CLF-CBF QP
+
+07. Related Work: Challenges in Goal Reaching
+    03:15–03:55 (40초)
+    진행 표시: Background
+    부제: Local Minima and Deadlock in CLF-CBF QP
+
+08. A Naive Trial: Direct End-Effector Tracking
+    03:55–04:25 (30초)
+    진행 표시: Planar
+    부제: Local Minima and Deadlock in CLF-CBF QP
+
+09. Human-Inspired Intuition: Reposition Before Reaching
+    04:25–04:45 (20초)
+    진행 표시: Planar
+    부제: Research Objectives
+
+10. Thesis Roadmap: From Problem to Method
+    04:45–05:00 (15초)
+    진행 표시: Planar
+    부제: Research Objectives
+
+11. Proposed Method: Initial State, Goal, and Obstacles
+    05:00–05:15 (15초)
+    진행 표시: Planar
+    부제: Intermediate Targets and Sequential Tasks
+
+12. Proposed Method: IK-Derived Intermediate Link Targets
+    05:15–05:25 (10초)
+    진행 표시: Planar
+    부제: Intermediate Targets and Sequential Tasks
+
+13. Sequential: Link 1 Subtask
+    05:25–05:45 (20초)
+    진행 표시: Planar
+    부제: CLF-CBF QP-Based Kinematic Control
+
+14. Sequential: Link 2 Subtask
+    05:45–06:05 (20초)
+    진행 표시: Planar
+    부제: CLF-CBF QP-Based Kinematic Control
+
+15. Sequential: End-Effector Subtask
+    06:05–06:25 (20초)
+    진행 표시: Planar
+    부제: CLF-CBF QP-Based Kinematic Control
+
+16. Planar CLFs: One QP and One CLF at Each Stage
+    06:25–06:40 (15초)
+    진행 표시: Planar
+    부제: Intermediate Position Tasks and Final Pose Task
+
+17. One Sequential Algorithm, Model-Specific Functions
+    06:40–07:05 (25초)
+    진행 표시: Planar
+    부제: Sequential Kinematic Control Framework
+
+18. Planar Results: Direct 72.00% / Sequential 84.33%
+    07:05–07:40 (35초)
+    진행 표시: Planar
+    부제: System 1: 3-DOF Planar Model
+
+19. Resolving Deadlock through Task Transition
+    07:40–08:25 (45초)
+    진행 표시: Planar
+    부제: Paired Outcomes and an Illustrative Trajectory
+
+20. Extension to a 7-DOF Spatial Manipulator
+    08:25–08:50 (25초)
+    진행 표시: Spatial
+    부제: Extension to the 7-DOF Spatial Manipulator
+
+21. Self-Collision CBFs from RDF
+    08:50–09:45 (55초)
+    진행 표시: Spatial
+    부제: RDF-Based Construction of CBF
+
+22. Spatial IK: Target Search with Null-Space Updates
+    09:45–10:45 (60초)
+    진행 표시: Spatial
+    부제: Multi-Start IK with a Safety-Aware Null-Space Update
+
+23. Spatial CLFs: Position and Orientation
+    10:45–11:25 (40초)
+    진행 표시: Spatial
+    부제: All-Link Sequence and Spatial Pose Tasks
+
+24. All-link Sequential: Spatial Manipulator Results
+    11:25–12:10 (45초)
+    진행 표시: Spatial
+    부제: Effect of All-Link Sequential Control
+
+25. The Completion-Time Cost of All-link Sequential Control
+    12:10–12:40 (30초)
+    진행 표시: Spatial
+    부제: Effect of All-Link Sequential Control
+
+26. Reduction to Two Intermediate Link Tasks
+    12:40–13:30 (50초)
+    진행 표시: Spatial
+    부제: Two-Link Reduction: Completion Time and Success
+
+27. Link-Pair Selection: A Potential Upper Bound near 80%
+    13:30–14:10 (40초)
+    진행 표시: Learning
+    부제: Two-Link Reduction: Completion Time and Success
+
+28. Training Labels and Losses
+    14:10–15:00 (50초)
+    진행 표시: Learning
+    부제: Training Objective and Sequence Selection
+
+29. Learned Selection (1/2): Predicting Success Scores
+    15:00–15:25 (25초)
+    진행 표시: Learning
+    부제: Network Architecture
+
+30. Learned Selection (2/2): From Selected Tasks to the QP
+    15:25–15:55 (30초)
+    진행 표시: Learning
+    부제: Network Architecture
+
+31. Test Results: Goal-Reaching Success Rates
+    15:55–16:45 (50초)
+    진행 표시: Results
+    부제: Recovery Through Learned Link Selection
+
+32. Shorter Completion Time with Fewer Subtasks
+    16:45–17:15 (30초)
+    진행 표시: Results
+    부제: Two-Link Reduction: Completion Time and Success
+
+33. An Episode Recovered by Learned Selection
+    17:15–18:00 (45초)
+    진행 표시: Results
+    부제: Recovery Through Learned Link Selection
+
+34. Conclusions: Safe Control and Learned Sequencing
+    18:00–18:30 (30초)
+    진행 표시: Results
+    부제: Conclusion
+
+35. Future Work: From Simulation to Robot Experiments
+    18:30–19:00 (30초)
+    진행 표시: Results
+    부제: Interpretation and Limitations
+
+36. Thank you
+    19:00–19:00 (0초)
+    진행 표시: Results
+
+보충 자료: 실제 PDF 페이지
+appendix-contents / 37쪽: Appendix Contents
+A1 / 38쪽: A1. Full Diagnostics for Planar Episode 11
+    부제: System 1: 3-DOF Planar Model
+A2 / 39쪽: A2. Validation Success by Link Pair
+    부제: Two-Link Reduction: Completion Time and Success
+A3 / 40쪽: A3. Spatial Manipulator IK: Soft-Min Safety Term
+    부제: Multi-Start IK with a Safety-Aware Null-Space Update
+A4 / 41쪽: A4. RDF Barriers: Differentiating Both Links' Motion
+    부제: RDF-Based Construction of CBF
+A5 / 42쪽: A5. Stage-Transition Rules: Planar and Spatial Manipulator
+    부제: Stage-Transition Rule
+A6 / 43쪽: A6. Test Comparisons on Shared Episodes
+    부제: Recovery Through Learned Link Selection
+A7 / 44–47쪽: A7. References
+    부제: Bibliography
+A8 / 48쪽: A8. Training Loss and Model Selection
+    부제: Training Objective and Sequence Selection
+A9 / 49쪽: A9. Task Switching and Safe-Set Invariance
+    부제: Sequential Kinematic Control Framework
+A10 / 50쪽: A10. Planar Episode 30: Configurations and CLFs
+    부제: Paired Outcomes and an Illustrative Trajectory
+A11 / 51쪽: A11. Problem Definition and Goal Criteria
+    부제: Problem Formulation
+A12 / 52쪽: A12. Full CLF--CBF QP
+    부제: CLF-CBF QP-Based Kinematic Control
+A13 / 53쪽: A13. Overall Control Architecture
+    부제: Sequential Kinematic Control Framework
+A14 / 54쪽: A14. Interpretation and Further Validation
+    부제: Interpretation and Limitations
+A15 / 55쪽: A15. Recovered and Lost Test Episodes
+    부제: Recovery Through Learned Link Selection
+A16 / 56쪽: A16. Direct Episode: Stagnation near the Safety Boundary
+    부제: Local Minima and Deadlock in CLF-CBF QP
+A17 / 57쪽: A17. Related Work: Systems and Dimension Assumptions
+    부제: Local Minima and Deadlock in CLF-CBF QP
+
+해석 원칙
+- 사람의 어깨 선행 배치는 설계 직관이며 보편적 인간 운동 법칙이나 실험 결과를 주장하지 않음.
+- Gonçalves는 manipulator 실험이 있으며 기본 이론의 짝수 차원 조건과 홀수 차원 확장을 구분.
+- IK configuration은 중간 목표의 출처이지 실행 경로가 아님. 전체 joint velocity와 모든 충돌 제약은 계속 사용.
+- Preset pair (3,5)는 Train 최고 성공률로 선정; Appendix A2 막대는 Validation 결과.
+- 사후 oracle, 학습 정책의 Test 결과, 서로 다른 공동 성공 집합의 시간 비교를 구분.
+- 본문 시간 비교는 All-link 대비 단계 축소의 효과. 같은 단계 수인 Preset pair 대비 시간 비교는 A6에 보존.
+- 새 제어 실험이나 학습 없이 보관된 데이터를 사용. 원본 데이터와 식별자는 변경하지 않음.
+
+원본: evidence/story_plan.json, evidence/chapter_mapping.json, speaker-notes.tex.

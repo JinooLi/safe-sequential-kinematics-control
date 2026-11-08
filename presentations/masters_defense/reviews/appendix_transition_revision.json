@@ -1,0 +1,77 @@
+{
+  "changed_main_pages": [
+    8,
+    9,
+    21
+  ],
+  "appendix_contents_page": 34,
+  "main_pages": 52,
+  "presenter_pages": 85,
+  "appendix_pages": 19,
+  "main_timing_seconds": 1140,
+  "appendix_topics_preserved": 16,
+  "presenter_slides_match_audience": true,
+  "navigation": {
+    "main": {
+      "contents_page": 34,
+      "topic_links": 16,
+      "return_links": 19,
+      "destinations_verified": {
+        "appendix-a1": 35,
+        "appendix-a10": 46,
+        "appendix-a11": 47,
+        "appendix-a12": 48,
+        "appendix-a13": 49,
+        "appendix-a14": 50,
+        "appendix-a15": 51,
+        "appendix-a16": 52,
+        "appendix-a2": 36,
+        "appendix-a3": 37,
+        "appendix-a4": 38,
+        "appendix-a5": 39,
+        "appendix-a6": 40,
+        "appendix-a7": 41,
+        "appendix-a8": 44,
+        "appendix-a9": 45,
+        "appendix-contents": 34
+      }
+    },
+    "presenter": {
+      "contents_page": 67,
+      "topic_links": 16,
+      "return_links": 19,
+      "destinations_verified": {
+        "appendix-a1": 68,
+        "appendix-a10": 79,
+        "appendix-a11": 80,
+        "appendix-a12": 81,
+        "appendix-a13": 82,
+        "appendix-a14": 83,
+        "appendix-a15": 84,
+        "appendix-a16": 85,
+        "appendix-a2": 69,
+        "appendix-a3": 70,
+        "appendix-a4": 71,
+        "appendix-a5": 72,
+        "appendix-a6": 73,
+        "appendix-a7": 74,
+        "appendix-a8": 77,
+        "appendix-a9": 78,
+        "appendix-contents": 67
+      }
+    }
+  },
+  "main_pdf_sha256": "9ab157106b60d195112bb9c4d2e608c566b2a63d2527a269fb79102e82e79eb4",
+  "no_new_simulations_or_training": true,
+  "review": {
+    "agent": "appendix_navigation_review",
+    "result": "pass",
+    "rendered_pages": [
+      8,
+      9,
+      21,
+      34
+    ],
+    "findings": []
+  }
+}

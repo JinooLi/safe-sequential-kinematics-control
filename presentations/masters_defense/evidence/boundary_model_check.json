@@ -1,0 +1,24 @@
+{
+  "model": "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/planar_bernstein_rdf.npz",
+  "model_sha256": "18569e3bff1242de56299158a640976ad3288454a62b8762391d39b88b6e1c2d",
+  "snapshot_model_parameters": {
+    "safe_distance": 0.08,
+    "link_radius": 0.05
+  },
+  "samples_checked": 176,
+  "max_obstacle_barrier_residual_m": 0.0,
+  "active_barrier": "obs1_link3",
+  "final_clf_gradient": [
+    -31.056880656582322,
+    -21.41829225002142,
+    -11.779703843460457
+  ],
+  "final_active_barrier_gradient": [
+    -1.6715956601939155,
+    -1.152811345408336,
+    -0.6340270306227529
+  ],
+  "gradient_cosine": 1.0000000000000002,
+  "h_derivative_along_negative_clf_gradient": -84.07444787928416,
+  "interpretation": "At the recorded final state the negative CLF gradient points toward decreasing active h. Static re-evaluation only; no QP re-solve or simulation."
+}

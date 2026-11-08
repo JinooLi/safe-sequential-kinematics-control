@@ -1,0 +1,84 @@
+{
+  "scope": "Read-only verification of existing experiment records and documented design; Q&A refinement without new simulation or change to numerical results.",
+  "source_sha256": {
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/evidence/planar_summary.json": "83b46b7c933a28cc819bb658121f04a14d6c7d1d99f40c0f55f4636743807613",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/evidence/planar_cases.json": "28b7cf61b556091d299da4492b67973bfca4e074c43932fff413f55bb9c0c86c",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/evidence/test_baselines_analysis.json": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/evaluate_test.py": "7a193a8280b3a728f07a4058391a837c35917b92270e4547eb04446352552c66",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/config.yaml": "b7f3e9ca4272e7b78e7337e98d24a8d6b61fa25863847e2b74768ff1b98ba131",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex": "4c4a9eed377f1167754dac10bc2f3034d869785c000ded7e82a8e66bff3cfb5a",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex": "0f6442be70bdd5a84b2fb05f75a2670da1df30fbd6742a7233dd3c39083a530f",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Evaluation.tex": "875e6cd97837eb985ba41dea225faa60bc6d2e98bf68802eef860266d2215542",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex": "93cdadbb1de98bedd7e34f28c02429c8269e5ed46dfceaec7a696615203e4db3",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex": "38931292e79f7913f87f8fa7a859e82d277e25723eebd9b10dba5968324a5396",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex": "e18ada6b20e2a85631688456a2ab600bcba765a09b58235a36239169c9f1b3b8",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Execution.tex": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5"
+  },
+  "qanda_before_sha256": "784a1cc8bea550f8457991555575edb937b69326054a99879b1d992baeb5b419",
+  "qanda_after_sha256": "ef22d60695190b9f69b5c0c59148521140f4a9762b4c0615b11703859a5ff269",
+  "planar_success": {
+    "rule": "final recorded position_error <= 0.1 m AND yaw_error <= 0.1 rad AND minimum logged barrier >= -0.01 m",
+    "population": "300 accepted collision-free IK scenes; 340 sampling rejections before acceptance are not a standalone end-to-end failure rate",
+    "label_recalculation": {
+      "direct": {
+        "records": 300,
+        "successes": 216,
+        "flag_mismatches": 0
+      },
+      "sequential": {
+        "records": 300,
+        "successes": 253,
+        "flag_mismatches": 0
+      }
+    },
+    "frozen_source_manifest_available": false
+  },
+  "panda_success": {
+    "rule": "at least one recorded goal hit AND minimum logged barrier >= -0.001 m AND minimum joint margin >= 0 AND no numerical solver failure",
+    "goal_tolerances": {
+      "position_m": 0.01,
+      "relative_quaternion_vector_norm": 0.01
+    },
+    "archived_code": "evaluate_test.py:113-120",
+    "population": "1000 IK-accepted scenes per Validation/Test split; same scenes across methods",
+    "safety_validation_mode": "iteration_states",
+    "interpolation_checks": 0,
+    "unsafe_goal_hits_excluded": {
+      "test_direct": 9,
+      "test_all_link_sequential": 12
+    }
+  },
+  "candidate_scope": {
+    "intermediate_count": 2,
+    "candidate_links": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "candidate_count": 10,
+    "execution_order": "ascending link index; fixed before rollout",
+    "documented_status": "fixed design choice and evaluated scope; neither optimal sequence length nor necessity of endpoint exclusions or ascending ordering established"
+  },
+  "recommended_short_slide_copy": {
+    "planar_population": "300 IK episodes",
+    "panda_population": "1,000 IK episodes",
+    "success_definition": "Goal reached safely within the time limit",
+    "transition": "Subtask transition",
+    "stage_constraint": "Stage-wise CLF constraint"
+  },
+  "page_mapping": {
+    "selector-training": 28,
+    "selector-model": 30,
+    "selection_recovery": 33
+  },
+  "safety_statement": "Recorded approximate-model acceptance is distinct from continuous physical collision-avoidance certification; numerical tolerances do not bound geometry approximation error.",
+  "feedback_interpretation": {
+    "shared_workspace_term": "ISO collaboration context; replaced with Cluttered Workspaces for the depicted equipment scene",
+    "human_inspiration": "Design intuition, not a universal biomechanics claim",
+    "goncalves_dimension": "Even-dimensional basic theory plus separate odd-dimensional extension",
+    "success_rule_unchanged": true,
+    "common_algorithm_not_identical_exception_policy": true
+  }
+}

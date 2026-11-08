@@ -1,0 +1,145 @@
+{
+  "canonical_methods": [
+    "Direct",
+    "Sequential",
+    "All-link Sequential",
+    "Fixed (3,5)",
+    "Learned selection",
+    "Uniform selection",
+    "Best fixed (2,5)",
+    "Oracle (사후 상한)"
+  ],
+  "canonical_terms": {
+    "장면": "scene / scenes",
+    "링크": "link",
+    "제어 작업": "task",
+    "IK q*": "IK configuration",
+    "초기 관절 배치": "초기 configuration",
+    "EE 목표": "목표 pose"
+  },
+  "scripts": [
+    "scripts/build_figures.py",
+    "scripts/build_story_figures.py",
+    "scripts/build_concept_figures.py",
+    "scripts/build_boundary_case.py"
+  ],
+  "validation_time_fields": {
+    "fixed": "completion_time",
+    "learned": "completion_time_seconds",
+    "display_labels_control_field_selection": false
+  },
+  "audit_numeric_checks": {
+    "evidence/figure_audit.json": {
+      "numeric_and_boolean_values_preserved": true,
+      "values_compared": 84
+    },
+    "evidence/story_figure_audit.json": {
+      "numeric_and_boolean_values_preserved": true,
+      "values_compared": 77
+    },
+    "evidence/concept_figure_audit.json": {
+      "numeric_and_boolean_values_preserved": true,
+      "values_compared": 20
+    },
+    "evidence/boundary_case_audit.json": {
+      "numeric_and_boolean_values_preserved": true,
+      "values_compared": 18
+    }
+  },
+  "frozen_evidence_files_checked": 15,
+  "frozen_evidence_sha256": {
+    "evidence/all_links_comparison.csv": "1ad7870f370b280132861a4ae25b831796d4ad442fbc1ac57d110c72b0a50c1c",
+    "evidence/selector_choices.csv": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d",
+    "evidence/case_180_direct.npz": "f68d1f7c4745d6b639cee5e2c082a594503247b0bd64600c9a90e382a8c98bc6",
+    "evidence/case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "evidence/case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8",
+    "evidence/case_011_direct.npz": "1f7c52b491fcf117613cf9e29c1409b94cad8c510ef82374aee20ba695557747",
+    "evidence/case_011_sequential.npz": "cca58b612c5c9c57246a52540456ca8aee1abe8006d582696eb079a9bea20cb1",
+    "evidence/planar_cases.json": "28b7cf61b556091d299da4492b67973bfca4e074c43932fff413f55bb9c0c86c",
+    "evidence/pair_outcomes.csv": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4",
+    "evidence/planar_goal_reconstruction.json": "21fedb9effaa3c9421d7887518294e34adcc922ff7401bec5e1cebcd75de84ca",
+    "evidence/recomputed_summary.json": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b",
+    "evidence/test_baselines_comparison.csv": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869",
+    "evidence/panda_example.json": "f0052b4acf0efe065b4f6fd01f93db633be6a49b9c1981d570305dec5ff9ae50",
+    "evidence/test_baselines_paired_comparisons.json": "8c9671cc19ef081bde2e63c80de164388cd334022f77ba7c437b49476a6d470d",
+    "evidence/case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312"
+  },
+  "generated_figure_count": 29,
+  "generated_files": [
+    "Fig/case030_clf_time.pdf",
+    "Fig/case030_clf_time.png",
+    "Fig/case030_overview.pdf",
+    "Fig/case030_overview.png",
+    "Fig/case030_stages.pdf",
+    "Fig/case030_stages.png",
+    "Fig/case180_boundary_stall.pdf",
+    "Fig/case180_boundary_stall.png",
+    "Fig/concept_clf_1.pdf",
+    "Fig/concept_clf_1.png",
+    "Fig/concept_clf_2.pdf",
+    "Fig/concept_clf_2.png",
+    "Fig/concept_clf_ee.pdf",
+    "Fig/concept_clf_ee.png",
+    "Fig/concept_panda_scene.pdf",
+    "Fig/concept_panda_scene.png",
+    "Fig/concept_planar_direct.pdf",
+    "Fig/concept_planar_direct.png",
+    "Fig/concept_planar_stages.pdf",
+    "Fig/concept_planar_stages.png",
+    "Fig/pair_variability.pdf",
+    "Fig/pair_variability.png",
+    "Fig/paired_time.pdf",
+    "Fig/paired_time.png",
+    "Fig/paired_time_test.pdf",
+    "Fig/paired_time_test.png",
+    "Fig/panda_all_links.pdf",
+    "Fig/panda_all_links.png",
+    "Fig/panda_scene.pdf",
+    "Fig/panda_scene.png",
+    "Fig/panda_success.pdf",
+    "Fig/panda_success.png",
+    "Fig/panda_test_success.pdf",
+    "Fig/panda_test_success.png",
+    "Fig/planar_clf_shapes.pdf",
+    "Fig/planar_clf_shapes.png",
+    "Fig/planar_clf_time.pdf",
+    "Fig/planar_clf_time.png",
+    "Fig/planar_scene.pdf",
+    "Fig/planar_scene.png",
+    "Fig/planar_stages.pdf",
+    "Fig/planar_stages.png",
+    "Fig/planar_success.pdf",
+    "Fig/planar_success.png",
+    "Fig/planar_trace.pdf",
+    "Fig/planar_trace.png",
+    "Fig/planar_yaw.pdf",
+    "Fig/planar_yaw.png",
+    "Fig/story_oracle.pdf",
+    "Fig/story_oracle.png",
+    "Fig/story_planar_direct.pdf",
+    "Fig/story_planar_direct.png",
+    "Fig/story_selection_effect.pdf",
+    "Fig/story_selection_effect.png",
+    "Fig/story_selection_examples.pdf",
+    "Fig/story_selection_examples.png",
+    "Fig/story_time_cost.pdf",
+    "Fig/story_time_cost.png"
+  ],
+  "pdf_text_checks": {
+    "forbidden_terms": [
+      "장면",
+      "링크",
+      "작업",
+      "자세",
+      "고정",
+      "학습 선택",
+      "균등"
+    ],
+    "matches": []
+  },
+  "font_sizes_reduced": false,
+  "long_method_labels_wrapped_without_font_reduction": true,
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "mujoco_assets_modified": false
+}

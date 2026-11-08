@@ -1,0 +1,35 @@
+{
+  "only_audience_frame_changed": "literature (page 7)",
+  "only_speaker_note_changed": "literature",
+  "note_labels_and_timings_unchanged": true,
+  "main_pages": 51,
+  "presenter_pages": 84,
+  "presenter_slides_match_audience": true,
+  "speech_seconds": 1140,
+  "main_pdf_sha256": "b301491caed0c7916675ff1b169961152f9a0ee321d52bebc90426528e1e195c",
+  "main_tex_sha256": "4a9ea484ae84d8d5f8390ae94067080a0109753b76d0d22c0038bd1de3b6e804",
+  "concurrent_user_source_edits_preserved": true,
+  "audience_slide_language": "English",
+  "speaker_notes_language": "Korean",
+  "visual_review": "Page 7 rendered at 1600 px; all three blocks and equations readable, no overlap",
+  "new_simulations_or_training": false,
+  "sources": [
+    {
+      "citation": "reis2021equilibria",
+      "url": "https://arxiv.org/html/2003.07819",
+      "equation": "(6), Q renamed R for the CLF rotation; assumptions retained in Korean Q&A"
+    },
+    {
+      "citation": "tan2024equilibria",
+      "url": "https://people.kth.se/~dimos/pdfs/Xiao_Automatica_2024.pdf",
+      "equation": "(44)-(46), written in actual input u instead of deviation u-prime"
+    },
+    {
+      "citation": "goncalves2023circulation",
+      "url": "https://arxiv.org/html/2307.09901v1",
+      "equation": "(3), circulation inequality; beta positive near obstacles"
+    }
+  ],
+  "user_title_preserved": true,
+  "title_audit_updated": "Record the user-edited presentation title separately from the thesis title"
+}

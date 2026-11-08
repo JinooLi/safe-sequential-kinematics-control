@@ -1,0 +1,32 @@
+{
+  "case_id": 180,
+  "source": "case_180_direct.npz",
+  "source_sha256": "f68d1f7c4745d6b639cee5e2c082a594503247b0bd64600c9a90e382a8c98bc6",
+  "selection": "Sequential-only successes with no Direct QP infeasibility, obstacle barrier active at termination; smallest maximum speed over 25–35 s among seven matching cases.",
+  "failure_reason": "timeout",
+  "qp_infeasible_count": 0,
+  "raw_samples": 17500,
+  "time_range_seconds": [
+    0.0,
+    34.99799999999681
+  ],
+  "snapshot_seconds": 34.99799999999681,
+  "tail_window_seconds": [
+    15,
+    35
+  ],
+  "tail_max_speed_rad_s": 4.85615022607182e-08,
+  "tail_min_barrier_m": 4.98212582300539e-15,
+  "tail_max_barrier_m": 8.41797323375415e-08,
+  "tail_max_position_drift_m": 1.2942408673993739e-07,
+  "active_barrier_column_zero_based": 2,
+  "active_barrier_label": "obs1_link3",
+  "final_position_error_m": 0.8177754846401174,
+  "final_yaw_error_rad": 1.1396056529349194,
+  "final_clf": 9.59780349062619,
+  "final_clf_slack": 9.597803490626095,
+  "max_reconstructed_clf_error": 1.7763568394002505e-14,
+  "geometry": "Recorded q, 1 m links and 0.05 m physical link radius; spatial close-up omits distant second obstacle. No exact RDF contour drawn.",
+  "plotting": "Every stored sample; no smoothing, new simulation, or QP re-solve. Shaded interval 15–35 s.",
+  "interpretation": "Observed boundary approach, vanishing command and residual task error; no claim of a universal cause for all failures or a proof of stable equilibrium."
+}

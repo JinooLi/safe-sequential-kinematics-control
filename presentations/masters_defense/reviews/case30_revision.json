@@ -1,0 +1,109 @@
+{
+  "status": "revised_and_validated",
+  "requests": [
+    {
+      "page": 8,
+      "change": "상수 10을 양의 설계 가중치 w_V로 일반화; yaw 상대 가중치 w_psi 도입. 평면과 Panda의 CLF 형태 차이 유지."
+    },
+    {
+      "page": 7,
+      "change": "첨부 그림과 일치하는 사례30 확인. 초기 자세, 순차 링크1·링크2·말단, 같은 시각의 Direct 자세를 5열로 표시."
+    },
+    {
+      "page": 12,
+      "change": "사례30의 V1·V2 활성/비활성 및 같은 말단 함수의 Direct·순차 곡선 비교."
+    },
+    {
+      "page": 32,
+      "change": "첨부 그림처럼 5개 자세와 3개 CLF 곡선을 합친 전체 그림을 A10에 배치."
+    }
+  ],
+  "general_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p,ee||^2+w_psi(1-cos e_psi)), w_V,w_psi>0",
+  "formula_source": "masters_tethis/sections/Method/Planar_Control.tex",
+  "case30": {
+    "case_id": 30,
+    "snapshots_seconds": [
+      0.0,
+      2.1279999999999872,
+      6.873999999999465,
+      18.226000000000777,
+      18.226000000000777
+    ],
+    "shared_last_snapshot_time": 18.226000000000777,
+    "same_initial_state": true,
+    "sequential_success": true,
+    "direct_success": false,
+    "direct_failure_class": "qp_infeasible",
+    "direct_qp_infeasible_count": 3,
+    "direct_same_time_position_error": 2.4063806913888715,
+    "direct_same_time_yaw_error": 1.0162542309890727,
+    "raw_samples_per_method": 17500,
+    "max_active_clf_error": 2.842170943040401e-14,
+    "max_direct_clf_error": 5.684341886080802e-14,
+    "actual_weights": {
+      "w_V": 10.0,
+      "w_psi": 0.5
+    },
+    "all_geometry_inside_common_axes": true,
+    "obstacle_halo": "Nominal geometric 0.08 m margin, matching archived reference; not exact RDF contours",
+    "figure_files": [
+      "case030_stages",
+      "case030_clf_time",
+      "case030_overview"
+    ],
+    "no_new_simulation": true
+  },
+  "qualitative_shapes": {
+    "coordinates": "task error coordinates; Vee plotted versus position-error norm and yaw error",
+    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p||^2+w_psi(1-cos(e_psi)))",
+    "illustrative_weights": {
+      "w_V": 1.0,
+      "w_psi": 0.5
+    },
+    "archived_weights": {
+      "w_V": 10,
+      "w_psi": 0.5
+    },
+    "display": "qualitative shapes; vertical magnitude unlabelled; no changes to archived trajectory values"
+  },
+  "comparison_scope": "18.226초는 두 방법의 동일 시각 자세 비교이며 실패 판정 시점이 아님. Direct 실패는 35초 전체 실행 기록 기준.",
+  "checks": {
+    "source_hashes": 21,
+    "geometry_and_clf_values": "all stored samples checked",
+    "rendered_pages_reviewed": [
+      7,
+      8,
+      12,
+      32
+    ],
+    "layout_and_fonts": "no overflow, missing glyphs, undefined references or off-page text",
+    "main_slides": 22,
+    "appendix_slides": 10,
+    "speech_seconds": 1140
+  },
+  "pdfs": {
+    "main": {
+      "pages": 32,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 2649,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "b1efd7c86ab18e904c4ea926745a26dc2217173887028a8d1d70e24326ecf9a0"
+    },
+    "presenter": {
+      "pages": 54,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 6287,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "47634255e01e1b3fee0a1c8fd393c79ab3fc6c01e691031e014cb7a71c030e0d"
+    }
+  },
+  "new_simulations_or_training": false
+}

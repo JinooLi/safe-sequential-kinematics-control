@@ -1,0 +1,643 @@
+{
+  "source_sha256": {
+    "recovery_scene.json": "864425a2d94dcf28b527f7c5449bc3f445c430e3bdab4e15ef220f431441b655",
+    "selector_choices.csv": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d",
+    "panda_example.json": "f0052b4acf0efe065b4f6fd01f93db633be6a49b9c1981d570305dec5ff9ae50"
+  },
+  "case_id": "seed2026120069_0014",
+  "split": "test",
+  "model_family": "baseline",
+  "model_seed": 11,
+  "source_records": [
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/contexts.jsonl",
+      "sha256": "8b49d63a7ab2d85b8c456ade9d8b52a8e216f742b3c4e17eb97a3f61133fb319"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/results.json",
+      "sha256": "ea36b0513952532a4830bd50ea775fcd0516612a989cb810d0b73dfc987ff1ce"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/evidence/selector_choices.csv",
+      "sha256": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d"
+    }
+  ],
+  "model_source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/assets/robots/panda.xml",
+  "model_sha256": "dc003017680e3446429f3c38f8aff532be59800abdadbb5dea22a61b72f987c9",
+  "model_matches_archived_sha256": true,
+  "mesh_sources": [
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0.stl",
+      "sha256": "dfc6d94330de8ddb005b311bfdba9f3b8e1aa7c256b71592ee7ff32cb9a9a5aa"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link1.stl",
+      "sha256": "e41a39a94108fcf56aacff603fc91ec80541f4c1af17b51a0de5617f5566e6d2"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link2.stl",
+      "sha256": "370f7605a0fae3529db169ded50f52f171024aa792d4d773bc84197301f6a039"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link3.stl",
+      "sha256": "0a8d638b9349c6c0eefc4e888636ac4838c4b27170f18a51699321118af709c1"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link4.stl",
+      "sha256": "0180ebb5772ec9840cb049750cffb29a9ddc90311752a16ea34757782ef9e48d"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_collision_0.obj",
+      "sha256": "3e5aa75fb13f193555c3dfb999df91d81df25006a5c3af5338297d78137c129b"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_collision_1.obj",
+      "sha256": "87cd8f621071df010f774cbde789282b8463840dfe704f8bdfa2e29be0142e15"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_collision_2.obj",
+      "sha256": "823ab6c8f7b1d79e0844fa071d82a03499ff68e34fddb1ba3451032c22736040"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6.stl",
+      "sha256": "20b768e99a0e0440b5754dcca108016434e57937cc356acd9c352ccd3cb27f77"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7.stl",
+      "sha256": "92ac6afcf7574c034d3170d8a68e95ac9048ab9d0dd5bbd8311b86e551b9ab1c"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand.stl",
+      "sha256": "94493e94f30fe940f2c8ca2f155c3bbe67bbff406d3edf5e261670d2f0f6e2ed"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_0.obj",
+      "sha256": "6b9f41a4c203540daaeb7a33cc3d0d6c6a32dc8bba187074eeaf97b3e36b3f9c"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_1.obj",
+      "sha256": "57673d2ee2a9db2e10c8986ae57c56a7c39c012b60fd26d7d8549553b664a5ed"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_2.obj",
+      "sha256": "1ca435a2a87a9608a146a47955724d43dd7ce10fc3dd3018800aa98f8ba86e05"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_3.obj",
+      "sha256": "3e9c6334d2b3b47944af3458ee5f20519abc20fe7ee23063bb53405ccab28046"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_4.obj",
+      "sha256": "215d25789704936120f119c0bc1cc7f68516dd3f8f1df61457b71acac3873f26"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_5.obj",
+      "sha256": "9361b104e93743045107aa5b15fb1a0835ba9c1f355aae71f56403cf6a9c33f6"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_7.obj",
+      "sha256": "2dc0b8ebbbc80e4c065d71e195adbc384f673438641fac82b07b801b4d2837cb"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_8.obj",
+      "sha256": "3b8c436999db5586b8eb47bed2b0aa7de6993868b2681b4c04246eeac42fdb7a"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_9.obj",
+      "sha256": "45178f97d2b5da6bce11f610212c4ef7d08c73db33a4fc38e1b7f66b93d023f5"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_10.obj",
+      "sha256": "c9198b9d8534d628d097b0f2b239bb30343353182df098ce0d9db6bc13326848"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link0_11.obj",
+      "sha256": "f0adec78d6677b7799d25121981270e8bfe119b5c18d08a91ee37a54ad75f65c"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link1.obj",
+      "sha256": "51091e776b16babdbe2f3849b5c041f921d1f11dd94ac19a0f1c81abf496fbae"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link2.obj",
+      "sha256": "5c9f8e715de52c3eb71b475de35993b3b96081e02abea9f28c414768877fc59b"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link3_0.obj",
+      "sha256": "ce2da87f51708e11b189249d41401065dabe89a06e251185a06cef4d5ff27178"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link3_1.obj",
+      "sha256": "2880b7753a7173f38fa87ee21da4dfc7fa7be46fbe07bac5aef9e128513cb118"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link3_2.obj",
+      "sha256": "670cff81ae84693769ca4ae658c154cf909d81167e7c8d22b70ea977f2504efa"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link3_3.obj",
+      "sha256": "30ede0c812efd0e0b767d134a4eae0b84e0fa407bb6325a5a555e0569b3a3ffd"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link4_0.obj",
+      "sha256": "443bf6d178177cf347951ecf107ccd10ca444e605e375b67304579e5f948806f"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link4_1.obj",
+      "sha256": "ca935ec7cc8b3f0e86aa079c76b0b3bf593b1e9830bab0fa7131ac51577c74f0"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link4_2.obj",
+      "sha256": "c89caf26d379c35bb9e191ee2d91d09ab29ecc792b48d8bc10b39e5b38222175"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link4_3.obj",
+      "sha256": "1495d17f45bdb230cf58b0beef9da4e8c9cfe76a3d2d38da89017efe5e093136"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_0.obj",
+      "sha256": "a3238b8f2af0f2eb66d9fe63dc5d41ac52d5d38507241b5ed10e3cb019ab3e71"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_1.obj",
+      "sha256": "9d994bbf83ec241e301b5197a6846da13f2a4a0582edb2c0f76962c5549649d6"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link5_2.obj",
+      "sha256": "83b4ffe9f772cd7fe182e98640650eebc899aaf01842656574b0416c90dd40a4"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_0.obj",
+      "sha256": "0504c70ebf1b284ee8faae7dcb896b8830bc672a6552015dd5dbd121fa031fb9"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_1.obj",
+      "sha256": "45f7ca77695198b6d86ec2417ad4e42e6275044f0f96266699ee8e1057757ac1"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_2.obj",
+      "sha256": "e54eee4d8232947ee8af65afd5a067e09dac2da6e7e585cb1dccb65496457da0"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_3.obj",
+      "sha256": "d4f6a25ef32fa1fa4734146981994ee760232cb077c80fea6487d78a077c7f27"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_4.obj",
+      "sha256": "be353480fe71d46f7a96f0a3cbb7e112caaf8d88368826f321a36a253c8749b2"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_5.obj",
+      "sha256": "7c87664623c3e1a6cb330db273227a69626dc5e53b4caff1d4ee7911eb3340c6"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_6.obj",
+      "sha256": "8fbc031e0d07b795ebf99115c75223141caaba317cab569159f3d477a7821681"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_7.obj",
+      "sha256": "7dc5ebb799fe281aab27d6e84e7a4efa0a8e42da2369ec83de3ea3f206f62d73"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_8.obj",
+      "sha256": "e3f77381817a341030f9dcc4c4aa7c559f80411b453fd87eb0fefecca82151bf"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_9.obj",
+      "sha256": "25a56ea9b02a03b6cb5a81f31c54f54d0185e1a0b3937c37e4289d896e50215a"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_10.obj",
+      "sha256": "365f26c21d10332cab8d8704645cb46930c30b3085956f2d097498c793f24db4"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_11.obj",
+      "sha256": "8ae61e08b3ad064f25bbf03b22e59cc15d65883b5a7ce92711aff29df2493901"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_12.obj",
+      "sha256": "f28d1bfd62b0244ffd19fb35fe9edefdf583d3c9167db944e87185d919e1d021"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_13.obj",
+      "sha256": "0a55fa92dccb261d07200e6565fca4c850fd17f0c1ecf38821c0b97d51796c7d"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_14.obj",
+      "sha256": "750ae3ee4781e62e3a045c662195247b03f6642b05aa93104f08258e5f6eba26"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_15.obj",
+      "sha256": "5999c1c2497a004a7c4bbe034cdf13744f839d85ae7a11b1bc386c48a3e642e6"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link6_16.obj",
+      "sha256": "551d7a8b37c53e7a152d008b4e36992e5b5abe74a4be18b57ee6319c27def09f"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_0.obj",
+      "sha256": "04586b0bde011715cfc22072ac72fe0717eb4d4817bcf665987ce6cd88eb2b93"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_1.obj",
+      "sha256": "c3f72289f394c9d6749a4a327fb11f05b203c37c95032c92f28019b40ebe7e00"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_2.obj",
+      "sha256": "d2faecedb304d0989040d082410378dc949dbbda23bd18c05134f08aae984db5"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_3.obj",
+      "sha256": "b62d87c4d4bdb7b281ed341d347c39dad0e50bf36aed8ac11d050073701d5f70"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_4.obj",
+      "sha256": "cb78ccb61fd4ad6c7bff4c4d2e6cb41e1964a5a3e1a28e67c0c6202371cfc018"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_5.obj",
+      "sha256": "099071d3090b51471ba52f4f90814fd3089f4975d196e4d488117073d0bfe491"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_6.obj",
+      "sha256": "99469e2d95ab74ce0292f2f16954c87a8a7dc16652e62e970fe37c94330a81bb"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/link7_7.obj",
+      "sha256": "426c3db8a19373f3dc73d4bec672e948121b2914c10e2e7b9c7ea80643a19e54"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand_0.obj",
+      "sha256": "b94aab901086f85df04c019b30f43bf9aa23a7ad0443ec80a8c14662a41cabd2"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand_1.obj",
+      "sha256": "cd76f7494bb314406a1819c46eb826ee254894f87235714f604a470653d9badb"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand_2.obj",
+      "sha256": "e0f44a71712afa5b98eb20355eff17763d3e2e19f459b2bef19abed3727e64b3"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand_3.obj",
+      "sha256": "a431a06d99e88a1b322b3122a01424ee7704daeaad0bc343b90b9604f014ad0c"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/hand_4.obj",
+      "sha256": "21f96ef6a8de082e41b1ea9834f1043de359e5d60305541bcb63539581f53bff"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/finger_0.obj",
+      "sha256": "215098c0fcdf7192f6c503a37cf49e3efecf8a9e1320f02b17c5584d89cc5b2c"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/assets/finger_1.obj",
+      "sha256": "cf239e9aca26bba09dbbf1c544c47d87cfc9a2f0637c8bb786af750b6d4eca44"
+    }
+  ],
+  "helper_source_sha256": "e191ea1afe40eb072ed7bf8ca76090d49071fe23dfe51489efed1522b398d7af",
+  "render_xml_sha256": "a8970b8f8ecee2860a95079ec65dbd073dedc39ee3c25a51a759a75e0c87444e",
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF",
+  "renderer": "MuJoCo static forward kinematics with original Panda meshes",
+  "mujoco_version": "3.10.0",
+  "common_camera": {
+    "azimuth": 45.0,
+    "elevation": -20.0,
+    "distance": 3.5,
+    "lookat": [
+      0.05,
+      -0.03,
+      0.5
+    ],
+    "fovy": 35
+  },
+  "same_initial_configuration_obstacles_goal_and_ik": true,
+  "common_obstacles": [
+    [
+      -0.22416599759412442,
+      -0.0682142845859861,
+      0.7905888016342139,
+      0.19497533452752905
+    ],
+    [
+      -0.36101277324172276,
+      0.14350181517354776,
+      0.11273050409053778,
+      0.12574266376916393
+    ],
+    [
+      -0.49978982081357604,
+      -0.516567603884056,
+      0.15690239082834098,
+      0.13087342913720812
+    ],
+    [
+      -0.47883631936723303,
+      -0.30583260322277367,
+      0.34943291248342,
+      0.14758506893246565
+    ],
+    [
+      0.2551795134707612,
+      0.37907483722025237,
+      0.3358582196427028,
+      0.13188603125545312
+    ],
+    [
+      0.6995201688589046,
+      -0.590147642591416,
+      0.5562555867262049,
+      0.13320619897278096
+    ],
+    [
+      -0.522336318106183,
+      0.5011898620039246,
+      0.5107082062578582,
+      0.11714417360108609
+    ],
+    [
+      0.052015628858220975,
+      -0.4825279172992837,
+      0.5484482283158058,
+      0.1351146233599002
+    ],
+    [
+      -0.3613491950983173,
+      -0.5393093998267258,
+      0.32161872742953923,
+      0.16715493602206338
+    ],
+    [
+      0.2704353154368341,
+      -0.4648752967337264,
+      0.6605987522793598,
+      0.18980971015820922
+    ]
+  ],
+  "target_position": [
+    0.6061290160911414,
+    -0.20694482998861968,
+    0.8993711017718318
+  ],
+  "target_rotation": [
+    [
+      -0.20084897965200052,
+      0.16352708223395643,
+      0.9658771043713582
+    ],
+    [
+      -0.05804850926695068,
+      -0.9862231437575936,
+      0.15490087568756425
+    ],
+    [
+      0.9779008425932741,
+      -0.024956043214787615,
+      0.20757441548135605
+    ]
+  ],
+  "configurations": [
+    [
+      1.535689434143146,
+      0.6224321599807134,
+      0.21012009114468366,
+      -0.9119581041818297,
+      2.105491495045566,
+      1.5592404496902679,
+      1.3919426196633298
+    ],
+    [
+      0.9518463508182265,
+      0.933561040667053,
+      2.8967541831497674,
+      -0.9116361345867646,
+      1.9761181418963791,
+      1.8875293131531103,
+      1.5967178161835949
+    ],
+    [
+      0.47250150213450975,
+      1.0790948200623887,
+      -2.2751174391604967,
+      -1.3713623955709575,
+      2.720898299116785,
+      1.8175039964068418,
+      -0.06671596869682002
+    ]
+  ],
+  "panel_times_seconds": [
+    0,
+    119.99999999999326,
+    23.41999999999959
+  ],
+  "final_panels_are_own_endpoints_not_common_time": true,
+  "intermediate_configurations_or_trajectories_invented": false,
+  "fixed_result": {
+    "pair": [
+      3,
+      5
+    ],
+    "success": false,
+    "reason": "timeout",
+    "elapsed": 119.99999999999326,
+    "final_stage": "link3_pose",
+    "stage_transitions": [],
+    "final_position_error": 0.6289011503209078,
+    "final_orientation_error": 0.3617825590572735
+  },
+  "learned_result": {
+    "pair": [
+      5,
+      6
+    ],
+    "success": true,
+    "reason": "goal_reached",
+    "elapsed": 23.41999999999959,
+    "final_stage": "end_effector_pose",
+    "stage_transitions": [
+      {
+        "time": 16.939999999999728,
+        "previous": "link5_pose",
+        "next": "link6_pose",
+        "reason": "target_reached"
+      },
+      {
+        "time": 18.339999999999698,
+        "previous": "link6_pose",
+        "next": "end_effector_pose",
+        "reason": "target_reached"
+      }
+    ],
+    "final_position_error": 0.009982454397253487,
+    "final_orientation_error": 0.003464247579939002
+  },
+  "rendered_end_effector_errors": [
+    {
+      "position_m": 1.226861034059369,
+      "orientation_quaternion_vector": 0.9302012980191728,
+      "end_effector_position": [
+        -0.2282482581317548,
+        0.6843181862561151,
+        0.7783223635382934
+      ]
+    },
+    {
+      "position_m": 0.6289011503209082,
+      "orientation_quaternion_vector": 0.3617825590572738,
+      "end_effector_position": [
+        0.2521072847083211,
+        0.25357159531152845,
+        1.1404310374982913
+      ]
+    },
+    {
+      "position_m": 0.009982454397256346,
+      "orientation_quaternion_vector": 0.003464247579940934,
+      "end_effector_position": [
+        0.6119297190702723,
+        -0.20833169267873447,
+        0.9073759660817357
+      ]
+    }
+  ],
+  "final_errors_match_archive_atol": 1e-12,
+  "physics_steps": 0,
+  "new_rollout": false,
+  "new_training": false,
+  "visible_content_bbox_pixels": [
+    [
+      88,
+      264,
+      944,
+      882
+    ],
+    [
+      88,
+      163,
+      944,
+      882
+    ],
+    [
+      88,
+      264,
+      944,
+      882
+    ]
+  ],
+  "goal_annotation": {
+    "native_vector": true,
+    "label": "EE goal",
+    "projected_pixel_centers": [
+      [
+        727.3676727690895,
+        295.16533927273315
+      ],
+      [
+        727.3676727690895,
+        295.16533927273315
+      ],
+      [
+        727.3676727690895,
+        295.16533927273315
+      ]
+    ],
+    "circle_radius_pixels": 39,
+    "projection": "Perspective projection from the midpoint MuJoCo GL camera",
+    "camera_records": [
+      {
+        "position": [
+          -2.275620460510254,
+          -2.3556206226348877,
+          1.6970704793930054
+        ],
+        "forward": [
+          0.6644630432128906,
+          0.6644630432128906,
+          -0.3420201539993286
+        ],
+        "up": [
+          0.2418447732925415,
+          0.2418447732925415,
+          0.9396926760673523
+        ],
+        "frustum_near": 0.016910267993807793,
+        "frustum_top": 0.005331786815077066,
+        "frustum_bottom": -0.005331786815077066,
+        "frustum_center": 0.0,
+        "target_depth": 3.6153609470384893,
+        "image_pixels": [
+          1000,
+          1000
+        ]
+      },
+      {
+        "position": [
+          -2.275620460510254,
+          -2.3556206226348877,
+          1.6970704793930054
+        ],
+        "forward": [
+          0.6644630432128906,
+          0.6644630432128906,
+          -0.3420201539993286
+        ],
+        "up": [
+          0.2418447732925415,
+          0.2418447732925415,
+          0.9396926760673523
+        ],
+        "frustum_near": 0.016910267993807793,
+        "frustum_top": 0.005331786815077066,
+        "frustum_bottom": -0.005331786815077066,
+        "frustum_center": 0.0,
+        "target_depth": 3.6153609470384893,
+        "image_pixels": [
+          1000,
+          1000
+        ]
+      },
+      {
+        "position": [
+          -2.275620460510254,
+          -2.3556206226348877,
+          1.6970704793930054
+        ],
+        "forward": [
+          0.6644630432128906,
+          0.6644630432128906,
+          -0.3420201539993286
+        ],
+        "up": [
+          0.2418447732925415,
+          0.2418447732925415,
+          0.9396926760673523
+        ],
+        "frustum_near": 0.016910267993807793,
+        "frustum_top": 0.005331786815077066,
+        "frustum_bottom": -0.005331786815077066,
+        "frustum_center": 0.0,
+        "target_depth": 3.6153609470384893,
+        "image_pixels": [
+          1000,
+          1000
+        ]
+      }
+    ],
+    "green_goal_pixels_within_8px_of_projection": [
+      289,
+      289,
+      100
+    ],
+    "same_goal_projection_verified": true
+  },
+  "interpretation": "Selected recovery example, showing differing terminal configurations. Not a causal proof or a representative statistical sample.",
+  "figure_files": [
+    "recovery_comparison.pdf",
+    "recovery_comparison.png"
+  ],
+  "figure_sha256": {
+    "recovery_comparison.pdf": "2ab141cb67b59eaed2481619e1cfafa987f6ac3003eb7cbe965812853ad50c69",
+    "recovery_comparison.png": "9be4e584e5cb922aecd462a26c49b895c4d3bb2ebefbb0e951f068a456eb86be"
+  },
+  "script_sha256": "af6ca07fef71a5df8726e2df068e0c1d26028f16fe583bcb039105f8dd92d43b"
+}

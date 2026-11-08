@@ -1,0 +1,54 @@
+{
+  "removed_main_takeaways": [
+    "motivation-goal",
+    "planar-direct",
+    "planar-initial",
+    "planar-scene",
+    "planar-ee",
+    "planar-results",
+    "panda-extension",
+    "panda-clf",
+    "all-links",
+    "learning-why"
+  ],
+  "moved_into_main_content": [
+    "planar-setup",
+    "planar-sequential",
+    "planar-link2",
+    "panda-rdf",
+    "panda-ik"
+  ],
+  "retained_main_takeaways": [
+    "motivation",
+    "literature",
+    "planar-why",
+    "time-cost",
+    "two-links",
+    "oracle",
+    "selector-features",
+    "selector-model",
+    "test-time"
+  ],
+  "removed_backup_takeaways": [
+    "A5",
+    "A11",
+    "A13",
+    "A14",
+    "A16"
+  ],
+  "background_order": [
+    "background-clf",
+    "background-cbf",
+    "background-qp",
+    "literature"
+  ],
+  "sources": [
+    "sections/Preliminaries/CLF.tex",
+    "sections/Preliminaries/CBF.tex",
+    "sections/Preliminaries/CLF_CBF_QP.tex",
+    "sections/Method/Kinematic_Control.tex"
+  ],
+  "new_empirical_results": false,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60
+}

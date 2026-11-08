@@ -1,0 +1,249 @@
+{
+  "source_directory": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/sequential_comparison/run_20260911_151710",
+  "case_id": 11,
+  "selection": "First case by ID in latest archived 300-case run with Sequential-only success and two goal-reached transitions.",
+  "operation": "Postprocessing saved trajectories; no new simulations.",
+  "source_sha256": {
+    "outputs/sequential_comparison/run_20260911_151710/summary.json": "dc4dcc24dac553f2909837a0a4d29dd0d4cdf6e932f9010d23726437c4a6eda7",
+    "outputs/sequential_comparison/run_20260911_151710/case_011_direct.npz": "1f7c52b491fcf117613cf9e29c1409b94cad8c510ef82374aee20ba695557747",
+    "outputs/sequential_comparison/run_20260911_151710/case_011_sequential.npz": "cca58b612c5c9c57246a52540456ca8aee1abe8006d582696eb079a9bea20cb1"
+  },
+  "original_case": {
+    "case_id": 11,
+    "target": [
+      -0.7178268810794945,
+      -0.261040030816202
+    ],
+    "target_yaw": -0.1281473064939802,
+    "obstacles": [
+      {
+        "position": [
+          -0.7666402852890719,
+          -0.8036616932954928
+        ],
+        "radius": 0.2118558697830098,
+        "enabled": true
+      },
+      {
+        "position": [
+          1.5506309808293404,
+          -0.9131487314881279
+        ],
+        "radius": 0.26444471167614875,
+        "enabled": true
+      }
+    ],
+    "ik_rejections_before_acceptance": 0,
+    "direct": {
+      "success": false,
+      "final_position": [
+        -0.6806423653337942,
+        -0.3875953762877938
+      ],
+      "final_yaw": -2.8558150074024677,
+      "position_error": 0.13190505554631404,
+      "yaw_error": 2.7276677009084875,
+      "min_barrier": 8.643086246706844e-14,
+      "active_link": 3,
+      "switch_reason": null,
+      "failure_reason": "timeout",
+      "completion_time": null,
+      "control_effort": 5.8675102690480525,
+      "max_joint_velocity": 4.737253532852431,
+      "mean_clf_slack": 9.244670158416419,
+      "max_clf_slack": 98.89727769806917,
+      "nonzero_clf_slack_ratio_to_goal": null,
+      "total_qp_solve_time": 4.603223123820499,
+      "mean_qp_solve_time": 0.00026304132136117133,
+      "qp_infeasible_count": 0,
+      "stage_durations": [],
+      "stage_switch_reasons": [],
+      "trajectory_file": "case_011_direct.npz"
+    },
+    "sequential": {
+      "success": true,
+      "final_position": [
+        -0.7024705173332944,
+        -0.2598016958575643
+      ],
+      "final_yaw": -0.15686358979783677,
+      "position_error": 0.015406212414977145,
+      "yaw_error": 0.02871628330385656,
+      "min_barrier": 0.04005721911104439,
+      "active_link": 3,
+      "switch_reason": "goal reached",
+      "failure_reason": null,
+      "completion_time": 17.17600000000136,
+      "control_effort": 6.844569937282693,
+      "max_joint_velocity": 4.000194176630404,
+      "mean_clf_slack": 0.029391397240428226,
+      "max_clf_slack": 16.060250855669278,
+      "nonzero_clf_slack_ratio_to_goal": 0.6171847712190011,
+      "total_qp_solve_time": 4.368084492976777,
+      "mean_qp_solve_time": 0.00024960482817010157,
+      "qp_infeasible_count": 0,
+      "stage_durations": [
+        4.587999999999495,
+        4.061999999999553,
+        26.3499999999971
+      ],
+      "stage_switch_reasons": [
+        "goal reached",
+        "goal reached"
+      ],
+      "trajectory_file": "case_011_sequential.npz"
+    },
+    "comparisons": {
+      "task_decomposition": "candidate_only_success"
+    }
+  },
+  "settings": {
+    "cases": 300,
+    "workers": 12,
+    "seed": 2332,
+    "duration": 35.0,
+    "goal_tolerance": 0.1,
+    "yaw_tolerance": 0.1,
+    "barrier_tolerance": -0.01,
+    "slack_active_threshold": 0.01,
+    "control_mode": null,
+    "initial_q": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "output_dir": "outputs/sequential_comparison",
+    "target_radius_range": [
+      0.6,
+      2.7
+    ],
+    "target_angle_range": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "target_orientation_range": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "obstacle_position_range": [
+      -2.2,
+      2.2
+    ],
+    "obstacle_radius_range": [
+      0.2,
+      0.35
+    ],
+    "initial_clearance_margin": 0.03,
+    "target_clearance_margin": 0.1,
+    "max_case_attempts": 10000,
+    "max_obstacle_attempts": 1000,
+    "resolved_control_mode": "clf",
+    "kinematic": true,
+    "link_lengths": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "lyapunov_reconstruction": {
+    "note": "Full historical YAML was not archived. Selected IK and constant CLF coefficients were recovered from saved active V and verified at every sample, independently for Direct EE V.",
+    "selected_branch": "elbow_down",
+    "selected_ik_q": [
+      2.678783645546324,
+      1.0811775026680994,
+      2.395076852471183
+    ],
+    "targets": [
+      [
+        -0.8948019102016362,
+        0.44646337083741017
+      ],
+      [
+        -1.7096272452367351,
+        -0.1332431699096639
+      ],
+      [
+        -0.7178268810794945,
+        -0.26104003081620136
+      ]
+    ],
+    "clf_weight": 5.0,
+    "final_yaw_weight": 0.5,
+    "max_active_sequential_error": 4.263256414560601e-14,
+    "max_direct_error": 8.526512829121202e-14,
+    "alternative_branch_max_error": 21.260912570404724
+  },
+  "snapshots": [
+    {
+      "completed_link": 1,
+      "sample_index": 2294,
+      "time": 4.587999999999717,
+      "q": [
+        2.4786369466394365,
+        -1.0796838446013325e-05,
+        9.223347937366363e-08
+      ],
+      "target": [
+        -0.8948019102016362,
+        0.44646337083741017
+      ],
+      "endpoint": [
+        -0.7881765896312539,
+        0.615449155948114
+      ],
+      "position_error": 0.19981279877980232,
+      "yaw_error": null,
+      "lyapunov_value": 0.3992515455621777,
+      "selection": "goal-reached stage transition state"
+    },
+    {
+      "completed_link": 2,
+      "sample_index": 4325,
+      "time": 8.649999999999558,
+      "q": [
+        2.9326182600059543,
+        0.5875220503676828,
+        5.912037624932624e-08
+      ],
+      "target": [
+        -1.7096272452367351,
+        -0.1332431699096639
+      ],
+      "endpoint": [
+        -1.9074465579157898,
+        -0.16211462330780121
+      ],
+      "position_error": 0.19991508519902743,
+      "yaw_error": null,
+      "lyapunov_value": 0.3996604129013439,
+      "selection": "goal-reached stage transition state"
+    },
+    {
+      "completed_link": 3,
+      "sample_index": 8588,
+      "time": 17.17600000000136,
+      "q": [
+        2.5562427487415715,
+        1.210508421694816,
+        2.2883102906600925
+      ],
+      "target": [
+        -0.7178268810794945,
+        -0.26104003081620136
+      ],
+      "endpoint": [
+        -0.6702967771065204,
+        -0.25888512383506995
+      ],
+      "position_error": 0.047578928190734456,
+      "yaw_error": 0.09997653958912547,
+      "lyapunov_value": 0.047605008391898004,
+      "selection": "first successful final EE sample"
+    }
+  ],
+  "final_lyapunov": {
+    "direct_V_EE": 9.751735636049649,
+    "sequential_V_EE": 0.004434934462643555
+  },
+  "snapshot_note": "First two states are the exact samples at recorded goal-reached stage transitions. Final state is the first sample within the experiment's 0.1 m position and 0.1 rad yaw tolerances. Goals are met within tolerances, not zero error. Link widths are schematic; obstacle circles use their recorded physical radii."
+}

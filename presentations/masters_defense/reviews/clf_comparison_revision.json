@@ -1,0 +1,14 @@
+{
+  "page": 8,
+  "status": "revised_and_validated",
+  "change": "평면 중간은 위치, 최종은 위치+yaw; Panda는 중간·최종 모두 위치+자세 오차의 공통 형태를 명시.",
+  "speech_seconds": 55,
+  "technical_scope": "동일함은 오차 구성·수식 형태에 관한 설명. 링크·목표·가중치에 따른 관절 공간 지형 및 시간 궤적은 다를 수 있음.",
+  "sources": [
+    "masters_tethis/sections/Method/Panda_Frames.tex",
+    "masters_tethis/sections/Method/Sequential_Frames.tex",
+    "src/safe_ik/control/panda_controller.py::_pose_clf/_active_clf"
+  ],
+  "pdf_sha256": "dc7f9842a796bb1573957ddcde3dcf40ba7c3679c6e770c1b0c13d2e62f69e51",
+  "verification": "evidence/verification.json"
+}

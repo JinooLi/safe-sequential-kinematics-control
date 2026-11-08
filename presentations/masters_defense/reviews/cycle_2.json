@@ -1,0 +1,71 @@
+{
+  "cycle": 2,
+  "reviewers": [
+    "defense_science_review",
+    "defense_delivery_review"
+  ],
+  "status": "revised_and_validated",
+  "reviewed_pdf_sha256": "4a17c9249d0c7187fbee49fb54ecde8b1aad9ffddbba81a49ed7da7dd02ffcae",
+  "items": [
+    {
+      "id": "S6/D6",
+      "priority": "P2",
+      "reviewed_slides": [
+        7
+      ],
+      "critique": "고정 축 범위로 두 스냅숏의 말단이 잘림.",
+      "change": "세 자세의 모든 관절점·장애물 경계·목표점에서 공통 축 범위를 계산하고 여백 추가. 모든 점의 범위 내부 포함을 검증. 그림 뒤 문단 나눔도 수정.",
+      "status": "addressed"
+    },
+    {
+      "id": "S7",
+      "priority": "P2",
+      "reviewed_slides": [
+        18,
+        19
+      ],
+      "critique": "Test 성공률 다음에 Validation 시간으로 바뀌어 분할·비교 기준 추적이 어려움.",
+      "change": "19쪽을 Test 두 패널로 통일. 전체 링크 대 학습: 공동 성공467장면,47.97→36.62초. 고정(3,5) 대 학습:514장면,36.12→36.21초. 학습 자체의 추가 속도 이득은 관찰되지 않았음을 명시. 원시 CSV와 보관 대응 비교를 대조.",
+      "status": "addressed"
+    },
+    {
+      "id": "D7",
+      "priority": "P2",
+      "reviewed_slides": [
+        7
+      ],
+      "critique": "현재 제어점만 있고 추종하는 목표점이 없어 작업 원리가 불완전하게 전달됨. 달성한 최종 자세로 목표를 대체하면 안 됨.",
+      "change": "기존 분석 보고서의 해석적 IK 복원값을 찾고, Direct/Sequential의 모든 저장 CLF 값과 최대 오차3e-14 이내로 재대조. 빈 원으로 p_i*, 점선으로 현재점과 목표점 차이를 표시. 복원 출처와 전환 허용오차를 화면·노트에 명시.",
+      "status": "addressed"
+    },
+    {
+      "id": "D8",
+      "priority": "P2",
+      "reviewed_slides": [
+        15,
+        16
+      ],
+      "critique": "1차 표 개편으로 후보 정의 2≤i<j≤6이 빠져 10개 출력의 의미가 불명확해짐.",
+      "change": "15쪽에 링크2–6 중 두 개, 총10쌍, 오름차순 실행을 복원하고 대본에 반영.",
+      "status": "addressed"
+    }
+  ],
+  "preserved_research_limits": [
+    "Test 개발 중 확인 이력",
+    "고정 쌍 대비 성공률 개선95% CI에0포함",
+    "보관 QP와 수정 QP의 재평가 필요",
+    "온라인 계산 시간·실기 미검증"
+  ],
+  "new_simulation_or_training": false,
+  "additional_subagent_review_cycles": 0,
+  "revised_pdf_sha256": "819f29af5aa87fbbdba94b49882a8ff37b6068e6f1e98f800bb490a2e5ecb008",
+  "verification": "build/review_history/cycle2/evidence/verification.json",
+  "parent_visual_check": {
+    "pages": [
+      7,
+      15,
+      19
+    ],
+    "result": "공통 축·목표점·후보 정의·Test 시간 그래프와 한계 문구를 렌더링에서 확인"
+  }
+}

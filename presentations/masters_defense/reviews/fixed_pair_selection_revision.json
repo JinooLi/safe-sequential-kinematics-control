@@ -1,0 +1,28 @@
+{
+  "changed_audience_pages": [
+    24,
+    34,
+    36
+  ],
+  "a2_title": "Validation Success by Link Pair",
+  "selection_rule": "Highest mean training success among ten link pairs; unchanged for Validation and Test",
+  "main_pages": 52,
+  "presenter_pages": 85,
+  "presenter_slides_match_audience": true,
+  "speech_seconds": 1140,
+  "evaluation_results_and_figures_unchanged": true,
+  "main_pdf_sha256": "3de4bee393748fffc182427f0e8c3459d11032bcdeeec7ad509a99c44291045b",
+  "review": {
+    "agent": "fixed_pair_wording_review",
+    "result": "pass",
+    "oracle_explanation": "Episode-specific complementary successes, not the 0.5 percentage point difference between two fixed pairs"
+  },
+  "visual_review": {
+    "pages": [
+      24,
+      36
+    ],
+    "result": "Clear labels; no overlap or overflow"
+  },
+  "new_simulations_or_training": false
+}

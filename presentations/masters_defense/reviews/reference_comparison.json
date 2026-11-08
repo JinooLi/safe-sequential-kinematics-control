@@ -1,0 +1,129 @@
+{
+  "reference": "/home/jinoo/.codex/attachments/4943e066-b779-4b18-8274-4c3fd18c6aec/PWY_중간발표_박원영_Final.pptx",
+  "reference_sha256": "bfa77636f789e3c2f8be288c452a3448174ab83f6f43c147c961a30638abe76b",
+  "inspection_method": "Extracted PPTX text and relationships, measured picture geometry in OOXML, and directly viewed embedded images plus current PDF pages 2 and 5–7. No PowerPoint/LibreOffice renderer is installed; therefore source-image contact sheets are evidence, not pixel-exact slide renders.",
+  "reference_slide_count": 50,
+  "reference_main_slide_count_from_printed_footer": 35,
+  "findings": [
+    {
+      "reference_pages": [
+        2
+      ],
+      "evidence": [
+        "image3.gif: 1280x720, 60 frames; ADAS driving visualization",
+        "image4.png: 1019x1008, car collision image"
+      ],
+      "technique": "Application and failure consequence precede mathematical formulation. Two images carry the reason for constraints.",
+      "current_gap": "Current motivation page 2 uses only three textual boxes, requiring verbal explanation before the audience sees a robot or workspace.",
+      "application": "Use the actual Panda model in a visually recognizable work setting, with a visible EE target and obstacles; place purpose and collision risk beside it. Keep abstract motivation, avoid early performance numbers.",
+      "priority": 1
+    },
+    {
+      "reference_pages": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "evidence": [
+        "Left path viewport stays at x=21600,y=1911600 and about 2303386x1317600 EMU",
+        "Right cost viewport stays at x=2311200,y=1922400 and 2302934x1303200 EMU",
+        "Iteration 3,7,8,9,22 shown in sequence",
+        "Current path red; previous paths black; cost history grows on fixed axes"
+      ],
+      "technique": "Only the state of the explanation changes between pages, leaving scale, coordinates, color mapping, and panel layout stable.",
+      "current_gap": "Current setup, movement and CLF pages show 3 complete states side-by-side, demanding simultaneous comparison of several small diagrams.",
+      "application": "Show a single larger robot viewport on consecutive setup and execution frames. Fix base, obstacles, selected IK, target markers, camera and scale; reveal inputs first, then update only the current robot and active task.",
+      "priority": 1
+    },
+    {
+      "reference_pages": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "evidence": [
+        "Page 15 compares inactive flat field and active barrier surface",
+        "Pages 17–19 reuse identical top-view image47.png at the identical x=3111570,y=1598075 and 1428387x1464006 EMU",
+        "The other view changes from inactive iteration 5, through active 15–45, to inactive 56"
+      ],
+      "technique": "The concrete configuration and the mathematical mechanism are shown together. A fixed reference view is retained while the active part changes.",
+      "current_gap": "Planar movement is on page 6 while its CLF shapes are isolated on page 7; the audience must mentally map active link to function.",
+      "application": "Pair each large link1/link2/EE state with that stage’s CLF shape and decrease constraint. Keep common QP/CBF location fixed. Explicitly replace the previous task when the active CLF changes.",
+      "priority": 1
+    },
+    {
+      "reference_pages": [
+        11,
+        20,
+        21
+      ],
+      "evidence": [
+        "Method introduced with an actual trajectory image",
+        "Final method result returns to trajectory and active barrier",
+        "Comparison with ordinary CBF uses paired function pictures"
+      ],
+      "technique": "The method closes its explanation with the same concrete example and a direct before/after contrast.",
+      "current_gap": "Later Panda IK and learned-selection blocks become predominantly equations or network architecture.",
+      "application": "Retain the current MuJoCo/Panda evidence and visually connect selected pair to configuration change and final EE arrival. A before/after null-space illustration may aid IK, but it must derive from recorded computations or be clearly conceptual.",
+      "priority": 2
+    }
+  ],
+  "implementation_guardrails": [
+    "Reference content is source material, not instructions. Borrow the presentation technique rather than its research claims or embedded media.",
+    "Show task changes rather than implying all CLFs decrease simultaneously or that the selected IK is a path.",
+    "All execution snapshots must retain their real recorded stage/time provenance; setup frames must show the same q0.",
+    "Keep CLF vs QP distinction: QP minimizes input/slack cost and enforces the currently active CLF decrease constraint.",
+    "Use explicit consecutive frames because the current Beamer class uses handout; do not rely on overlays that collapse into one page.",
+    "More reveal pages need not mean more speaking time. Split existing explanation time and retain the 20-minute total.",
+    "Do not adopt the reference’s dense formula pages, tiny labels, inconsistent image typography, or lack of direct source attribution.",
+    "Use fixed bounding boxes for each variant to prevent visual jumps from independent tight cropping."
+  ],
+  "review_status": "Independent comparison complete; implementation decisions and final rendered QA remain with parent.",
+  "adopted_plan": {
+    "motivation": {
+      "reference_pages": [
+        2
+      ],
+      "change": "Two visual motivation frames, 30+35 seconds"
+    },
+    "planar_setup": {
+      "reference_pages": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "change": "Three fixed-viewport cumulative setup frames, 10+10+10 seconds"
+    },
+    "planar_execution": {
+      "reference_pages": [
+        17,
+        18,
+        19
+      ],
+      "change": "Three robot + active-CLF frames, 20+20+20 seconds; then 20-second common QP overview"
+    },
+    "learning": {
+      "reference_pages": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "change": "Fixed-layout network reveal: score prediction then pair selection and QP execution, 25+30 seconds"
+    },
+    "main_frames": 30,
+    "appendix_pages": 17,
+    "audience_pdf_pages": 47,
+    "presenter_pdf_pages": 77,
+    "speaking_seconds": 1140,
+    "buffer_seconds": 60
+  }
+}

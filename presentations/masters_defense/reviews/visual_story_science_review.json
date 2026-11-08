@@ -1,0 +1,96 @@
+{
+  "reviewer": "progressive_planar",
+  "scope": "Read-only science/text review of pages 6–12; original figure contact sheet visually checked; final page render pending",
+  "reviewed_source_sha256": {
+    "main.tex": "bb5a30be1325b2e28fecf0901b887227014ed23ba027e5962795288f0149d105",
+    "speaker-notes.tex": "be3f7627c38dad927614513462b439e9acc50554a3876a7a1118dbd356f23641",
+    "evidence/story_plan.json": "7bfc55f2c2468f984d21150003f65ad1cce99712712b208064aadfc1181e6418",
+    "evidence/progressive_planar_audit.json": "6de68d55aaa110a62354872a2b002441c47d9b5e2e9a691c7707a35589d92558"
+  },
+  "confirmed": [
+    "Pages 6–8 preserve identical q0 and add goal, obstacles, then selected IK; no execution implied.",
+    "All robot states and goals use exact archived case-30 data with forward-kinematic checks.",
+    "Intermediate CLFs use planar position errors; final CLF adds periodic yaw error.",
+    "One current CLF decrease constraint enters one velocity/slack QP at each step; shared CBF and input limits persist.",
+    "Prior task is released and final configuration need not equal selected IK; notes explicitly explain that dashed IK is not a path.",
+    "Plan remains 30 main slides and 1140 speech seconds plus 60 seconds buffer."
+  ],
+  "findings": [
+    {
+      "id": "SCI-01",
+      "priority": "P2",
+      "pages": [
+        7
+      ],
+      "title": "Problem data should not be called control input",
+      "evidence": "The heading 제어 입력 정보 labels target pose and obstacles; the actual control input u is joint velocity.",
+      "recommendation": "Replace heading with 문제 입력 or 목표·환경 정보.",
+      "status": "resolved",
+      "resolution": "Page 7 heading changed to 목표·환경 정보, separating goal/environment data from joint-velocity control input.",
+      "verification": "Verified final main.tex text."
+    },
+    {
+      "id": "SCI-02",
+      "priority": "P2",
+      "pages": [
+        9,
+        10
+      ],
+      "title": "Snapshot is a completed-task boundary, not the active-link value logged at that sample",
+      "evidence": [
+        {
+          "completed_link": 1,
+          "sample_index": 1064,
+          "time_s": 2.1279999999999872,
+          "logged_active_link": 2,
+          "preceding_logged_active_link": 1
+        },
+        {
+          "completed_link": 2,
+          "sample_index": 3437,
+          "time_s": 6.873999999999465,
+          "logged_active_link": 3,
+          "preceding_logged_active_link": 2
+        }
+      ],
+      "recommendation": "Describe the robot as link 1/2 추종 완료 시점 and label the associated inequality 이 단계의 CLF, so the explanatory prior-stage constraint is not mistaken for the logged current constraint after switching.",
+      "status": "resolved",
+      "resolution": "Right-hand labels now identify link 1의 CLF/link 2의 CLF/EE의 CLF; notes identify completed-task transition snapshots. Q&A explicitly distinguishes logged next active_link from prior-stage CLF shown.",
+      "verification": "Verified final main.tex, speaker-notes.tex, and 질의응답_메모.txt."
+    },
+    {
+      "id": "SCI-03",
+      "priority": "P2",
+      "pages": [
+        9,
+        10
+      ],
+      "title": "Visual goal highlight can be mistaken for a tolerance boundary",
+      "evidence": {
+        "highlight_radius_m": 0.145,
+        "completed_position_error_m": [
+          0.19988754665951414,
+          0.19983399146890135
+        ],
+        "meaning": "The active goal ring is decorative emphasis, so the completed controlled point lies outside it despite tolerance satisfaction."
+      },
+      "recommendation": "Clarify in notes that the ring only highlights the active target, or replace the ring with a non-boundary emphasis. If using a tolerance circle, verify the historical intermediate threshold before assigning geometric meaning.",
+      "status": "resolved",
+      "resolution": "Removed target circle and disk from all staged figures; active target is now a larger saturated star. Actual endpoint keeps its small colored outline. Geometry transforms and PDF sizes remain unchanged.",
+      "verification": "Re-rendered all six PDF/PNG figures; visually inspected link-1 output; generator and audit explicitly exclude target tolerance circles."
+    }
+  ],
+  "blocking_scientific_errors": 0,
+  "changed_presentation_files": false,
+  "figure_revision_sha256": {
+    "scripts/build_progressive_planar.py": "67fb946b70efc35c348c551f370ebbe27dc6827f85759db0df748906941fc78b",
+    "evidence/progressive_planar_audit.json": "d239fb15df9fec0237e0c24916a3b43b515696cbfad3df2642bf0eb568fb3b65"
+  },
+  "resolution_verification_sha256": {
+    "main.tex": "2ad734861abc0d9bbbfe27feb4d88ccda477454d5422197568f644dfcc9c975c",
+    "speaker-notes.tex": "a4fea602f3b47b34274fe4dbd4cdc7e035cc194a44753fcfd35c330a7e263e4a",
+    "질의응답_메모.txt": "0082a45342e3754c00f8176cca39a330c720a3c331aeacb49f5df9c24762ebb0",
+    "evidence/progressive_planar_audit.json": "d239fb15df9fec0237e0c24916a3b43b515696cbfad3df2642bf0eb568fb3b65"
+  },
+  "all_findings_resolved": true
+}

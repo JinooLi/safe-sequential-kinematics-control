@@ -1,0 +1,25 @@
+{
+  "english_audience_pdf_sha256": "6bddee37e080ea5bd71364524580815d771a8e8f92c0d49aa0ac37880b7da49a",
+  "presenter_slides_match_audience": true,
+  "korean_note_pages": 33,
+  "note_labels_and_timings_unchanged": true,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "main_pages": 51,
+  "presenter_pages": 84,
+  "translated_documents": [
+    "speaker-notes.tex",
+    "발표대본.txt",
+    "질의응답_메모.txt",
+    "발표구성.txt",
+    "README.md"
+  ],
+  "technical_terms_retained_in_english": true,
+  "independent_review": "korean_notes_review",
+  "no_new_simulations_or_training": true,
+  "english_main_tex_not_edited_by_assistant": true,
+  "concurrent_user_main_edits_preserved": true,
+  "user_main_edits": "Obstacle node moved to y=2 in selector figure; LaTeX formatting",
+  "latest_main_tex_sha256": "4822ed48012a46fee4d88fa05b4897283a17db85cc44fe133cda529e1baf5195",
+  "workshop_presenter_matches_reviewed_content": true
+}

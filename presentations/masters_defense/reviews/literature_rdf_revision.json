@@ -1,0 +1,37 @@
+{
+  "literature_keys": [
+    "reis2021equilibria",
+    "tan2024equilibria",
+    "goncalves2023circulation"
+  ],
+  "founding_qp_reference_page": 6,
+  "rdf_reference_page": 19,
+  "primary_sources": {
+    "reis2021equilibria": "https://arxiv.org/abs/2003.07819",
+    "tan2024equilibria": "https://people.kth.se/~dimos/pdfs/Xiao_Automatica_2024.pdf",
+    "goncalves2023circulation": "https://arxiv.org/html/2307.09901v1"
+  },
+  "scope_limits": [
+    "No universal convergence claim",
+    "Circulation uses a related nominal-controller CBF-QP, not an identical relaxed CLF-CBF formulation",
+    "No claim that intermediate tasks dominate these methods"
+  ],
+  "query_chain": [
+    "source a surface sample",
+    "coordinates in target b frame",
+    "target b runtime distance-field value",
+    "nearby-query soft minimum",
+    "clearance barrier",
+    "linear QP safety inequality"
+  ],
+  "figure_is_schematic": true,
+  "new_empirical_results": false,
+  "main_slides": 33,
+  "appendix_pages": 18,
+  "speech_seconds": 1140,
+  "review_corrections": [
+    "Explicit undesired equilibrium qualifier",
+    "RDF expanded at first visible use",
+    "IK acronym deferred from page7 to page9"
+  ]
+}

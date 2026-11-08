@@ -1,0 +1,102 @@
+{
+  "request": "Align diagram arrows on page19; discuss scene versus episode.",
+  "modified_slide": 19,
+  "changes": [
+    "Symmetric input columns and straight encoder-to-attention ports",
+    "Centered attention and score head",
+    "Orthogonal robot-feature bypass",
+    "Equal-width lower control boxes with matching gaps and horizontal arrows",
+    "Explicit anchors and a non-crossing pair-to-sequence route"
+  ],
+  "terminology": "No replacement: scene denotes a shared initial/goal/obstacle context; episode may denote an individual controller execution.",
+  "latest_user_edits_preserved": true,
+  "only_selector_model_source_frame_changed": true,
+  "independent_visual_review": "arrow_review: no required changes",
+  "verification": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 41,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 3507,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "f5e540cb632b5909877e5d77cddc98be7d3ca21f7c2cc732b322cd25fd18af56"
+      },
+      "presenter": {
+        "pages": 65,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 7254,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "073ba0cc1ad0b6bb64c43aa4b4a46582ef37cdaf7e3d3571fe8de399a7e60f3a"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "user_block_title_colors_preserved": true,
+      "clf_shapes_page": 7,
+      "clf_time_page": 9,
+      "ik_pose_overlay_page": 6,
+      "planar_setup_page": 5
+    },
+    "refinement_checks": {
+      "learning_task_before_architecture": true,
+      "normal_transition_explained": true,
+      "ik_admitted_population_visible": true,
+      "recovery_case": "seed2026120069_0014",
+      "recovery_static_endpoint_render": true,
+      "recovery_panel_seconds": [
+        0,
+        119.99999999999326,
+        23.41999999999959
+      ]
+    },
+    "bibliography": {
+      "backend": "BibTeX",
+      "style": "IEEEtran",
+      "cited_entries": 7,
+      "continuation_pages": 1
+    },
+    "chapter_subtitles": {
+      "frames": 39,
+      "source": "evidence/chapter_mapping.json"
+    },
+    "terminology": {
+      "official_english_title": true,
+      "first_use_definitions": true,
+      "canonical_method_labels": true,
+      "scene_and_link_consistency": true
+    },
+    "panda_render": {
+      "backend": "MuJoCo",
+      "static_archived_configuration": true,
+      "image_pixels": [
+        1800,
+        1350
+      ],
+      "physics_steps": 0,
+      "max_frame_residual_m": 2.886579864025407e-15
+    },
+    "main_slides": 24,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 24,
+    "figure_audit": "evidence/figure_audit.json",
+    "story_figure_audit": "evidence/story_figure_audit.json",
+    "story_order_matches_user_outline": true
+  },
+  "source_sha256": "a7c325de5873a6737c933e27f3845b5a7ac2603ec8ec07a04d7a7bb398149fae"
+}

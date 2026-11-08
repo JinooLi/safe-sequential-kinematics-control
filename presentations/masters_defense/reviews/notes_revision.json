@@ -1,0 +1,62 @@
+{
+  "status": "separated_and_validated",
+  "request": "tex파일에서 talknote 제거 및 발표 대본 별도 분리",
+  "changes": {
+    "main.tex": "talknote 정의·21개 본문·노트 표시 설정 제거. 슬라이드별 고유 label 추가. 기존 전달본의 들여쓰기 유지.",
+    "speaker-notes.tex": "21개 발표 시간·대본의 편집 원본",
+    "presenter.tex": "별도 노트 설정을 읽는 연습용 진입점",
+    "presenter-notes-setup.tex": "frame label로 외부 노트를 해당 슬라이드 뒤에 연결",
+    "scripts/export_notes.py": "분리된 노트 원본을 현재 슬라이드 순서로 텍스트 내보내기",
+    "scripts/speaker_notes.py": "중첩 TeX 그룹을 허용하는 노트 읽기",
+    "scripts/verify_artifacts.py": "분리된 노트 수·label 대응·발표 시간 검증"
+  },
+  "comparison": {
+    "main": {
+      "pages_before": 31,
+      "pages_after": 31,
+      "pages_with_position_changes": [
+        21
+      ],
+      "pages_with_text_changes": []
+    },
+    "presenter": {
+      "pages_before": 52,
+      "pages_after": 52,
+      "pages_with_position_changes": [
+        41,
+        42
+      ],
+      "pages_with_text_changes": []
+    },
+    "text_script_unchanged": true
+  },
+  "minor_layout_change": "질의응답 장의 University of Seoul 마지막 줄은 talknote 제거 후 TeX의 끝 공백 정리로 1.66pt 재정렬. 연습용 해당 장과 축소 미리보기에도 반영. 다른 페이지의 텍스트 위치 동일.",
+  "main_slides": 21,
+  "appendix_slides": 10,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "pdfs": {
+    "main": {
+      "pages": 31,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 2615,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "45a13ca93e4d691e506a02ad5eb8cc210a4291297bffe45ae5df009ab9c41f9f"
+    },
+    "presenter": {
+      "pages": 52,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 6298,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "76a70aa7dea2cdda243dfc3ba65bc7256353887f107a0401d28e903add440b37"
+    }
+  }
+}

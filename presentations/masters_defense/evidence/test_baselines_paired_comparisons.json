@@ -1,0 +1,96 @@
+{
+  "scenes": 1000,
+  "simulation_seconds": 120,
+  "bootstrap_draws": 10000,
+  "bootstrap_seed": 20261023,
+  "methods": {
+    "direct": {
+      "successes": 455,
+      "success_rate": 0.455
+    },
+    "sequential": {
+      "successes": 552,
+      "success_rate": 0.552
+    },
+    "fixed35": {
+      "successes": 587,
+      "success_rate": 0.587
+    },
+    "neural": {
+      "successes": 609,
+      "success_rate": 0.609
+    }
+  },
+  "uniform_expected_success_rate": 0.552,
+  "oracle_successes": 802,
+  "paired_comparisons": {
+    "sequential_vs_direct": {
+      "both_success": 325,
+      "reference_only": 130,
+      "candidate_only": 227,
+      "both_failure": 318,
+      "difference_pp": 9.700000000000001,
+      "bootstrap_95_ci_pp": [
+        6.0,
+        13.4
+      ],
+      "mcnemar_exact_pvalue": 3.2030854868297237e-07,
+      "reference_common_mean": 23.653907692307573,
+      "candidate_common_mean": 45.60338461538582,
+      "mean_time_difference": 21.94947692307824
+    },
+    "fixed35_vs_sequential": {
+      "both_success": 458,
+      "reference_only": 94,
+      "candidate_only": 129,
+      "both_failure": 319,
+      "difference_pp": 3.5000000000000004,
+      "bootstrap_95_ci_pp": [
+        0.6,
+        6.4
+      ],
+      "mcnemar_exact_pvalue": 0.02258426705756913,
+      "reference_common_mean": 47.49711790393148,
+      "candidate_common_mean": 35.690174672489455,
+      "mean_time_difference": -11.806943231442022
+    },
+    "neural_vs_sequential": {
+      "both_success": 467,
+      "reference_only": 85,
+      "candidate_only": 142,
+      "both_failure": 306,
+      "difference_pp": 5.7,
+      "bootstrap_95_ci_pp": [
+        2.7,
+        8.6
+      ],
+      "mcnemar_exact_pvalue": 0.00018791541516180498,
+      "reference_common_mean": 47.97263383297777,
+      "candidate_common_mean": 36.61922912205608,
+      "mean_time_difference": -11.353404710921692
+    },
+    "neural_vs_fixed35": {
+      "both_success": 514,
+      "reference_only": 73,
+      "candidate_only": 95,
+      "both_failure": 318,
+      "difference_pp": 2.1999999999999997,
+      "bootstrap_95_ci_pp": [
+        -0.3,
+        4.7
+      ],
+      "mcnemar_exact_pvalue": 0.10491191481478204,
+      "reference_common_mean": 36.11696498054517,
+      "candidate_common_mean": 36.21326848249071,
+      "mean_time_difference": 0.09630350194554431
+    }
+  },
+  "source_sha256": {
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/comparison.csv": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/analysis.json": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/complete.json": "c54ef9dd24f57c0db195c4663ea13c2ff4b50e018d25c1d63f71edde2f751989",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/split.csv": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/comparison_inputs/selector_choices.csv": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/comparison_inputs/pair_outcomes.csv": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4"
+  }
+}

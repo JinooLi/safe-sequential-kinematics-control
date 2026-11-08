@@ -1,0 +1,17 @@
+% Rehearsal-only integration; never loaded by main.tex.
+\setbeameroption{show notes}
+\makeatletter
+% Keep the rehearsal header concise; the audience title remains unchanged.
+\def\beamer@shorttitle{Sequential Collision-Aware Kinematic Control}
+\newcommand{\SpeakerNote}[3]{%
+  \expandafter\gdef\csname defense@note@#1\endcsname{%
+    \gdef\beamer@notes{\textbf{목표 발표 시간: #2초}\par\medskip #3}}}
+\input{speaker-notes.tex}
+% Attach the note just before Beamer finalizes each frame's note page.
+% Frame labels keep the association intact when slides are reordered.
+\pretocmd{\beamer@framenotesend}{%
+  \ifcsname defense@note@\beamer@againname\endcsname
+    \csname defense@note@\beamer@againname\endcsname
+  \fi
+}{}{\PackageError{defense-notes}{Cannot attach speaker notes}{Check the Beamer note hook.}}
+\makeatother

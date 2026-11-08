@@ -1,0 +1,59 @@
+% Section labels and one dot per main slide, following the reference deck.
+% Completed: filled gray. Current: larger blue. Upcoming: hollow gray.
+% The cover is excluded; backup slides have an independent page count.
+\makeatletter
+\providecommand{\DefenseProgressStage}{}
+\newcommand{\defensepart}[1]{\gdef\DefenseProgressStage{#1}}
+\input{progress-data.tex}
+
+\newcommand{\defense@group}[3]{%
+  \def\defense@width{15mm}%
+  \def\defense@candidate{#1}%
+  \def\defense@name{Motivation}\ifx\defense@candidate\defense@name\def\defense@width{20mm}\fi
+  \def\defense@name{Background}\ifx\defense@candidate\defense@name\def\defense@width{22mm}\fi
+  \def\defense@name{Learning}\ifx\defense@candidate\defense@name\def\defense@width{17mm}\fi
+  \makebox[\defense@width][c]{%
+    \begin{tikzpicture}[x=1mm,y=1mm,baseline=0mm]
+      \path[use as bounding box] (-8.5,0) rectangle (8.5,4);
+      \def\defense@candidate{#1}%
+      \ifx\DefenseProgressStage\defense@candidate
+        \node[anchor=base,inner sep=0pt,font=\bfseries,text=Accent] at (0,2.02) {#1};
+      \else
+        \node[anchor=base,inner sep=0pt,text=black!75] at (0,2.02) {#1};
+      \fi
+      \foreach \defense@page in {#2,...,#3}{%
+        \pgfmathsetmacro{\defense@x}{(\defense@page-(#2+#3)/2)*1.4}%
+        \ifnum\defense@page<\c@framenumber
+          \fill[black!55] (\defense@x,.65) circle[radius=.38];
+        \else\ifnum\defense@page=\c@framenumber
+          \fill[Accent] (\defense@x,.65) circle[radius=.55];
+        \else
+          \draw[black!45,line width=.25pt] (\defense@x,.65) circle[radius=.38];
+        \fi\fi
+      }%
+    \end{tikzpicture}}}
+
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \begingroup
+  \normalfont\fontsize{10}{12}\selectfont
+  % Beamer adds 4 pt: the complete footer reserves less than 6.7 mm.
+  \vbox to 5.2mm{%
+    \offinterlineskip
+    \hbox to \paperwidth{%
+      \hskip5mm%
+      \ifbeamer@inappendix
+        \vrule width0pt height4mm depth0pt%
+        \raisebox{1.6mm}{\makebox[\dimexpr\paperwidth-24mm\relax][l]{\hyperlink{appendix-contents}{\color{Accent}Appendix contents}}}%
+        \raisebox{1.6mm}{\makebox[14mm][r]{\color{black!75}\insertframenumber\,/\,\inserttotalframenumber}}%
+      \else
+        \DefenseProgressGroups%
+        \raisebox{1.6mm}{\makebox[14mm][r]{\color{black!75}\insertframenumber\,/\,\insertmainframenumber}}%
+      \fi
+      \hskip5mm\hss%
+    }%
+    \vskip.8mm
+  }%
+  \endgroup
+}
+\makeatother

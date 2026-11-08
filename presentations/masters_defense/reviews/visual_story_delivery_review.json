@@ -1,0 +1,137 @@
+{
+  "review_type": "Independent delivery and visual progression review against the senior presentation",
+  "reference_report": "reviews/reference_comparison.json",
+  "inspected": {
+    "main_source": "main.tex",
+    "story_plan": "evidence/story_plan.json",
+    "speaker_notes": "speaker-notes.tex",
+    "rendered_pages": [
+      2,
+      3,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      24,
+      25
+    ],
+    "render_directory": "build/visual_story_revision/render",
+    "render_sheet_files": [
+      "motivation.png",
+      "progression.png",
+      "learning.png",
+      "page-12.png"
+    ]
+  },
+  "reviewed_pdf_sha256": "4a31b0c8d0fe3db508b4476f928da67de500183621520494ce3f6b5a795ade06",
+  "overall": "The requested reference-inspired visual progression is achieved. Both low-priority findings were corrected and visually verified on the final rendered sheets. No unresolved delivery or layout finding remains in the inspected scope.",
+  "strengths": [
+    {
+      "pages": [
+        2,
+        3
+      ],
+      "observation": "The same Panda, workpiece, goal marker and camera anchor the purpose-to-constraints progression. Large, sparse visuals replace text-only motivation; no early numerical performance claims."
+    },
+    {
+      "pages": [
+        6,
+        7,
+        8
+      ],
+      "observation": "Robot base, q0, scale and viewport remain fixed while target/obstacles and selected IK are progressively added. The sequence makes setup visibly distinct from execution."
+    },
+    {
+      "pages": [
+        9,
+        10,
+        11
+      ],
+      "observation": "The same scene and selected IK stay in view; the moving robot, active target color and corresponding CLF change together. This directly applies the senior slides 17–19 mechanism/state pairing."
+    },
+    {
+      "pages": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "observation": "The transition criterion appears on page 9, release of the old task on page 10, and EE completion on page 11. Page 12 serves as a recap after each CLF has already been introduced, so its greater density is justified."
+    },
+    {
+      "pages": [
+        24,
+        25
+      ],
+      "observation": "Inputs, encoders, cross-attention, bypass and score head retain fixed positions. Page 25 adds selection and control flow below without shifting the learned model, making execution-before/runtime roles clear."
+    },
+    {
+      "pages": [
+        2,
+        3,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        24,
+        25
+      ],
+      "observation": "Explicit frames are robust under Beamer handout mode. The 30-frame plan retains 1140 seconds plus 60 seconds of transition buffer."
+    }
+  ],
+  "findings": [
+    {
+      "id": "D1",
+      "priority": "low",
+      "pages": [
+        7
+      ],
+      "location": "main.tex, planar-scene right-column heading",
+      "issue": "제어 입력 정보 labels EE goal and obstacles, while the control input later denotes joint velocity u. It could briefly conflate problem inputs with actuator commands.",
+      "recommendation": "Replace with 목표·환경 정보 or 문제 설정.",
+      "status": "resolved_and_visually_verified",
+      "resolution": "Page 7 now reads 목표·환경 정보, separating scene specification from the QP joint-velocity input."
+    },
+    {
+      "id": "D2",
+      "priority": "low",
+      "pages": [
+        6,
+        7,
+        8
+      ],
+      "location": "main.tex, setup right-column fixed-height minipages",
+      "issue": "The 1/3–3/3 markers stay fixed, but 선택한 IK and its main description sit noticeably higher on page 8 than the main headings on pages 6 and 7 because the two vfill regions distribute unequal content. Robot geometry remains correctly fixed.",
+      "recommendation": "Use a fixed top gap after the step marker and aligned heading/description baselines for all three right columns; reserve the final note region consistently.",
+      "status": "resolved_and_visually_verified",
+      "resolution": "Pages 6–8 use the same fixed gap after the step marker. The three right-column headings and description starts now align; robot geometry and viewport remain unchanged."
+    }
+  ],
+  "nonissues_and_limits": [
+    "The white lower region on page 24 intentionally reserves the control blocks for page 25; filling it would undermine stable alignment.",
+    "The motivation render is a schematic workcell, not trial evidence; speaker notes and Q&A explicitly distinguish it. The main slide does not need a small-font disclaimer.",
+    "The stage snapshots are actual recorded end-of-stage configurations rather than interpolated animation; their visual sequence does not establish a new trajectory.",
+    "Reference comparison used OOXML geometry and original embedded media, not a native PowerPoint slide render.",
+    "The final thanks frame was not part of these visual sheets; its user-authored title/subtitle exception is preserved in the source and plan."
+  ],
+  "initial_reviewed_pdf_sha256": "a643061e6cb30db6836b09f9af8a69c35aad930538178f74051b28c35e76183b",
+  "final_visual_check": {
+    "sheets": [
+      "build/visual_story_revision/render/progression.png",
+      "build/visual_story_revision/render/motivation.png",
+      "build/visual_story_revision/render/learning.png"
+    ],
+    "observations": [
+      "Setup headings on pages 6–8 are aligned.",
+      "Motivation headings and body lines are aligned across pages 2–3.",
+      "The page-25 selection-to-control connector has a clear right-angle route without overlap.",
+      "Stage targets use enlarged stars; the function heading now identifies the stage CLF without implying the stored sample still has that stage active."
+    ],
+    "unresolved_findings": 0
+  }
+}

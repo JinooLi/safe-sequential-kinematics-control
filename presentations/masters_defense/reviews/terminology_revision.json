@@ -1,0 +1,97 @@
+{
+  "request": "Use familiar robotics English terms within Korean presentation prose.",
+  "terminology": {
+    "평면": "planar",
+    "말단 / 종단": "end-effector (EE)",
+    "직접 제어": "Direct",
+    "순차 제어 (method name)": "Sequential",
+    "자기 충돌": "self-collision",
+    "완화 변수": "slack 변수",
+    "자유도 (screen labels)": "DOF"
+  },
+  "scope": [
+    "main.tex",
+    "speaker-notes.tex",
+    "generated figures",
+    "발표대본.txt",
+    "질의응답_메모.txt",
+    "README.md"
+  ],
+  "formal_korean_thesis_title_preserved": true,
+  "user_edited_boundary_slide_title_preserved": "안전 경계 부근의 정체",
+  "figure_fonts": "pdfLaTeX + ko.TeX + Latin Modern",
+  "visual_review_pages": [
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    20,
+    22,
+    26,
+    31
+  ],
+  "visual_review_result": "No overlapping labels or clipped text; equal metric-box sizes retained.",
+  "validation": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 31,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 2593,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "e8929c5b86a0fb42825f6202e9890c29834a3293629ad7e800597802ed600537"
+      },
+      "presenter": {
+        "pages": 52,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 6238,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "7fe1d4c8eaacef5568313e6dc31aa73a5ea9d7330a7019bad096645debbc0aa4"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "main_page_13_metric_boxes": "same 0.485\\textwidth and fixed title/body heights",
+      "clf_shapes_page": 7,
+      "clf_time_page": 11,
+      "ik_pose_overlay_page": 6
+    },
+    "main_slides": 21,
+    "appendix_slides": 10,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 21,
+    "figure_audit": "evidence/figure_audit.json"
+  },
+  "source_hashes": {
+    "main.tex": "b711e49ef5dd70d3702e7cddfa19fee868951c900e08cbb54105dd8f948542f5",
+    "speaker-notes.tex": "5431c9d59e79ceef1278aa477651c9212484b2dad986d2e6fef88dfde202929a",
+    "scripts/build_figures.py": "4bd179d16932e0097608a04c5e09301471dd2c342ee375ec67c3f7a7afe77c65",
+    "scripts/build_boundary_case.py": "6c67f4fffcd936f8b39dca91348a9a071dde60a68c2ec91321d340c789982df1"
+  },
+  "new_simulations_or_training": false,
+  "archived_experimental_data_modified": false,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60
+}

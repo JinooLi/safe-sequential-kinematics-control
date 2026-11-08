@@ -1,0 +1,149 @@
+{
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF",
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "source_sha256": {
+    "case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312",
+    "case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8",
+    "all_links_comparison.csv": "1ad7870f370b280132861a4ae25b831796d4ad442fbc1ac57d110c72b0a50c1c",
+    "pair_outcomes.csv": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4",
+    "selector_choices.csv": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d",
+    "recomputed_summary.json": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b"
+  },
+  "planar_direct": {
+    "case_id": 30,
+    "snapshot_seconds": [
+      0,
+      18.226000000000777
+    ],
+    "same_initial_state_verified": true,
+    "displayed_goals": "EE target position and yaw only; intermediate IK targets omitted before method introduction",
+    "same_snapshot_time_as_sequential_success": true,
+    "direct_position_error_at_snapshot_m": 2.4063806913888715,
+    "direct_yaw_error_at_snapshot_rad": 1.0162542309890727,
+    "direct_final_failure_class": "qp_infeasible",
+    "direct_qp_infeasible_count": 3,
+    "failure_class_describes_full_35s_evaluation_not_snapshot": true,
+    "obstacle_halo": "Nominal 0.08 m geometric margin; not exact RDF contours",
+    "all_geometry_inside_common_axes": true
+  },
+  "time_cost": {
+    "split": "validation",
+    "evaluation_seconds": 120,
+    "shared_success_scenes": 330,
+    "direct_mean_seconds": 24.23642424242421,
+    "all_link_sequential_mean_seconds": 44.48193939394044,
+    "all_link_over_direct_ratio": 1.835334245225739,
+    "emphasis": "44.48 s label in red and bold; unchanged archived mean"
+  },
+  "oracle": {
+    "split": "validation",
+    "scenes": 1000,
+    "pairs_per_scene": 10,
+    "fixed_35_successes": 576,
+    "best_fixed_pair": [
+      2,
+      5
+    ],
+    "best_fixed_successes": 581,
+    "scene_wise_oracle_successes": 820,
+    "oracle_definition": "At least one of the ten candidate pairs succeeded in a scene",
+    "oracle_is_post_hoc_upper_bound_not_learned_selector_performance": true,
+    "pair_successes": [
+      533,
+      539,
+      581,
+      530,
+      511,
+      576,
+      548,
+      557,
+      558,
+      540
+    ]
+  },
+  "selection_effect": {
+    "split": "test",
+    "scenes": 1000,
+    "model_family": "baseline",
+    "model_seed": 11,
+    "reference_pair_index": 5,
+    "reference_pair": [
+      3,
+      5
+    ],
+    "both_success": 514,
+    "learned_only": 95,
+    "fixed_only": 73,
+    "both_failure": 318,
+    "net_success_gain": 22,
+    "difference_percentage_points": 2.2,
+    "interpretation": "Paired descriptive result; does not establish a causal mechanism or significance"
+  },
+  "selection_examples": {
+    "split": "test",
+    "model_family": "baseline",
+    "model_seed": 11,
+    "examples": [
+      {
+        "display_label": "Episode A",
+        "case_id": "seed2026120009_0017",
+        "successful_pair_indices": [
+          2
+        ],
+        "learned_pair_index": 2,
+        "learned_pair": [
+          2,
+          5
+        ],
+        "completion_seconds": 65.72000000000406,
+        "all_pair_successes": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "display_label": "Episode B",
+        "case_id": "seed2026120069_0014",
+        "successful_pair_indices": [
+          9
+        ],
+        "learned_pair_index": 9,
+        "learned_pair": [
+          5,
+          6
+        ],
+        "completion_seconds": 23.41999999999959,
+        "all_pair_successes": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "selection_note": "Two selected successes illustrate scene-dependent pair choice; not representative sample statistics"
+  },
+  "figure_files": [
+    "story_planar_direct",
+    "story_time_cost",
+    "story_oracle",
+    "story_selection_effect",
+    "story_selection_examples"
+  ]
+}

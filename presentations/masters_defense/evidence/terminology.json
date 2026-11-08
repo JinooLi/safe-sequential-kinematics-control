@@ -1,0 +1,47 @@
+{
+  "official_title": "Sequential Collision-Aware Kinematic Control of Robot Manipulators Using Control Barrier Functions and Learned Link Selection",
+  "canonical": [
+    "episode",
+    "link",
+    "task",
+    "end-effector (EE)",
+    "Direct",
+    "Sequential",
+    "All-link Sequential",
+    "Preset pair (3,5)",
+    "Learned selection",
+    "Uniform selection",
+    "IK configuration",
+    "self-collision",
+    "null-space",
+    "slack",
+    "Spatial Manipulator",
+    "CLF constraint",
+    "subtask transition",
+    "CBF candidate",
+    "Binary Cross Entropy"
+  ],
+  "first_definitions": {
+    "Direct": "end-effector (EE) tracking without intermediate tasks",
+    "Sequential": "intermediate link tasks followed by EE tracking"
+  },
+  "semantic_distinctions": [
+    "Use task for a controller objective; distinguish it from the physical manipulation operation",
+    "Joint configuration q and spatial pose (p,R) remain distinct",
+    "Direct does not mean a straight Cartesian path",
+    "Use episode for dataset cases; preserve historical source identifiers and filenames",
+    "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
+    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
+    "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded",
+    "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
+    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
+    "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded",
+    "Preset pair (3,5) is selected by highest training success and held unchanged on Validation/Test",
+    "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
+    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
+    "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded"
+  ],
+  "numeric_scene_unit": "episodes",
+  "presentation_title": "Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing",
+  "presentation_title_source": "feedback.md 1번: 발표 제목의 Learned Link Selection을 Supervised Learning-based Subtask Sequencing으로 변경"
+}

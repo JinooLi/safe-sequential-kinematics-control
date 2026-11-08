@@ -1,0 +1,1175 @@
+% !TEX encoding = UTF-8 Unicode
+% CDSL@UoS template: 4:3, boxes, 10pt, serif math, original logos and margins.
+\documentclass[t,10pt,handout]{beamer}
+\input{template-style.tex}
+\usepackage{booktabs,tabularx,bm,tikz,lmodern,appendixnumberbeamer}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric}
+\graphicspath{{Fig/}}
+\definecolor{Accent}{HTML}{205493}
+\definecolor{Success}{HTML}{28735E}
+\definecolor{Muted}{HTML}{67727D}
+\definecolor{Soft}{HTML}{F0F4F8}
+\setbeamercolor{structure}{fg=Accent}
+\setbeamercolor{block title}{fg=Soft,bg=Accent}
+\setbeamercolor{block body}{fg=black,bg=Soft}
+\setbeamercolor{alerted text}{fg=Darkred}
+\setbeamerfont{frametitle}{size=\fontsize{14.4}{17.3}\selectfont}
+\setbeamerfont{title}{size=\fontsize{14.4}{17.3}\selectfont}
+\setbeamerfont{subtitle}{size=\normalsize}
+\setbeamerfont{framesubtitle}{size=\normalsize}
+\setbeamercolor{framesubtitle}{fg=Accent}
+\setbeamertemplate{bibliography item}[text]
+\setbeamertemplate{bibliography entry title}{}
+\setbeamertemplate{bibliography entry location}{}
+\setbeamertemplate{bibliography entry note}{}
+\setbeamerfont{block title}{size=\normalsize}
+\setbeamertemplate{itemize item}{\color{Accent}$\blacktriangleright$}
+\setlength{\tabcolsep}{5pt}
+\pdfstringdefDisableCommands{\def\\{ }}
+
+\newcommand{\takeaway}[1]{\par\begin{beamercolorbox}[sep=2mm,wd=\linewidth]{block body}\color{black}\textbf{#1}\end{beamercolorbox}\par\vspace{2mm}}
+\newcommand{\ee}{\mathrm{ee}}
+\newcommand{\qstar}{q^*}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\tikzset{box/.style={draw=Accent!60,fill=Soft,rounded corners=2pt,align=center,
+    minimum height=10mm,inner sep=3mm,font=\normalsize},
+    arr/.style={-{Stealth[length=2mm]},thick,draw=Accent},
+    mini/.style={box,font=\normalsize,inner sep=2mm,minimum height=8mm}}
+
+% Author verified against the user's sequential-safety-IK manuscript.
+% Defense date is deliberately blank; set it here when the date is fixed.
+\title{Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing}
+\subtitle{Master's Thesis Defense}
+\author{Jinwoo Lee\\[1.5mm]\normalsize Advisor: Gyunghoon Park}
+\institute{\normalsize Department of Electrical and Computer Engineering\\University of Seoul\\[1mm]
+  \normalsize Control \& Dynamic Systems Lab.\\[1mm]
+  \includegraphics[height=12mm]{CDSLlogo.png}\hspace{6mm}\includegraphics[height=12mm]{UoSlogo.jpg}}
+\date{}
+\hypersetup{pdftitle={Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing},pdfauthor={Jinwoo Lee},pdfsubject={20-minute English Master's Thesis Defense}}
+
+
+% Shared slide rhythm: fixed content area with flexible gaps between groups.
+\newenvironment{slidebody}{\begin{minipage}[t][68.5mm][s]{\linewidth}\vspace{0pt}}{\par\vspace{0pt}\end{minipage}}
+\newcommand{\appendixentry}[2]{%
+  \noindent\hyperlink{appendix-a#1}{\strut\makebox[8mm][l]{\color{Accent}\textbf{A#1}}#2}\par\vspace{.2mm}}
+\newcommand{\metricbox}[3]{%
+  \begin{beamercolorbox}[wd=\linewidth,ht=4mm,dp=4mm,center]{block title}\normalsize #1\end{beamercolorbox}%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\linewidth,ht=13mm,dp=3mm,center]{block body}%
+    {\normalsize #2}\\[2mm]{\normalsize #3}%
+  \end{beamercolorbox}}
+
+
+% Consecutive frames share a fixed diagram viewport (handout-safe progression).
+\newcommand{\selectorfigure}[1]{%
+  \begin{tikzpicture}[x=1mm,y=.94mm,
+      compact/.style={mini,font=\normalsize,inner sep=1.4mm,minimum height=7mm},
+      flow/.style={compact,text width=30mm,minimum height=8mm}]
+    \path[use as bounding box] (-55,-54) rectangle (55,7);
+    \node[compact,text width=34mm](r) at (-25.5,0){Robot + goal $z_r$\\$q_0,q^*,p_d,\rho(R_d)$};
+    \node[compact,text width=34mm](o) at (25.5,2){Obstacle set\\$(c_x,c_y,c_z,r)$ per obstacle};
+    \node[compact,text width=34mm](re) at (-25.5,-12){Robot encoder};
+    \node[compact,text width=34mm](oe) at (25.5,-12){Shared obstacle\\encoder};
+    \node[compact,text width=66mm](a) at (0,-24){\textcolor{Darkred}{\textbf{Cross-attention}}~\cite{vaswani2017attention}\\Robot query / obstacle keys and values};
+    \ifnum#1=1
+      \node[compact,text width=66mm](h) at (0,-36){Success scores $\hat p_k$ for 10 pairs};
+    \else
+      \node[compact,text width=66mm](h) at (0,-36){Success scores $\hat p_k$ $\to$ selected sequence $S_{\hat k(z)}$};
+    \fi
+    \draw[arr](r.south)--(re.north);
+    \draw[arr](o.south)--(oe.north);
+    \draw[arr](re.south)--(re.south |- a.north);
+    \draw[arr](oe.south)--(oe.south |- a.north);
+    \draw[arr](a.south)--(h.north);
+    \coordinate (bypass) at (-50,-12);
+    \draw[arr,rounded corners=1mm](re.west)--(bypass)--(bypass |- h.west)--(h.west);
+    \ifnum#1=2
+      \node[flow](seq) at (-38,-49){$S_{\hat k(z)}\to\mathrm{EE}$};
+      \node[flow](qp) at (0,-49){CLF--CBF QP};
+      \node[flow](u) at (38,-49){Joint velocity $u$};
+      \coordinate (routing) at (0,-42);
+      \draw[arr](h.south)--(routing)--(routing -| seq.north)--(seq.north);
+      \draw[arr](seq.east)--(qp.west);
+      \draw[arr](qp.east)--(u.west);
+    \fi
+  \end{tikzpicture}}
+
+\newcommand{\taskqp}[2]{%
+  \[\begin{aligned}
+    \min_{u,\delta}\quad &\tfrac12u^\top W_u u+\tfrac12w_\delta\delta^2\\[2mm]
+    \text{s.t.}\quad &{\color{#2}\nabla_q V_{#1}^{\top}u\leq-c_VV_{#1}+\delta}\\[2mm]
+    &\nabla_qh_r^\top u\geq-\gamma_r h_r,\quad\forall r\\[2mm]
+    &u\in\mathcal U
+  \end{aligned}\]}
+
+\input{progress-style.tex}
+
+\begin{document}
+
+\begin{frame}[plain,label=title]
+  \titlepage
+\end{frame}
+
+\defensepart{Motivation}
+
+\begin{frame}[label=motivation-goal]{Safe Goal Reaching for Autonomous Workstations}
+  \framesubtitle{Research Background}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.66\textwidth}\centering
+      \includegraphics[width=\linewidth,height=60mm,keepaspectratio]{motivation_task.png}
+      \column{.31\textwidth}
+      \textbf{Self-driving laboratories}~\cite{burger2020chemist}\par\vspace{6mm}
+      Laboratory automation\par\vspace{6mm}
+      Industrial manipulation\par\vspace{6mm}
+      \textbf{Reach the required task pose}
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=motivation]{Safe Motion in Cluttered Workspaces}
+  \framesubtitle{Research Background}
+  \begin{slidebody}
+    \takeaway{Goal reaching with whole-arm collision avoidance}
+    
+    \begin{columns}[c,onlytextwidth]
+      \column{.67\textwidth}\centering
+      \includegraphics[width=\linewidth,height=53mm,keepaspectratio]{motivation_safety.png}
+      \column{.30\textwidth}
+      \textbf{Objects and equipment}\par\vspace{5mm}
+      Limited free space\par\vspace{5mm}
+      Safety of every link
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\defensepart{Background}
+
+\begin{frame}[label=background-clf]{Kinematic Control and Goal-Error Reduction}
+  \framesubtitle{Control Lyapunov Function}
+  \begin{slidebody}
+    \centering
+    \textbf{Kinematic control: joint velocity as the input}\par\vspace{2mm}
+    $\dot q=u,\quad q:\ \text{joint angles},\quad u:\ \text{joint velocity}$\par\vspace{3mm}
+    \begin{columns}[c,onlytextwidth]
+      \column{.49\textwidth}\centering
+      \textbf{Control Lyapunov Function (CLF)}\par\vspace{2mm}
+      \begin{tikzpicture}[x=9mm,y=9mm]
+        \path[use as bounding box] (-2.6,-.7) rectangle (2.6,3.2);
+        \draw[-{Stealth},black!70](-2.4,0)--(2.5,0) node[below left]{$e$};
+        \draw[-{Stealth},black!70](0,0)--(0,2.9) node[above]{$V$};
+        \draw[Accent,line width=1.2pt,domain=-2.2:2.2,samples=60] plot(\x,{.5*\x*\x});
+        \draw[Accent,line width=1.6pt,-{Stealth},domain=1.8:.8,samples=30] plot(\x,{.5*\x*\x});
+        \fill[Success](0,0)circle(2pt);
+        \node[Success,below]at(0,-.08){goal};
+      \end{tikzpicture}
+      \column{.47\textwidth}\centering
+      $e(q)$: task error\par\vspace{2mm}
+      $V(q)=\tfrac12\norm{e(q)}^2$\par\vspace{5mm}
+      \textbf{CLF constraint}\par
+      \[\nabla_qV^\top u\leq-c_VV,\quad c_V>0\]
+    \end{columns}
+    \vfill
+    $V=0$: task satisfied\qquad $\dot V<0$: error reduction\par
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=background-cbf]{Background (2/3): CBF for Safety}
+  \framesubtitle{Control Barrier Function}
+  \begin{slidebody}
+    \centering
+    \textbf{Control Barrier Function (CBF)}~\cite{ames2017cbf}\par
+    \vspace{2mm}$\dot q=u,\qquad h(q)=d(q)-d_{\mathrm{safe}}$\par
+    \vfill
+    \begin{columns}[c,onlytextwidth]
+      \column{.47\textwidth}\centering
+      \begin{tikzpicture}[x=9mm,y=9mm]
+        \path[use as bounding box] (-.3,-.65) rectangle (5.3,3.65);
+        % Surface distance: link capsule radius .18, obstacle radius .6.
+        \fill[Accent!35,rounded corners=1.6mm](.65,.15)rectangle(1.01,3.15);
+        \draw[line width=1pt,Accent](.83,.35)--(.83,2.95);
+        \filldraw[fill=black!14,draw=black!65](3.8,1.65)circle(.6);
+        \draw[dashed,Success,thick](3.8,1.65)circle(1.05);
+        \draw[<->,thick](1.01,1.65)--node[above]{$d$}(3.2,1.65);
+        \draw[<->,Success,thick](3.8,2.25)--(3.8,2.70);
+        \node[Success,anchor=west]at(3.92,2.46){$d_{\mathrm{safe}}$};
+        \node[Accent]at(.83,3.5){link};
+        \node at(3.8,.12){obstacle};
+        \node[Success]at(2.55,3.32){Boundary $h=0$};
+        \draw[Success](2.85,3.1)--(3.25,2.55);
+      \end{tikzpicture}
+      \column{.49\textwidth}
+      {\color{Success}\textbf{Safe set}\par\vspace{1mm}$\mathcal C=\{q\mid h(q)\geq0\}$}\par
+      \[\nabla_qh^\top u\geq-\gamma h\]
+      \centering $\gamma>0$\par\vspace{5mm}
+      \textbf{Boundary condition}\par
+      \[h=0\quad\Rightarrow\quad\dot h\geq0\]
+    \end{columns}
+    \vfill
+    $h>0$: motion toward obstacles allowed within the CBF constraint\par
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=background-qp]{QP-Based Kinematic Control~\cite{ames2017cbf}}
+  \framesubtitle{CLF-CBF QP}
+  \begin{slidebody}
+    \centering
+    \textbf{QP-based kinematic control}\par
+    \taskqp{}{Accent}
+    $\delta$: CLF slack\qquad $\mathcal U$: joint-velocity limits\par\vfill
+    \begin{tikzpicture}[x=1mm,y=1mm]
+      \node[box,text width=25mm](state)at(0,0){Joint state $q$};
+      \node[box,text width=25mm](qp)at(38,0){CLF--CBF QP};
+      \node[box,text width=25mm](u)at(76,0){Joint velocity $u$};
+      \draw[arr](state)--(qp);\draw[arr](qp)--(u);
+    \end{tikzpicture}\par\vfill
+    Optimization at every control step\par
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=literature]{Related Work: Challenges in Goal Reaching}
+  \framesubtitle{Local Minima and Deadlock in CLF-CBF QP}
+  \begin{slidebody}\vspace{-1mm}
+    \takeaway{Our approach: IK-derived link tasks along the kinematic chain}
+    \begin{block}{CLF shaping --- Reis et al. (2021)~\cite{reis2021equilibria}}
+      Stable non-goal equilibria $\rightarrow$ rotation of the CLF\par\vspace{1mm}
+      {\centering\(V(x,R)=V_{\mathrm{ref}}(Rx),\qquad R\in\mathrm{SO}(n)\)\par}
+    \end{block}
+    \vfill
+    \begin{block}{QP reformulation --- Tan \& Dimarogonas (2024)~\cite{tan2024equilibria}}
+      Stay close to a CLF-compatible nominal controller\par\vspace{1mm}
+      {\centering\(\min_{u,\delta}\ \tfrac12\|u-u_{\mathrm{nom}}\|^2
+        +\tfrac p2\delta^2\quad\text{s.t. CLF and CBF}\)\par}
+    \end{block}
+    \vfill
+    \begin{block}{Circulation constraints --- Gon\c{c}alves et al. (2023)~\cite{goncalves2023circulation}}
+      Circulation in configuration space; basic theory: $n$ even\par\vspace{1mm}
+      {\centering\(T(q)^\top u\geq\beta(D(q)),\quad
+        \beta(D)>0\ \text{near obstacles}\)\par}
+    \end{block}
+    
+  \end{slidebody}
+\end{frame}
+
+\defensepart{Planar}
+
+\begin{frame}[label=planar-direct]{A Naive Trial: Direct End-Effector Tracking}
+  \framesubtitle{Local Minima and Deadlock in CLF-CBF QP}
+  \begin{slidebody}
+    \centering
+    \textbf{Direct: end-effector (EE) tracking without intermediate tasks}\par
+    \vfill
+    \includegraphics[width=\linewidth,height=55mm,keepaspectratio]{concept_planar_direct.pdf}\par
+    \vfill
+    $V=V_{\ee}$: the final EE CLF from the start\par
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=human-inspiration]{Human-Inspired Intuition: Reposition Before Reaching}
+  \framesubtitle{Research Objectives}
+  \begin{slidebody}
+    \centering
+    \textbf{Arm repositioning $\longrightarrow$ hand reaching}\par\vspace{3mm}
+    \begin{tikzpicture}[x=8mm,y=8mm]
+      \foreach \shift/\a/\b/\caption in {0/-50/-30/Initial posture,4.8/70/30/Shoulder repositioning,9.6/60/-15/Hand reaching}{
+        \begin{scope}[shift={(\shift,0)}]
+          \fill[black!20](-.55,-.55)rectangle(-.08,.6);
+          \filldraw[fill=black!12,draw=black!50](1.15,.0)rectangle(1.70,.65);
+          \coordinate(S)at(0,0);
+          \coordinate(E)at({1.5*cos(\a)},{1.5*sin(\a)});
+          \coordinate(H)at({1.5*cos(\a)+1.3*cos(\b)},{1.5*sin(\a)+1.3*sin(\b)});
+          \draw[line width=2.5pt,Accent](S)--(E);
+          \draw[line width=2.5pt,Success](E)--(H);
+          \fill[Accent](S)circle(2pt);\fill[black](E)circle(1.5pt);
+          \draw[Success,fill=white,line width=1pt](H)circle(2pt);
+          \node[star,star points=5,fill=Success,inner sep=2pt]at(2.006,.963){};
+          \node[align=center,text width=37mm]at(1,-2.45){\caption};
+        \end{scope}
+      }
+    \end{tikzpicture}\par\vfill
+    \begin{block}{A design intuition for the manipulator}
+      Intermediate link targets $\longrightarrow$ final end-effector target
+    \end{block}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=thesis-outline]{Thesis Roadmap: From Problem to Method}
+  \framesubtitle{Research Objectives}
+  \begin{slidebody}
+    \begin{enumerate}\setlength{\itemsep}{4mm}
+      \item Introduction: research background and objectives
+      \item Preliminaries: kinematics and CLF--CBF QP
+      \item \textbf{A Sequential Approach to Collision-Free Kinematic Control}\\[1mm]
+        Planar example $\to$ spatial extension $\to$ supervised sequencing
+      \item Simulation Results: success and completion time
+      \item Conclusion: contributions and future work
+    \end{enumerate}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-scene]{Proposed Method: Initial State, Goal, and Obstacles}
+  \framesubtitle{Intermediate Targets and Sequential Tasks}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.60\textwidth}\centering
+      \includegraphics[width=\linewidth,height=61mm,keepaspectratio]{progressive_planar_02_scene.pdf}
+      \column{.37\textwidth}
+      \textbf{1 / 2: Task specification}\par\vspace{5mm}
+      Initial state $q_0$\par\vspace{4mm}
+      EE goal $(p_d,\psi_d)$\par\vspace{4mm}
+      Obstacles $\mathcal O$\par\vspace{5mm}
+      Inverse kinematics (IK)
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-setup]{Proposed Method: IK-Derived Intermediate Link Targets}
+  \framesubtitle{Intermediate Targets and Sequential Tasks}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.60\textwidth}\centering
+      \includegraphics[width=\linewidth,height=63mm,keepaspectratio]{progressive_planar_03_ik.pdf}
+      \column{.37\textwidth}
+      \begin{minipage}[c][61mm][s]{\linewidth}
+        {\color{Accent}\normalsize\textbf{2 / 2}}\par\vspace{12mm}
+        {\normalsize\textbf{Selected IK solution}}\par\vspace{4mm}
+        Dashed: target configuration\\[3mm]$p_i^*=p_i(q^*)$\par\vfill
+        Targets from a single $q^*$
+      \end{minipage}
+    \end{columns}
+    \vfill
+    \centering\textbf{Sequential: intermediate link tasks followed by EE tracking}\par
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-sequential]{Sequential: Link 1 Subtask}
+  \framesubtitle{CLF-CBF QP-Based Kinematic Control}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.48\textwidth}\centering
+      \includegraphics[width=\linewidth,height=61mm,keepaspectratio]{progressive_planar_04_link1.pdf}
+      \column{.50\textwidth}\centering
+      \taskqp{1}{Accent}
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-link2]{Sequential: Link 2 Subtask}
+  \framesubtitle{CLF-CBF QP-Based Kinematic Control}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.48\textwidth}\centering
+      \includegraphics[width=\linewidth,height=61mm,keepaspectratio]{progressive_planar_05_link2.pdf}
+      \column{.50\textwidth}\centering
+      \taskqp{2}{orange!80!black}
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-ee]{Sequential: End-Effector Subtask}
+  \framesubtitle{CLF-CBF QP-Based Kinematic Control}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.48\textwidth}\centering
+      \includegraphics[width=\linewidth,height=61mm,keepaspectratio]{progressive_planar_06_ee.pdf}
+      \column{.50\textwidth}\centering
+      \taskqp{\ee}{Success}
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-clf]{Planar CLFs: One QP and One CLF at Each Stage}
+  \framesubtitle{Intermediate Position Tasks and Final Pose Task}
+  \begin{slidebody}
+    \centering\textbf{Stage-wise CLF constraint}\par\vspace{2mm}
+
+    \centering
+    \begin{tikzpicture}[x=1mm,y=1mm]
+      \node[font=\normalsize\bfseries,text=Accent] (q1) at (18,0){$\mathrm{QP}_1$};
+      \node[font=\normalsize\bfseries,text=orange!80!black] (q2) at (57,0){$\mathrm{QP}_2$};
+      \node[font=\normalsize\bfseries,text=Success] (qe) at (96,0){$\mathrm{QP}_{\ee}$};
+      \draw[arr](q1)--(q2);
+      \draw[arr](q2)--(qe);
+      \node at(57,7){Subtask transition};
+    \end{tikzpicture}\par
+    \vfill
+    \begin{columns}[T,onlytextwidth]
+      \column{.32\textwidth}\centering
+      \includegraphics[width=.92\linewidth,height=24mm,keepaspectratio]{concept_clf_1.pdf}\\[-1mm]
+      $V_1=w_V\norm{e_{p,1}}^2$\par\vspace{1mm}
+      \colorbox{Accent!12}{\strut$\dot V_1\leq-c_VV_1+\delta$}
+      \column{.32\textwidth}\centering
+      \includegraphics[width=.92\linewidth,height=24mm,keepaspectratio]{concept_clf_2.pdf}\\[-1mm]
+      $V_2=w_V\norm{e_{p,2}}^2$\par\vspace{1mm}
+      \colorbox{orange!12}{\strut$\dot V_2\leq-c_VV_2+\delta$}
+      \column{.32\textwidth}\centering
+      \includegraphics[width=.92\linewidth,height=24mm,keepaspectratio]{concept_clf_ee.pdf}\\[-1mm]
+      $V_{\ee}$: position + yaw\par\vspace{1mm}
+      \colorbox{Success!12}{\strut$\dot V_{\ee}\leq-c_VV_{\ee}+\delta$}
+    \end{columns}
+    \vfill
+    {\normalsize $V_{\ee}=w_V\bigl(\norm{e_{p,\ee}}^2+w_\psi[1-\cos e_\psi]\bigr),\quad w_V,w_\psi>0$}\par
+    \vfill
+    \centering
+    Shared: QP objective, CBFs, and input limits\par\vspace{2mm}
+    
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=algorithm-overview]{One Sequential Algorithm, Model-Specific Functions}
+  \framesubtitle{Sequential Kinematic Control Framework}
+  \begin{slidebody}
+    \centering\textbf{Shared QP structure and sequential task execution}\par\vspace{2mm}
+    \centering
+    \begin{tikzpicture}[x=1mm,y=1mm]
+      \node[box,inner sep=2mm,text width=20mm](ik)at(0,0){Safe IK\\$q^*$};
+      \node[box,inner sep=2mm,text width=24mm](tasks)at(29,0){Link subtasks\\$S=(i_1,\ldots,i_L)$};
+      \node[box,inner sep=2mm,text width=22mm](qp)at(61,0){Active CLF\\CLF--CBF QP};
+      \node[box,inner sep=2mm,text width=18mm](run)at(90,0){Apply $u$\\$\dot q=u$};
+      \draw[arr](ik)--(tasks);\draw[arr](tasks)--(qp);\draw[arr](qp)--(run);
+    \end{tikzpicture}\par\vfill
+    \begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+      Component & Planar manipulator & Spatial Manipulator\\\midrule
+      Configuration & $q\in\mathbb R^3$ & $q\in\mathbb R^7$\\[3mm]
+      Task error & Position / yaw & Position / quaternion\\[3mm]
+      Collision functions & Analytic link distances & Capsule + RDF distances\\\bottomrule
+    \end{tabularx}\par\vfill
+    
+    Model-specific functions and transition / termination policies
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-results]{Planar Results: Direct 72.00\% / Sequential 84.33\%}
+  \framesubtitle{System 1: 3-DOF Planar Model}
+  \begin{slidebody}
+    \centering
+    \includegraphics[width=.94\linewidth,height=38mm,keepaspectratio]{planar_success.pdf}\par
+    \vfill
+    \begin{columns}[T,onlytextwidth]
+      \column{.48\textwidth}
+      \textbf{300 IK episodes}
+      \begin{itemize}\setlength{\itemsep}{1mm}
+        \item 1 m per link; 2 obstacles
+        \item Initial $q_0=(0,0,0)$
+        \item Time limit $T=35$ s
+      \end{itemize}
+      \column{.46\textwidth}
+      \textbf{Success on the same 300 episodes}\par\vspace{1mm}
+      \begin{tabular}{lr}\toprule
+        Sequential only  & 47          \\[1mm]
+        Direct only      & 10          \\[1mm]
+        Net success gain & \textbf{37} \\\bottomrule
+      \end{tabular}
+    \end{columns}
+    \vfill
+    \centering Success: EE goal reached safely within 35 s\par
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=planar-why]{Resolving Deadlock through Task Transition}
+  \framesubtitle{Paired Outcomes and an Illustrative Trajectory}
+  \begin{slidebody}
+    \takeaway{Intermediate tasks allow temporary increases in EE error}
+    \vspace{1mm}
+    \centering
+    \includegraphics[width=\linewidth,height=35mm,keepaspectratio]{case030_clf_time.pdf}\par\vspace{1mm}
+    {\normalsize Solid/shaded: active / dashed: inactive / purple: Direct}
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{4mm}
+      \item Direct: final-goal tracking can settle at a non-goal equilibrium
+      \item Sequential: a new subtask changes the feasible tracking direction
+    \end{itemize}
+    
+  \end{slidebody}
+\end{frame}
+
+\defensepart{Spatial}
+
+\begin{frame}[label=panda-extension]{Extension to a 7-DOF Spatial Manipulator}
+  \framesubtitle{Extension to the 7-DOF Spatial Manipulator}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.58\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=62mm,keepaspectratio]{panda_mujoco.png}\\[1mm]
+      {\normalsize MuJoCo: initial configuration and goal pose}
+      \column{.38\textwidth}
+      \begin{itemize}\setlength{\itemsep}{5mm}
+        \item Position \textbf{and} orientation targets
+        \item Accurate distances for complex link shapes
+        \item Relative motion between robot links
+        \item Collision-free IK among redundant solutions
+      \end{itemize}
+    \end{columns}
+    \vfill
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=panda-rdf]{Self-Collision CBFs from RDF~\cite{li2024rdf}}
+  \framesubtitle{RDF-Based Construction of CBF}
+  \begin{slidebody}
+    \begin{columns}[c,onlytextwidth]
+      \column{.59\textwidth}\centering
+      \includegraphics[width=\linewidth,height=48mm,keepaspectratio]{rdf_query_field.pdf}
+      \column{.38\textwidth}
+      \textbf{1. Transform queries}\par
+      \[\xi_{ab,k}=R_b^\top(x_{a,k}-p_b)\]
+      \textbf{2. Evaluate the RDF}\par
+      \[d_k=\tilde d_b(\xi_{ab,k})\]
+      \textbf{3. Construct $h_{ab}(q)$}\par
+      \[D_{ab}=\operatorname{softmin}_k d_k\]
+      \[h_{ab}=D_{ab}-m_{\mathrm{phys}}-m_{\mathrm{err}}\]
+    \end{columns}\par\vfill
+    \textbf{Our CBF construction:} soft-min, margins, relative gradients\par\vspace{2mm}
+    \centering $\nabla_qh_{ab}^{\top}u\geq-\gamma h_{ab}$\par
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=panda-ik]{Spatial IK: Target Search with Null-Space Updates}
+  \framesubtitle{Multi-Start IK with a Safety-Aware Null-Space Update}
+  \begin{slidebody}
+    \setlength{\abovedisplayskip}{3pt}
+    \setlength{\belowdisplayskip}{3pt}
+
+    \begin{block}{EE-error correction + clearance improvement~\cite{siciliano2009robotics}}
+      \[v_{\mathrm{IK}}=
+        \underbrace{J_\lambda^\# k_pe_{\mathrm{IK}}}_{\text{EE-error correction}}
+        +\underbrace{(I-J^\dagger J)k_h\nabla H_\tau}_{v_h:\ \text{null-space term}}\]
+    \end{block}
+    \vfill
+    \[H_\tau=-\tau\log\sum_r e^{-h_r^{\mathrm{IK}}/\tau}\]
+    \[Jv_h=0,\qquad \nabla H_\tau^\top v_h\geq0\]
+    \centering Clearance improvement without changing the EE twist\par
+    \vfill
+    \begin{enumerate}\setlength{\itemsep}{3mm}
+      \item Capsule-based search from multiple initial guesses
+      \item Acceptance of $q^*$ after goal, joint-limit, and RDF collision checks
+    \end{enumerate}
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=panda-clf]{Spatial CLFs: Position and Orientation}
+  \framesubtitle{All-Link Sequence and Spatial Pose Tasks}
+  \begin{slidebody}
+
+    \begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+      Model  & Intermediate link tasks & Final EE task          \\\midrule
+      Planar & position                & position + yaw         \\[3mm]
+      Spatial Manipulator  & position + orientation  & position + orientation \\\bottomrule
+    \end{tabularx}
+    \vfill
+    \begin{block}{The same CLF form for intermediate and final tasks}
+      \[V_i=\tfrac12\norm{p_i-p_i^*}^2+
+        \tfrac{w_R}{2}\norm{\epsilon_i}^2\]
+      \[[\eta_i,\epsilon_i^\top]^\top=Q_i^*Q_i^{-1}\]
+    \end{block}
+    \vfill
+    \centering
+    $\epsilon_i$: vector part of the relative unit quaternion\par
+    \vspace*{6mm}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=all-links]{All-link Sequential: Spatial Manipulator Results}
+  \framesubtitle{Effect of All-Link Sequential Control}
+  \begin{slidebody}
+
+    \begin{block}{All-link Sequential: every link task followed by the EE task}
+      \centering
+      $1\to2\to3\to4\to5\to6\to7\to\mathrm{EE}$
+    \end{block}
+    \vfill
+    \centering
+    \includegraphics[width=.96\linewidth,height=38mm,keepaspectratio]{panda_all_links.pdf}\par
+    \vfill
+    \textbf{Validation:} 1,000 IK episodes / 10 obstacles / 120 s\par
+    \vspace{2mm}Success: EE goal reached safely within 120 s\par
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=time-cost]{The Completion-Time Cost of All-link Sequential Control}
+  \framesubtitle{Effect of All-Link Sequential Control}
+  \begin{slidebody}
+    \takeaway{Fewer intermediate stages while retaining the goal-reaching benefit}
+
+    \centering
+    \textbf{Validation: 330 episodes with success in both methods}\par
+    \vfill
+    \includegraphics[width=.95\linewidth,height=43mm,keepaspectratio]{story_time_cost.pdf}\par
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{2.5mm}
+      \item Mean completion time: 24.24 s $\to$ \textcolor{Darkred}{\textbf{44.48 s}}
+      \item Added stages from seven intermediate link tasks
+    \end{itemize}
+    
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=two-links]{Reduction to Two Intermediate Link Tasks}
+  \framesubtitle{Two-Link Reduction: Completion Time and Success}
+  \begin{slidebody}
+    \takeaway{Two selected link tasks / all seven joint velocities $u\in\mathbb R^7$}
+    \begin{block}{Intermediate links: 7 $\to$ 2 / total tasks: 8 $\to$ 3}
+      \centering
+      Two links from 2--6: $2\le i<j\le6$, 10 candidate pairs\\[2mm]
+      \textbf{Preset pair $(3,5)$:}\quad$\boxed{3}\to\boxed{5}\to\ee$
+      \par\vspace{2mm}Highest training success rate; fixed for Validation and Test
+    \end{block}
+    \vfill
+    \begin{tabularx}{\linewidth}{@{}Xrr@{}}\toprule
+      Validation          & Success rate   & \shortstack{Mean time (s) \\468 shared successes} \\\midrule
+      All-link Sequential & 59.00\%        & 47.13                     \\[2mm]
+      Preset pair $(3,5)$       & 57.60\%        & 36.45                     \\[2mm]
+      Change              & \textcolor{Darkred}{\textbf{\boldmath$-1.40$\%p}} & \textcolor{Darkred}{\textbf{\boldmath$-22.67$\%}}                \\\bottomrule
+    \end{tabularx}
+    \vfill
+    
+  \end{slidebody}
+\end{frame}
+
+\defensepart{Learning}
+
+\begin{frame}[label=oracle]{Link-Pair Selection: A Potential Upper Bound near 80\%}
+  \framesubtitle{Two-Link Reduction: Completion Time and Success}
+  \begin{slidebody}
+    \takeaway{Oracle 82.00\%: post-hoc bound from all 10 candidate rollouts}
+
+    \centering
+    \includegraphics[width=\linewidth,height=42mm,keepaspectratio]{story_oracle.pdf}\par
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{3mm}
+      \item Validation: a successful pair in 820/1,000 episodes
+      \item Potential gain from selecting a different pair for each episode
+    \end{itemize}
+    
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=selector-training]{Training Labels and Losses}
+  \framesubtitle{Training Objective and Sequence Selection}
+  \begin{slidebody}
+    \begin{block}{Episode labels $y_k$: 1 = success, 0 = failure}
+      \centering
+      \setlength{\tabcolsep}{3pt}
+      \begin{tabular}{cccccccccc}
+        $(2,3)$                         & $(2,4)$ & $(2,5)$ & $(2,6)$                         & $(3,4)$ & $\boxed{(3,5)}$                 & $(3,6)$ & $(4,5)$ & $(4,6)$ & $(5,6)$ \\
+        \textcolor{Success}{\textbf{1}} & 0       & 0       & \textcolor{Success}{\textbf{1}} & 0       & \textcolor{Darkred}{\textbf{0}} & 0       & 0       & 0       & 0
+      \end{tabular}
+    \end{block}
+    \vfill
+    {\color{Accent}\textbf{Binary Cross Entropy: predict each pair's success}}\par
+    \vspace{2mm}
+    {\centering\(
+      \ell_{\mathrm{BCE}}=-\frac1{10}\sum_{k=1}^{10}
+      \bigl[y_k\log\hat p_k+(1-y_k)\log(1-\hat p_k)\bigr]
+      \)\par\vspace{1mm}
+      Model logits $a_k$\quad $\hat p_k=\sigma(a_k)$\par}
+    \vfill
+    {\color{Accent}\textbf{Selection: put weight on successful pairs}}\par
+    \vspace{2mm}
+    {\centering\(
+    \ell_{\mathrm{sel}}=
+    \begin{cases}
+      -\log\sum_{k:y_k=1}\omega_k, & \text{any successful pair}, \\[1mm]
+      0,                           & \text{all pairs fail},
+    \end{cases}
+    \qquad \omega_k=\dfrac{e^{a_k}}{\sum_{j=1}^{10}e^{a_j}}
+    \)\par}
+    \vfill
+    {\centering\(\mathcal L=\frac1N\sum_{n=1}^{N}
+      \bigl(\ell_{\mathrm{BCE},n}+3\ell_{\mathrm{sel},n}\bigr)\)\par}
+    \vspace{2mm}
+    \centering\normalsize Train \textbf{21,423} / Validation \textbf{1,000} / Test \textbf{1,000} episodes
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=selector-features]{Learned Selection (1/2): Predicting Success Scores}
+  \framesubtitle{Network Architecture}
+  \begin{slidebody}
+    \takeaway{Before execution: score each candidate link pair}
+    \centering
+    \selectorfigure{1}\par\vfill
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=selector-model]{Learned Selection (2/2): From Selected Tasks to the QP}
+  \framesubtitle{Network Architecture}
+  \begin{slidebody}
+    \takeaway{Before execution: pair selection / during execution: QP at each step}
+    \centering
+    \selectorfigure{2}\par
+    
+  \end{slidebody}
+\end{frame}
+
+\defensepart{Results}
+
+\begin{frame}[label=test-success]{Test Results: Goal-Reaching Success Rates}
+  \framesubtitle{Recovery Through Learned Link Selection}
+  \begin{slidebody}
+    \centering
+    \textbf{Test:} 1,000 IK episodes / shared success criteria\par\vfill
+    \includegraphics[width=\linewidth,height=44mm,keepaspectratio]{panda_test_success.pdf}\par
+    \vfill
+    \begin{block}{Learned selection $-$ Preset pair $(3,5)$: +2.20 percentage points (pp)}
+      Paired 95\% confidence interval (CI): $[-0.30,4.70]$\,pp\\[1mm]\textbf{Uncertain improvement over Preset pair (3,5)}
+    \end{block}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=test-time]{Shorter Completion Time with Fewer Subtasks}
+  \framesubtitle{Two-Link Reduction: Completion Time and Success}
+  \begin{slidebody}
+    \takeaway{Stage reduction retains the completion-time benefit}
+    
+    \centering
+    \includegraphics[width=.95\linewidth,height=43mm,keepaspectratio]{paired_time_test_all_links.pdf}\par\vfill
+    \textbf{467 Test episodes with success in both methods}\par\vspace{3mm}
+    Mean completion time: $47.97\to36.62$ s\par\vspace{2mm}
+    \textbf{11.35 s shorter with two intermediate subtasks}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=learning-why]{An Episode Recovered by Learned Selection}
+  \framesubtitle{Recovery Through Learned Link Selection}
+  \begin{slidebody}
+    \centering
+    \textbf{Shared initial state and final configurations of the two rollouts}\par
+    \vfill
+    \includegraphics[width=\linewidth,height=49mm,keepaspectratio]{recovery_comparison.pdf}\par
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{2mm}
+      \item Preset pair $(3,5)$: stopped at link 3 / selected $(5,6)$: EE goal reached
+      \item Full Test: Learned selection only 95 / Preset pair (3,5) only 73
+    \end{itemize}
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=conclusion]{Conclusions: Safe Control and Learned Sequencing}
+  \framesubtitle{Conclusion}
+  \begin{slidebody}
+
+    \begin{enumerate}\setlength{\itemsep}{5mm}
+      \item \textbf{IK-based Sequential task construction}\\[1mm]
+            Higher observed success rates than Direct on Planar and Spatial Manipulator
+      \item \textbf{Stage reduction to two intermediate links}\\[1mm]
+            Shorter completion times than All-link Sequential
+      \item \textbf{Learned link-pair selection for each episode}\\[1mm]
+            Versus Preset pair $(3,5)$: +2.20\,pp / 95\% CI $[-0.30,4.70]$\,pp
+    \end{enumerate}
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[label=future-work]{Future Work: From Simulation to Robot Experiments}
+  \framesubtitle{Interpretation and Limitations}
+  \begin{slidebody}
+    \begin{block}{A common, fresh evaluation}
+      Corrected QP + frozen selector + previously unseen episodes
+    \end{block}\vfill
+    \begin{block}{Online deployment on the Spatial Manipulator}
+      Distance-query latency, QP timing, and tracking accuracy
+    \end{block}\vfill
+    \begin{block}{Physical-robot validation}
+      Model mismatch, sensing uncertainty, and collision margins
+    \end{block}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[c,label=questions]{}
+  \centering
+  {\color{Accent}\normalsize Thank you}\\[-18mm]
+\end{frame}
+
+\appendix
+
+\begin{frame}{Appendix Contents}
+  \hypertarget{appendix-contents}{}
+  \begin{slidebody}
+    \begin{columns}[t,onlytextwidth]
+      \column{.48\textwidth}
+      \begin{minipage}[t][67mm][s]{\linewidth}
+        \begin{block}{\strut Control and geometry}
+          \appendixentry{3}{Spatial IK safety term}
+          \appendixentry{4}{RDF barrier derivatives}
+          \appendixentry{12}{Full CLF--CBF QP}
+          \appendixentry{13}{Control architecture}
+        \end{block}
+        \vfill
+        \begin{block}{\strut Tasks and foundations}
+          \appendixentry{5}{Stage-transition rules}
+          \appendixentry{9}{Safe-set invariance}
+          \appendixentry{11}{Goal criteria}
+          \appendixentry{7}{References}
+          \appendixentry{17}{Related-work assumptions}
+        \end{block}
+      \end{minipage}
+      \column{.48\textwidth}
+      \begin{minipage}[t][67mm][s]{\linewidth}
+        \begin{block}{\strut Learning and evaluation}
+          \appendixentry{2}{Validation success by pair}
+          \appendixentry{6}{Paired test comparisons}
+          \appendixentry{8}{Training and model selection}
+          \appendixentry{14}{Further validation}
+        \end{block}
+        \vfill
+        \begin{block}{\strut Episode diagnostics}
+          \appendixentry{1}{Planar episode 11}
+          \appendixentry{10}{Planar episode 30}
+          \appendixentry{15}{Recovered and lost episodes}
+          \appendixentry{16}{Boundary stagnation}
+        \end{block}
+      \end{minipage}
+    \end{columns}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A1. Full Diagnostics for Planar Episode 11}
+  \hypertarget{appendix-a1}{}
+  \framesubtitle{System 1: 3-DOF Planar Model}
+  \begin{slidebody}
+    \centering
+    \includegraphics[width=.98\linewidth,height=54mm,keepaspectratio]{planar_trace.pdf}
+    \vfill
+    \begin{itemize}\normalsize
+      \item Position, yaw, minimum barrier, and active link
+      \item Red dashed: evaluation tolerance / green: first success at 17.176 s
+    \end{itemize}
+
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A2. Validation Success by Link Pair}
+  \hypertarget{appendix-a2}{}
+  \framesubtitle{Two-Link Reduction: Completion Time and Success}
+  \begin{slidebody}
+    \takeaway{Oracle: post-hoc upper bound, not an executable selection policy}
+    \centering
+    \includegraphics[width=.98\linewidth,height=43mm,keepaspectratio]{pair_variability.pdf}
+    \begin{itemize}
+      \item Preset pair $(3,5)$: selected by the \textbf{highest training success rate}
+      \item Best single pair on Validation: $(2,5)$, 58.10\%
+      \item At least one successful pair: 820/1,000 episodes (oracle 82.00\%)
+    \end{itemize}
+    
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A3. Spatial Manipulator IK: Soft-Min Safety Term}
+  \hypertarget{appendix-a3}{}
+  \framesubtitle{Multi-Start IK with a Safety-Aware Null-Space Update}
+  \begin{slidebody}
+    \normalsize
+    \[H_\tau(q)=-\tau\log\sum_r e^{-h_r^{\mathrm{IK}}(q)/\tau},\qquad
+      \nabla H_\tau=\sum_r\pi_r\nabla h_r^{\mathrm{IK}}\]
+    \[\pi_r=\frac{e^{-h_r^{\mathrm{IK}}/\tau}}{\sum_j e^{-h_j^{\mathrm{IK}}/\tau}},\qquad
+      v_h=k_h(I-J^\dagger J)\nabla H_\tau\]
+    \begin{block}{Orthogonal null-space projector $N=I-J^\dagger J$~\cite{siciliano2009robotics}}
+      \[Jv_h=0,\qquad \nabla H_\tau^\top v_h=k_h\norm{N\nabla H_\tau}^2\geq0\]
+      First-order increase in $H_\tau$ without changing the EE twist
+    \end{block}
+    \vfill
+    \begin{itemize}
+      \item Full update: primary task term and joint clipping also included
+      \item IK iterates: neither an executed path nor a safety proof for all iterations
+      \item No solution within the search budget; no proof of unreachability
+    \end{itemize}
+
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A4. RDF Barriers: Differentiating Both Links' Motion}
+  \hypertarget{appendix-a4}{}
+  \framesubtitle{RDF-Based Construction of CBF}
+  \begin{slidebody}
+    \normalsize
+    \[\xi_{ab,k}=R_b^\top(x_{a,k}-p_b),\qquad d_k=\tilde d_b(\xi_{ab,k})\]
+    \begin{align*}
+      J_{x,k}               & =J_{p,a}-[R_as_{a,k}]_\times J_{\omega,a},                            \\
+      J_{\xi,k}             & =R_b^\top\big(J_{x,k}-J_{p,b}+[x_{a,k}-p_b]_\times J_{\omega,b}\big), \\
+      \nabla_qh_{ab}^{\top} & =\sum_k\pi_k\nabla_\xi\tilde d_b(\xi_{ab,k})^\top J_{\xi,k}.
+    \end{align*}
+    \vfill
+    \begin{block}{Soft-min bounds for a fixed query set~\cite{molnar2023composing}}
+      \[\min_kd_k-\varepsilon_{\mathrm{sm}}\leq D_{ab}\leq\min_kd_k,
+        \quad\beta=\frac{\log K}{\varepsilon_{\mathrm{sm}}}\]
+      $\varepsilon_{\mathrm{sm}}$: soft-min approximation error over the query set;\\
+      no guarantee on RDF geometry error or unqueried surface clearance
+    \end{block}
+
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A5. Stage-Transition Rules: Planar and Spatial Manipulator}
+  \hypertarget{appendix-a5}{}
+  \framesubtitle{Stage-Transition Rule}
+  \begin{slidebody}
+    \normalsize
+    \begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+      Condition         & Planar                                                           & Spatial Manipulator                                                               \\\midrule
+      Intermediate task & Link 1 and 2 positions                                           & Selected-link position and orientation                              \\[2mm]
+      Subtask transition     & Intermediate position within tolerance                           & Position-error norm $\leq0.05$ m; quaternion-vector norm $\leq0.05$ \\[2mm]
+      Boundary stall    & Next stage if small commanded speed and active collision barrier & Termination if low applied speed and insufficient error reduction   \\[2mm]
+      QP infeasible     & Switch and recompute at intermediate stages                      & Termination without further integration                             \\[2mm]
+      Numerical failure & Separate from infeasibility switching                            & Termination                                                         \\\bottomrule
+    \end{tabularx}
+    \vspace{3mm}
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A6. Test Comparisons on Shared Episodes}
+  \hypertarget{appendix-a6}{}
+  \framesubtitle{Recovery Through Learned Link Selection}
+  \begin{slidebody}
+    \takeaway{No additional speed gain observed over Preset pair (3,5)}
+    \normalsize
+    \begin{tabularx}{\linewidth}{@{}Xrr@{}}\toprule
+      Comparison (second $-$ first)               & Gap (pp)  & 95\% CI (pp)   \\\midrule
+      Direct $\to$ All-link Sequential            & +9.70\,pp & $[6.00,13.40]$ \\[2mm]
+      All-link Sequential $\to$ Learned selection & +5.70\,pp & $[2.70,8.60]$  \\[2mm]
+      Preset pair $(3,5)$ $\to$ Learned selection       & +2.20\,pp & $[-0.30,4.70]$ \\\bottomrule
+    \end{tabularx}
+    \vspace{4mm}
+    \begin{tabularx}{\linewidth}{@{}Xrr@{}}\toprule
+      Shared-success subset                   & Episodes & Mean time (s) \\\midrule
+      All-link Sequential / Learned selection & 467      & 47.97 / 36.62 \\[2mm]
+      Preset pair $(3,5)$ / Learned selection       & 514      & 36.12 / 36.21 \\\bottomrule
+    \end{tabularx}
+    
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}[allowframebreaks=0.88]{A7. References}
+  \hypertarget{appendix-a7}{}
+  \framesubtitle{Bibliography}
+  \normalsize
+  \bibliographystyle{IEEEtran}
+  \bibliography{references}
+\end{frame}
+
+\begin{frame}{A8. Training Loss and Model Selection}
+  \hypertarget{appendix-a8}{}
+  \framesubtitle{Training Objective and Sequence Selection}
+  \begin{slidebody}
+    \normalsize
+    \[\omega_k=\frac{e^{a_k}}{\sum_j e^{a_j}},\qquad
+      \ell_{\mathrm{sel},n}=\begin{cases}
+        -\log\sum_{k:y_{nk}=1}\omega_k, & \exists k:y_{nk}=1,    \\
+        0,                              & \text{all pairs fail}.
+      \end{cases}\]
+    \[\mathcal L=\frac1{N_{\mathrm{tr}}}\sum_n\left[\frac1{10}\sum_k
+        \ell_{\mathrm{BCE}}(y_{nk},\hat p_k)+3\ell_{\mathrm{sel},n}\right]\]
+    \vfill
+    \begin{itemize}
+      \item AdamW: learning rate $10^{-3}$, weight decay $10^{-4}$, batch 64
+      \item Up to 500 epochs, patience 50; five seeds: 11, 23, 37, 53, 71
+      \item Selection by Validation successes, then BCE: seed 11, epoch 20
+      \item Train-only joint normalization; all 10 outcomes per episode in one split
+      \item Training: mixed legacy/revised QP data; Validation/Test: legacy controller
+    \end{itemize}
+
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A9. Task Switching and Safe-Set Invariance}
+  \hypertarget{appendix-a9}{}
+  \framesubtitle{Sequential Kinematic Control Framework}
+  \begin{slidebody}
+    \takeaway{Safe-set invariance under assumptions / no guarantee of goal convergence}
+    \begin{block}{Assumptions for standard CBF invariance~\cite{ames2017cbf}}
+      \begin{itemize}\setlength{\itemsep}{2mm}
+        \item $C^1$ barriers $h_r$ over the visited region
+        \item Initial condition $q(0)\in\mathcal C$
+        \item Actual velocity satisfying $\dot h_r\geq-\gamma_rh_r$ almost everywhere
+      \end{itemize}
+    \end{block}
+    \vfill
+    \[h_r(t)\geq e^{-\gamma_rt}h_r(0)\geq0\]
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{3mm}
+      \item Same state and barriers across task switches
+      \item Separate checks for QP feasibility, goal convergence, and discretization
+    \end{itemize}
+    
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A10. Planar Episode 30: Configurations and CLFs}
+  \hypertarget{appendix-a10}{}
+  \framesubtitle{Paired Outcomes and an Illustrative Trajectory}
+  \begin{slidebody}
+    \centering
+    \includegraphics[width=\linewidth,height=68mm,keepaspectratio]{case030_overview.pdf}\par
+    \vfill
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A11. Problem Definition and Goal Criteria}
+  \hypertarget{appendix-a11}{}
+  \framesubtitle{Problem Formulation}
+  \begin{slidebody}
+    \begin{block}{Joint-Velocity Kinematic Control}
+      \[\dot q=u,\qquad q\in\R^n,\quad u:\text{joint velocity}\]
+    \end{block}
+    \vfill
+    \begin{columns}[T,onlytextwidth]
+      \column{.47\textwidth}
+      \textbf{Inputs}
+      \begin{itemize}\setlength{\itemsep}{3mm}
+        \item Initial configuration $q_0$
+        \item EE goal $(p_d,R_d)$
+        \item Obstacles, joint limits, time $T$
+      \end{itemize}
+      \column{.49\textwidth}
+      \textbf{Safety and goal criteria}
+      \[\mathcal C=\{q:h_r(q)\geq0\ \forall r\}\]
+      \[\norm{p_{\ee}-p_d}\leq\varepsilon_p\]
+      \[\norm{\epsilon_{\ee}}\leq\varepsilon_R\]
+    \end{columns}
+    \vfill
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A12. Full CLF--CBF QP}
+  \hypertarget{appendix-a12}{}
+  \framesubtitle{CLF-CBF QP-Based Kinematic Control}
+  \begin{slidebody}
+    \takeaway{Hard CBF constraints; separate feasibility and convergence checks}
+    \setlength{\abovedisplayskip}{4pt}\setlength{\belowdisplayskip}{4pt}
+    \begin{align*}
+      (u^*,\delta^*)=\argmin_{u,\delta}\quad
+       & \tfrac12u^\top W_u u+\tfrac12w_\delta\delta^2 \\[1mm]
+      \text{subject to}\quad
+       & \nabla V_s^\top u\leq-c_VV_s+\delta, \\[1mm]
+       & \nabla h_r^\top u\geq-\gamma_rh_r,\quad\forall r, \\[1mm]
+       & -\gamma_J(q_j-q_{j,\min})\leq u_j
+      \leq\gamma_J(q_{j,\max}-q_j), \\[1mm]
+       & u\in\mathcal U(u_{\mathrm{prev}}).
+    \end{align*}
+    \vfill
+    $\delta$: CLF slack; collision and joint-limit constraints without slack\par\vspace{2mm}
+    $\mathcal U$: velocity limits and optional command-change limits\par\vfill
+    \centering QP solver: OSQP~\cite{stellato2020osqp}
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A13. Overall Control Architecture}
+  \hypertarget{appendix-a13}{}
+  \framesubtitle{Sequential Kinematic Control Framework}
+  \begin{slidebody}
+    \centering
+    \begin{tikzpicture}[node distance=7mm]
+      \node[box,text width=25mm](input){Episode inputs\\$q_0,(p_d,R_d),\mathcal O$};
+      \node[box,text width=25mm,right=of input](ik){IK search + checks\\Target $q^*$};
+      \node[box,fill=Success!10,draw=Success,text width=25mm,right=of ik](target){Link targets\\$(p_i(q^*),R_i(q^*))$};
+      \node[box,fill=Success!10,draw=Success,text width=25mm,below=7mm of target](select){Link order $S$\\All / two links};
+      \node[box,text width=25mm,left=of select](qp){CLF--CBF QP\\Current task + CBFs};
+      \node[box,text width=25mm,left=of qp](robot){Apply joint velocity\\$\dot q=u$};
+      \draw[arr](input)--(ik);\draw[arr](ik)--(target);
+      \draw[arr](target)--(select);\draw[arr](select)--(qp);\draw[arr](qp)--(robot);
+      \coordinate (fbL) at ($(robot.south)+(0,-7mm)$);
+      \coordinate (fbR) at ($(qp.south)+(0,-7mm)$);
+      \draw[arr,rounded corners=2mm](robot.south)--(fbL)--(fbR)--(qp.south);
+      \node[font=\normalsize,anchor=north] at ($(fbL)!.5!(fbR)+(0,-1mm)$){State $q$: updated at each control step};
+    \end{tikzpicture}
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{1.5mm}
+      \item Before execution: fixed IK target $q^*$ and link order $S$
+      \item During execution: task switches under shared safety constraints
+    \end{itemize}
+    \vfill
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A14. Interpretation and Further Validation}
+  \hypertarget{appendix-a14}{}
+  \framesubtitle{Interpretation and Limitations}
+  \begin{slidebody}
+    \begin{block}{Uncertainty in the Success Gain over Preset pair (3,5)}
+      \centering
+      \normalsize $+2.20$\,pp\qquad\normalsize 95\% CI $[-0.30,4.70]$\,pp
+    \end{block}
+    \vfill
+    \begin{enumerate}\setlength{\itemsep}{6mm}
+      \item \textbf{Independent evaluation}: fresh evaluation after development-time Test inspection
+      \item \textbf{Safety evaluation}: revised QP on shared episodes
+      \item \textbf{Execution tests}: online computation time and physical-robot tests
+    \end{enumerate}
+    \vfill
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A15. Recovered and Lost Test Episodes}
+  \hypertarget{appendix-a15}{}
+  \framesubtitle{Recovery Through Learned Link Selection}
+  \begin{slidebody}
+    \takeaway{95\% paired bootstrap CI $[-0.30,4.70]$\,pp}
+    \centering
+    \includegraphics[width=\linewidth,height=47mm,keepaspectratio]{story_selection_effect.pdf}\par
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{3mm}
+      \item Shared successes: 514 / shared failures: 318 episodes
+      \item Net gain: 22 episodes / success-rate gap: +2.20\,pp
+    \end{itemize}
+    
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A16. Direct Episode: Stagnation near the Safety Boundary}
+  \hypertarget{appendix-a16}{}
+  \framesubtitle{Local Minima and Deadlock in CLF-CBF QP}
+  \begin{slidebody}
+    \centering
+    \includegraphics[width=\linewidth,height=45mm,keepaspectratio]{case180_boundary_stall.pdf}\par
+    \vfill
+    \begin{itemize}\setlength{\itemsep}{2mm}
+      \item Episode 180: position error 0.82 m / vanishing speed
+      \item Time-limit termination without QP infeasibility
+    \end{itemize}
+
+  \end{slidebody}
+\end{frame}
+
+\begin{frame}{A17. Related Work: Systems and Dimension Assumptions}
+  \hypertarget{appendix-a17}{}
+  \framesubtitle{Local Minima and Deadlock in CLF-CBF QP}
+  \begin{slidebody}
+    \begin{block}{General controller modifications}
+      Reis: CLF shaping / Tan: nominal-input QP reformulation
+    \end{block}\vfill
+    \begin{block}{Gon\c{c}alves: circulation in configuration space}
+      Basic theory: even $n$, $\Omega^\top=-\Omega$, $\Omega^\top\Omega=I$\\[2mm]
+      Odd-dimensional extension: singular $\Omega$; additional feasibility concern\\[2mm]
+      Demonstrations: 4-DOF arm and 15-dimensional multi-robot system
+    \end{block}\vfill
+    \begin{block}{This work: IK-derived intermediate link tasks}
+      Planar $q\in\mathbb R^3$ and spatial $q\in\mathbb R^7$\\[2mm]
+      No even-dimension condition in the task-construction procedure
+    \end{block}
+  \end{slidebody}
+\end{frame}
+
+\end{document}

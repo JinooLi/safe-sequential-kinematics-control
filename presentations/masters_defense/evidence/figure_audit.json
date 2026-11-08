@@ -1,0 +1,176 @@
+{
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF",
+  "planar_success_counts": [
+    216,
+    253
+  ],
+  "panda_success_rates_percent": {
+    "validation": [
+      45.6,
+      59.0,
+      54.73,
+      57.6,
+      61.3
+    ],
+    "test": [
+      45.5,
+      55.2,
+      55.2,
+      58.7,
+      60.9
+    ]
+  },
+  "validation_paired_time": [
+    {
+      "candidate": "Preset pair (3,5)",
+      "n": 468,
+      "all_link_mean": 47.13106837606966,
+      "candidate_mean": 36.44645299145333,
+      "reduction_percent": 22.670004633379676
+    },
+    {
+      "candidate": "Learned selection",
+      "n": 494,
+      "all_link_mean": 47.83299595141829,
+      "candidate_mean": 36.10846153846191,
+      "reduction_percent": 24.511394654987605
+    }
+  ],
+  "planar_stage_snapshots_seconds": [
+    4.585999999999717,
+    8.647999999999557,
+    17.17600000000136
+  ],
+  "planar_stage_geometry": {
+    "lower_bounds": [
+      -3.186899865642206,
+      -1.5275934431642768
+    ],
+    "upper_bounds": [
+      2.1650756925054893,
+      2.196829895367701
+    ],
+    "all_points_and_obstacle_extents_inside": true,
+    "goal_source": "Analytic IK reconstruction, verified against every stored CLF sample",
+    "max_clf_residual": {
+      "direct": 2.842170943040401e-14,
+      "sequential": 1.4210854715202004e-14
+    },
+    "goal_positions": [
+      [
+        -0.8948019102016362,
+        0.44646337083741017
+      ],
+      [
+        -1.7096272452367351,
+        -0.1332431699096639
+      ],
+      [
+        -0.7178268810794945,
+        -0.26104003081620136
+      ]
+    ]
+  },
+  "panda_scene_example": {
+    "case_id": "seed2026120000_0007",
+    "obstacle_count": 10,
+    "pair_success_labels": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "rendering": "Static saved q0 and obstacles; robot drawn as frame connection lines, not collision geometry."
+  },
+  "test_paired_time": [
+    {
+      "reference": "All-link Sequential",
+      "n": 467,
+      "reference_mean": 47.97263383297777,
+      "learned_mean": 36.61922912205608,
+      "difference_seconds": -11.353404710921687
+    },
+    {
+      "reference": "Preset pair (3,5)",
+      "n": 514,
+      "reference_mean": 36.11696498054517,
+      "learned_mean": 36.21326848249071,
+      "difference_seconds": 0.09630350194554183
+    }
+  ],
+  "test_paired_time_main": {
+    "reference": "All-link Sequential",
+    "n": 467,
+    "reference_mean": 47.97263383297777,
+    "learned_mean": 36.61922912205608,
+    "difference_seconds": -11.353404710921687,
+    "split": "test",
+    "evaluation_seconds": 120,
+    "population": "The same 467 episodes succeeded with both methods",
+    "source_comparison_key": "neural_vs_sequential",
+    "appendix_comparison_retained": "paired_time_test"
+  },
+  "planar_clf_time": {
+    "function": "V1,V2=10||e_p||^2; Vee=10||e_p||^2+5(1-cos(e_yaw))",
+    "active_samples_verified": 17500,
+    "max_active_error": 4.263256414560601e-14,
+    "time_range_seconds": [
+      0,
+      20
+    ],
+    "first_goal_seconds": 17.17600000000136,
+    "inactive_functions": "Re-evaluated on the same stored trajectory, not separate simulated runs."
+  },
+  "planar_clf_shapes": {
+    "coordinates": "task error coordinates; Vee plotted versus position-error norm and yaw error",
+    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p||^2+w_psi(1-cos(e_psi)))",
+    "illustrative_weights": {
+      "w_V": 1.0,
+      "w_psi": 0.5
+    },
+    "archived_weights": {
+      "w_V": 10,
+      "w_psi": 0.5
+    },
+    "display": "qualitative shapes; vertical magnitude unlabelled; no changes to archived trajectory values"
+  },
+  "case30": {
+    "case_id": 30,
+    "snapshots_seconds": [
+      0.0,
+      2.1279999999999872,
+      6.873999999999465,
+      18.226000000000777,
+      18.226000000000777
+    ],
+    "shared_last_snapshot_time": 18.226000000000777,
+    "same_initial_state": true,
+    "sequential_success": true,
+    "direct_success": false,
+    "direct_failure_class": "qp_infeasible",
+    "direct_qp_infeasible_count": 3,
+    "direct_same_time_position_error": 2.4063806913888715,
+    "direct_same_time_yaw_error": 1.0162542309890727,
+    "raw_samples_per_method": 17500,
+    "max_active_clf_error": 2.842170943040401e-14,
+    "max_direct_clf_error": 5.684341886080802e-14,
+    "actual_weights": {
+      "w_V": 10.0,
+      "w_psi": 0.5
+    },
+    "all_geometry_inside_common_axes": true,
+    "obstacle_halo": "Nominal geometric 0.08 m margin, matching archived reference; not exact RDF contours",
+    "figure_files": [
+      "case030_stages",
+      "case030_clf_time",
+      "case030_overview"
+    ],
+    "no_new_simulation": true
+  }
+}

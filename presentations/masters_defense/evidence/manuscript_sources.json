@@ -1,0 +1,82 @@
+[
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
+    "sha256": "469232eee8dc87e62f4ba32913798614ef42df4c067a0184115fdeafa8e67431"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/abstract_ko.tex",
+    "sha256": "6036201befdbbb75af911625686150e3ce2ffca6176db0241d24a3c621336ed5"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Conclusion.tex",
+    "sha256": "f9621436278ae1b384a6fd501c81014b4df7e2058021a5b135c76ebfae4c1410"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Intro.tex",
+    "sha256": "bd99bba9ab99d5326fe69ca7afff9fb35114528c5d417b1fc7d43e4b2f52455d"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Kinematic_Control.tex",
+    "sha256": "dd38a92947de2cf837748cae64f85c4e2085c7114f3907df941aa9fe4b96c16b"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+    "sha256": "93cdadbb1de98bedd7e34f28c02429c8269e5ed46dfceaec7a696615203e4db3"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Overview.tex",
+    "sha256": "ba7084cfb513a1f6431365488ae741a76062a300f84841765e39a888241c47fd"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Execution.tex",
+    "sha256": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Frames.tex",
+    "sha256": "e04742a206d2dff450b6946eae84d80c140660efe60c3b62747b350579b25be5"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Overview.tex",
+    "sha256": "77476886f0248b0abcdc413d510000aace755af418d3708c7664b073f0fce84e"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+    "sha256": "e18ada6b20e2a85631688456a2ab600bcba765a09b58235a36239169c9f1b3b8"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Problem_Formulation.tex",
+    "sha256": "034d4778e7720c27c865d9e7b2fc1eb6c2e11710e1ff24b836d6138eb8e76e43"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/RDF_CBF.tex",
+    "sha256": "b86fe78114e25ba9ed742708851d291b645469fb25fe2c79b9dd772351cee33f"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Safe_IK.tex",
+    "sha256": "5f30123a24febe2f89889ad6fdfe80904c4a039766c2edb30562290620f3decf"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+    "sha256": "38931292e79f7913f87f8fa7a859e82d277e25723eebd9b10dba5968324a5396"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Evaluation.tex",
+    "sha256": "875e6cd97837eb985ba41dea225faa60bc6d2e98bf68802eef860266d2215542"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+    "sha256": "0f6442be70bdd5a84b2fb05f75a2670da1df30fbd6742a7233dd3c39083a530f"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+    "sha256": "4c4a9eed377f1167754dac10bc2f3034d869785c000ded7e82a8e66bff3cfb5a"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/references.bib",
+    "sha256": "5156919eada1c2762a829267d55398855b9868f66f939dd85b6e6f0c7e50103c"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/sequential-safety-IK/main.tex",
+    "sha256": "0fd35b1f0d80d7ca4e2ba62117982173797d0ec6fff0bd8d6cdc8cf1199c5c3f"
+  }
+]

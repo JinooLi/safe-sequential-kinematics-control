@@ -1,0 +1,73 @@
+{
+  "status": "revised_and_validated",
+  "main_slides": 22,
+  "appendix_slides": 10,
+  "language": "Korean",
+  "planned_seconds": 1200,
+  "changes": [
+    {
+      "request": 1,
+      "result": "화면 제목·본문·요약을 명사형으로 변경. 구어체 발화 대본은 발표용 문장 유지."
+    },
+    {
+      "request": 2,
+      "result": "모든 그래프 글자를 pdfLaTeX/ko.TeX/Latin Modern으로 조판. 영문·한글·수식의 슬라이드 글꼴과 일치."
+    },
+    {
+      "request": 3,
+      "result": "73mm 공통 콘텐츠 영역과 유연한 그룹 간격, 하단 요약 위치 통일. 적은 분량의 슬라이드 중앙 배치와 그래프 크기 조정."
+    },
+    {
+      "request": 4,
+      "result": "작은 회색 설명을 모든 슬라이드에서 제거. 상세 조건·출처를 질의응답_메모.txt로 이관하고 본문 축약."
+    },
+    {
+      "request": 5,
+      "pages": [
+        5
+      ],
+      "result": "피드백 경로를 명시적 모서리 좌표로 재작성하고 라벨을 수평 구간 아래 중앙 배치."
+    },
+    {
+      "request": 6,
+      "pages": [
+        7
+      ],
+      "result": "검증한 전체 IK 자세를 녹색 점선으로 세 스냅숏 위에 중첩. 현재 자세·활성 링크·목표점 구분."
+    },
+    {
+      "request": 7,
+      "pages": [
+        8,
+        12
+      ],
+      "result": "V1,V2,Vee의 오차 좌표 함수 개형과 같은 궤적 위의 시간 변화·활성 구간 모두 추가. 기록 CLF와 전체17500개 샘플 대조."
+    },
+    {
+      "request": 8,
+      "pages": [
+        14
+      ],
+      "result": "두 비교 박스의 폭0.485textwidth, 제목 높이·본문 높이·글자 크기를 공통 매크로로 통일."
+    }
+  ],
+  "appendix_moves": {
+    "A9": "이전 본문10쪽 불변성 조건",
+    "A10": "이전 본문12쪽 실제 자세와 yaw 오차"
+  },
+  "new_simulations_or_training": false,
+  "new_subagent_review_cycles": 0,
+  "verification": "evidence/verification.json",
+  "pdf_sha256": "ab16ba748bad5547d788fd884e01a9c9bd61a7b79a7109b105a52f138897d4ba",
+  "validation": {
+    "evidence_files": 17,
+    "main_pdf_pages": 32,
+    "presenter_pdf_pages": 54,
+    "layout_or_font_errors": 0,
+    "offpage_text": 0,
+    "main_content_time_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "fonts": "ko.TeX + Latin Modern, no DejaVu or non-TeX TrueType in PDF",
+    "visual_checks": "전체 슬라이드와 3·5·7·8·12·14·31쪽 수정 사항 직접 확인"
+  }
+}

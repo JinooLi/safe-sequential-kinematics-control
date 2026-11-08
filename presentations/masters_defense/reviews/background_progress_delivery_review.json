@@ -1,0 +1,71 @@
+{
+  "status": "pass",
+  "review_scope": "Read-only visual and source review of revised background, sequential motion, RDF, learned selection, and appendix navigation.",
+  "reviewed_pages": [
+    4,
+    5,
+    6,
+    7,
+    12,
+    13,
+    14,
+    19,
+    27,
+    28,
+    34
+  ],
+  "findings": [],
+  "checks": [
+    {
+      "name": "background_sequence",
+      "status": "pass",
+      "evidence": "Pages 4–6 separately introduce CLF, CBF, and their QP combination; page 7 connects the background to the research question. No forced takeaway on the three explanation pages."
+    },
+    {
+      "name": "selective_takeaway_information",
+      "status": "pass",
+      "evidence": "Direct and Sequential first definitions remain in source. Pages 12–13 explicitly retain tolerance-based transition and release of link 1 task. Page 19 retains capsule versus RDF roles."
+    },
+    {
+      "name": "motion_fixed_layout",
+      "status": "pass",
+      "evidence": "Pages 12–14 preserve robot viewpoint, obstacle positions, CLF plot area, constraint area, and common safety-condition placement. Stage captions remain legible and clear of the footer."
+    },
+    {
+      "name": "learning_fixed_layout",
+      "status": "pass",
+      "evidence": "Pages 27–28 preserve encoder and attention node positions; the second frame adds selection and the control row. Arrows connect intended box anchors without text intersections."
+    },
+    {
+      "name": "progress_readability",
+      "status": "pass",
+      "evidence": "Reviewed body pages show six navigation labels, current section highlighted, a continuous thin bar, and correct main slide count /33. No observed footer/content overlap."
+    },
+    {
+      "name": "appendix_navigation",
+      "status": "pass",
+      "evidence": "Page 34 shows Backup and 1/17 with no main progress bar or section labels."
+    }
+  ],
+  "source_hashes": {
+    "main.tex": "853501b3437d4b9c585eebe527e222331d384258bbaec83bdc2a0d83a977671e",
+    "progress-style.tex": "e38e496570ddef50f2cacaab22b6febc9f9f788076e7a6724b385f9094a39da2",
+    "evidence/story_plan.json": "9952c505f2b7e34e0b87fa50474ce803686d7f646ea82d7ae1a96784250c3a02"
+  },
+  "render_hashes": {
+    "4": "e62e1c70f3fc77624e95111730bb65664b6f43e040836efba759285569bc37ad",
+    "5": "27666dbdf7132e233744ba797c1c26b695c18aece462ef81866e9f806cdd5240",
+    "6": "94acdd9c33ccae939c4e80033b48cc43d7194f7570b12060e727158a3bf7abd0",
+    "7": "023d82f31632ab88d3931d53ca6bc23d70442d6af1c3d7e281c9b4655d08e283",
+    "12": "9bdbbc18cadad8f9dac3faf43de4d1b934ae6d7a4d20bdca4d26639afefaccfc",
+    "13": "2d2183dc02fda7c76ff8849ce528c882a2fde7de92940f9b671a99b0922a207e",
+    "14": "b0c6590e4b2dc66064e9bbdeed7031a87fd7e7957e0512c2ff713e0423f07723",
+    "19": "093f34c6930a62049b91a0173f8ec2033162ccaceb047e9948c4366ebd6f8024",
+    "27": "2480710015f25152b07a40e0c0ef3d5b7e6aa73350b68455a08483745adeb623",
+    "28": "cecd181400ecdd43cc374a1128b994dc501f5037d61e87eb3900d6ec1daea803",
+    "34": "f3721ffcb8a605635d559b6d4ba4c741ab52f8ded4ad6768d67feb36a9d3ee4c"
+  },
+  "limitations": [
+    "Review targets the requested rendered audience pages and relevant source; it does not repeat the controller numerical audit or inspect every presenter-note page."
+  ]
+}

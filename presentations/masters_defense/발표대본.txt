@@ -1,0 +1,151 @@
+석사 학위 발표 대본 — 20분, 한국어 발표 / 영어 슬라이드
+
+본문 36장(표지와 마무리 포함), 보충 자료 21쪽.
+목표 발화 시간: 19분 + 화면 전환과 호흡 1분 = 총 20분.
+시간은 리허설 기준이며 실제 말하는 속도에 맞게 조정합니다.
+아래 영어 제목은 슬라이드와 대응하기 위한 표기이며, 낭독할 대본은 한국어입니다.
+
+01. Title
+00:00–00:15 / 15초
+안녕하십니까. CBF와 지도학습 기반 subtask sequencing을 이용한 로봇팔의 Sequential kinematic control에 대해 발표하겠습니다. 장애물 사이에서 안전하게 목표에 도달하기 위한 중간 task의 구성과 선택이 핵심입니다.
+
+02. Safe Goal Reaching for Autonomous Workstations
+00:15–00:40 / 25초
+자율실험실에서는 로봇팔이 시료를 옮기거나 실험 장비를 조작해야 합니다. 제조 현장의 조립과 이송에서도 작업물의 원하는 위치와 방향에 도달하는 것이 출발점입니다. 그림의 초록색 표시는 이러한 작업 목표이며, 성능 평가가 아닌 정적인 작업 환경 예시입니다.
+
+03. Safe Motion in Cluttered Workspaces
+00:40–01:10 / 30초
+같은 환경에 주변 설비를 추가하면 목표 도달만으로는 충분하지 않습니다. End-effector뿐 아니라 팔꿈치와 손목을 포함한 전체 link가 물체와 설비를 피해야 합니다. 자율실험실과 제조 현장 모두 충돌을 피하려고 멈추기만 하면 작업을 완료할 수 없습니다. 따라서 안전과 목표 도달을 함께 다루는 제어가 필요합니다.
+
+04. Kinematic Control and Goal-Error Reduction
+01:10–01:50 / 40초
+먼저 이번 연구는 kinematic control입니다. Joint configuration q를 상태로, joint velocity u를 입력으로 사용하므로 q의 시간 미분이 u입니다. Torque 동역학을 직접 제어하는 문제와는 구분됩니다. e는 현재 task와 목표 사이의 오차이고, CLF V는 그 오차를 하나의 값으로 모읍니다. CLF constraint는 그림의 그릇을 내려가듯 V를 감소시키는 속도를 요구합니다. 같은 task를 만족하는 configuration은 여러 개일 수 있으므로 특정 joint configuration 하나로의 수렴을 뜻하지는 않습니다.
+
+05. Background (2/3): CBF for Safety
+01:50–02:30 / 40초
+안전 조건에는 link와 장애물 사이의 표면 거리 d와 필요한 여유 거리 d safe의 차이 h를 사용합니다. Safe set은 h가 0 이상인 configuration들의 집합입니다. 안전 경계에서 충분히 떨어진 상태에서는 장애물에 접근할 수 있지만, h가 0인 경계에서는 h가 더 감소하지 못하도록 합니다. CBF constraint는 이 속도 조건을 표현합니다. 항상 장애물에서 멀어지라는 조건은 아닙니다. Joint limit과 self-collision도 같은 제약 구조로 다룰 수 있습니다.
+
+06. QP-Based Kinematic Control
+02:30–03:15 / 45초
+이제 CLF와 CBF constraint를 같은 joint velocity에 적용한 QP-based kinematic control입니다. QP는 입력과 slack의 비용을 최소화하며, V 자체를 최소화하지는 않습니다. Slack delta는 CLF constraint만 완화하고 CBF와 입력 제한은 hard constraint로 유지합니다. Delta가 양수이면 V의 감소가 느려지거나 V가 증가할 수 있으므로, 안전 조건을 유지하면서도 목표에 도달하지 못할 수 있습니다. 매 제어 주기 현재 q에서 QP를 다시 풉니다. CLF slack만으로 모든 QP의 실행 가능성이 보장되는 것은 아닙니다.
+
+07. Related Work: Challenges in Goal Reaching
+03:15–03:55 / 40초
+이러한 원치 않는 평형점 문제에 대해 Reis는 CLF를 회전시키고, Tan은 CLF-compatible nominal 입력과의 차이를 최소화하며, Goncalves는 장애물 접선 방향 운동을 요구합니다. Goncalves의 기본 이론은 짝수 차원이며 홀수 차원 확장은 별도입니다. Planar manipulator 실험도 있으므로 로봇팔에 적용하지 않았다고 말할 수는 없습니다. 구분점은 이들이 일반적인 제어 구조나 제약을 바꾸는 반면, 본 연구는 로봇팔의 IK와 link 구조에서 중간 task를 구성하고 순차적으로 추종한다는 점입니다.
+
+08. A Naive Trial: Direct End-Effector Tracking
+03:55–04:25 / 30초
+먼저 중간 task 없이 처음부터 end-effector만 추종하는 Direct를 보겠습니다. Cartesian 직선 경로라는 뜻은 아닙니다. 같은 CLF-CBF QP를 사용하지만, 그림처럼 안전 제약과 최종 오차 감소가 충돌하면 목표에 도달하지 못할 수 있습니다. 최종 목표를 그대로 유지하되 중간에 추종하는 task를 바꾸는 것이 도움이 되는지 살펴보겠습니다.
+
+09. Human-Inspired Intuition: Reposition Before Reaching
+04:25–04:45 / 20초
+사람이 장애물을 피해 물체를 잡을 때, 손끝만 목표로 보내기보다 어깨와 팔꿈치의 배치를 먼저 바꾸는 모습을 설계 직관으로 삼았습니다. 이를 모든 사람의 동작 법칙으로 주장하는 것은 아닙니다. 이 아이디어를 로봇팔의 중간 link 목표를 먼저 추종하는 절차로 단순화했습니다.
+
+10. Thesis Roadmap: From Problem to Method
+04:45–05:00 / 15초
+논문 흐름에 맞춰 먼저 planar manipulator에서 중간 목표 구성과 Sequential 제어를 설명하겠습니다. 이후 Spatial Manipulator에 필요한 함수들을 구성하고, 실행할 subtask를 학습으로 선택한 결과와 한계를 살펴보겠습니다.
+
+11. Proposed Method: Initial State, Goal, and Obstacles
+05:00–05:15 / 15초
+제안 방법의 입력은 초기 configuration, end-effector 목표 pose, 장애물입니다. 초록색 별과 화살표가 최종 목표입니다. 아직 로봇을 움직이는 단계가 아니라, 중간 목표를 만들기 위한 문제 설정입니다.
+
+12. Proposed Method: IK-Derived Intermediate Link Targets
+05:15–05:25 / 10초
+점선은 충돌 검사를 통과한 IK configuration이며, 여기서 중간 link 목표를 얻습니다. 이 목표들을 차례로 거쳐 end-effector를 추종하는 방법이 Sequential입니다.
+
+13. Sequential: Link 1 Subtask
+05:25–05:45 / 20초
+첫 번째로 파란 link 1 목표를 추종합니다. 오른쪽 QP는 앞서 설명한 식과 같고, 강조된 CLF constraint만 V1을 사용합니다. 그림은 이 task를 마친 상태입니다. 현재 목표의 허용 오차를 만족하면 다음 subtask로 전환합니다.
+
+14. Sequential: Link 2 Subtask
+05:45–06:05 / 20초
+다음은 link 2의 목표를 추종합니다. QP의 비용과 CBF, 입력 제한은 유지하고 CLF constraint를 V2로 바꿉니다. 이전 task는 해제되므로 link 1은 이전 목표에서 벗어날 수 있습니다. 모든 joint velocity는 계속 사용합니다.
+
+15. Sequential: End-Effector Subtask
+06:05–06:25 / 20초
+마지막 task는 end-effector입니다. 중간 task가 위치 오차만 사용했다면, 최종 CLF는 위치와 yaw를 함께 사용합니다. 그림은 기록된 목표 도달 상태입니다. 점선 IK는 중간 목표를 제공하는 configuration이지 그대로 따라가야 하는 경로는 아닙니다.
+
+16. Planar CLFs: One QP and One CLF at Each Stage
+06:25–06:40 / 15초
+세 단계는 서로 다른 CLF constraint를 사용하는 하나의 QP 구조입니다. 중간 task는 위치, 최종 task는 위치와 yaw를 사용합니다. 현재 목표를 만족하면 subtask를 전환하며, 매 제어 주기에는 활성 task의 QP 하나만 풉니다.
+
+17. One Sequential Algorithm, Model-Specific Functions
+06:40–07:05 / 25초
+전체 절차는 먼저 IK를 검증하고, 그 configuration에서 중간 link 목표를 얻는 것입니다. 현재 subtask의 CLF와 모든 안전 CBF를 사용해 QP를 풀고, 목표 허용 오차를 만족하면 다음 task로 넘어갑니다. 공통 구조를 유지하되 IK, pose CLF, 거리 함수를 모델에 맞게 구성합니다. 정상 목표 전환은 공통이지만 정체와 QP 실행 불가능에 대한 예외 정책은 모델마다 다릅니다.
+
+18. Planar Results: Direct 72.00\% / Sequential 84.33\%
+07:05–07:40 / 35초
+같은 300개 IK episode에서 Direct는 216개, Sequential은 253개에 성공했습니다. 성공률은 72퍼센트에서 84.33퍼센트로 증가했습니다. Sequential만 성공한 경우는 47개이고 Direct만 성공한 경우는 10개입니다. 따라서 모든 episode에서 우수한 것은 아니지만 전체 성공 수는 늘었습니다. 이 성공 판정은 목표 pose와 기록된 안전 기준을 함께 검사하며, IK를 찾지 못한 경우는 이 집합에 포함하지 않습니다.
+
+19. Resolving Deadlock through Task Transition
+07:40–08:25 / 45초
+이 그래프는 앞서 본 Direct의 목표 도달 실패와 연결됩니다. 최종 CLF만 강제하면 안전 경계 부근에서 진행이 멈출 수 있습니다. Sequential에서는 현재 task의 CLF만 활성화하고, 전환하면 이전 task를 해제합니다. 따라서 이전 CLF나 최종 EE 함수가 중간에 커지는 것도 허용됩니다. 이 자유도로 팔의 configuration을 바꾼 후 마지막 EE task에서 목표에 도달합니다. 이는 같은 목표를 향한 즉각적인 감소를 강제하는 대신 중간 task로 우회하는 방식입니다. 다만 모든 교착 상태를 제거하거나 전역 수렴을 증명하는 결과는 아닙니다.
+
+20. Extension to a 7-DOF Spatial Manipulator
+08:25–08:50 / 25초
+이제 7-DOF Spatial Manipulator입니다. 같은 Sequential 구조를 사용하려면 복잡한 link 형상의 self-collision, 여러 IK 후보, 그리고 3차원 방향 오차를 처리해야 합니다. 다음 장부터 이 문제들을 RDF 기반 CBF, null-space IK, spatial pose CLF로 각각 연결하겠습니다.
+
+21. Self-Collision CBFs from RDF
+08:50–09:45 / 55초
+RDF는 query 위치에서 link 표면까지의 signed distance를 주는 함수입니다. 등고선은 link b의 거리장이고, 주황색 점들은 link a의 표면 표본입니다. 각 점을 b의 좌표계로 바꾼 뒤 그 좌표를 b의 거리 함수에 대입합니다. 본 연구에서는 이 거리값들을 smooth minimum으로 모으고 필요한 safety margin을 빼서 CBF를 구성합니다. 또한 두 link의 운동을 함께 반영한 gradient를 QP 제약에 사용합니다. RDF는 형상 정보이고, 이러한 추가 구성으로 제어에 사용할 안전 제약을 얻습니다. 그림은 capsule의 개념 단면이며, 실제 self-collision에는 다항식 근사 RDF를 사용합니다.
+
+22. Spatial IK: Target Search with Null-Space Updates
+09:45–10:45 / 60초
+Spatial Manipulator에서는 여러 초기값으로 수치 IK를 탐색합니다. 첫 항은 damped inverse로 end-effector pose error를 줄입니다. 두 번째 항은 clearance gradient를 Jacobian의 null space로 투영해 순간적인 end-effector twist를 바꾸지 않으면서 joint를 조정합니다. 첫 항의 damped inverse와 직교 projector에 사용하는 Moore--Penrose inverse는 구분해야 합니다. 탐색에는 capsule 형상을 사용하고, 얻은 후보는 RDF를 포함한 제어기의 충돌 모델로 다시 검사합니다. 채택한 configuration 하나에서 중간 link 목표를 얻습니다. IK 반복을 로봇 경로로 실행하는 것은 아니며, 안전한 IK가 제어 성공까지 보장하지는 않습니다.
+
+23. Spatial CLFs: Position and Orientation
+10:45–11:25 / 40초
+Planar에서는 중간 task에 위치, 최종 task에 위치와 yaw를 사용했습니다. Spatial Manipulator에서는 모든 단계에 위치와 relative unit quaternion의 vector part를 사용합니다. 단계마다 같은 형태이지만 추종하는 link와 목표가 바뀝니다. Quaternion vector의 norm은 회전각 절반의 sine 절댓값이며 회전각 자체가 아닙니다. 같은 식의 형태라는 뜻이지 joint space에서 같은 함수 지형이나 시간 변화를 가진다는 뜻은 아닙니다.
+
+24. All-link Sequential: Spatial Manipulator Results
+11:25–12:10 / 45초
+All-link Sequential은 일곱 개 중간 link task를 거쳐 end-effector까지 총 여덟 단계를 수행합니다. 같은 Validation 1,000개 IK episode에서 성공률은 Direct의 45.6퍼센트에서 59퍼센트로 증가했습니다. 화면의 성공은 제한 시간 내 목표 도달을 나타내되, 실제 집계에는 기록된 안전 기준, joint limit와 solver 판정도 포함됩니다. 중간 task가 전체 성공 수를 늘렸지만 모든 실패 유형이 줄어든 것은 아닙니다. 다음으로 추가 단계의 시간 부담을 보겠습니다.
+
+25. The Completion-Time Cost of All-link Sequential Control
+12:10–12:40 / 30초
+두 방법이 모두 성공한 330개 episode에서는 평균 완료 시간이 24.24초에서 44.48초로 늘어났습니다. 강조한 값처럼 중간 목표를 거치는 데 상당한 동작 시간이 추가됩니다. 이는 계산 시간이 아니라 로봇의 시뮬레이션 동작 시간입니다. 중간 단계 수를 줄이면서도 목표로 유도하는 효과를 유지할 수 있는지 살펴보겠습니다.
+
+26. Reduction to Two Intermediate Link Tasks
+12:40–13:30 / 50초
+중간 link 두 개를 고르면 end-effector까지 총 세 단계입니다. Joint 두 개만 움직이는 것이 아니라 일곱 joint velocity를 모두 사용합니다. Link 2부터 6까지의 열 개 pair를 후보로 두고 작은 번호부터 실행합니다. Train 평균 성공률이 가장 높은 (3,5)를 사전에 선정하여 Preset pair라고 부르며 Validation과 Test에서 고정합니다. Validation 성공률은 All-link보다 1.4퍼센트포인트 낮지만, 공동 성공 468개에서는 평균 완료 시간이 47.13초에서 36.45초로 크게 줄어듭니다. 이제 episode마다 어떤 pair를 선택할지가 남습니다.
+
+27. Link-Pair Selection: A Potential Upper Bound near 80\%
+13:30–14:10 / 40초
+같은 episode도 선택한 pair에 따라 결과가 달라집니다. Validation에서 적어도 하나의 후보가 성공하는 episode는 82퍼센트입니다. 열 개 결과를 모두 확인한 사후 oracle 상한이며 실행 전 모델의 성능은 아닙니다. Validation의 최고 단일 pair는 (2,5)이고 Train에서 선택한 Preset pair는 (3,5)입니다. 학습의 목적은 고정 pair들의 작은 순위 차이가 아니라 episode마다 성공할 pair를 골라 oracle과의 격차를 줄이는 것입니다.
+
+28. Training Labels and Losses
+14:10–15:00 / 50초
+Episode마다 열 개의 이진 label이 있으며 여러 pair가 동시에 성공할 수 있습니다. 이 예에서는 Preset pair가 실패하고 다른 두 pair는 성공합니다. 모델의 logit에 sigmoid를 적용하고 Binary Cross Entropy로 각 pair의 성공 여부를 예측합니다. Selection loss는 같은 logit의 softmax에서 성공 후보에 모인 확률을 키웁니다. 정답을 하나만 지정할 필요는 없습니다. 모든 pair가 실패하면 selection 항만 0으로 두고 Binary Cross Entropy는 유지합니다. 최종 목적 함수는 두 항을 가중합해 전체 Train episode에서 평균하며, Validation과 Test는 포함하지 않습니다.
+
+29. Learned Selection (1/2): Predicting Success Scores
+15:00–15:25 / 25초
+모델은 초기 configuration, IK configuration, 목표 pose, 장애물 집합을 입력받습니다. Shared encoder로 장애물을 처리하고, 빨간색으로 표시한 cross-attention에서 로봇 표현을 query로 사용해 특징을 모읍니다. 로봇 특징의 직접 연결도 유지하며 열 개 후보의 성공 score를 출력합니다.
+
+30. Learned Selection (2/2): From Selected Tasks to the QP
+15:25–15:55 / 30초
+논문과 같은 기호로 후보 sequence를 S k, 선택한 index를 k hat으로 나타냅니다. 실행 전 가장 높은 성공 score의 sequence를 선택하고, 그 안의 두 link task와 end-effector task를 차례로 수행합니다. 아래 QP는 매 제어 주기 joint velocity를 계산합니다. 학습은 subtask sequence를 선택하고, QP는 안전 제약 아래에서 속도를 결정합니다.
+
+31. Test Results: Goal-Reaching Success Rates
+15:55–16:45 / 50초
+Test 성공률은 Direct 45.5퍼센트, All-link Sequential 55.2퍼센트, Preset pair 58.7퍼센트, Learned selection 60.9퍼센트입니다. 학습의 추가 효과를 분리하려면 같은 세 단계를 쓰는 Preset pair와 비교합니다. 차이는 2.2퍼센트포인트이며 paired bootstrap 95퍼센트 신뢰구간은 마이너스 0.3부터 플러스 4.7입니다. 0이 포함되므로 추가 개선은 아직 불확실합니다. 개발 중 Test를 확인한 이력도 있어 새로운 episode를 이용한 평가가 필요합니다.
+
+32. Shorter Completion Time with Fewer Subtasks
+16:45–17:15 / 30초
+완료 시간은 두 방법이 모두 성공한 episode에서 비교합니다. All-link Sequential과 Learned selection의 공동 성공 467개에서는 평균이 47.97초에서 36.62초로 감소했습니다. 중간 단계 수를 줄여 얻은 시간 이점을 유지한 결과입니다. 이 비교만으로 학습 자체가 시간을 추가로 줄였다고 해석하지는 않으며, 같은 단계 수를 쓰는 Preset pair와의 비교는 Appendix에 남겼습니다.
+
+33. An Episode Recovered by Learned Selection
+17:15–18:00 / 45초
+이 Test episode에서는 (5,6)만 성공하며 모델도 그 pair를 선택합니다. 왼쪽은 공통 초기 상태이고 나머지는 저장된 최종 configuration입니다. Preset pair는 link 3에서 120초 제한에 도달하고, 선택한 (5,6)은 23.42초에 EE 목표에 도달합니다. 두 그림의 종료 시점은 다릅니다. 전체 Test에서는 회복 95개에서 손실 73개를 빼면 순증가 22개입니다. 이 사례는 선택에 따라 결과가 달라짐을 보여주지만 보편적인 인과관계나 확정적인 통계 개선의 증명은 아닙니다.
+
+34. Conclusions: Safe Control and Learned Sequencing
+18:00–18:30 / 30초
+정리하겠습니다. IK에서 중간 link 목표를 구성하고 Sequential로 추종해 두 로봇의 평가에서 Direct보다 높은 성공률을 얻었습니다. 중간 task를 두 개로 줄이면 공동 성공 episode의 완료 시간이 줄었습니다. 지도학습 기반 선택은 Preset pair가 실패한 일부 episode를 회복했으며, 그 추가 효과를 더 엄밀히 확인하는 것이 다음 과제입니다.
+
+35. Future Work: From Simulation to Robot Experiments
+18:30–19:00 / 30초
+다음 검증은 수정된 QP와 고정된 모델을 새로운 episode에서 평가하는 것입니다. 이후 온라인으로 모델 선택과 QP를 연결하고 실제 로봇에서 형상 오차, 이산 제어, 계산 지연의 영향을 확인해야 합니다. RDF query와 QP의 계산 시간, 실제 추종 정확도를 측정하고, sensing uncertainty와 실제 collision margin을 함께 검증하겠습니다. 감사합니다.
+
+36. Thank you
+19:00–19:00 / 0초
+질문에 따라 보충 슬라이드에서 수식과 가정, task 전환 규칙, paired 통계 비교, 추가 기록 예시를 설명합니다.
+

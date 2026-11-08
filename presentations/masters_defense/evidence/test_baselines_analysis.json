@@ -1,0 +1,81 @@
+{
+  "complete": true,
+  "scenes": 1000,
+  "rollouts": 2000,
+  "simulation_seconds": 120,
+  "methods": {
+    "direct": {
+      "rollouts": 1000,
+      "successes": 455,
+      "success_rate": 0.455,
+      "goal_reached": 464,
+      "numerical_errors": 2,
+      "unsafe_goal_reached": 9,
+      "termination_reasons": {
+        "timeout": 449,
+        "stalled": 83,
+        "goal_reached": 464,
+        "qp_infeasible": 2,
+        "qp_solver_failure": 2
+      },
+      "successful_completion_time_mean": 25.256043956043904
+    },
+    "sequential": {
+      "rollouts": 1000,
+      "successes": 552,
+      "success_rate": 0.552,
+      "goal_reached": 564,
+      "numerical_errors": 5,
+      "unsafe_goal_reached": 12,
+      "termination_reasons": {
+        "stalled": 165,
+        "timeout": 265,
+        "goal_reached": 564,
+        "qp_solver_failure": 5,
+        "qp_infeasible": 1
+      },
+      "successful_completion_time_mean": 49.75619565217539
+    }
+  },
+  "sequential_vs_direct_120s": {
+    "both_success": 325,
+    "reference_only": 130,
+    "candidate_only": 227,
+    "both_failure": 318,
+    "candidate_minus_reference_percentage_points": 9.700000000000001,
+    "paired_bootstrap_95_interval_percentage_points": [
+      6.0,
+      13.4
+    ],
+    "mcnemar_exact_pvalue": 3.2030854868297237e-07,
+    "both_success_reference_mean_seconds": 23.653907692307573,
+    "both_success_candidate_mean_seconds": 45.60338461538582,
+    "both_success_mean_time_difference_seconds": 21.94947692307824
+  },
+  "failure_stages": {
+    "direct": {
+      "end_effector_pose": 545
+    },
+    "sequential": {
+      "link6_pose": 13,
+      "link2_pose": 48,
+      "link3_pose": 74,
+      "end_effector_pose": 51,
+      "link1_pose": 108,
+      "link5_pose": 78,
+      "link7_pose": 73,
+      "link4_pose": 3
+    }
+  },
+  "source_policy": "same archived runtime, QP, and settings as both 120 s validation references; exact existing Test scenes",
+  "stage_frames": [
+    "link1",
+    "link2",
+    "link3",
+    "link4",
+    "link5",
+    "link6",
+    "link7"
+  ],
+  "completed_utc": "2026-11-02T12:03:40.616766+00:00"
+}

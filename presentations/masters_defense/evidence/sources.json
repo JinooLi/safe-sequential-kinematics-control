@@ -1,0 +1,115 @@
+[
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_defense/CDSLlogo.png",
+    "copy": "CDSLlogo.png",
+    "sha256": "2fd62e965ed87401cab71d79b3e3a3abb5387682c8eccc3ac4e13dd92bfb36f3",
+    "previous_template_source": "/home/jinoo/latex-ws/LaTeX-env/ws/Beamer_CDSL_UoS_Template/CDSLlogo.png",
+    "previous_template_sha256": "7f29627e86045ee1f6c89b6f543d11f0e6abcc2e1729b288c30b57b1601cf563",
+    "provenance": "Preserved the user-maintained delivered-project logo during the visual-story revision; no image alteration."
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/Beamer_CDSL_UoS_Template/UoSlogo.jpg",
+    "copy": "UoSlogo.jpg",
+    "sha256": "f7bd48725704912cc2b78b1576a72a60f3da9def7f51f32729add837d2d15d1c"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/Beamer_CDSL_UoS_Template/Beamer_CDSL_UoS_Template.tex",
+    "copy": "evidence/template_original.tex",
+    "sha256": "0fa6e4708d2a5819815080f7fc7f86683e2cbdf0d06c0d887ab88fba0c7eea11"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/vendor/franka_emika_panda/panda.png",
+    "copy": "Fig/panda.png",
+    "sha256": "d6ad5fcfc60237f0f006cf22d6e0b70febb559f609d915cd4316e9f1ad383c2d"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/planar_cases.json",
+    "copy": "evidence/planar_cases.json",
+    "sha256": "28b7cf61b556091d299da4492b67973bfca4e074c43932fff413f55bb9c0c86c"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/planar_summary.json",
+    "copy": "evidence/planar_summary.json",
+    "sha256": "83b46b7c933a28cc819bb658121f04a14d6c7d1d99f40c0f55f4636743807613"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/case_011_direct.npz",
+    "copy": "evidence/case_011_direct.npz",
+    "sha256": "1f7c52b491fcf117613cf9e29c1409b94cad8c510ef82374aee20ba695557747"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/case_011_sequential.npz",
+    "copy": "evidence/case_011_sequential.npz",
+    "sha256": "cca58b612c5c9c57246a52540456ca8aee1abe8006d582696eb079a9bea20cb1"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/all_links_comparison.csv",
+    "copy": "evidence/all_links_comparison.csv",
+    "sha256": "1ad7870f370b280132861a4ae25b831796d4ad442fbc1ac57d110c72b0a50c1c"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/all_links_analysis.json",
+    "copy": "evidence/all_links_analysis.json",
+    "sha256": "9e89f34b825ebb8f1c6bd230f0e0ce37d22a61d333d6b8318afae788fe7e1358"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/recomputed_summary.json",
+    "copy": "evidence/recomputed_summary.json",
+    "sha256": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_comparison.csv",
+    "copy": "evidence/test_baselines_comparison.csv",
+    "sha256": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_analysis.json",
+    "copy": "evidence/test_baselines_analysis.json",
+    "sha256": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_paired_comparisons.json",
+    "copy": "evidence/test_baselines_paired_comparisons.json",
+    "sha256": "8c9671cc19ef081bde2e63c80de164388cd334022f77ba7c437b49476a6d470d"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/pair_outcomes.csv",
+    "copy": "evidence/pair_outcomes.csv",
+    "sha256": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4"
+  },
+  {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/selector_choices.csv",
+    "copy": "evidence/selector_choices.csv",
+    "sha256": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/planar_lyapunov/case-011-sequential-only/report.json",
+    "copy": "evidence/planar_goal_reconstruction.json",
+    "sha256": "21fedb9effaa3c9421d7887518294e34adcc922ff7401bec5e1cebcd75de84ca"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/planar_lyapunov/case-030-opposite-ik/report.json",
+    "copy": "evidence/case030_report.json",
+    "sha256": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/planar_lyapunov/case-030-opposite-ik/render_paper.py",
+    "copy": "evidence/case030_reference_render.py",
+    "sha256": "fb6983eba5e714fb119a7c2c0edb5f179b8e75dbf54310a27bc1069652c9af08"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/sequential_comparison/run_20260911_151710/case_030_direct.npz",
+    "copy": "evidence/case_030_direct.npz",
+    "sha256": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/sequential_comparison/run_20260911_151710/case_030_sequential.npz",
+    "copy": "evidence/case_030_sequential.npz",
+    "sha256": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8"
+  },
+  {
+    "source": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/sequential_comparison/run_20260911_151710/case_180_direct.npz",
+    "copy": "evidence/case_180_direct.npz",
+    "sha256": "f68d1f7c4745d6b639cee5e2c082a594503247b0bd64600c9a90e382a8c98bc6"
+  }
+]

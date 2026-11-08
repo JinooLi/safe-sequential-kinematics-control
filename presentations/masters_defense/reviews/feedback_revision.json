@@ -1,0 +1,1195 @@
+{
+  "request": "feedback.md 반영",
+  "date_kst": "2026-11-07",
+  "feedback_sha256": "b31f935437732dacc00cff3ee09dafa82431cc02b0b01f228a6686576145dcbb",
+  "review_scope": "44개 피드백의 소스·그림 audit·원전·논문 대조. 최종 main/presenter 컴파일 및 내용·배치 검증 완료는 부모 에이전트가 확인. 세부 수치는 별도 build 기록 참조.",
+  "feedback_items_count": 44,
+  "main_pages": 36,
+  "appendix_pages": 21,
+  "audience_pages": 57,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "language": {
+    "audience": "English",
+    "notes_and_documentation": "Korean"
+  },
+  "typography": {
+    "beamer_body_pt": 10,
+    "beamer_title_pt": 14.4,
+    "figure_font": "Latin Modern via pdfLaTeX",
+    "figure_source_sizes_pt": {
+      "general_charts": 22,
+      "concept_and_recovery": 24,
+      "rdf_schematic": 30
+    },
+    "effective_size_note_ko": "그림 내부 label은 단일 source 크기지만 삽입 폭·높이가 달라 실제 PDF point size는 완전히 같지 않음. 수식 첨자는 정상적인 TeX 크기 규칙 유지.",
+    "literal_two_sizes_for_every_pdf_glyph": false
+  },
+  "items": [
+    {
+      "id": 1,
+      "original_pages": [
+        1
+      ],
+      "new_labels": [
+        "title"
+      ],
+      "new_pages": [
+        1
+      ],
+      "topic_ko": "발표 제목",
+      "change_ko": "Learned Link Selection을 Supervised Learning-based Subtask Sequencing으로 변경. 실제 학습 범위는 미리 정한 후보 sequence의 선택으로 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 2,
+      "original_pages": [
+        1
+      ],
+      "new_labels": [
+        "title"
+      ],
+      "new_pages": [
+        1
+      ],
+      "topic_ko": "학교 로고",
+      "change_ko": "CDSL 연구실 로고 옆에 UoS 학교 로고를 같은 높이로 배치.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 3,
+      "original_pages": [],
+      "new_labels": [],
+      "new_pages": [],
+      "topic_ko": "글씨 크기 규칙",
+      "change_ko": "본문·부제·도식·진행표시 10pt, 표지·슬라이드 제목 14.4pt의 두 계층 적용. 그림 내부는 LaTeX 글꼴과 단일 source 크기를 사용하되 삽입 배율에 따른 실제 크기 차이가 존재. PDF의 모든 glyph가 정확히 두 크기뿐이라는 뜻은 아님.",
+      "status": "반영",
+      "scope": "전체 문서"
+    },
+    {
+      "id": 4,
+      "original_pages": [
+        3
+      ],
+      "new_labels": [
+        "motivation"
+      ],
+      "new_pages": [
+        3
+      ],
+      "topic_ko": "Shared workspace 의미",
+      "change_ko": "실제 학술용어인 공동 작업공간의 의미와 출처 설명. 정적 장애물 실험 범위에 맞춰 Cluttered Workspaces로 교체.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 5,
+      "original_pages": [
+        2,
+        3
+      ],
+      "new_labels": [
+        "motivation-goal",
+        "motivation"
+      ],
+      "new_pages": [
+        2,
+        3
+      ],
+      "topic_ko": "실제 응용 동기",
+      "change_ko": "Self-driving laboratories, Laboratory automation, Industrial manipulation 추가. Burger et al. 원전을 BibTeX로 인용.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 6,
+      "original_pages": [],
+      "new_labels": [],
+      "new_pages": [],
+      "topic_ko": "핵심 문장 위치와 색",
+      "change_ko": "takeaway 상자를 각 슬라이드 본문 위쪽으로 이동하고 검은색 굵은 글씨로 설정. 16쪽 Stage-wise CLF constraint와 17쪽 Shared QP 핵심 문장도 상단 배치.",
+      "status": "반영",
+      "scope": "전체 문서"
+    },
+    {
+      "id": 7,
+      "original_pages": [
+        4
+      ],
+      "new_labels": [
+        "background-clf"
+      ],
+      "new_pages": [
+        4
+      ],
+      "topic_ko": "Kinematic control 선행 설명",
+      "change_ko": "Joint velocity를 입력으로 하는 kinematic control과 q_dot=u를 CLF 설명 전에 명시.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 8,
+      "original_pages": [
+        4
+      ],
+      "new_labels": [
+        "background-clf"
+      ],
+      "new_pages": [
+        4
+      ],
+      "topic_ko": "CLF 제목과 기호 정의",
+      "change_ko": "Control Lyapunov Function (CLF)을 그래프 위에 배치하고 q=joint angles, u=joint velocity, e=task error 정의.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 9,
+      "original_pages": [
+        5
+      ],
+      "new_labels": [
+        "background-cbf"
+      ],
+      "new_pages": [
+        5
+      ],
+      "topic_ko": "Interior 표현 교체",
+      "change_ko": "h>0에서 CBF constraint 안의 장애물 접근을 허용한다는 표현으로 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 10,
+      "original_pages": [
+        5
+      ],
+      "new_labels": [
+        "background-cbf"
+      ],
+      "new_pages": [
+        5
+      ],
+      "topic_ko": "Safe set 집합 표기",
+      "change_ko": "C={q | h(q)>=0}로 집합을 명시하고 경계 조건과 구분.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 11,
+      "original_pages": [
+        6
+      ],
+      "new_labels": [
+        "background-qp"
+      ],
+      "new_pages": [
+        6
+      ],
+      "topic_ko": "QP 명칭과 인용",
+      "change_ko": "QP-Based Kinematic Control로 제목·본문 변경, Ames 인용을 제목에 배치.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 12,
+      "original_pages": [
+        7
+      ],
+      "new_labels": [
+        "literature"
+      ],
+      "new_pages": [
+        7
+      ],
+      "topic_ko": "관련 연구 제목",
+      "change_ko": "Related Work: Challenges in Goal Reaching으로 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 13,
+      "original_pages": [
+        7
+      ],
+      "new_labels": [
+        "literature"
+      ],
+      "new_pages": [
+        7
+      ],
+      "topic_ko": "로봇팔 특화 task 구성",
+      "change_ko": "일반적인 CLF/QP 수정과 IK-derived link tasks를 대비. Goncalves에도 4-DOF arm 실험이 있으므로 manipulator 적용이 없다는 주장은 배제. A17에서 짝수 기본 이론과 홀수 확장 구분.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 14,
+      "original_pages": [
+        8
+      ],
+      "new_labels": [
+        "planar-direct"
+      ],
+      "new_pages": [
+        8
+      ],
+      "topic_ko": "Direct 시도의 한계",
+      "change_ko": "A Naive Trial: Direct End-Effector Tracking으로 제목 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 15,
+      "original_pages": [
+        8
+      ],
+      "new_labels": [
+        "human-inspiration"
+      ],
+      "new_pages": [
+        9
+      ],
+      "topic_ko": "사람 동작에서 얻은 직관",
+      "change_ko": "새 9쪽에 초기 자세→어깨 재배치→손 reaching 도식 추가. 보편적인 생체 동작 법칙이 아닌 design intuition으로 표현.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 16,
+      "original_pages": [
+        9,
+        10
+      ],
+      "new_labels": [
+        "thesis-outline",
+        "planar-scene"
+      ],
+      "new_pages": [
+        10,
+        11
+      ],
+      "topic_ko": "초기 설정 통합과 논문 목차",
+      "change_ko": "기존 initial pose와 task specification을 새 11쪽에 통합. 그 앞 새 10쪽에 Thesis Roadmap 추가.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 17,
+      "original_pages": [],
+      "new_labels": [],
+      "new_pages": [],
+      "topic_ko": "논문 section 부제",
+      "change_ko": "Chapter 번호·제목 대신 대응하는 논문 section/subsection 제목을 부제로 사용.",
+      "status": "반영",
+      "scope": "전체 문서"
+    },
+    {
+      "id": 18,
+      "original_pages": [
+        10
+      ],
+      "new_labels": [
+        "planar-scene"
+      ],
+      "new_pages": [
+        11
+      ],
+      "topic_ko": "EE 마커 확대",
+      "change_ko": "Progressive planar 그림의 EE 목표 별을 24pt, 활성 EE 목표를 28pt source 크기로 확대. 저장 configuration과 공통 시야는 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 19,
+      "original_pages": [
+        12,
+        13,
+        14
+      ],
+      "new_labels": [
+        "planar-sequential",
+        "planar-link2",
+        "planar-ee"
+      ],
+      "new_pages": [
+        13,
+        14,
+        15
+      ],
+      "topic_ko": "실행 단계별 QP",
+      "change_ko": "오른쪽 CLF 개형 제거 후 6쪽과 동일한 taskqp 식 사용. V1/V2/Vee에 해당하는 CLF constraint만 단계별 색으로 강조.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 20,
+      "original_pages": [
+        15
+      ],
+      "new_labels": [
+        "planar-clf"
+      ],
+      "new_pages": [
+        16
+      ],
+      "topic_ko": "전환 명칭",
+      "change_ko": "QP 연결 화살표의 Normal switch를 Subtask transition으로 교체.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 21,
+      "original_pages": [],
+      "new_labels": [],
+      "new_pages": [],
+      "topic_ko": "CLF 용어 통일",
+      "change_ko": "CLF decrease condition 대신 CLF constraint 사용.",
+      "status": "반영",
+      "scope": "전체 문서"
+    },
+    {
+      "id": 22,
+      "original_pages": [
+        15
+      ],
+      "new_labels": [
+        "planar-clf"
+      ],
+      "new_pages": [
+        16
+      ],
+      "topic_ko": "Stage별 CLF 표현",
+      "change_ko": "Stage-wise CLF constraint로 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 23,
+      "original_pages": [
+        15
+      ],
+      "new_labels": [
+        "algorithm-overview"
+      ],
+      "new_pages": [
+        17
+      ],
+      "topic_ko": "공통 알고리즘 개요",
+      "change_ko": "새 17쪽에 IK→link subtasks→active CLF QP→joint velocity 흐름과 planar/spatial 비교표 추가. 공통 QP 구조와 모델별 함수·transition/termination policy를 구분.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 24,
+      "original_pages": [],
+      "new_labels": [],
+      "new_pages": [],
+      "topic_ko": "Spatial Manipulator 표기",
+      "change_ko": "청중용 제목·본문·그림의 Panda를 Spatial Manipulator로 변경. 진행표시는 Spatial로 축약. 원본 데이터·코드 식별자와 실제 mesh provenance의 Panda 명칭 유지.",
+      "status": "반영",
+      "scope": "전체 문서"
+    },
+    {
+      "id": 25,
+      "original_pages": [
+        16
+      ],
+      "new_labels": [
+        "planar-results"
+      ],
+      "new_pages": [
+        18
+      ],
+      "topic_ko": "Planar 평가 집합",
+      "change_ko": "300 IK-admitted episodes를 300 IK episodes로 변경. IK 조건부 집합이라는 의미는 대본 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 26,
+      "original_pages": [
+        16
+      ],
+      "new_labels": [
+        "planar-results"
+      ],
+      "new_pages": [
+        18
+      ],
+      "topic_ko": "Paired 결과 명확화",
+      "change_ko": "Success on the same 300 episodes로 변경. Sequential only / Direct only / Net success gain 명시.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 27,
+      "original_pages": [
+        16
+      ],
+      "new_labels": [
+        "planar-results"
+      ],
+      "new_pages": [
+        18
+      ],
+      "topic_ko": "Planar 성공 기준",
+      "change_ko": "Success: EE goal reached safely within 35 s로 간결화. 실제 집계의 목표 pose·기록된 안전 조건은 대본 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 28,
+      "original_pages": [
+        17
+      ],
+      "new_labels": [
+        "planar-why"
+      ],
+      "new_pages": [
+        19
+      ],
+      "topic_ko": "Task Transition 제목",
+      "change_ko": "Resolving Deadlock through Task Transition으로 제목 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 29,
+      "original_pages": [
+        17
+      ],
+      "new_labels": [
+        "planar-why"
+      ],
+      "new_pages": [
+        19
+      ],
+      "topic_ko": "본문 episode 번호 제거",
+      "change_ko": "본문 CLF 시간 그래프·설명에서 episode 30 표기 제거. 원자료 provenance와 A10 진단 자료의 식별자는 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 30,
+      "original_pages": [
+        17
+      ],
+      "new_labels": [
+        "planar-why"
+      ],
+      "new_pages": [
+        19
+      ],
+      "topic_ko": "교착 문제와 해결 연결",
+      "change_ko": "Direct의 non-goal equilibrium과 task 전환에 따른 운동 방향 변경, 일시적 EE error 증가 허용을 연결. 전역 수렴이나 모든 교착 해소를 주장하지 않음.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 31,
+      "original_pages": [
+        18
+      ],
+      "new_labels": [
+        "panda-extension"
+      ],
+      "new_pages": [
+        20
+      ],
+      "topic_ko": "Spatial 확장의 문제",
+      "change_ko": "3D position/orientation, 복잡한 link 형상, 상대 link 운동, redundant IK 문제를 제시해 다음 RDF·IK·CLF 슬라이드와 연결.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 32,
+      "original_pages": [
+        19
+      ],
+      "new_labels": [
+        "panda-rdf"
+      ],
+      "new_pages": [
+        21
+      ],
+      "topic_ko": "RDF 원전 인용",
+      "change_ko": "Self-Collision CBFs from RDF 제목에 Li et al. 원전 인용.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 33,
+      "original_pages": [
+        19
+      ],
+      "new_labels": [
+        "panda-rdf"
+      ],
+      "new_pages": [
+        21
+      ],
+      "topic_ko": "Clearance barrier 교체",
+      "change_ko": "3. Construct h_ab(q)로 바꿔 RDF query값과 제어용 안전 함수 구성을 구분.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 34,
+      "original_pages": [
+        19
+      ],
+      "new_labels": [
+        "panda-rdf"
+      ],
+      "new_pages": [
+        21
+      ],
+      "topic_ko": "RDF에서 CBF로의 추가 구성",
+      "change_ko": "Soft-min aggregation, physical/error margins, 상대 link 운동을 반영한 joint-space gradients 명시.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 35,
+      "original_pages": [
+        22
+      ],
+      "new_labels": [
+        "all-links"
+      ],
+      "new_pages": [
+        24
+      ],
+      "topic_ko": "Spatial 평가 집합",
+      "change_ko": "1,000 IK episodes로 변경.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 36,
+      "original_pages": [
+        22
+      ],
+      "new_labels": [
+        "all-links"
+      ],
+      "new_pages": [
+        24
+      ],
+      "topic_ko": "Spatial 성공 기준",
+      "change_ko": "Success: EE goal reached safely within 120 s로 간결화. 단순 goal hit와 안전 검사를 통과한 성공의 차이는 대본·질의응답 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 37,
+      "original_pages": [
+        23
+      ],
+      "new_labels": [
+        "time-cost"
+      ],
+      "new_pages": [
+        25
+      ],
+      "topic_ko": "44.48초 강조",
+      "change_ko": "본문 44.48 s와 비교 그림 label을 빨간색 굵은 글씨로 강조.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 38,
+      "original_pages": [
+        24
+      ],
+      "new_labels": [
+        "two-links",
+        "oracle",
+        "test-success",
+        "learning-why"
+      ],
+      "new_pages": [
+        26,
+        27,
+        31,
+        33
+      ],
+      "topic_ko": "Fixed 명칭 명확화",
+      "change_ko": "Fixed (3,5)를 Preset pair (3,5)로 변경. Train 최고 성공률로 선정하고 Validation/Test에서 고정했다는 기준 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 39,
+      "original_pages": [
+        24
+      ],
+      "new_labels": [
+        "two-links"
+      ],
+      "new_pages": [
+        26
+      ],
+      "topic_ko": "변화량 강조와 단위",
+      "change_ko": "Change 행 -1.40%p 및 -22.67%를 빨간색 굵은 글씨로 표시. 수식 숫자에도 boldmath를 적용해 실제 굵은 글씨로 표시.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 40,
+      "original_pages": [
+        26
+      ],
+      "new_labels": [
+        "selector-training"
+      ],
+      "new_pages": [
+        28
+      ],
+      "topic_ko": "BCE 풀어쓰기",
+      "change_ko": "Binary Cross Entropy를 식 위 설명에 사용. 수식의 BCE 아래첨자는 정의된 약어로 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 41,
+      "original_pages": [
+        27
+      ],
+      "new_labels": [
+        "selector-features",
+        "selector-model"
+      ],
+      "new_pages": [
+        29,
+        30
+      ],
+      "topic_ko": "Cross-attention 강조",
+      "change_ko": "두 연속 네트워크 도식의 Cross-attention을 빨간색 굵은 글씨로 표시. 29쪽에도 상단 핵심 상자를 추가하여 30쪽과 네트워크 도식의 위치를 일치시킴.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 42,
+      "original_pages": [
+        28
+      ],
+      "new_labels": [
+        "selector-model"
+      ],
+      "new_pages": [
+        30
+      ],
+      "topic_ko": "논문 sequence 기호",
+      "change_ko": "후보 S_k 및 선택 sequence S_{hat k(z)} 사용. 임의 순열 학습이 아닌 사전 정의 후보 선택이라는 의미 유지.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 43,
+      "original_pages": [
+        30
+      ],
+      "new_labels": [
+        "test-time"
+      ],
+      "new_pages": [
+        32
+      ],
+      "topic_ko": "시간 비교의 초점",
+      "change_ko": "본문에서 Preset 비교를 제거하고 All-link와 Learned의 공동 성공 Test 467개에 집중. 같은 단계 수의 Preset 비교는 A6에 유지해 학습 자체의 추가 속도 이득과 구분.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    },
+    {
+      "id": 44,
+      "original_pages": [
+        32
+      ],
+      "new_labels": [
+        "conclusion",
+        "future-work"
+      ],
+      "new_pages": [
+        34,
+        35
+      ],
+      "topic_ko": "추가 검증 구체화",
+      "change_ko": "결론 다음 새 35쪽에 corrected QP·frozen selector·새 episode 평가, online latency, 실제 로봇 검증을 별도 제시.",
+      "status": "반영",
+      "scope": "지정 슬라이드"
+    }
+  ],
+  "main_page_mapping": [
+    {
+      "old_page": 1,
+      "old_label": "title",
+      "new_page": 1,
+      "new_label": "title",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 2,
+      "old_label": "motivation-goal",
+      "new_page": 2,
+      "new_label": "motivation-goal",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 3,
+      "old_label": "motivation",
+      "new_page": 3,
+      "new_label": "motivation",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 4,
+      "old_label": "background-clf",
+      "new_page": 4,
+      "new_label": "background-clf",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 5,
+      "old_label": "background-cbf",
+      "new_page": 5,
+      "new_label": "background-cbf",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 6,
+      "old_label": "background-qp",
+      "new_page": 6,
+      "new_label": "background-qp",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 7,
+      "old_label": "literature",
+      "new_page": 7,
+      "new_label": "literature",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 8,
+      "old_label": "planar-direct",
+      "new_page": 8,
+      "new_label": "planar-direct",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 9,
+      "old_label": "planar-initial",
+      "new_page": 11,
+      "new_label": "planar-scene",
+      "change": "통합"
+    },
+    {
+      "old_page": 10,
+      "old_label": "planar-scene",
+      "new_page": 11,
+      "new_label": "planar-scene",
+      "change": "통합"
+    },
+    {
+      "old_page": 11,
+      "old_label": "planar-setup",
+      "new_page": 12,
+      "new_label": "planar-setup",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 12,
+      "old_label": "planar-sequential",
+      "new_page": 13,
+      "new_label": "planar-sequential",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 13,
+      "old_label": "planar-link2",
+      "new_page": 14,
+      "new_label": "planar-link2",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 14,
+      "old_label": "planar-ee",
+      "new_page": 15,
+      "new_label": "planar-ee",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 15,
+      "old_label": "planar-clf",
+      "new_page": 16,
+      "new_label": "planar-clf",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 16,
+      "old_label": "planar-results",
+      "new_page": 18,
+      "new_label": "planar-results",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 17,
+      "old_label": "planar-why",
+      "new_page": 19,
+      "new_label": "planar-why",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 18,
+      "old_label": "panda-extension",
+      "new_page": 20,
+      "new_label": "panda-extension",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 19,
+      "old_label": "panda-rdf",
+      "new_page": 21,
+      "new_label": "panda-rdf",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 20,
+      "old_label": "panda-ik",
+      "new_page": 22,
+      "new_label": "panda-ik",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 21,
+      "old_label": "panda-clf",
+      "new_page": 23,
+      "new_label": "panda-clf",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 22,
+      "old_label": "all-links",
+      "new_page": 24,
+      "new_label": "all-links",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 23,
+      "old_label": "time-cost",
+      "new_page": 25,
+      "new_label": "time-cost",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 24,
+      "old_label": "two-links",
+      "new_page": 26,
+      "new_label": "two-links",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 25,
+      "old_label": "oracle",
+      "new_page": 27,
+      "new_label": "oracle",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 26,
+      "old_label": "selector-training",
+      "new_page": 28,
+      "new_label": "selector-training",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 27,
+      "old_label": "selector-features",
+      "new_page": 29,
+      "new_label": "selector-features",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 28,
+      "old_label": "selector-model",
+      "new_page": 30,
+      "new_label": "selector-model",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 29,
+      "old_label": "test-success",
+      "new_page": 31,
+      "new_label": "test-success",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 30,
+      "old_label": "test-time",
+      "new_page": 32,
+      "new_label": "test-time",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 31,
+      "old_label": "learning-why",
+      "new_page": 33,
+      "new_label": "learning-why",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 32,
+      "old_label": "conclusion",
+      "new_page": 34,
+      "new_label": "conclusion",
+      "change": "유지 또는 수정"
+    },
+    {
+      "old_page": 33,
+      "old_label": "questions",
+      "new_page": 36,
+      "new_label": "questions",
+      "change": "유지 또는 수정"
+    }
+  ],
+  "new_main_frames": [
+    {
+      "label": "human-inspiration",
+      "page": 9
+    },
+    {
+      "label": "thesis-outline",
+      "page": 10
+    },
+    {
+      "label": "algorithm-overview",
+      "page": 17
+    },
+    {
+      "label": "future-work",
+      "page": 35
+    }
+  ],
+  "appendix_page_mapping": [
+    {
+      "name": "Contents",
+      "old_pages": [
+        34
+      ],
+      "new_pages": [
+        37
+      ]
+    },
+    {
+      "name": "A1",
+      "old_pages": [
+        35
+      ],
+      "new_pages": [
+        38
+      ]
+    },
+    {
+      "name": "A2",
+      "old_pages": [
+        36
+      ],
+      "new_pages": [
+        39
+      ]
+    },
+    {
+      "name": "A3",
+      "old_pages": [
+        37
+      ],
+      "new_pages": [
+        40
+      ]
+    },
+    {
+      "name": "A4",
+      "old_pages": [
+        38
+      ],
+      "new_pages": [
+        41
+      ]
+    },
+    {
+      "name": "A5",
+      "old_pages": [
+        39
+      ],
+      "new_pages": [
+        42
+      ]
+    },
+    {
+      "name": "A6",
+      "old_pages": [
+        40
+      ],
+      "new_pages": [
+        43
+      ]
+    },
+    {
+      "name": "A7",
+      "old_pages": [
+        41,
+        42,
+        43
+      ],
+      "new_pages": [
+        44,
+        45,
+        46,
+        47
+      ]
+    },
+    {
+      "name": "A8",
+      "old_pages": [
+        44
+      ],
+      "new_pages": [
+        48
+      ]
+    },
+    {
+      "name": "A9",
+      "old_pages": [
+        45
+      ],
+      "new_pages": [
+        49
+      ]
+    },
+    {
+      "name": "A10",
+      "old_pages": [
+        46
+      ],
+      "new_pages": [
+        50
+      ]
+    },
+    {
+      "name": "A11",
+      "old_pages": [
+        47
+      ],
+      "new_pages": [
+        51
+      ]
+    },
+    {
+      "name": "A12",
+      "old_pages": [
+        48
+      ],
+      "new_pages": [
+        52
+      ]
+    },
+    {
+      "name": "A13",
+      "old_pages": [
+        49
+      ],
+      "new_pages": [
+        53
+      ]
+    },
+    {
+      "name": "A14",
+      "old_pages": [
+        50
+      ],
+      "new_pages": [
+        54
+      ]
+    },
+    {
+      "name": "A15",
+      "old_pages": [
+        51
+      ],
+      "new_pages": [
+        55
+      ]
+    },
+    {
+      "name": "A16",
+      "old_pages": [
+        52
+      ],
+      "new_pages": [
+        56
+      ]
+    },
+    {
+      "name": "A17",
+      "old_pages": [],
+      "new_pages": [
+        57
+      ]
+    }
+  ],
+  "scientific_clarifications_ko": {
+    "shared_workspace": "Shared workspace는 실제 학술용어이며 사람과 로봇 또는 복수 로봇이 물리적 작업공간을 공유하는 상황에 사용. 본 연구의 정적 장애물 실험은 human–robot collaboration을 평가하지 않으므로 Cluttered Workspaces로 교체.",
+    "goncalves": "Goncalves의 기본 이론은 짝수 차원의 skew-symmetric orthonormal Omega를 가정. 홀수 차원에는 singular Omega를 사용하는 별도 확장이 존재. T=Omega N이 0인데 beta>0인 경우 circulation 제약이 불가능하므로 feasibility에 추가 주의가 필요. 원전은 4-DOF planar arm과 15차원 다중로봇을 실험. 따라서 기존 연구가 manipulator에 적용되지 않았다는 주장은 하지 않음. 본 연구의 차이는 IK와 kinematic chain에서 intermediate link task를 구성한다는 점.",
+    "human_inspiration": "사람의 어깨·팔 재배치는 설계 직관으로 제시하며 모든 사람의 보편적 순서나 실험적으로 입증된 법칙이라는 주장은 배제.",
+    "model_policies": "공통 QP·sequence 구조는 유지하되 모델별 transition/termination policy를 구분. Planar는 중간 단계 boundary stall/infeasibility에서 stage advance가 가능하지만 Spatial은 종료. 정확한 규칙은 A5.",
+    "rdf": "RDF는 geometry representation이며 surface queries, soft-min, margins, relative gradients로 self-collision safety function 구성. 근사 geometry, finite queries, top-K 변경 등에 대해 전역 안전 인증을 주장하지 않음. 외부 구형 장애물에는 capsule 기반 제약 사용.",
+    "preset_learning": "Preset(3,5)는 Train에서 선정한 두-link sequence. 학습은 사전 정의 ascending-order 후보 10개 중 선택. +2.20pp의 95% paired CI[-0.30,4.70]는 0을 포함하므로 추가 성공률 개선은 불확실. 시간 이득은 stage reduction과 구분.",
+    "success": "본문의 safely는 기록된 collision·joint-limit·solver 기준을 통과한 성공을 간결하게 표현한 것. 정확한 mesh clearance나 연속 물리궤적의 안전 인증을 뜻하지 않음."
+  },
+  "sources": [
+    {
+      "id": "shared_workspace_iso",
+      "url": "https://committee.iso.org/news/2016/03/Ref2057.html",
+      "supports_ko": "사람과 로봇이 같은 작업공간을 사용하는 collaborative robotics의 공식 용례"
+    },
+    {
+      "id": "shared_workspace_research",
+      "url": "https://www.roboticsproceedings.org/rss20/p029.pdf",
+      "supports_ko": "Shared Workspace를 제목·실험 맥락에 사용한 RSS 2024 원전"
+    },
+    {
+      "id": "burger2020chemist",
+      "url": "https://www.nature.com/articles/s41586-020-2442-2",
+      "supports_ko": "자율실험실에서 시료와 실험장비를 다루는 로봇 응용"
+    },
+    {
+      "id": "goncalves2023circulation",
+      "url": "https://arxiv.org/html/2307.09901v1",
+      "supports_ko": "§III 짝수 차원 기본 이론, §IV-C 홀수 차원 확장, §V-A4-DOF arm, §V-B15차원 실험"
+    },
+    {
+      "id": "li2024rdf",
+      "url": "https://arxiv.org/abs/2307.00533",
+      "supports_ko": "Bernstein polynomial 기반 robot distance field"
+    },
+    {
+      "id": "molnar2023composing",
+      "url": "https://arxiv.org/abs/2309.06647",
+      "supports_ko": "Soft-min을 이용한 CBF candidate 합성"
+    }
+  ],
+  "figure_audit": "evidence/feedback_figure_audit.json",
+  "new_simulation": false,
+  "new_training": false,
+  "unaddressed_content_items": [],
+  "final_validation_reported_by_parent": {
+    "main_and_presenter_build": "완료",
+    "content_and_layout_verification": "완료",
+    "source": "부모 에이전트의 최종 검증 완료 통보",
+    "delivery_status": "발행 결과는 build/feedback_revision/published.json 참조"
+  }
+}

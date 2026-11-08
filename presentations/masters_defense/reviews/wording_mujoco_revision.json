@@ -1,0 +1,428 @@
+{
+  "requests": [
+    "Use the exact thesis English title",
+    "Use scene consistently",
+    "Define Direct and Sequential at first content use",
+    "Unify method and technical terminology",
+    "Replace Panda extension illustration with an actual MuJoCo rendering"
+  ],
+  "terminology": {
+    "official_title": "Sequential Collision-Aware Kinematic Control of Robot Manipulators Using Control Barrier Functions and Learned Link Selection",
+    "canonical": [
+      "scene",
+      "link",
+      "task",
+      "end-effector (EE)",
+      "Direct",
+      "Sequential",
+      "All-link Sequential",
+      "Fixed (3,5)",
+      "Learned selection",
+      "Uniform selection",
+      "IK configuration",
+      "self-collision",
+      "null-space",
+      "slack"
+    ],
+    "first_definitions": {
+      "Direct": "중간 task 없이 end-effector (EE) 목표만 추종",
+      "Sequential": "중간 link task를 거친 뒤 EE 목표 추종"
+    },
+    "semantic_distinctions": [
+      "Physical manipulation work remains 작업; controller objectives use task",
+      "Joint configuration q and spatial pose (p,R) remain distinct",
+      "Direct does not mean a straight Cartesian path"
+    ],
+    "numeric_scene_unit": "scenes"
+  },
+  "pages_changed": {
+    "title": 1,
+    "first_Direct_definition": 4,
+    "first_Sequential_definition": 5,
+    "MuJoCo_Panda_scene": 9,
+    "figure_terminology": "All active figures"
+  },
+  "plan": {
+    "main_slides": 23,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60,
+    "slides": [
+      {
+        "page": 1,
+        "label": "title",
+        "title": "표지",
+        "seconds": 20,
+        "user_outline": "표지"
+      },
+      {
+        "page": 2,
+        "label": "motivation",
+        "title": "Motivation: 로봇팔의 안전한 목표 도달",
+        "seconds": 65,
+        "user_outline": "1. Motivation",
+        "thesis_chapter": "Chapter 1. Introduction"
+      },
+      {
+        "page": 3,
+        "label": "literature",
+        "title": "문헌 조사: 안전 제약·정체 분석·로봇 형상",
+        "seconds": 55,
+        "user_outline": "2. 문헌 조사",
+        "thesis_chapter": "Chapter 1. Introduction"
+      },
+      {
+        "page": 4,
+        "label": "planar-direct",
+        "title": "Planar 3-DOF: end-effector 목표를 바로 추종",
+        "seconds": 70,
+        "user_outline": "3-1. Planar 기존 방법",
+        "thesis_chapter": "Chapter 2. Preliminaries"
+      },
+      {
+        "page": 5,
+        "label": "planar-sequential",
+        "title": "제안 방법: 중간 link 목표를 거쳐 EE 목표 추종",
+        "seconds": 65,
+        "user_outline": "3-2. Planar 제안 방법",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 6,
+        "label": "planar-clf",
+        "title": "Planar CLF: 단계마다 하나의 QP와 하나의 CLF",
+        "seconds": 45,
+        "user_outline": "3-2. Planar 제안 방법",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 7,
+        "label": "planar-results",
+        "title": "Planar 결과: Direct 72.00\\% / Sequential 84.33\\%",
+        "seconds": 40,
+        "user_outline": "3-3. Planar 효과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 8,
+        "label": "planar-why",
+        "title": "작동 원리: CLF 전환을 통한 자세 재구성",
+        "seconds": 65,
+        "user_outline": "3-4. Planar 작동 원리",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 9,
+        "label": "panda-extension",
+        "title": "7-DOF Panda로 확장: 형상·IK·pose task",
+        "seconds": 40,
+        "user_outline": "4. Panda 확장",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 10,
+        "label": "panda-rdf",
+        "title": "Panda self-collision: RDF 기반 CBF",
+        "seconds": 55,
+        "user_outline": "4-1. RDF",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 11,
+        "label": "panda-ik",
+        "title": "Panda IK: null-space update를 통한 목표 탐색",
+        "seconds": 75,
+        "user_outline": "4-2. Null-space IK",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 12,
+        "label": "panda-clf",
+        "title": "Panda CLF: 모든 단계의 위치·자세 오차 추종",
+        "seconds": 60,
+        "user_outline": "4-3. Panda CLF",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 13,
+        "label": "all-links",
+        "title": "Panda: All-link Sequential의 구성과 결과",
+        "seconds": 50,
+        "user_outline": "4-4. All-link Sequential",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 14,
+        "label": "time-cost",
+        "title": "All-link Sequential의 이동 시간 부담",
+        "seconds": 35,
+        "user_outline": "5. 시간 부담",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 15,
+        "label": "two-links",
+        "title": "중간 link task를 두 개로 축소",
+        "seconds": 55,
+        "user_outline": "6. 두 link 선택",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 16,
+        "label": "oracle",
+        "title": "어떤 link 쌍을 고르는가: 약 80\\%의 잠재적 상한",
+        "seconds": 50,
+        "user_outline": "7. 약 80%의 상한",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 17,
+        "label": "selector-model",
+        "title": "Learned selection: scene에 따른 link 쌍 선택",
+        "seconds": 55,
+        "user_outline": "8. Learning",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 18,
+        "label": "selector-training",
+        "title": "Learning 목표: 여러 성공 쌍을 허용하는 선택",
+        "seconds": 45,
+        "user_outline": "8. Learning",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 19,
+        "label": "test-success",
+        "title": "Test 결과: 방법별 목표 도달 성공률",
+        "seconds": 55,
+        "user_outline": "9. 결과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 20,
+        "label": "test-time",
+        "title": "Test 완료 시간: 단계 축소와 학습 효과의 구분",
+        "seconds": 40,
+        "user_outline": "9. 결과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 21,
+        "label": "learning-why",
+        "title": "왜 도움이 되는가: scene마다 다른 성공 link 쌍",
+        "seconds": 60,
+        "user_outline": "10. 왜 도움이 되는가",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 22,
+        "label": "conclusion",
+        "title": "결론: task 구성·단계 축소·scene별 선택",
+        "seconds": 40,
+        "user_outline": "결론",
+        "thesis_chapter": "Chapter 5. Conclusion"
+      },
+      {
+        "page": 23,
+        "label": "questions",
+        "title": "질의응답",
+        "seconds": 0,
+        "user_outline": "질의응답",
+        "thesis_chapter": "Chapter 5. Conclusion"
+      }
+    ],
+    "bibliography_continuation_pages": 1
+  },
+  "verification": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 40,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 3396,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "df6c9238ffe901fc937bd31a434d60dd45d412d58b353d9627f269da21f6a7b2"
+      },
+      "presenter": {
+        "pages": 63,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 7184,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "2c3fc14dbf446ed82ac7296c50cc0d8abe5953642883cb4f96238d45541cd69b"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "user_block_title_colors_preserved": true,
+      "clf_shapes_page": 6,
+      "clf_time_page": 8,
+      "ik_pose_overlay_page": 5
+    },
+    "bibliography": {
+      "backend": "BibTeX",
+      "style": "IEEEtran",
+      "cited_entries": 7,
+      "continuation_pages": 1
+    },
+    "chapter_subtitles": {
+      "frames": 38,
+      "source": "evidence/chapter_mapping.json"
+    },
+    "terminology": {
+      "official_english_title": true,
+      "first_use_definitions": true,
+      "canonical_method_labels": true,
+      "scene_and_link_consistency": true
+    },
+    "panda_render": {
+      "backend": "MuJoCo",
+      "static_archived_configuration": true,
+      "image_pixels": [
+        1800,
+        1350
+      ],
+      "physics_steps": 0,
+      "max_frame_residual_m": 2.886579864025407e-15
+    },
+    "main_slides": 23,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 23,
+    "figure_audit": "evidence/figure_audit.json",
+    "story_figure_audit": "evidence/story_figure_audit.json",
+    "story_order_matches_user_outline": true
+  },
+  "content_checks": {
+    "main_pages": 40,
+    "presenter_pages": 63,
+    "slide_note_pairs": 23,
+    "appendix_pages_matched": 17,
+    "first_method_definitions": true,
+    "canonical_terms_in_pdf": true,
+    "mujoco_caption_on_page9": true
+  },
+  "figure_terminology_audit": "evidence/figure_terminology_audit.json",
+  "mujoco_render_audit": "evidence/mujoco_render_audit.json",
+  "render": {
+    "renderer": "MuJoCo EGL",
+    "image": "Fig/panda_mujoco.png",
+    "pixels": [
+      1800,
+      1350
+    ],
+    "source": "evidence/panda_example.json",
+    "physics_steps": 0,
+    "max_frame_residual_m": 2.886579864025407e-15
+  },
+  "subagent_reviews": [
+    {
+      "agent": "mechanism_evidence",
+      "findings": [
+        "Exact English thesis title confirmed",
+        "Direct means EE-only tracking, not a straight path",
+        "First EE expansion restored",
+        "Configuration versus pose distinguished",
+        "Corrected generic fixed-pair comparison vs Fixed (3,5) baseline",
+        "Notes and documents synchronized,1140 seconds retained"
+      ],
+      "status": "applied"
+    },
+    {
+      "agent": "literature_flow",
+      "findings": [
+        "29 figures regenerated with canonical labels",
+        "199 numeric/boolean audit values and 15 frozen-data hashes unchanged",
+        "Data-field selection made independent of translated plot labels",
+        "Long method labels wrapped without smaller fonts"
+      ],
+      "status": "passed"
+    },
+    {
+      "agent": "story_figures",
+      "findings": [
+        "Original Panda visual meshes rendered in MuJoCo",
+        "All nine archived frame positions reproduced",
+        "Ten archived obstacles and goal retained",
+        "Camera zoom keeps scene within frame",
+        "No dynamics rollout or package changes"
+      ],
+      "status": "passed"
+    }
+  ],
+  "visual_pages_reviewed": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40
+  ],
+  "new_simulations_or_training": false,
+  "concurrent_user_edits": {
+    "preserved_user_metricbox_title_dp": "4mm",
+    "preserved_user_formatting": true,
+    "content_conflicts_resolved": 1,
+    "only_user_semantic_change": "metricbox title depth2mm→4mm"
+  },
+  "source_hashes": {
+    "main.tex": "238edc891c556c3a8da2497f8daa62414768669b3c12b1ccd31c315f2185c0e4",
+    "speaker-notes.tex": "1008f3677b6e9b679ae5a648fa626afae38df17a3615b2c7fd28578c61f26074",
+    "README.md": "2b5a28f3315172dc21bd18ea1e45fd431668b02ca0abcfd1d35fefdbe0da675c",
+    "발표구성.txt": "6d60299a02cead5068dae913a412b2e8a3821e0109ff4a6e4566752d6181d02c",
+    "발표대본.txt": "cf2aec498ec3fc8f2efb7b88fba198da2ac1a735b821d973364cf24d51e67a01",
+    "질의응답_메모.txt": "1a99534c9d509cd8a240a70f1e085879262ccb982552fdea87136c993fa3e7db",
+    "scripts/render_panda_slide.py": "e191ea1afe40eb072ed7bf8ca76090d49071fe23dfe51489efed1522b398d7af",
+    "scripts/verify_artifacts.py": "561f9bf3175b3b70c6e0cadbac69034ed661e772be48f8bd9df6af1e0435dd06",
+    "evidence/figure_terminology_audit.json": "58f9d336c3b873431c0cce96ddfbd2ade605b74bf15ceb2183c760c4852aa396",
+    "evidence/mujoco_render_audit.json": "8e63b56ce8977f9ae179a753c237428deaa7552b93ded144bec7d6367ce809d6"
+  }
+}

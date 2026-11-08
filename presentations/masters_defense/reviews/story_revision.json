@@ -1,0 +1,356 @@
+{
+  "request": "Rebuild the 20-minute Korean defense in the ten-part user-specified narrative.",
+  "plan": {
+    "main_slides": 23,
+    "appendix_slides": 15,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60,
+    "slides": [
+      {
+        "page": 1,
+        "label": "title",
+        "title": "표지",
+        "seconds": 20,
+        "user_outline": "표지"
+      },
+      {
+        "page": 2,
+        "label": "motivation",
+        "title": "Motivation: 안전 제약과 목표 도달의 간극",
+        "seconds": 65,
+        "user_outline": "1. Motivation"
+      },
+      {
+        "page": 3,
+        "label": "literature",
+        "title": "문헌 조사: 안전 제약·정체 분석·로봇 형상",
+        "seconds": 55,
+        "user_outline": "2. 문헌 조사"
+      },
+      {
+        "page": 4,
+        "label": "planar-direct",
+        "title": "Planar 3-DOF: EE 목표만 추종하는 Direct",
+        "seconds": 70,
+        "user_outline": "3-1. Planar 기존 방법"
+      },
+      {
+        "page": 5,
+        "label": "planar-sequential",
+        "title": "제안 방법: 중간 링크 목표를 거치는 Sequential",
+        "seconds": 65,
+        "user_outline": "3-2. Planar 제안 방법"
+      },
+      {
+        "page": 6,
+        "label": "planar-clf",
+        "title": "Planar CLF: 중간 위치 task와 최종 pose task",
+        "seconds": 45,
+        "user_outline": "3-2. Planar 제안 방법"
+      },
+      {
+        "page": 7,
+        "label": "planar-results",
+        "title": "Planar 결과: Direct 72.00\\% / Sequential 84.33\\%",
+        "seconds": 40,
+        "user_outline": "3-3. Planar 효과"
+      },
+      {
+        "page": 8,
+        "label": "planar-why",
+        "title": "작동 원리: CLF 전환을 통한 자세 재구성",
+        "seconds": 65,
+        "user_outline": "3-4. Planar 작동 원리"
+      },
+      {
+        "page": 9,
+        "label": "panda-extension",
+        "title": "7-DOF Panda로 확장: 형상·IK·pose task",
+        "seconds": 40,
+        "user_outline": "4. Panda 확장"
+      },
+      {
+        "page": 10,
+        "label": "panda-rdf",
+        "title": "Panda self-collision: RDF 기반 CBF",
+        "seconds": 55,
+        "user_outline": "4-1. RDF"
+      },
+      {
+        "page": 11,
+        "label": "panda-ik",
+        "title": "Panda IK: null-space update를 통한 목표 탐색",
+        "seconds": 75,
+        "user_outline": "4-2. Null-space IK"
+      },
+      {
+        "page": 12,
+        "label": "panda-clf",
+        "title": "Panda CLF: 모든 단계의 위치·자세 오차 추종",
+        "seconds": 60,
+        "user_outline": "4-3. Panda CLF"
+      },
+      {
+        "page": 13,
+        "label": "all-links",
+        "title": "Panda 전체 링크 Sequential: 성공률 증가",
+        "seconds": 50,
+        "user_outline": "4-4. 전체 링크 Sequential"
+      },
+      {
+        "page": 14,
+        "label": "time-cost",
+        "title": "전체 링크 Sequential의 이동 시간 부담",
+        "seconds": 35,
+        "user_outline": "5. 시간 부담"
+      },
+      {
+        "page": 15,
+        "label": "two-links",
+        "title": "중간 link task를 7개에서 2개로 축소",
+        "seconds": 55,
+        "user_outline": "6. 두 링크 선택"
+      },
+      {
+        "page": 16,
+        "label": "oracle",
+        "title": "어떤 링크 쌍을 고르는가: 약 80\\%의 잠재적 상한",
+        "seconds": 50,
+        "user_outline": "7. 약 80%의 상한"
+      },
+      {
+        "page": 17,
+        "label": "selector-model",
+        "title": "Learning: 장면에서 링크 쌍의 성공 점수 예측",
+        "seconds": 55,
+        "user_outline": "8. Learning"
+      },
+      {
+        "page": 18,
+        "label": "selector-training",
+        "title": "Learning 목표: 여러 성공 쌍을 허용하는 선택",
+        "seconds": 45,
+        "user_outline": "8. Learning"
+      },
+      {
+        "page": 19,
+        "label": "test-success",
+        "title": "Test 성공률: 고정 쌍 58.70\\% / 학습 선택 60.90\\%",
+        "seconds": 55,
+        "user_outline": "9. 결과"
+      },
+      {
+        "page": 20,
+        "label": "test-time",
+        "title": "Test 완료 시간: 단계 축소와 학습 효과의 구분",
+        "seconds": 40,
+        "user_outline": "9. 결과"
+      },
+      {
+        "page": 21,
+        "label": "learning-why",
+        "title": "왜 도움이 되는가: 장면마다 다른 성공 링크 쌍",
+        "seconds": 60,
+        "user_outline": "10. 왜 도움이 되는가"
+      },
+      {
+        "page": 22,
+        "label": "conclusion",
+        "title": "결론: task 구성·단계 축소·장면별 선택",
+        "seconds": 40,
+        "user_outline": "결론"
+      },
+      {
+        "page": 23,
+        "label": "questions",
+        "title": "질의응답",
+        "seconds": 0,
+        "user_outline": "질의응답"
+      }
+    ]
+  },
+  "narrative": [
+    "Motivation",
+    "Literature review",
+    "Planar baseline, proposed method, effect, mechanism",
+    "Panda: RDF, null-space IK, pose CLF, all-link Sequential",
+    "Time cost",
+    "Two-link task selection",
+    "Oracle potential around 80%",
+    "Learning",
+    "Results",
+    "Observed reasons for improvement"
+  ],
+  "main_slides": 23,
+  "appendix_slides": 15,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "preserved_user_edits": [
+    "Blue block titles with light text",
+    "Fixed metric-box heights",
+    "Source formatting where content retained"
+  ],
+  "preserved_requirements": [
+    "Korean prose with conventional English robotics terminology",
+    "Nominal slide copy",
+    "LaTeX fonts in all graphs",
+    "Separated speaker notes",
+    "Positive symbolic planar CLF weights",
+    "Same-time case30 comparison",
+    "Actual boundary case180"
+  ],
+  "new_figures": [
+    "story_planar_direct",
+    "story_time_cost",
+    "story_oracle",
+    "story_selection_effect",
+    "story_selection_examples"
+  ],
+  "subagent_reviews": [
+    {
+      "role": "Literature and speaker narrative",
+      "findings": [
+        "Use Ames2017, Tan2024, Li2024",
+        "Tan also proposes changes that remove some equilibria; avoid claiming prior work ignores the problem",
+        "23 notes with exact1140second budget"
+      ],
+      "status": "applied"
+    },
+    {
+      "role": "Scientific mechanism and source evidence",
+      "findings": [
+        "All ten requested stages present",
+        "Two-link selection retains all seven joint velocity inputs",
+        "Oracle82% is Validation post-hoc bound",
+        "Name fixed(3,5) comparator in the conclusion",
+        "Planar and learning explanations limited to observed mechanisms"
+      ],
+      "status": "applied"
+    },
+    {
+      "role": "Figures and visual review",
+      "findings": [
+        "Five new figures recomputed from frozen records",
+        "Remove repeated faint failure-cell text and duplicate figure caption",
+        "Enlarge baseline Direct figure from33mm to40mm"
+      ],
+      "status": "applied"
+    }
+  ],
+  "literature_sources": [
+    {
+      "citation": "Ames et al.,2017",
+      "url": "https://arxiv.org/abs/1609.06408"
+    },
+    {
+      "citation": "Tan and Dimarogonas,2024",
+      "url": "https://arxiv.org/abs/2104.14895"
+    },
+    {
+      "citation": "Li et al.,2024",
+      "url": "https://arxiv.org/abs/2307.00533"
+    }
+  ],
+  "visual_pages_reviewed": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38
+  ],
+  "presenter_order_verified": {
+    "slide_note_pairs": 23,
+    "matching_appendix_pages": 15
+  },
+  "verification": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 38,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 3031,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "76eeb933cafd75e36526754fd5f69ee6326ff2c79f10fe774000189c259033c6"
+      },
+      "presenter": {
+        "pages": 61,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 6744,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "b9ff8b91882d16d68fb67507443374ab69d24187bade5c1d92e03bb62bceb65b"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "user_block_title_colors_preserved": true,
+      "clf_shapes_page": 6,
+      "clf_time_page": 8,
+      "ik_pose_overlay_page": 5
+    },
+    "main_slides": 23,
+    "appendix_slides": 15,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 23,
+    "figure_audit": "evidence/figure_audit.json",
+    "story_figure_audit": "evidence/story_figure_audit.json",
+    "story_order_matches_user_outline": true
+  },
+  "new_simulation_or_training": false,
+  "source_hashes": {
+    "main.tex": "889fcb6b1f620f779ed3b724d4a9001b41234ac20b6c72569baeb2b4716143e1",
+    "speaker-notes.tex": "40d5d429245c310a90754f9cd915f592c679156c2829fe667fa3e2ea1585dd51",
+    "scripts/build_story_figures.py": "d43071ecb1d8caa58cf149485576ec7c83891e0382429fbb9c0ad441183ae669",
+    "scripts/export_notes.py": "0c92a5e708f3ca5a7d297c41adb1dcd7f23b2ed1fb661d241701546c63352681",
+    "scripts/verify_artifacts.py": "2e3cad0ea6c1530a2ce7a67570105c4eb88d35d3f4fe804abf7e064ebcc5adc9",
+    "발표구성.txt": "f774e002474deb142aa303d7245ca814922d43f7835cb25ee8e24b4df2c8257a",
+    "발표대본.txt": "b0d3a2714c198939912c8460b417fceeb538ff9482c578da90f929e14b9c3608",
+    "질의응답_메모.txt": "806cfd127468bc92c6b92729118f8f2c00e6753569a183d06420053bd7bbf1c7"
+  }
+}

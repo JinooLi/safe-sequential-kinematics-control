@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-07",
+  "requests": [
+    "Section-grouped dot progress instead of a continuous bar",
+    "Shorter page17 CLF plots and wider explanatory text spacing",
+    "All presentation text in English"
+  ],
+  "reference": "PWY_중간발표_박원영_Final.pptx; slideMaster1 section labels + hollow dots and per-slide filled ellipse",
+  "navigation": {
+    "content_dots": 32,
+    "completed": "filled gray",
+    "current": "larger blue",
+    "upcoming": "hollow gray",
+    "cover_excluded": true,
+    "backup_count_separate": true
+  },
+  "page17": {
+    "old_plot_height_pt": 294.48,
+    "new_plot_height_pt": 204.48,
+    "height_reduction_percent": 30.56,
+    "width_and_source_font_sizes_preserved": true,
+    "explanation_item_spacing_mm": 4
+  },
+  "english": [
+    "main slides",
+    "backup slides",
+    "plot labels",
+    "presenter notes",
+    "outline",
+    "Q&A memo",
+    "README"
+  ],
+  "terminology": "episode/episodes for dataset cases; archived identifiers unchanged",
+  "review_fixes": [
+    "English paragraph alignment on narrow motivation columns",
+    "Preserved empirical qualifier observed in speed claims",
+    "Explicit error norms and command-change limits",
+    "IK and CI expanded",
+    "White in-bar values avoid reference-line overlap in A2"
+  ],
+  "evidence": {
+    "new_simulations_or_training": false,
+    "metrics_unchanged": true,
+    "citation_backend": "BibTeX"
+  },
+  "validation": {
+    "audience_pages": 50,
+    "presenter_pages": 83,
+    "identical_slide_text_in_presenter": 50,
+    "korean_characters": 0,
+    "speech_seconds": 1140,
+    "navigation_pixel_states_checked": 1024,
+    "reference_dot_style": "section label + one hollow dot per slide + filled current marker",
+    "plot_height_reduction_percent": 30.56,
+    "sources_unchanged": true
+  },
+  "main_pdf_sha256": "bd964394574e4449591e27929eb7b62d196a63126e0cab59015fb4224876fd0f"
+}

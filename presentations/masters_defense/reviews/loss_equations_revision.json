@@ -1,0 +1,25 @@
+{
+  "changed_source_frames": [
+    26
+  ],
+  "changed_audience_pages": [
+    26
+  ],
+  "presenter_slides_match_audience": true,
+  "main_pages": 51,
+  "presenter_pages": 84,
+  "main_slide_count": 33,
+  "loss_equations_checked_against": [
+    "src/safe_ik/application/train_link_selection.py:38",
+    "src/safe_ik/application/train_link_selection.py:53"
+  ],
+  "sigmoid_for_bce": true,
+  "softmax_same_logits_for_selection": true,
+  "selection_zero_for_all_failure": true,
+  "bce_and_mean_retain_all_failure": true,
+  "selection_weight": 3,
+  "training_episode_mean": true,
+  "independent_agent_review": "loss_equation_review; passed source and render",
+  "visual_review": "page26.png; no overlap, normal slide math font",
+  "main_pdf_sha256": "0d82da9c51321cea4d461185301da780fa450311a596f327a7f91b8212879de3"
+}

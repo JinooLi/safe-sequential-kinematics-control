@@ -1,0 +1,29 @@
+{
+  "cause": "main.tex program magic comment bypassed the configured latexmk recipe, so outdir was not passed to pdflatex. Compilation succeeded in the source directory while the viewer read the configured out directory.",
+  "extension_version": "10.20.0",
+  "log_evidence": {
+    "path": "/home/jinoo/.vscode-server/data/logs/20261106T144818/exthost1/output_logging_20261106T144822/1-LaTeX Workshop.log",
+    "magic_comment_line": 1051,
+    "actual_pdflatex_command_line": 1053,
+    "success_line": 1060,
+    "pdf_missing_line": 1083
+  },
+  "fix": "Removed the program magic comment from main.tex. Kept LaTeX Workshop settings unchanged.",
+  "official_reference": "https://github.com/James-Yu/LaTeX-Workshop/wiki/Compile#magic-comments",
+  "verification": {
+    "command": [
+      "latexmk",
+      "-synctex=1",
+      "-interaction=nonstopmode",
+      "-file-line-error",
+      "-pdflatex",
+      "-outdir=/home/jinoo/latex-ws/LaTeX-env/out/ws/masters_defense",
+      "-shell-escape",
+      "/home/jinoo/latex-ws/LaTeX-env/ws/masters_defense/main"
+    ],
+    "exit_code": 0,
+    "output_pdf": "/home/jinoo/latex-ws/LaTeX-env/out/ws/masters_defense/main.pdf",
+    "pages": 31,
+    "pdf_sha256": "711a3985578c758b909e938d6d82fa3d6574a80265e294a7e8389935e4abe2a4"
+  }
+}

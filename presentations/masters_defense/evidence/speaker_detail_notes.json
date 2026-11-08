@@ -1,0 +1,165 @@
+[
+  {
+    "original_page": 2,
+    "details": [
+      "논문 Research Objectives: 순차 작업 정식화, 평면·공간 구현, 순서 선택의 대응 비교."
+    ]
+  },
+  {
+    "original_page": 3,
+    "details": [
+      "배경: Ames et al., TAC 2017; Tan \\& Dimarogonas, Automatica 2024. 개념도는 일반적 메커니즘을 설명한다."
+    ]
+  },
+  {
+    "original_page": 4,
+    "details": [
+      "논문: Method / Problem Formulation. $h_r$는 이 슬라이드에서 충돌·관절 한계 장벽을 통칭한다."
+    ]
+  },
+  {
+    "original_page": 5,
+    "details": [
+      "녹색 상자: 본 연구의 작업 구성·선택. QP와 RDF는 기반 기법. 논문 Method 참조."
+    ]
+  },
+  {
+    "original_page": 6,
+    "details": [
+      "Panda: 다중 초기값 IK + capsule 검사 + RDF 재검증. 평면: 두 해의 해석적 IK와 충돌 검사."
+    ]
+  },
+  {
+    "original_page": 7,
+    "details": [
+      "앞 두 자세는 전환 직전, 마지막은 최초 성공. 목표는 저장 CLF와 일치하는 IK 복원값.\\newline 이 사례의 중간 전환은 허용오차 내 도달이며, 일반적으로 미달성 전환도 허용한다 (A5)."
+    ]
+  },
+  {
+    "original_page": 8,
+    "details": [
+      "논문: Kinematic Control. 기반: Ames et al., TAC 2017. 수치 해법: OSQP (Stellato et al., 2020)."
+    ]
+  },
+  {
+    "original_page": 9,
+    "details": [
+      "RDF 표현: Li et al., ICRA 2024. Soft-min: Molnar \\& Ames, L-CSS 2023. 실험 $K=2$; 유한·단방향 표면 질의."
+    ]
+  },
+  {
+    "original_page": 10,
+    "details": [
+      "논문: Kinematic Control의 불변성 명제. top-$K$ 선택 경계에서는 $C^1$ 가정을 직접 적용할 수 없다."
+    ]
+  },
+  {
+    "original_page": 11,
+    "details": [
+      "논문 Planar 결과 및 보관 기록. 충돌 없는 IK가 채택된 장면에 한정; 채택 전 IK 탈락 340회."
+    ]
+  },
+  {
+    "original_page": 12,
+    "details": [
+      "위: 직접의 마지막 기록(35초 직전) / 순차의 최초 성공. 별은 목표 위치. 아래: yaw 허용오차 0.1 rad(붉은 선).\\newline\n  녹색 세로선은 최초 성공, 옅은 파란 선은 순차 작업 전환. 선택된 사례이며 정체 원인의 인과 검증은 아니다."
+    ]
+  },
+  {
+    "original_page": 13,
+    "details": [
+      "평가 장면 seed2026120000\\_0007의 저장 입력.\\newline 로봇은 프레임 연결선, 구는 장애물 10개. 별·세 축은 목표 위치·방향. 정적 시각화.",
+      "공통의 보관 제어기·QP 버전. 완료 시간은 시뮬레이션 시간이며 IK·QP·신경망의 계산 시간을 제외한다."
+    ]
+  },
+  {
+    "original_page": 14,
+    "details": [
+      "Validation 1,000장면, $T=120$ s. 종료 분류는 각 실행의 관측값이며 정체 해소의 인과 증거가 아니다."
+    ]
+  },
+  {
+    "original_page": 15,
+    "details": [
+      "모두 Validation. 고정 쌍은 훈련 데이터로 선택. 균등 선택의 기대 성공률 54.73\\%는 별도 기준.\\newline\n  시간은 성공한 공통 집합의 시뮬레이션 시간. Oracle은 실행 전에 사용할 수 있는 정책이 아니다."
+    ]
+  },
+  {
+    "original_page": 16,
+    "details": [
+      "24,234개 학습 파라미터. 장애물 순서에 불변인 집합 처리. Sigmoid 출력은 각 링크 쌍의 성공 점수."
+    ]
+  },
+  {
+    "original_page": 17,
+    "details": [
+      "장면 seed2026120000\\_0007: 레이블 구조의 예시이며 모델의 성공 사례를 뜻하지 않는다.\\newline\n  5개 초기화 중 Validation으로 모델 선택. 상세 손실·학습 설정은 A8."
+    ]
+  },
+  {
+    "original_page": 18,
+    "details": [
+      "Test 1,000장면, $T=120$ s. 개발 중 이미 확인한 분할이므로 새 독립 평가로 해석하지 않는다.\\newline\n  균등 선택 기대값: Validation 54.73\\%, Test 55.20\\%. 전체 비교 그림은 동봉 panda\\_success.pdf."
+    ]
+  },
+  {
+    "original_page": 19,
+    "details": [
+      "각 패널은 두 방법이 모두 성공한 Test 장면만 사용하며, 좌우의 집합은 다르다.\\newline 시뮬레이션 이동 시간이며 IK·QP·모델 추론의 계산 시간은 제외."
+    ]
+  },
+  {
+    "original_page": 20,
+    "details": [
+      "Test 대응 bootstrap 10,000회. 원고: Interpretation and Limitations. 학습 선택 대 전체 링크의 Test 차이는 +5.70\\%p."
+    ]
+  },
+  {
+    "original_page": 23,
+    "details": [
+      "원래 궤적은 최초 성공 이후에도 35초까지 기록. 경로 전체의 연속시간 안전성을 인증하는 그림은 아니다."
+    ]
+  },
+  {
+    "original_page": 24,
+    "details": [
+      "모든 값은 Validation, $T=120$ s. Test oracle은 80.20\\%. 두 단계가 최적 길이라는 주장은 하지 않는다."
+    ]
+  },
+  {
+    "original_page": 25,
+    "details": [
+      "논문 Safe IK. Soft-min 구성: Molnar \\& Ames, L-CSS 2023."
+    ]
+  },
+  {
+    "original_page": 26,
+    "details": [
+      "실험 $K=2$. top-$K$ 교체 경계에서 gradient 불연속 가능. 먼 링크 쌍에는 sphere gate 사용."
+    ]
+  },
+  {
+    "original_page": 27,
+    "details": [
+      "논문 Planar Control / Panda Execution. 단계 전환 규칙 자체가 다음 QP의 실현 가능성을 보장하지 않는다."
+    ]
+  },
+  {
+    "original_page": 28,
+    "details": [
+      "Test 1,000장면. 대응 bootstrap 10,000회, seed 20261023. 개발 중 확인한 분할에 대한 기술적 비교."
+    ]
+  },
+  {
+    "original_page": 29,
+    "details": [
+      "실험: 사용자 석사논문 원고 및 draft-evidence의 보관 결과 (2026-11-02 Test 기준선 갱신 포함).\\newline\n  동봉 evidence/sources.json에 원본 경로·SHA-256, figure\\_audit.json에 재계산 수치 기록."
+    ]
+  },
+  {
+    "original_page": 30,
+    "details": [
+      "논문 Link Selection / Learning Dataset and Training Conditions. 시험 최고 seed로 교체하지 않음."
+    ]
+  }
+]

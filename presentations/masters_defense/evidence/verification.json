@@ -1,0 +1,133 @@
+{
+  "evidence_hashes_checked": 22,
+  "pdfs": {
+    "main": {
+      "pages": 57,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 4643,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "16a63a5ae86dc084753ce3c2b59cdb7cf82eb1e21e26af43acb3cf787c674b16"
+    },
+    "presenter": {
+      "pages": 93,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 9237,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "34deaee3775ae8bea387242090adb6ec4d64037b7eefeb43c4d439a5fa3c3602"
+    }
+  },
+  "issues": [],
+  "style_checks": {
+    "visible_small_print_removed": true,
+    "english_screen_copy": true,
+    "latex_fonts_in_graphs": true,
+    "user_block_title_colors_preserved": true,
+    "clf_shapes_page": 16,
+    "clf_time_page": 19,
+    "ik_pose_overlay_page": 12,
+    "planar_setup_pages": [
+      11,
+      12
+    ]
+  },
+  "language_checks": {
+    "audience_slides": "English",
+    "speaker_notes": "Korean",
+    "presenter_slide_pages": "English",
+    "presenter_note_pages": "Korean",
+    "korean_speaker_notes": 36
+  },
+  "background_and_navigation": {
+    "background_order": [
+      "background-clf",
+      "background-cbf",
+      "background-qp",
+      "literature"
+    ],
+    "main_takeaways": 9,
+    "takeaways_at_top_in_black": true,
+    "progress_parts": [
+      "Motivation",
+      "Background",
+      "Planar",
+      "Spatial",
+      "Learning",
+      "Results"
+    ],
+    "cover_excluded_from_progress": true,
+    "appendix_separate": true,
+    "indicator": "one dot per content slide",
+    "dots": 35
+  },
+  "visual_story_checks": {
+    "progressive_planar_stages": 6,
+    "fixed_geometry_transform": true,
+    "archived_case": 30,
+    "motivation_static_illustration": true,
+    "motivation_same_camera": true
+  },
+  "refinement_checks": {
+    "learning_task_before_architecture": true,
+    "normal_transition_explained": true,
+    "ik_episode_population_visible": true,
+    "recovery_case": "seed2026120069_0014",
+    "recovery_static_endpoint_render": true,
+    "recovery_panel_seconds": [
+      0,
+      119.99999999999326,
+      23.41999999999959
+    ]
+  },
+  "bibliography": {
+    "backend": "BibTeX",
+    "style": "IEEEtran",
+    "cited_entries": 10,
+    "continuation_pages": 3
+  },
+  "literature_and_rdf": {
+    "follow_up_control_studies": 3,
+    "geometry_reference_used_at_rdf_method": true,
+    "query_to_barrier_to_qp_explicit": true,
+    "field_figure_is_schematic": true,
+    "source_surface_query_residual": 1.3877787807814457e-16
+  },
+  "section_subtitles": {
+    "frames": 51,
+    "source": "evidence/chapter_mapping.json"
+  },
+  "terminology": {
+    "presentation_title_preserved": true,
+    "title_matches_thesis": false,
+    "first_use_definitions": true,
+    "canonical_method_labels": true,
+    "scene_and_link_consistency": true
+  },
+  "panda_render": {
+    "backend": "MuJoCo",
+    "static_archived_configuration": true,
+    "image_pixels": [
+      1800,
+      1350
+    ],
+    "physics_steps": 0,
+    "max_frame_residual_m": 2.886579864025407e-15
+  },
+  "main_slides": 36,
+  "appendix_slides": 21,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "new_simulations_or_training": false,
+  "speaker_notes": "speaker-notes.tex",
+  "notes_matched_by_frame_label": 36,
+  "figure_audit": "evidence/figure_audit.json",
+  "story_figure_audit": "evidence/story_figure_audit.json",
+  "story_order_matches_user_outline": true
+}

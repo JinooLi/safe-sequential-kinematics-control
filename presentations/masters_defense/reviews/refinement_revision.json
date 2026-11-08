@@ -1,0 +1,388 @@
+{
+  "request": "Apply six presentation review suggestions.",
+  "changes": [
+    {
+      "pages": [
+        3,
+        4
+      ],
+      "change": "Connect prior work to the research question; label CLF goal reduction and CBF safety margin."
+    },
+    {
+      "pages": [
+        6,
+        7
+      ],
+      "change": "Name the normal tolerance-based transition; distinguish exceptions in speaker notes and appendix."
+    },
+    {
+      "pages": [
+        8,
+        14,
+        20
+      ],
+      "change": "Identify IK-admitted evaluation populations and recorded success criteria."
+    },
+    {
+      "pages": [
+        16,
+        17
+      ],
+      "change": "Explain the two-link and ordered ten-pair design scope in notes and Q&A; constrain oracle interpretation to this candidate set."
+    },
+    {
+      "pages": [
+        18,
+        19
+      ],
+      "change": "Place multilabel learning objective before architecture; connect chosen pair to sequential tasks, existing QP and joint velocity."
+    },
+    {
+      "pages": [
+        22
+      ],
+      "change": "Replace success grid with archived initial/terminal Panda configurations for a real recovery case; use narrower recovery-case title."
+    }
+  ],
+  "plan": {
+    "main_slides": 24,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60,
+    "slides": [
+      {
+        "page": 1,
+        "label": "title",
+        "title": "표지",
+        "seconds": 20,
+        "user_outline": "표지"
+      },
+      {
+        "page": 2,
+        "label": "motivation",
+        "title": "Motivation: 로봇팔의 안전한 목표 도달",
+        "seconds": 65,
+        "user_outline": "1. Motivation",
+        "thesis_chapter": "Chapter 1. Introduction"
+      },
+      {
+        "page": 3,
+        "label": "literature",
+        "title": "문헌 조사: 안전 제약·정체 분석·로봇 형상",
+        "seconds": 55,
+        "user_outline": "2. 문헌 조사",
+        "thesis_chapter": "Chapter 1. Introduction"
+      },
+      {
+        "page": 4,
+        "label": "planar-direct",
+        "title": "Planar 3-DOF: end-effector 목표만 바로 추종하는 경우",
+        "seconds": 70,
+        "user_outline": "3-1. Planar 기존 방법",
+        "thesis_chapter": "Chapter 2. Preliminaries"
+      },
+      {
+        "page": 5,
+        "label": "planar-setup",
+        "title": "제안 방법: 초기 configuration에서 IK 목표 구성",
+        "seconds": 30,
+        "user_outline": "3-2. Planar 제안 방법: 입력·IK 목표 구성",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 6,
+        "label": "planar-sequential",
+        "title": "제안 방법: 중간 link 목표를 거쳐 EE 목표 추종",
+        "seconds": 35,
+        "user_outline": "3-2. Planar 제안 방법",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 7,
+        "label": "planar-clf",
+        "title": "Planar CLF: 단계마다 하나의 QP와 하나의 CLF",
+        "seconds": 45,
+        "user_outline": "3-2. Planar 제안 방법",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 8,
+        "label": "planar-results",
+        "title": "Planar 결과: Direct 72.00\\% / Sequential 84.33\\%",
+        "seconds": 40,
+        "user_outline": "3-3. Planar 효과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 9,
+        "label": "planar-why",
+        "title": "작동 원리: CLF 전환을 통한 자세 재구성",
+        "seconds": 65,
+        "user_outline": "3-4. Planar 작동 원리",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 10,
+        "label": "panda-extension",
+        "title": "7-DOF Panda로 확장: 형상·IK·pose task",
+        "seconds": 40,
+        "user_outline": "4. Panda 확장",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 11,
+        "label": "panda-rdf",
+        "title": "Panda self-collision: RDF 기반 CBF",
+        "seconds": 55,
+        "user_outline": "4-1. RDF",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 12,
+        "label": "panda-ik",
+        "title": "Panda IK: null-space update를 통한 목표 탐색",
+        "seconds": 75,
+        "user_outline": "4-2. Null-space IK",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 13,
+        "label": "panda-clf",
+        "title": "Panda CLF: 모든 단계의 위치·자세 오차 추종",
+        "seconds": 60,
+        "user_outline": "4-3. Panda CLF",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 14,
+        "label": "all-links",
+        "title": "Panda: All-link Sequential의 구성과 결과",
+        "seconds": 50,
+        "user_outline": "4-4. All-link Sequential",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 15,
+        "label": "time-cost",
+        "title": "All-link Sequential의 이동 시간 부담",
+        "seconds": 35,
+        "user_outline": "5. 시간 부담",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 16,
+        "label": "two-links",
+        "title": "중간 link task를 두 개로 축소",
+        "seconds": 55,
+        "user_outline": "6. 두 link 선택",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 17,
+        "label": "oracle",
+        "title": "어떤 link 쌍을 고르는가: 약 80\\%의 잠재적 상한",
+        "seconds": 50,
+        "user_outline": "7. 약 80%의 상한",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 18,
+        "label": "selector-training",
+        "title": "Learning 목표: 여러 성공 쌍을 허용하는 선택",
+        "seconds": 45,
+        "user_outline": "8. Learning",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 19,
+        "label": "selector-model",
+        "title": "Learned selection: scene에 따른 link 쌍 선택",
+        "seconds": 55,
+        "user_outline": "8. Learning",
+        "thesis_chapter": "Chapter 3. A Sequential Approach to Collision-Free Kinematic Control"
+      },
+      {
+        "page": 20,
+        "label": "test-success",
+        "title": "Test 결과: 방법별 목표 도달 성공률",
+        "seconds": 55,
+        "user_outline": "9. 결과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 21,
+        "label": "test-time",
+        "title": "Test 완료 시간: 단계 축소와 학습 효과의 구분",
+        "seconds": 40,
+        "user_outline": "9. 결과",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 22,
+        "label": "learning-why",
+        "title": "Scene별 선택의 회복 사례",
+        "seconds": 60,
+        "user_outline": "10. 왜 도움이 되는가",
+        "thesis_chapter": "Chapter 4. Simulation Results"
+      },
+      {
+        "page": 23,
+        "label": "conclusion",
+        "title": "결론: task 구성·단계 축소·scene별 선택",
+        "seconds": 40,
+        "user_outline": "결론",
+        "thesis_chapter": "Chapter 5. Conclusion"
+      },
+      {
+        "page": 24,
+        "label": "questions",
+        "title": "질의응답",
+        "seconds": 0,
+        "user_outline": "질의응답",
+        "thesis_chapter": "Chapter 5. Conclusion"
+      }
+    ],
+    "bibliography_continuation_pages": 1
+  },
+  "verification": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 41,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 3507,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "9147bd381bb0cd86c8c8d6ca4b6f0fca2b140090f8402a885d8973047f9f128d"
+      },
+      "presenter": {
+        "pages": 65,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 7254,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "ce8634bf17e4c67dc0bca904de4eeca08842485925517ca648a33cb05ab19192"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "user_block_title_colors_preserved": true,
+      "clf_shapes_page": 7,
+      "clf_time_page": 9,
+      "ik_pose_overlay_page": 6,
+      "planar_setup_page": 5
+    },
+    "refinement_checks": {
+      "learning_task_before_architecture": true,
+      "normal_transition_explained": true,
+      "ik_admitted_population_visible": true,
+      "recovery_case": "seed2026120069_0014",
+      "recovery_static_endpoint_render": true,
+      "recovery_panel_seconds": [
+        0,
+        119.99999999999326,
+        23.41999999999959
+      ]
+    },
+    "bibliography": {
+      "backend": "BibTeX",
+      "style": "IEEEtran",
+      "cited_entries": 7,
+      "continuation_pages": 1
+    },
+    "chapter_subtitles": {
+      "frames": 39,
+      "source": "evidence/chapter_mapping.json"
+    },
+    "terminology": {
+      "official_english_title": true,
+      "first_use_definitions": true,
+      "canonical_method_labels": true,
+      "scene_and_link_consistency": true
+    },
+    "panda_render": {
+      "backend": "MuJoCo",
+      "static_archived_configuration": true,
+      "image_pixels": [
+        1800,
+        1350
+      ],
+      "physics_steps": 0,
+      "max_frame_residual_m": 2.886579864025407e-15
+    },
+    "main_slides": 24,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 24,
+    "figure_audit": "evidence/figure_audit.json",
+    "story_figure_audit": "evidence/story_figure_audit.json",
+    "story_order_matches_user_outline": true
+  },
+  "content_checks": {
+    "audience_pages": 41,
+    "presenter_pages": 65,
+    "audience_presenter_match": true,
+    "visual_review_pages": [
+      3,
+      4,
+      6,
+      8,
+      14,
+      17,
+      18,
+      19,
+      20,
+      22
+    ],
+    "retained_manual_title_and_metricbox": true,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60,
+    "normal_transition_not_all_exception_transitions": true,
+    "recovery_scene": "seed2026120069_0014",
+    "recovery_configurations": "archived initial and two different-time terminal states",
+    "new_rollouts": false,
+    "new_training": false,
+    "independent_reviewers": [
+      "review_narrative",
+      "review_claims"
+    ],
+    "reviewer_required_changes_resolved": true
+  },
+  "figure_audit": "evidence/recovery_comparison_audit.json",
+  "claims_audit": "evidence/refinement_claims_audit.json",
+  "validation": "Audience and presenter builds, embedded fonts, bounded text, bibliography, paired page content, stored endpoint kinematics and visual review passed.",
+  "independent_reviews": [
+    "review_narrative: flow, note consistency and visual review; no unresolved required changes",
+    "review_claims: success population, candidate scope and recovery interpretation; arithmetic wording corrected"
+  ],
+  "limits": "Recovery figure uses each execution endpoint at a different time; no intermediate path reconstruction, new rollout or training.",
+  "notes_header": "Short rehearsal header prevents wrapping of the user-edited long frame title; audience title unchanged.",
+  "source_hashes": {
+    "main.tex": "929ca9d7de9e6abfb80f0ae32536d2ff5d43daa6cbd4578e081791e0257440f1",
+    "speaker-notes.tex": "0bae0c258047dfc436aa8fbdaac8cdffed8e40cfe4a0cd52fc7417f308a6de02",
+    "presenter-notes-setup.tex": "d171929b54dad50e6a24f9de1280c095ea81f7e3cd10214eccf14bef3e049126",
+    "README.md": "3d0db084619aea50ae3a04962f419bd12a8d9792d8e479af2c928724c79910ce",
+    "발표구성.txt": "853cb972dc2e0c3770e88c7c9b20cbffdb7f6a382ae397a634b20ad9b128da5b",
+    "발표대본.txt": "635f8cda33eaa7dcaec1225c541e908be212ad4e510d29255899894a29d16d9b",
+    "질의응답_메모.txt": "5a51d297cf91aca895bbd45fdc56f26001c935b699b2f5fe3e7b0c38fbe2031d",
+    "scripts/build_recovery_comparison.py": "db4a76f64c7bfaf0e8d3df54d802e38b0b15c5f7109ee6bfbbe154263f8f9059",
+    "scripts/verify_artifacts.py": "2b692a0414056ed9e86e8fb5de84ee158cfccee8964c1dcb05cb050fc0527dc0",
+    "evidence/story_plan.json": "477c3743608568a87ab6125c17ae1019f85d5309c5bf74524e2e9eae8cc30be8",
+    "evidence/chapter_mapping.json": "099172a542a3d82b87bc51abe99bd10927b57b860cff3d3e7a441e9fe1a8e088",
+    "evidence/refinement_claims_audit.json": "0e5eebd49076baa13c13d7af264c7c0b0089e47b064d74c4a52dc3942dfbd3f6",
+    "evidence/recovery_scene.json": "864425a2d94dcf28b527f7c5449bc3f445c430e3bdab4e15ef220f431441b655",
+    "evidence/recovery_comparison_audit.json": "d90a82d134350ae08c51982932ff8dbb2f8e9b6454925b4749899de2e6f9c96c"
+  }
+}

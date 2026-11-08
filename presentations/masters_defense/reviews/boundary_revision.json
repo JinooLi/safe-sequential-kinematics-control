@@ -1,0 +1,90 @@
+{
+  "status": "revised_and_validated",
+  "page": 3,
+  "request": "안전 경계 부근에서 정체되는 실제 사례로 설명 구체화",
+  "change": "추상 개념도를 사례180의 실제 종료 자세 확대와 최소 장벽·위치 오차 시간 그래프로 교체. 정체 구간15–35초 및 속도 상한 표시.",
+  "case_audit": {
+    "case_id": 180,
+    "source": "case_180_direct.npz",
+    "source_sha256": "f68d1f7c4745d6b639cee5e2c082a594503247b0bd64600c9a90e382a8c98bc6",
+    "selection": "Sequential-only successes with no Direct QP infeasibility, obstacle barrier active at termination; smallest maximum speed over 25–35 s among seven matching cases.",
+    "failure_reason": "timeout",
+    "qp_infeasible_count": 0,
+    "raw_samples": 17500,
+    "time_range_seconds": [
+      0.0,
+      34.99799999999681
+    ],
+    "snapshot_seconds": 34.99799999999681,
+    "tail_window_seconds": [
+      15,
+      35
+    ],
+    "tail_max_speed_rad_s": 4.85615022607182e-08,
+    "tail_min_barrier_m": 4.98212582300539e-15,
+    "tail_max_barrier_m": 8.41797323375415e-08,
+    "tail_max_position_drift_m": 1.2942408673993739e-07,
+    "active_barrier_column_zero_based": 2,
+    "active_barrier_label": "obs1_link3",
+    "final_position_error_m": 0.8177754846401174,
+    "final_yaw_error_rad": 1.1396056529349194,
+    "final_clf": 9.59780349062619,
+    "final_clf_slack": 9.597803490626095,
+    "max_reconstructed_clf_error": 1.7763568394002505e-14,
+    "geometry": "Recorded q, 1 m links and 0.05 m physical link radius; spatial close-up omits distant second obstacle. No exact RDF contour drawn.",
+    "plotting": "Every stored sample; no smoothing, new simulation, or QP re-solve. Shaded interval 15–35 s.",
+    "interpretation": "Observed boundary approach, vanishing command and residual task error; no claim of a universal cause for all failures or a proof of stable equilibrium."
+  },
+  "model_check": {
+    "model": "/home/jinoo/prj/safe-inv-clbf-robot-arm/models/planar_bernstein_rdf.npz",
+    "model_sha256": "18569e3bff1242de56299158a640976ad3288454a62b8762391d39b88b6e1c2d",
+    "snapshot_model_parameters": {
+      "safe_distance": 0.08,
+      "link_radius": 0.05
+    },
+    "samples_checked": 176,
+    "max_obstacle_barrier_residual_m": 0.0,
+    "active_barrier": "obs1_link3",
+    "final_clf_gradient": [
+      -31.056880656582322,
+      -21.41829225002142,
+      -11.779703843460457
+    ],
+    "final_active_barrier_gradient": [
+      -1.6715956601939155,
+      -1.152811345408336,
+      -0.6340270306227529
+    ],
+    "gradient_cosine": 1.0000000000000002,
+    "h_derivative_along_negative_clf_gradient": -84.07444787928416,
+    "interpretation": "At the recorded final state the negative CLF gradient points toward decreasing active h. Static re-evaluation only; no QP re-solve or simulation."
+  },
+  "visual_checks": "Slide 3 rendered and inspected; no text overlap or clipping. LaTeX fonts and nominal screen text retained.",
+  "pdfs": {
+    "main": {
+      "pages": 32,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 2668,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "9e010fc1c686d1933dcd8ae990973d48b4cc8050be5857259392610a8f8affca"
+    },
+    "presenter": {
+      "pages": 54,
+      "page_size_points": [
+        362.835,
+        272.126
+      ],
+      "extracted_words": 6361,
+      "out_of_page_text_boxes": 0,
+      "layout_or_font_errors": [],
+      "sha256": "407f9d2c55e5c3dfdd1633b48add94e3c9b1e23c045f526de576cf203484d2f9"
+    }
+  },
+  "speech_seconds": 55,
+  "deck_speech_seconds": 1140,
+  "new_simulations_or_training": false
+}

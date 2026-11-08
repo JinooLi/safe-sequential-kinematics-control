@@ -1,0 +1,128 @@
+{
+  "representation": "Analytic signed-distance field of a capsule, schematic 2D slice",
+  "actual_panda_rdf": false,
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "font_rendering": "pdfLaTeX + Latin Modern Sans; PNG rasterized from vector PDF",
+  "size_inches": [
+    6.5,
+    5.0
+  ],
+  "recommended_slide_size_mm": [
+    65,
+    50
+  ],
+  "source_target_convention": "Source a surface samples, target b signed-distance field",
+  "coordinate_convention": "All geometry shown in target link b frame",
+  "query_coordinate_symbol": "xi_ab,k = R_b^T (R_a s_a,k + p_a - p_b)",
+  "runtime_field_symbol": "tilde d_b",
+  "target_capsule": {
+    "start": [
+      -0.69,
+      -0.4
+    ],
+    "end": [
+      0.69,
+      -0.4
+    ],
+    "radius": 0.28
+  },
+  "source_capsule": {
+    "start": [
+      -0.64,
+      0.62
+    ],
+    "end": [
+      0.52,
+      0.87
+    ],
+    "radius": 0.15
+  },
+  "query_coordinates": [
+    [
+      -0.671601996342906,
+      0.7666332630310836
+    ],
+    [
+      -0.28493532967623925,
+      0.849966596364417
+    ],
+    [
+      0.10173133699042747,
+      0.9332999296977502
+    ],
+    [
+      0.4883980036570942,
+      1.0166332630310837
+    ],
+    [
+      -0.6083980036570941,
+      0.4733667369689164
+    ],
+    [
+      -0.22173133699042735,
+      0.5567000703022498
+    ],
+    [
+      0.16493532967623936,
+      0.640033403635583
+    ],
+    [
+      0.5516019963429061,
+      0.7233667369689164
+    ],
+    [
+      -0.7866332630310836,
+      0.588398003657094
+    ],
+    [
+      0.6666332630310836,
+      0.9016019963429059
+    ]
+  ],
+  "query_distances_illustrative": [
+    0.8866332630310836,
+    0.9699665963644171,
+    1.05329992969775,
+    1.1366332630310836,
+    0.5933667369689164,
+    0.6767000703022498,
+    0.7600334036355829,
+    0.8433667369689164,
+    0.7131105684451069,
+    1.021601996342906
+  ],
+  "highlight_index": 6,
+  "surface_query_residual_max": 1.3877787807814457e-16,
+  "queries_all_on_source_surface": true,
+  "queries_all_outside_target": true,
+  "field_negative_inside_target_and_zero_on_surface_verified": true,
+  "positive_contours_increasing_with_distance": [
+    0.2,
+    0.4,
+    0.6,
+    0.8,
+    1.0,
+    1.2,
+    1.4
+  ],
+  "no_query_motion_arrow": true,
+  "sources": [
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/src/safe_ik/domain/panda_rdf_safety.py",
+      "sha256": "50a5ba47b4b3104a895a53fbf1508edcc1cde8016dcbfe7d22525bdc370c55c4"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/RDF.tex",
+      "sha256": "444a4e60eadaa057d07579604effa6d440b59dc9dc83b0f9459e0b7032ca3821"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/RDF_CBF.tex",
+      "sha256": "b86fe78114e25ba9ed742708851d291b645469fb25fe2c79b9dd772351cee33f"
+    }
+  ],
+  "output_sha256": {
+    "rdf_query_field.pdf": "621c2b77840a7d5599e4c08765dbc9e836f33a7867722c89d0ab09c9d9d51829",
+    "rdf_query_field.png": "b378b95db196c9113d6e2d6dff7918c47aebf43e51e5a7d8ed4ce62e80d36744"
+  }
+}

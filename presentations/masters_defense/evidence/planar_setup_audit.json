@@ -1,0 +1,74 @@
+{
+  "source_sha256": {
+    "case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312",
+    "case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8"
+  },
+  "case_id": 30,
+  "panels": [
+    {
+      "title": "Initial configuration",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "obstacles_visible": false,
+      "ee_target_pose_visible": false,
+      "ik_configuration_and_intermediate_targets_visible": false
+    },
+    {
+      "title": "EE goal and obstacles",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "ik_configuration_and_intermediate_targets_visible": false
+    },
+    {
+      "title": "Selected IK configuration",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "ik_configuration_and_intermediate_targets_visible": true
+    }
+  ],
+  "initial_q_identical_in_all_panels": true,
+  "selected_ik_q": [
+    -0.556348614215052,
+    -1.3151238261849376,
+    -0.7489026010385773
+  ],
+  "max_ik_link_target_fk_residual_m": 0.0,
+  "ik_ee_position_residual_m": 6.684427777288335e-16,
+  "ik_ee_yaw_residual_rad": 4.440892098500626e-16,
+  "ik_source": "Archived reconstructed branch; no new IK solve or rollout",
+  "interpretation": "Information accumulates from left to right; dashed IK is a goal configuration, not an execution path",
+  "axis_bounds": {
+    "lower": [
+      -0.7223218069298338,
+      -2.300666655203244
+    ],
+    "upper": [
+      3.2,
+      1.814433430829126
+    ]
+  },
+  "common_scale_and_axes": true,
+  "all_geometry_inside_axes": true,
+  "obstacle_halo": "Nominal 0.08 m geometric margin, not an exact RDF contour",
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF",
+  "numeric_axes_or_time_labels": false,
+  "new_simulation_or_training": false,
+  "figure_files": [
+    "Fig/planar_setup.pdf",
+    "Fig/planar_setup.png"
+  ]
+}

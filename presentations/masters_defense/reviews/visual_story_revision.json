@@ -1,0 +1,170 @@
+{
+  "request": "Compare the senior presentation and improve visual motivation and stepwise method explanation.",
+  "reference": "reviews/reference_comparison.json",
+  "inspection_limit": "PPTX OOXML text/layout and original embedded media inspected; native PowerPoint slide rendering unavailable.",
+  "changes": [
+    {
+      "pages": [
+        2,
+        3
+      ],
+      "change": "Same-camera workcell purpose followed by fixtures; sparse native labels; illustrative static MuJoCo render."
+    },
+    {
+      "pages": [
+        6,
+        7,
+        8
+      ],
+      "change": "Fixed-viewport q0, goal/obstacles, selected IK revealed on consecutive frames."
+    },
+    {
+      "pages": [
+        9,
+        10,
+        11
+      ],
+      "change": "Archived case-30 task-boundary configurations paired with their stage CLF; large target star without tolerance ring."
+    },
+    {
+      "pages": [
+        12
+      ],
+      "change": "Common input/slack QP and changing CLF summarized after stage demonstrations."
+    },
+    {
+      "pages": [
+        24,
+        25
+      ],
+      "change": "Fixed model geometry: scene encoding and scores, then pair selection and QP control."
+    }
+  ],
+  "timing": {
+    "main_pages": 30,
+    "appendix_pages": 17,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60
+  },
+  "manual_edits_preserved": [
+    "Titleless thanks frame",
+    "Delivered-project CDSL logo",
+    "Block title colors",
+    "Metricbox heights"
+  ],
+  "independent_reviews": [
+    "reviews/visual_story_delivery_review.json",
+    "reviews/visual_story_science_review.json"
+  ],
+  "resolved_findings": [
+    "D1 and SCI-01: target/environment heading",
+    "D2: fixed heading baselines",
+    "SCI-02: stage-specific CLF and transition-boundary notes",
+    "SCI-03: star emphasis replacing decorative goal ring"
+  ],
+  "verification": {
+    "evidence_hashes_checked": 22,
+    "pdfs": {
+      "main": {
+        "pages": 47,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 3753,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "4a31b0c8d0fe3db508b4476f928da67de500183621520494ce3f6b5a795ade06"
+      },
+      "presenter": {
+        "pages": 77,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 7838,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "a65ebdff27b8d371d54484678d9312862dd5319a341ba810ac82225253041bb5"
+      }
+    },
+    "issues": [],
+    "style_checks": {
+      "visible_small_print_removed": true,
+      "nominal_screen_copy": true,
+      "latex_fonts_in_graphs": true,
+      "user_block_title_colors_preserved": true,
+      "clf_shapes_page": 12,
+      "clf_time_page": 14,
+      "ik_pose_overlay_page": 8,
+      "planar_setup_pages": [
+        6,
+        7,
+        8
+      ]
+    },
+    "visual_story_checks": {
+      "progressive_planar_stages": 6,
+      "fixed_geometry_transform": true,
+      "archived_case": 30,
+      "motivation_static_illustration": true,
+      "motivation_same_camera": true
+    },
+    "refinement_checks": {
+      "learning_task_before_architecture": true,
+      "normal_transition_explained": true,
+      "ik_admitted_population_visible": true,
+      "recovery_case": "seed2026120069_0014",
+      "recovery_static_endpoint_render": true,
+      "recovery_panel_seconds": [
+        0,
+        119.99999999999326,
+        23.41999999999959
+      ]
+    },
+    "bibliography": {
+      "backend": "BibTeX",
+      "style": "IEEEtran",
+      "cited_entries": 7,
+      "continuation_pages": 1
+    },
+    "chapter_subtitles": {
+      "frames": 44,
+      "source": "evidence/chapter_mapping.json"
+    },
+    "terminology": {
+      "official_english_title": true,
+      "first_use_definitions": true,
+      "canonical_method_labels": true,
+      "scene_and_link_consistency": true
+    },
+    "panda_render": {
+      "backend": "MuJoCo",
+      "static_archived_configuration": true,
+      "image_pixels": [
+        1800,
+        1350
+      ],
+      "physics_steps": 0,
+      "max_frame_residual_m": 2.886579864025407e-15
+    },
+    "main_slides": 30,
+    "appendix_slides": 17,
+    "speech_seconds": 1140,
+    "transition_buffer_seconds": 60,
+    "new_simulations_or_training": false,
+    "speaker_notes": "speaker-notes.tex",
+    "notes_matched_by_frame_label": 30,
+    "figure_audit": "evidence/figure_audit.json",
+    "story_figure_audit": "evidence/story_figure_audit.json",
+    "story_order_matches_user_outline": true
+  },
+  "content_checks": {
+    "audience_pages": 47,
+    "presenter_pages": 77,
+    "all_audience_pages_match_presenter": true,
+    "notes_pages": 30
+  },
+  "main_source_sha256": "2ad734861abc0d9bbbfe27feb4d88ccda477454d5422197568f644dfcc9c975c",
+  "notes_sha256": "a4fea602f3b47b34274fe4dbd4cdc7e035cc194a44753fcfd35c330a7e263e4a"
+}
