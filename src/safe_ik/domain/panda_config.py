@@ -176,7 +176,6 @@ class PandaTrajectoryConfig:
     clf_rate: float
     clf_slack_weight: float
     velocity_limits: np.ndarray
-    acceleration_limits: np.ndarray
     # Goal acceptance only; does not relax the QP or IK safety constraints.
     success_barrier_tolerance: float = 1e-6
     stop_progress_window: float = 2.0

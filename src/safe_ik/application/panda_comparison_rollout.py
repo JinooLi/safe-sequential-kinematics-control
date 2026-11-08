@@ -196,16 +196,8 @@ def comparison_rollout(
             if actual_used.size
             else 0.0
         ),
-        "max_applied_acceleration_excess": (
-            float(
-                max(
-                    0.0,
-                    np.max(
-                        np.abs(actual_acceleration)
-                        - config.trajectory.acceleration_limits
-                    ),
-                )
-            )
+        "max_applied_acceleration": (
+            float(np.max(np.abs(actual_acceleration)))
             if actual_acceleration.size
             else 0.0
         ),
@@ -214,17 +206,8 @@ def comparison_rollout(
             if used.size
             else 0.0
         ),
-        "max_acceleration_excess": (
-            float(
-                max(
-                    0.0,
-                    np.max(
-                        np.abs(acceleration) - config.trajectory.acceleration_limits
-                    ),
-                )
-            )
-            if acceleration.size
-            else 0.0
+        "max_command_acceleration": (
+            float(np.max(np.abs(acceleration))) if acceleration.size else 0.0
         ),
         "rollout_wall_time": rollout_wall,
         "qp_solve_time": float(sum(qp_times)),

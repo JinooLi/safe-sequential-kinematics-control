@@ -124,16 +124,14 @@ def parse_panda_config(data: dict, path: str | Path) -> PandaControllerConfig:
 
     initial_q = np.asarray(robot["initial_q"], dtype=float)
     velocity_limits = np.asarray(trajectory["velocity_limits"], dtype=float)
-    acceleration_limits = np.asarray(trajectory["acceleration_limits"], dtype=float)
     for name, values in (
         ("robot.initial_q", initial_q),
         ("trajectory.velocity_limits", velocity_limits),
-        ("trajectory.acceleration_limits", acceleration_limits),
     ):
         if values.shape != (dof,) or not np.all(np.isfinite(values)):
             raise ValueError(f"{name} must contain {dof} finite values")
-    if np.any(velocity_limits <= 0.0) or np.any(acceleration_limits <= 0.0):
-        raise ValueError("trajectory velocity/acceleration limits must be positive")
+    if np.any(velocity_limits <= 0.0):
+        raise ValueError("trajectory velocity limits must be positive")
 
     capsules = tuple(
         CapsuleConfig(
@@ -248,7 +246,6 @@ def parse_panda_config(data: dict, path: str | Path) -> PandaControllerConfig:
                 "trajectory.clf_slack_weight", trajectory["clf_slack_weight"]
             ),
             velocity_limits=velocity_limits,
-            acceleration_limits=acceleration_limits,
             success_barrier_tolerance=trajectory.get("success_barrier_tolerance", 1e-6),
             stop_progress_window=trajectory.get("stop_progress_window", 2.0),
             stop_progress_tolerance=trajectory.get("stop_progress_tolerance", 1e-3),

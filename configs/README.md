@@ -28,12 +28,18 @@ CLF slack 가중치 5000, 최대 150초, 적분 주기 0.02초, barrier 성공 �
 시뮬레이션은 관절 한계 CBF를 유지하면서 모델의 관절 위치 한계에서 바깥쪽 이동을
 차단한다. 이는 이상적인 위치 제한이며 실제 하드웨어의 감속·보호 정지 동작을
 재현한 것은 아니다. 비교 궤적에는 QP의 `command`와 별도로 `applied_velocity`,
-`joint_limit_clipped`를 기록하고, 결과에는 제한 작동 횟수와 실제 속도·가속도 초과량을 남긴다.
+`joint_limit_clipped`를 기록하고, 결과에는 제한 작동 횟수와 실제 속도 초과량을 남긴다.
+QP는 관절 속도를 제한하지만 연속 명령 사이의 가속도는 제한하지 않는다.
+`trajectory.acceleration_limits`는 제거했으며, 이전 YAML에 남아 있어도 적용하지 않는다.
+새 비교 결과의 `max_command_acceleration`, `max_applied_acceleration`은 명령 속도와
+실제 적용 속도의 차분으로 계산한 가속도 절댓값의 최댓값(rad/s²)이다. 최초 속도는
+0으로 두며 실제 적용된 구간만 포함한다. 기존 `max_acceleration_excess`,
+`max_applied_acceleration_excess`는 더 이상 기록하지 않는다.
 1mm 허용오차는 성공 판정에만 적용하며 실제 barrier 값과 엄격한 판정도 함께 보관한다.
 
 저속 정체 판정은 명령 속도가 아니라 각 적분 구간의 실제 관절각 변화 / 적분 주기로
-계산한 `applied_velocity`를 사용한다. QP의 명령 가속도 제한에는 별도의 명령 이력을
-유지한다. 일반 실행 기록에도 `command`, `applied_velocity`, `command_applied`를 저장하며,
+계산한 `applied_velocity`를 사용한다.
+일반 실행 기록에도 `command`, `applied_velocity`, `command_applied`를 저장하며,
 적용되지 않은 명령의 실제 속도 0은 `command_applied=false`로 구분한다.
 
 특정 7개 사례를 선택했던 재실험은 해당 결과 폴더의 장면·IK·설정 사본을 사용했다.

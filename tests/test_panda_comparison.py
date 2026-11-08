@@ -114,6 +114,23 @@ class PandaComparisonTest(unittest.TestCase):
         self.assertEqual(len(trace["q"]), 2)
         np.testing.assert_array_equal(trace["q"][-1], result["final_q"])
         self.assertAlmostEqual(result["completion_time"], 0.02)
+        self.assertAlmostEqual(result["max_command_acceleration"], 50.0)
+        self.assertAlmostEqual(result["max_applied_acceleration"], 50.0)
+        self.assertNotIn("max_acceleration_excess", result)
+        self.assertNotIn("max_applied_acceleration_excess", result)
+
+    def test_no_applied_commands_produce_zero_acceleration_metrics(self):
+        for status in (QPStatus.SOLVED, QPStatus.FAILED):
+            with self.subTest(status=status):
+                config = self.config
+                if status == QPStatus.SOLVED:
+                    config = replace(
+                        config, target=replace(config.target, position=np.zeros(3))
+                    )
+                result, trace = self.run_case(config=config, status=status)
+                self.assertFalse(trace["command_applied"].any())
+                self.assertEqual(result["max_command_acceleration"], 0.0)
+                self.assertEqual(result["max_applied_acceleration"], 0.0)
 
     def test_joint_stop_records_actual_motion_without_hiding_requested_command(self):
         config = load_panda_config(ROOT / "tests/fixtures/panda.yaml")
@@ -152,6 +169,8 @@ class PandaComparisonTest(unittest.TestCase):
             np.diff(trace["q"], axis=0), trace["applied_velocity"] * 0.02
         )
         self.assertLess(result["applied_control_effort"], result["control_effort"])
+        self.assertAlmostEqual(result["max_command_acceleration"], 50.0)
+        self.assertAlmostEqual(result["max_applied_acceleration"], 0.25)
 
         # A longer run must detect the physical stop despite outward QP commands.
         config = replace(

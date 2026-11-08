@@ -5,8 +5,13 @@ from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import yaml
 
-from safe_ik.application.panda_configuration import load_panda_config
+from safe_ik.adapters.osqp_solver import OSQPSolver
+from safe_ik.application.panda_configuration import (
+    load_panda_config,
+    parse_panda_config,
+)
 from safe_ik.control.panda_controller import PandaTrajectoryController
 from safe_ik.domain.ik_contracts import SafeIKCandidate
 from safe_ik.domain.safety_contracts import BarrierEvaluation
@@ -222,9 +227,7 @@ class PandaStoppingTest(unittest.TestCase):
         self.assertEqual(len(controller._progress_best_errors), 1)
         self.assertAlmostEqual(controller._best_task_error, 4.0)
 
-    def test_applied_motion_drives_stall_without_changing_command_acceleration_history(
-        self,
-    ):
+    def test_applied_motion_drives_stall_independently_of_commands(self):
         for actual_speed, stalled in ((0.0, True), (0.1, False)):
             config = replace(
                 self.config,
@@ -232,25 +235,95 @@ class PandaStoppingTest(unittest.TestCase):
                     self.config.trajectory,
                     stop_window=0.04,
                     stop_progress_window=0.04,
-                    acceleration_limits=np.full(7, 0.1),
                 ),
             )
             solver = Solver()
             controller = self.controller(config, solver=solver)
             for _ in range(2):
-                command = controller.get_velocity(np.zeros(7))
+                controller.get_velocity(np.zeros(7))
                 actual = np.zeros(7)
                 actual[0] = actual_speed
                 controller.record_applied_velocity(actual)
-                np.testing.assert_array_equal(
-                    controller.previous_command_velocity, command
-                )
                 np.testing.assert_array_equal(controller.last_applied_velocity, actual)
             controller.get_velocity(np.zeros(7))
             self.assertEqual(controller.last_status.stalled, stalled)
             if not stalled:
-                delta = config.trajectory.acceleration_limits[0] * 0.02
-                self.assertAlmostEqual(solver.problems[-1].upper[-7], 1e-4 + delta)
+                np.testing.assert_array_equal(
+                    solver.problems[-1].upper[-7:], config.trajectory.velocity_limits
+                )
+
+    def test_speed_can_reach_limit_and_reverse_without_acceleration_ramp(self):
+        target = np.array([0.5, 0, 0, 0, 0, 0, 0])
+        candidate = SafeIKCandidate(target, 0, 1, 0, 0, 1)
+        for mode in ("direct", "sequential", "joint_clf"):
+            for period in (0.001, 0.02):
+                with self.subTest(mode=mode, period=period):
+                    config = replace(
+                        self.config,
+                        target=replace(self.config.target, position=target[:3]),
+                        trajectory=replace(
+                            self.config.trajectory,
+                            mode=mode,
+                            integration_period=period,
+                        ),
+                    )
+                    controller = self.controller(
+                        config,
+                        candidates=() if mode == "direct" else (candidate,),
+                        solver=OSQPSolver(
+                            max_iterations=20_000,
+                            absolute_tolerance=1e-8,
+                            relative_tolerance=1e-8,
+                        ),
+                    )
+                    # Start from rest, then observe the opposite side of the goal.
+                    # Both commands should reach the speed bound in a single tick.
+                    for q, sign in ((np.zeros(7), 1), (2 * target, -1)):
+                        command = controller.get_velocity(q)
+                        self.assertEqual(controller.last_qp_status, "solved")
+                        expected = np.zeros(7)
+                        expected[0] = sign * config.trajectory.velocity_limits[0]
+                        np.testing.assert_allclose(command, expected, atol=1e-6)
+                        controller.record_applied_velocity(command)
+
+    def test_joint_cbf_still_limits_outward_speed_near_both_joint_bounds(self):
+        for sign in (-1, 1):
+            with self.subTest(sign=sign):
+                config = replace(
+                    self.config,
+                    target=replace(
+                        self.config.target, position=np.array([sign * 10.5, 0, 0])
+                    ),
+                )
+                controller = self.controller(
+                    config,
+                    solver=OSQPSolver(
+                        max_iterations=20_000,
+                        absolute_tolerance=1e-8,
+                        relative_tolerance=1e-8,
+                    ),
+                )
+                q = np.zeros(7)
+                q[0] = sign * (10.0 - 0.001)
+                command = controller.get_velocity(q)
+                self.assertEqual(controller.last_qp_status, "solved")
+                self.assertAlmostEqual(
+                    sign * command[0], config.safety.alpha * 0.001, places=6
+                )
+
+    def test_legacy_yaml_acceleration_limit_no_longer_narrows_velocity_bounds(self):
+        path = ROOT / "tests/fixtures/panda.yaml"
+        data = yaml.safe_load(path.read_text())
+        data["trajectory"].update(mode="direct", acceleration_limits=[1e-9] * 7)
+        config = parse_panda_config(data, path)
+        solver = Solver()
+        self.controller(config, solver=solver).get_velocity(np.zeros(7))
+        np.testing.assert_array_equal(
+            solver.problems[-1].lower[-7:], -config.trajectory.velocity_limits
+        )
+        np.testing.assert_array_equal(
+            solver.problems[-1].upper[-7:], config.trajectory.velocity_limits
+        )
 
     def test_unapplied_commands_do_not_fill_motion_window(self):
         controller = self.controller()

@@ -146,8 +146,6 @@ trajectory:
   clf_slack_weight: 1000.0
   # One third of Panda's configured nominal limits.
   velocity_limits: [0.0725, 0.0725, 0.0725, 0.0725, 0.087, 0.087, 0.087]
-  acceleration_limits:
-    [5.0, 2.5, 3.33333333, 4.16666667, 5.0, 6.66666667, 6.66666667]
 
 qp:
   joint_velocity_weight: 1.0

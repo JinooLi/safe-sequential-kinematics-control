@@ -67,7 +67,6 @@ class PandaTrajectoryController:
             if config.trajectory.stage_task == "pose"
             else ()
         )
-        self.previous_command_velocity = np.zeros(config.dof)
         self.last_applied_velocity = np.zeros(config.dof)
         window_samples = max(
             1,
@@ -247,8 +246,8 @@ class PandaTrajectoryController:
     def record_applied_velocity(self, velocity) -> None:
         """Record measured motion once after each completed integration interval.
 
-        Command generation alone is not evidence of motion. Keep the command
-        history used by the QP acceleration bounds separate from this feedback.
+        Command generation alone is not evidence of motion. Stall detection
+        uses this feedback rather than the QP's requested velocity.
         """
         velocity = np.asarray(velocity, dtype=float)
         if velocity.shape != (self.config.dof,) or not np.isfinite(velocity).all():
@@ -349,7 +348,6 @@ class PandaTrajectoryController:
                 (previous_stage_name, self.active_stage_name, "candidate_switch")
             )
         self._reset_stall_history()
-        self.previous_command_velocity.fill(0.0)
         self._advance_reached_stages(q)
         self._record_task_progress(q)
         self.last_status = self.status(q)
@@ -411,21 +409,13 @@ class PandaTrajectoryController:
         lower.append(0.0)
         upper.append(np.inf)
 
-        velocity_lower = -trajectory.velocity_limits
-        velocity_upper = trajectory.velocity_limits
-        delta = trajectory.acceleration_limits * trajectory.integration_period
-        velocity_lower = np.maximum(
-            velocity_lower, self.previous_command_velocity - delta
-        )
-        velocity_upper = np.minimum(
-            velocity_upper, self.previous_command_velocity + delta
-        )
+        # Bound joint speed only; consecutive commands have no slew-rate limit.
         for joint in range(self.config.dof):
             row = np.zeros(self.config.dof + 1)
             row[joint] = 1.0
             rows.append(row)
-            lower.append(velocity_lower[joint])
-            upper.append(velocity_upper[joint])
+            lower.append(-trajectory.velocity_limits[joint])
+            upper.append(trajectory.velocity_limits[joint])
 
         problem = QPProblem(
             block_diag(
@@ -465,7 +455,6 @@ class PandaTrajectoryController:
             return velocity
 
         velocity = np.asarray(result.x[: self.config.dof], dtype=float)
-        self.previous_command_velocity = velocity.copy()
         self.last_clf_slack = float(result.x[-1])
         self.last_status = self.status(q)
         return velocity
