@@ -1,4 +1,4 @@
-"""Softmax selection of successful, fast link pairs using saved simulation time."""
+"""Softmax selection of successful, fast actions using saved simulation time."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from ..domain.link_actions import action_id
 from .link_selection import (
-    LINK_PAIRS,
     OBJECTIVE,
     SELECTION_METRIC,
     LinkTimeSelectionNet,
@@ -24,8 +24,10 @@ from .link_selection import (
 def discounted_rewards(labels, completion_times, time_scale_seconds):
     validate_time_scale(time_scale_seconds)
     labels, times = np.asarray(labels), np.asarray(completion_times)
-    if labels.shape != times.shape or labels.ndim != 2 or labels.shape[1] != 10:
-        raise ValueError("labels and completion times must have shape [scenes, 10]")
+    if labels.shape != times.shape or labels.ndim != 2 or labels.shape[1] == 0:
+        raise ValueError(
+            "labels and completion times must have shape [scenes, actions]"
+        )
     if not np.isin(labels, [0, 1]).all():
         raise ValueError("time rewards require binary effective labels")
     success = labels.astype(bool)
@@ -61,14 +63,15 @@ def time_reward_loss(logits, labels, completion_times, time_scale_seconds=120.0)
 
 
 def load_completion_times(data, dataset_directory):
-    """Join hashed source CSVs by scene and pair; never use failed elapsed time.
+    """Join hashed source CSVs by scene and action; never use failed elapsed time.
 
     Combined historical datasets omit timing arrays. Traverse their existing
     provenance tree and validate the leaf arrays and CSV labels against the
     unchanged combined dataset. No dataset files are edited.
     """
     lookup = {str(case): i for i, case in enumerate(data["case_id"])}
-    pair_lookup = {pair: i for i, pair in enumerate(LINK_PAIRS)}
+    actions = data["actions"]
+    action_lookup = {action_id(links): i for i, links in enumerate(actions)}
     times = np.full(data["labels"].shape, np.nan, dtype=np.float64)
     seen = np.zeros_like(data["labels"], dtype=bool)
     provenance, visited = [], set()
@@ -82,6 +85,8 @@ def load_completion_times(data, dataset_directory):
             raise ValueError("duplicate/cyclic timing source")
         visited.add(directory)
         source = load_dataset(directory, expected_dataset)
+        if source["actions"] != actions:
+            raise ValueError("timing source action catalog mismatch")
         complete = json.loads((directory / "complete.json").read_text())
         csv_path = directory / "results.csv"
         if not csv_path.exists():
@@ -120,9 +125,21 @@ def load_completion_times(data, dataset_directory):
                 case = row["case_id"]
                 if case not in source_id_set:
                     raise ValueError("timing CSV contains an unknown source scene")
-                i, j = lookup[case], pair_lookup[tuple(json.loads(row["pair"]))]
+                identifier = row.get("action_id")
+                if not identifier:
+                    identifier = action_id(tuple(json.loads(row["pair"])))
+                elif (
+                    row.get("pair")
+                    and action_id(tuple(json.loads(row["pair"]))) != identifier
+                ):
+                    raise ValueError("conflicting timing CSV action identifiers")
+                if identifier not in action_lookup:
+                    raise ValueError("unknown timing CSV action")
+                i, j = lookup[case], action_lookup[identifier]
                 if seen[i, j]:
-                    raise ValueError("duplicate scene/pair timing")
+                    raise ValueError("duplicate scene/action timing")
+                if "observed" in row and row["observed"] != "True":
+                    raise ValueError("unobserved timing CSV outcome")
                 if row["label_valid"] not in ("True", "False") or row[
                     "success"
                 ] not in ("True", "False"):
@@ -150,7 +167,7 @@ def load_completion_times(data, dataset_directory):
                     times[i, j] = t
                 seen[i, j] = True
                 count += 1
-        if count != len(source_ids) * 10:
+        if count != len(source_ids) * len(actions):
             raise ValueError("incomplete timing CSV")
         provenance.append(
             dict(
@@ -164,7 +181,7 @@ def load_completion_times(data, dataset_directory):
 
     visit(dataset_directory, expected_dataset=data["dataset_sha256"])
     if not seen.all():
-        raise ValueError("missing completion-time scene/pair records")
+        raise ValueError("missing completion-time scene/action records")
     discounted_rewards(data["labels"], times, 120.0)
     return times, provenance
 
@@ -200,5 +217,5 @@ def timing_metrics(labels, times, probabilities, time_scale_seconds=120.0):
             ).sum()
         ),
         oracle_successes=int(np.isfinite(oracle_times).sum()),
-        selection_counts=np.bincount(choices, minlength=10).tolist(),
+        selection_counts=np.bincount(choices, minlength=labels.shape[1]).tolist(),
     )

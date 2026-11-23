@@ -153,11 +153,11 @@ class PreparedArtifactTests(unittest.TestCase):
             )
             return context
 
-        def collect(pool, contexts, out, start):
+        def collect(pool, contexts, out, start, actions):
             rows = []
-            for pair in dataset.LINK_PAIRS:
+            for pair in actions:
                 directory = out / "fixture"
-                run = directory / f"link{pair[0]}_link{pair[1]}"
+                run = directory / dataset.action_id(pair)
                 run.mkdir()
                 dataset.save_npz(
                     run / "trajectory.npz", q=np.array([case["initial_q"]])
@@ -216,7 +216,7 @@ class PreparedArtifactTests(unittest.TestCase):
                 ik.write_bytes(original)
                 dataset.run(path, output, 1, 4, workers_per_gpu=1, phase="rollout")
                 self.assertEqual(
-                    json.loads((output / "complete.json").read_text())["rollouts"], 10
+                    json.loads((output / "complete.json").read_text())["rollouts"], 16
                 )
                 with self.assertRaises((ValueError, FileExistsError)):
                     dataset.run(path, output, 1, 4, workers_per_gpu=1, phase="rollout")

@@ -1,5 +1,6 @@
-# Fixed-IK link selection pilot: 10 eligible contexts x 10 link pairs.
-# No-IK scenes are retained separately; replenish for up to three rounds.
+# Link selection pilot: 10 eligible contexts x 16 choices (10 pairs, 5 singles, Direct).
+# Sequential choices share one fixed IK. No-IK scenes are retained separately;
+# the generator controls the bounded number of replenishment rounds.
 # The base seed increments on each replenishment round.
 controller_config: ../panda.yaml
 rdf_device: cuda

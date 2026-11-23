@@ -2,6 +2,8 @@
 
 import csv
 import json
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -15,6 +17,12 @@ from safe_ik.application.train_link_time_selection import (
     objective_metadata,
     run,
     validate_time_settings,
+)
+from safe_ik.domain.link_actions import (
+    LINK_ACTIONS,
+    action_id,
+    catalog_arrays,
+    catalog_metadata,
 )
 from safe_ik.learning.link_selection import (
     LINK_PAIRS,
@@ -35,9 +43,9 @@ from safe_ik.learning.link_time_selection import (
 )
 
 
-def dataset(root):
+def dataset(root, *, actions=LINK_PAIRS):
     rng = np.random.default_rng(17)
-    labels = rng.integers(0, 2, (20, 10), dtype=np.int8)
+    labels = rng.integers(0, 2, (20, len(actions)), dtype=np.int8)
     labels[0] = 0
     labels[1] = 1
     labels[0, 0] = -1
@@ -52,18 +60,26 @@ def dataset(root):
         obstacles=np.tile([[[0.1, 0.2, 0.3, 0.1]]], (20, 2, 1)),
         success=labels,
         label_valid=valid,
-        link_pairs=np.array(LINK_PAIRS),
+        **(
+            {"link_pairs": np.array(LINK_PAIRS)}
+            if actions == LINK_PAIRS
+            else {**catalog_arrays(actions), "observed": np.ones_like(valid)}
+        ),
     )
     np.savez_compressed(root / "dataset.npz", **arrays)
     rows = []
     for i, case in enumerate(ids):
-        for j, pair in enumerate(LINK_PAIRS):
+        for j, pair in enumerate(actions):
             ok = labels[i, j] == 1
             t = 10.0 + j if ok else 0.02
             rows.append(
                 dict(
                     case_id=case,
-                    pair=json.dumps(pair),
+                    **(
+                        {"pair": json.dumps(pair)}
+                        if actions == LINK_PAIRS
+                        else {"action_id": action_id(pair)}
+                    ),
                     label_valid=bool(valid[i, j]),
                     success=bool(ok),
                     goal_reached=bool(ok),
@@ -84,6 +100,7 @@ def dataset(root):
                 contexts=20,
                 valid_labels=int(valid.sum()),
                 success_labels=int((labels == 1).sum()),
+                **(catalog_metadata(actions) if actions == LINK_ACTIONS else {}),
                 data_sha256={
                     n: sha256(root / n) for n in ["dataset.npz", "results.csv"]
                 },
@@ -157,10 +174,11 @@ class LinkTimeSelectionTests(unittest.TestCase):
             probabilities.argmax(1), baseline(state, obstacles).argmax(1)
         )
         checkpoint = dict(
-            schema_version=16,
+            schema_version=18,
             model=MODEL_SPEC,
             state_dict=model.state_dict(),
-            link_pairs=[list(p) for p in LINK_PAIRS],
+            **catalog_metadata(),
+            output_dim=len(LINK_ACTIONS),
             **objective_metadata({"weight_decay": 0.0001}, 120.0),
         )
         with TemporaryDirectory() as temp:
@@ -174,7 +192,7 @@ class LinkTimeSelectionTests(unittest.TestCase):
                 loaded, [0] * 7, [0] * 7, [0] * 3, [1, 0, 0, 0], []
             )
             self.assertAlmostEqual(sum(answer["probabilities"]), 1.0, places=6)
-            self.assertEqual(answer["probability_semantics"], "link_pair_selection")
+            self.assertEqual(answer["probability_semantics"], "action_selection")
             self.assertEqual(
                 predict_selection(None, None, None, None, None, None)["method"],
                 "direct",
@@ -187,23 +205,39 @@ class LinkTimeSelectionTests(unittest.TestCase):
                 torch.save({**checkpoint, field: value}, path)
                 with self.assertRaises(ValueError):
                     load_model(path)
+            legacy_model = LinkTimeSelectionNet(actions=LINK_PAIRS).eval()
+            legacy = {
+                **checkpoint,
+                "schema_version": 16,
+                "link_pairs": [list(p) for p in LINK_PAIRS],
+                "state_dict": legacy_model.state_dict(),
+                "output_semantics": "link_pair_selection_probability",
+            }
+            for key in ("action_schema_version", "actions", "output_dim"):
+                legacy.pop(key)
+            torch.save(legacy, path)
+            loaded = load_model(path)
+            self.assertEqual(loaded.actions, LINK_PAIRS)
+            torch.testing.assert_close(
+                loaded(state, obstacles), legacy_model(state, obstacles), rtol=0, atol=0
+            )
 
     def test_timing_csv_join_hashes_failure_mask_and_metrics(self):
         with TemporaryDirectory() as temp:
             p = Path(temp)
-            dataset(p)
+            dataset(p, actions=LINK_ACTIONS)
             data = load_dataset(p)
             times, sources = load_completion_times(data, p)
             self.assertTrue(np.isnan(times[data["labels"] == 0]).all())
             self.assertTrue((times[data["labels"] == 1] >= 10).all())
             self.assertEqual(len(sources), 1)
-            pred = np.zeros((20, 10))
-            pred[:, 0] = 1
+            pred = np.zeros((20, 16))
+            pred[:, 15] = 1
             metrics = timing_metrics(data["labels"], times, pred)
-            n = int(data["labels"][:, 0].sum())
+            n = int(data["labels"][:, 15].sum())
             self.assertEqual(metrics["selected_successes"], n)
             self.assertAlmostEqual(
-                metrics["failure_penalized_120s_cost"], (n * 10 + (20 - n) * 120) / 20
+                metrics["failure_penalized_120s_cost"], (n * 25 + (20 - n) * 120) / 20
             )
             with (p / "results.csv").open("a") as f:
                 f.write("\n")
@@ -276,3 +310,73 @@ class LinkTimeSelectionTests(unittest.TestCase):
                 np.testing.assert_array_equal(probs, z["probabilities"])
             with self.assertRaises(FileExistsError):
                 run(source, path, out, "cpu")
+
+    def test_cli_time_training_without_test_omits_test_metrics(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "data"
+            source.mkdir()
+            dataset(source, actions=LINK_ACTIONS)
+            config = dict(
+                dataset_sha256=sha256(source / "dataset.npz"),
+                numerical_error_policy="failure",
+                split=dict(seed=9, train=16, validation=4, test=0),
+                objective=dict(
+                    name="negative_log_discounted_success_mass",
+                    time_scale_seconds=120.0,
+                ),
+                training=dict(
+                    seeds=[11],
+                    learning_rate=0.001,
+                    weight_decay=0.0001,
+                    batch_size=8,
+                    max_epochs=2,
+                    patience=2,
+                ),
+            )
+            path = root / "config.yaml"
+            path.write_text(yaml.safe_dump(config))
+            out = root / "training"
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "safe_ik.application.train_link_time_selection",
+                    "--dataset",
+                    str(source),
+                    "--config",
+                    str(path),
+                    "--output",
+                    str(out),
+                    "--device",
+                    "cpu",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            report = json.loads((out / "evaluation.json").read_text())
+            self.assertEqual(report["output_dim"], 16)
+            self.assertFalse(report["test_evaluation_performed"])
+            self.assertEqual(report["evaluation_splits"], ["train", "validation"])
+            self.assertEqual(set(report["runs"][0]["metrics"]), {"train", "validation"})
+            self.assertFalse(
+                any(
+                    "test" in key
+                    for key in report
+                    if key != "test_evaluation_performed"
+                )
+            )
+            self.assertEqual(
+                set(json.loads((out / "split.json").read_text())),
+                {"train", "validation"},
+            )
+            selection = json.loads((out / "selection.json").read_text())
+            self.assertNotIn("selected_before_test_evaluation", selection)
+            self.assertFalse(selection["test_evaluation_performed"])
+            self.assertFalse(
+                json.loads((out / "complete.json").read_text())[
+                    "test_evaluation_performed"
+                ]
+            )

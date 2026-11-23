@@ -1,0 +1,17 @@
+# Completed production-10000-action16-20261119T044531Z: 10,000 scenes.
+# Fixed small one-head success model; fresh initialization for all five seeds.
+# Scene-level stratification; the exact IDs are retained in training/split.json.
+dataset_sha256: 690f6cf66de89cda784dec81621c5e1765d0f2097b9a65743f80a06a84a7b773
+numerical_error_policy: failure
+split:
+  seed: 20261016
+  train: 9000
+  validation: 1000
+  test: 0
+training:
+  seeds: [11, 23, 37, 53, 71]
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 64
+  max_epochs: 500
+  patience: 50

@@ -7,7 +7,6 @@ remain in metres in the dataset's common world/base coordinate system.
 from __future__ import annotations
 
 import hashlib
-import itertools
 import json
 from pathlib import Path
 
@@ -16,7 +15,15 @@ import torch
 from scipy.spatial.transform import Rotation
 from torch import nn
 
-LINK_PAIRS = tuple(itertools.combinations(range(2, 7), 2))
+from ..domain.link_actions import (
+    LINK_ACTIONS,
+    LINK_PAIRS,
+    action_id,
+    actions_from_arrays,
+    actions_from_metadata,
+    validate_actions,
+)
+
 MODEL_SPEC = {
     "architecture": "cross_attention",
     "robot_hidden_dims": [64, 64],
@@ -44,19 +51,23 @@ def load_dataset(directory, expected_sha256=None):
         raise ValueError("dataset checksum mismatch")
     with np.load(directory / "dataset.npz", allow_pickle=False) as archive:
         data = {key: archive[key].copy() for key in archive.files}
+    actions = actions_from_arrays(data)
+    if actions == LINK_ACTIONS or any(
+        key in complete for key in ("actions", "link_pairs", "action_schema_version")
+    ):
+        if actions_from_metadata(complete) != actions:
+            raise ValueError("dataset/complete action catalog mismatch")
     size = len(data["case_id"])
     expected_shapes = {
         "initial_q": (size, 7),
         "selected_ik": (size, 7),
         "target_position": (size, 3),
         "target_quaternion": (size, 4),
-        "success": (size, 10),
-        "label_valid": (size, 10),
+        "success": (size, len(actions)),
+        "label_valid": (size, len(actions)),
     }
     if size != complete["contexts"] or len(set(data["case_id"])) != size:
         raise ValueError("missing or duplicate scene IDs")
-    if not np.array_equal(data["link_pairs"], LINK_PAIRS):
-        raise ValueError("unexpected output-index/link-pair mapping")
     for key, shape in expected_shapes.items():
         if data[key].shape != shape or not np.isfinite(data[key]).all():
             raise ValueError(f"invalid {key}")
@@ -71,6 +82,18 @@ def load_dataset(directory, expected_sha256=None):
         raise ValueError("invalid obstacle array")
     if data["label_valid"].dtype != np.bool_:
         raise ValueError("label_valid must be boolean")
+    # Numerical failures were executed and remain negative labels. Missing
+    # rollouts are not failures and must never be silently trained as zeros.
+    observed = data.get("observed")
+    if observed is None:
+        if actions != LINK_PAIRS:
+            raise ValueError("action datasets require an observed outcome mask")
+    elif (
+        observed.dtype != np.bool_
+        or observed.shape != (size, len(actions))
+        or not observed.all()
+    ):
+        raise ValueError("unobserved outcomes cannot be used for training")
     valid = data["label_valid"]
     raw = data["success"]
     if not np.isin(raw[valid], [0, 1]).all() or not np.all(raw[~valid] == -1):
@@ -82,6 +105,7 @@ def load_dataset(directory, expected_sha256=None):
     # User-selected outcome policy: a numerical solver failure is a failure.
     # Preserve source arrays, and produce a separate fully observed target array.
     data["labels"] = np.where(valid, raw, 0).astype(np.float32)
+    data["actions"] = actions
     data["dataset_sha256"] = actual_hash
     data["dataset_sources"] = complete.get("sources", [])
     return data
@@ -143,17 +167,28 @@ def split_scenes(
 ):
     labels = np.asarray(labels)
     sizes = (train_size, validation_size, test_size)
-    if any(type(size) is not int or size <= 0 for size in sizes) or sum(sizes) != len(
-        labels
+    if (
+        any(type(size) is not int for size in sizes)
+        or train_size <= 0
+        or validation_size <= 0
+        or test_size < 0
+        or sum(sizes) != len(labels)
     ):
-        raise ValueError("positive split sizes must sum to the scene count")
-    if labels.ndim != 2 or labels.shape[1] != 10 or not np.isin(labels, [0, 1]).all():
-        raise ValueError("split requires ten binary labels per scene")
+        raise ValueError(
+            "positive train/validation and nonnegative test sizes must sum to the scene count"
+        )
+    if labels.ndim != 2 or labels.shape[1] == 0 or not np.isin(labels, [0, 1]).all():
+        raise ValueError("split requires binary action labels per scene")
     rng = np.random.default_rng(seed)
     strata = labels.sum(axis=1).astype(int)
-    test, remaining = _stratified_take(np.arange(len(labels)), strata, test_size, rng)
+    remaining = np.arange(len(labels))
+    if test_size:
+        test, remaining = _stratified_take(remaining, strata, test_size, rng)
     validation, train = _stratified_take(remaining, strata, validation_size, rng)
-    return {"train": train, "validation": validation, "test": test}
+    split = {"train": train, "validation": validation}
+    if test_size:
+        split["test"] = test
+    return split
 
 
 def load_scene_split(data, specification, dataset_directory):
@@ -176,9 +211,19 @@ def load_scene_split(data, specification, dataset_directory):
     split = {}
     for key in ("train", "validation", "test"):
         size = specification[key]
-        case_ids = record[key]["case_ids"]
-        if type(size) is not int or size <= 0 or len(case_ids) != size:
+        case_ids = (
+            record.get(key, {"case_ids": []})["case_ids"]
+            if key == "test" and size == 0
+            else record[key]["case_ids"]
+        )
+        if (
+            type(size) is not int
+            or size < (0 if key == "test" else 1)
+            or len(case_ids) != size
+        ):
             raise ValueError(f"frozen split size mismatch: {key}")
+        if size == 0:
+            continue
         if any(case_id not in lookup for case_id in case_ids):
             raise ValueError("frozen split contains unknown scene IDs")
         split[key] = np.array([lookup[case_id] for case_id in case_ids], dtype=int)
@@ -189,10 +234,11 @@ def load_scene_split(data, specification, dataset_directory):
 
 
 class LinkSuccessNet(nn.Module):
-    """The selected 24,234-parameter, one-head model with hidden dropout 0.1."""
+    """Selected one-head backbone; 16 actions by default, legacy 10 supported."""
 
-    def __init__(self, joint_mean=None, joint_std=None):
+    def __init__(self, joint_mean=None, joint_std=None, *, actions=LINK_ACTIONS):
         super().__init__()
+        self.actions = validate_actions(actions)
         mean = np.zeros(14) if joint_mean is None else np.asarray(joint_mean)
         std = np.ones(14) if joint_std is None else np.asarray(joint_std)
         if (
@@ -212,7 +258,9 @@ class LinkSuccessNet(nn.Module):
         self.state_encoder = nn.Sequential(
             nn.Linear(23, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU()
         )
-        self.head = nn.Sequential(nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, 10))
+        self.head = nn.Sequential(
+            nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, len(self.actions))
+        )
         self.query_projection = nn.Linear(64, 32)
         self.cross_attention = nn.MultiheadAttention(
             embed_dim=32,
@@ -273,7 +321,7 @@ SELECTION_METRIC = "validation_selected_time_reward"
 
 
 class LinkTimeSelectionNet(LinkSuccessNet):
-    """Same backbone/initialization; forward returns ten selection probabilities."""
+    """Same backbone/initialization; forward returns action selection probabilities."""
 
     output_activation = "softmax"
 
@@ -296,6 +344,8 @@ def predict_selection(
     if selected_ik is None:
         return {
             "method": "direct",
+            "action_id": "direct",
+            "action_index": None,
             "pair_index": None,
             "link_frames": [],
             "probabilities": None,
@@ -324,10 +374,15 @@ def predict_selection(
         is_softmax = getattr(model, "output_activation", "sigmoid") == "softmax"
         probabilities = (output if is_softmax else output.sigmoid())[0].cpu().numpy()
     index = int(probabilities.argmax())
+    links = model.actions[index]
+    legacy = model.actions == LINK_PAIRS
     return {
-        "method": "sequential",
-        "pair_index": index,
-        "link_frames": [f"link{i}" for i in LINK_PAIRS[index]],
+        "method": "sequential" if links else "direct",
+        "action_id": action_id(links),
+        "action_index": index,
+        # Compatibility for consumers of the original ten-pair API.
+        "pair_index": index if len(links) == 2 else None,
+        "link_frames": [f"link{i}" for i in links],
         "probabilities": probabilities.tolist(),
         "reason": (
             "highest_time_reward_selection_probability"
@@ -335,7 +390,9 @@ def predict_selection(
             else "highest_predicted_success"
         ),
         "probability_semantics": (
-            "link_pair_selection" if is_softmax else "per_pair_success"
+            ("link_pair_selection" if legacy else "action_selection")
+            if is_softmax
+            else ("per_pair_success" if legacy else "per_action_success")
         ),
     }
 
@@ -343,12 +400,11 @@ def predict_selection(
 def load_model(checkpoint_path, device="cpu"):
     """Load the selected model, retaining schema-11/12 Adam inference support."""
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
-    if checkpoint["link_pairs"] != [list(pair) for pair in LINK_PAIRS]:
-        raise ValueError("checkpoint link mapping mismatch")
     version = checkpoint["schema_version"]
-    if version == 16:
+    actions = checkpoint_actions(checkpoint)
+    if version in (16, 18):
         return load_time_checkpoint(checkpoint, device)
-    if version in (12, 13):
+    if version in (12, 13, 17):
         matches = checkpoint.get("model") == MODEL_SPEC
     elif version == 11:
         # Metadata validation only: no implementations of retired variants.
@@ -365,7 +421,7 @@ def load_model(checkpoint_path, device="cpu"):
         )
     else:
         raise ValueError("unsupported checkpoint; only the selected model is supported")
-    if version == 13:
+    if version in (13, 17):
         decay = checkpoint.get("weight_decay")
         optimizer_matches = (
             checkpoint.get("optimizer") == "adamw"
@@ -388,7 +444,7 @@ def load_model(checkpoint_path, device="cpu"):
         or "parameter_l2_weight" in checkpoint
     ):
         raise ValueError("checkpoint does not match the selected model and objective")
-    model = LinkSuccessNet()
+    model = LinkSuccessNet(actions=actions)
     model.load_state_dict(checkpoint["state_dict"])
     # Loading state_dict replaces the normalization buffers; validate them too.
     if (
@@ -400,14 +456,38 @@ def load_model(checkpoint_path, device="cpu"):
     return model.to(device).eval()
 
 
+def checkpoint_actions(checkpoint):
+    """Never reinterpret legacy checkpoint rows as the expanded action catalog."""
+    version = checkpoint.get("schema_version")
+    if version in (17, 18):
+        if "action_schema_version" not in checkpoint or "actions" not in checkpoint:
+            raise ValueError("new checkpoints require an explicit action catalog")
+        actions = actions_from_metadata(checkpoint)
+        if checkpoint.get("output_dim") != len(actions):
+            raise ValueError("checkpoint output dimension/catalog mismatch")
+        return actions
+    if version in (11, 12, 13, 16):
+        actions = actions_from_metadata(checkpoint)
+        if actions != LINK_PAIRS or "actions" in checkpoint:
+            raise ValueError("legacy checkpoint link mapping mismatch")
+        return actions
+    raise ValueError("unsupported checkpoint; only the selected model is supported")
+
+
 def load_time_checkpoint(checkpoint, device="cpu"):
+    actions = checkpoint_actions(checkpoint)
+    semantics = (
+        "action_selection_probability"
+        if checkpoint["schema_version"] == 18
+        else "link_pair_selection_probability"
+    )
     validate_time_scale(checkpoint.get("time_scale_seconds"))
     decay = checkpoint.get("weight_decay")
     if (
-        checkpoint.get("schema_version") != 16
+        checkpoint.get("schema_version") not in (16, 18)
         or checkpoint.get("model") != MODEL_SPEC
         or checkpoint.get("output_activation") != "softmax"
-        or checkpoint.get("output_semantics") != "link_pair_selection_probability"
+        or checkpoint.get("output_semantics") != semantics
         or checkpoint.get("optimization_loss") != OBJECTIVE
         or checkpoint.get("selection_metric") != SELECTION_METRIC
         or checkpoint.get("optimizer") != "adamw"
@@ -416,12 +496,11 @@ def load_time_checkpoint(checkpoint, device="cpu"):
         or decay < 0
         or checkpoint.get("bce_loss_weight") != 0.0
         or checkpoint.get("numerical_error_policy") != "failure"
-        or checkpoint.get("link_pairs") != [list(p) for p in LINK_PAIRS]
     ):
         raise ValueError(
             "checkpoint does not match the softmax time-selection objective"
         )
-    model = LinkTimeSelectionNet()
+    model = LinkTimeSelectionNet(actions=actions)
     model.load_state_dict(checkpoint["state_dict"])
     if (
         not torch.isfinite(model.joint_mean).all()

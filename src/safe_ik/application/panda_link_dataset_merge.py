@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from ..domain.link_actions import actions_from_metadata
 from .panda_comparison import atomic_json, digest
 from .panda_experiment_configuration import load_panda_experiment
 from .panda_link_dataset import export_dataset, utc_now
@@ -12,6 +13,7 @@ from .panda_link_dataset_campaign import campaign_plan, identity, verified_batch
 
 def merge_groups(directories, output):
     contexts, rows, groups, requests, identities, inputs = [], [], [], [], [], {}
+    action_catalogs = []
     for directory in map(Path, directories):
         complete = json.loads((directory / "complete.json").read_text())
         for name, expected in complete["data_sha256"].items():
@@ -41,6 +43,11 @@ def merge_groups(directories, output):
                 batch["contexts"],
                 identity(load_panda_experiment(directory / batch["config"])),
             )
+            action_catalogs.append(
+                actions_from_metadata(
+                    json.loads((attempt / "manifest.json").read_text())
+                )
+            )
             contexts.extend(ctx)
             rows.extend(res)
         inputs[str(directory.resolve())] = digest(directory / "complete.json")
@@ -48,6 +55,8 @@ def merge_groups(directories, output):
         not groups
         or any(r != requests[0] for r in requests)
         or any(i != identities[0] for i in identities)
+        or not action_catalogs
+        or any(actions != action_catalogs[0] for actions in action_catalogs)
     ):
         raise ValueError("GPU group configuration/source mismatch")
     if sorted(groups) != list(range(requests[0].get("groups", 1))):
@@ -59,7 +68,7 @@ def merge_groups(directories, output):
     # Only create output after validation; never overwrite old exports.
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
-    counts = export_dataset(output, contexts, rows)
+    counts = export_dataset(output, contexts, rows, action_catalogs[0])
     atomic_json(
         output / "complete.json",
         dict(

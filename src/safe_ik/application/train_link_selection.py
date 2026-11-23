@@ -20,8 +20,15 @@ import yaml
 from scipy.stats import binomtest
 from torch.nn import functional as F
 
-from safe_ik.learning.link_selection import (
+from safe_ik.domain.link_actions import (
+    LINK_ACTIONS,
     LINK_PAIRS,
+    action_id,
+    catalog_arrays,
+    catalog_metadata,
+    validate_actions,
+)
+from safe_ik.learning.link_selection import (
     MODEL_SPEC,
     LinkSuccessNet,
     joint_statistics,
@@ -158,7 +165,7 @@ def validate_settings(settings):
     }:
         raise ValueError("invalid split settings")
     for key in ("train", "validation", "test"):
-        if type(split.get(key)) is not int or split[key] <= 0:
+        if type(split.get(key)) is not int or split[key] < (0 if key == "test" else 1):
             raise ValueError(f"invalid split {key}")
     if type(split.get("seed")) is not int or split["seed"] < 0:
         raise ValueError("invalid split seed")
@@ -187,10 +194,16 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
-def prediction_metrics(labels, probabilities, fixed_pair, bootstrap_seed=0):
+def prediction_metrics(
+    labels, probabilities, fixed_pair, bootstrap_seed=0, *, actions=None
+):
     labels, probabilities = np.asarray(labels), np.asarray(probabilities)
-    if labels.shape != probabilities.shape or labels.ndim != 2 or labels.shape[1] != 10:
-        raise ValueError("expected matching [scenes, 10] arrays")
+    if labels.shape != probabilities.shape or labels.ndim != 2 or labels.shape[1] == 0:
+        raise ValueError("expected matching [scenes, actions] arrays")
+    if actions is not None:
+        actions = validate_actions(actions)
+        if len(actions) != labels.shape[1]:
+            raise ValueError("metric action catalog/label dimension mismatch")
     if (
         not np.isin(labels, [0, 1]).all()
         or not np.isfinite(probabilities).all()
@@ -226,12 +239,12 @@ def prediction_metrics(labels, probabilities, fixed_pair, bootstrap_seed=0):
                 ),
             }
         )
-    return {
+    metrics = {
         "scenes": len(labels),
         "selected_successes": int(selected.sum()),
         "selected_success_rate": float(selected.mean()),
-        "fixed_pair_successes": int(baseline.sum()),
-        "fixed_pair_success_rate": float(baseline.mean()),
+        "fixed_action_successes": int(baseline.sum()),
+        "fixed_action_success_rate": float(baseline.mean()),
         "random_selection_expected_success_rate": float(labels.mean()),
         "oracle_successes": int(labels.max(axis=1).sum()),
         "oracle_success_rate": float(labels.max(axis=1).mean()),
@@ -247,9 +260,40 @@ def prediction_metrics(labels, probabilities, fixed_pair, bootstrap_seed=0):
         ),
         "brier": float(((probabilities - labels) ** 2).mean()),
         "threshold_0_5_accuracy": float(((probabilities >= 0.5) == labels).mean()),
-        "selection_counts": np.bincount(chosen, minlength=10).tolist(),
+        "selection_counts": np.bincount(chosen, minlength=labels.shape[1]).tolist(),
         "calibration_bins": bins,
     }
+    if actions is not None:
+        counts = np.asarray([len(links) for links in actions])[chosen]
+        metrics["selection_by_intermediate_count"] = {
+            str(count): {
+                "selected_scenes": int((counts == count).sum()),
+                "successes": int(selected[counts == count].sum()),
+                "success_rate": (
+                    float(selected[counts == count].mean())
+                    if np.any(counts == count)
+                    else None
+                ),
+            }
+            for count in sorted({len(links) for links in actions})
+        }
+        metrics["fixed_action_success_rates"] = {
+            action_id(links): float(labels[:, i].mean())
+            for i, links in enumerate(actions)
+        }
+        if actions == LINK_ACTIONS:
+            pair_count = len(LINK_PAIRS)
+            metrics["new_actions_rescue_scenes"] = int(
+                (
+                    (labels[:, :pair_count].max(axis=1) == 0)
+                    & (labels[:, pair_count:].max(axis=1) == 1)
+                ).sum()
+            )
+    # Keep legacy consumers of ten-pair reports working.
+    if actions is None or actions == LINK_PAIRS:
+        metrics["fixed_pair_successes"] = metrics["fixed_action_successes"]
+        metrics["fixed_pair_success_rate"] = metrics["fixed_action_success_rate"]
+    return metrics
 
 
 def train_seed(
@@ -264,13 +308,18 @@ def train_seed(
     seed,
     fixed_pair,
     device,
+    *,
+    actions=LINK_PAIRS,
 ):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if device.type == "cuda":
         torch.cuda.manual_seed_all(seed)
-    model = LinkSuccessNet(mean, std).to(device)
+    actions = validate_actions(actions)
+    if targets.shape[1] != len(actions):
+        raise ValueError("training label/action dimension mismatch")
+    model = LinkSuccessNet(mean, std, actions=actions).to(device)
     optimizer = make_optimizer(model, settings)
     batch_rng = np.random.default_rng(seed)
     destination = output / f"seed-{seed}"
@@ -377,10 +426,11 @@ def train_seed(
             break
     write_csv(destination / "history.csv", history)
     checkpoint = {
-        "schema_version": 13,
+        "schema_version": 17,
         "model": MODEL_SPEC,
         "state_dict": best_state,
-        "link_pairs": [list(pair) for pair in LINK_PAIRS],
+        **catalog_metadata(actions),
+        "output_dim": len(actions),
         "seed": seed,
         "best_epoch": best_epoch,
         "best_validation_bce": best_loss,
@@ -418,24 +468,44 @@ def train_seed(
 
 
 def write_report(output, report):
+    has_test = report["test_evaluation_performed"]
     rows = [
         "# Panda selected link-combination model",
         "",
-        "Robot MLP 23→64→64; obstacle MLP 4→32→32; one-head cross-attention (32D); context projection 32→64; concatenated prediction MLP 128→64→10.",
-        "24,234 parameters. ReLU and dropout 0.1 at all five hidden MLP sites; dropout disabled for evaluation.",
+        f"Robot MLP 23→64→64; obstacle MLP 4→32→32; one-head cross-attention (32D); context projection 32→64; concatenated prediction MLP 128→64→{report['output_dim']}.",
+        f"{report['parameter_count']:,} parameters. ReLU and dropout 0.1 at all five hidden MLP sites; dropout disabled for evaluation.",
         f"AdamW with weight_decay={report['weight_decay']:g}; BCE + 3 × negative log successful softmax mass, averaged across all scenes. Numerical errors remain failures.",
         "Only 14 joint-angle inputs are standardized using training statistics; geometry stays in metres.",
-        f"Checkpoint selection: {selection_description()}; exact ties retain earlier epoch/lower seed. All choices are frozen before test evaluation.",
-        f"Selected seed: {report['selected_seed']}; fixed pair from training labels: {report['fixed_pair']}.",
+        f"Checkpoint selection: {selection_description()}; exact ties retain earlier epoch/lower seed.",
+        (
+            "All choices are frozen before test evaluation."
+            if has_test
+            else "No test set was requested or evaluated. Validation is used for checkpoint/seed selection; its score is not an independent test estimate."
+        ),
+        f"Selected seed: {report['selected_seed']}; fixed action from training labels: {report['fixed_action_id']}.",
         "",
-        "| Seed | Best epoch | Validation success | Test success | Test BCE |",
-        "| --- | ---: | ---: | ---: | ---: |",
+        (
+            "| Seed | Best epoch | Validation success | Test success | Test BCE |"
+            if has_test
+            else "| Seed | Best epoch | Validation success | Validation BCE |"
+        ),
+        (
+            "| --- | ---: | ---: | ---: | ---: |"
+            if has_test
+            else "| --- | ---: | ---: | ---: |"
+        ),
     ]
     for run in report["runs"]:
-        v, t = run["metrics"]["validation"], run["metrics"]["test"]
-        rows.append(
-            f"| {run['seed']} | {run['best_epoch']} | {v['selected_success_rate']:.2%} | {t['selected_success_rate']:.2%} | {t['bce']:.4f} |"
-        )
+        v = run["metrics"]["validation"]
+        if has_test:
+            t = run["metrics"]["test"]
+            rows.append(
+                f"| {run['seed']} | {run['best_epoch']} | {v['selected_success_rate']:.2%} | {t['selected_success_rate']:.2%} | {t['bce']:.4f} |"
+            )
+        else:
+            rows.append(
+                f"| {run['seed']} | {run['best_epoch']} | {v['selected_success_rate']:.2%} | {v['bce']:.4f} |"
+            )
     rows += [
         "",
         "Seeds share the same evaluation scenes. Results and paired intervals are exploratory; no multiplicity correction. This report does not deploy a controller.",
@@ -480,12 +550,14 @@ def run(dataset_directory, config_path, output, device_name):
     objective = objective_metadata(settings["training"])
     data = load_dataset(dataset_directory, settings["dataset_sha256"])
     labels = data["labels"]
+    actions = data["actions"]
     specification = settings["split"]
     split = load_scene_split(data, specification, dataset_directory)
+    has_test = "test" in split
     split_policy = (
         "frozen_scene_ids"
         if "file" in specification
-        else "stratified_successful_pair_count"
+        else "stratified_successful_action_count"
     )
     state = make_state(
         data["initial_q"],
@@ -512,12 +584,19 @@ def run(dataset_directory, config_path, output, device_name):
             "dataset_sha256": data["dataset_sha256"],
             "dataset_sources": data["dataset_sources"],
             "split_policy": split_policy,
+            "evaluation_splits": list(split),
+            "test_evaluation_performed": has_test,
             "settings": settings,
             "model": MODEL_SPEC,
+            **catalog_metadata(actions),
+            "output_dim": len(actions),
             "source_sha256": {
                 "train_link_selection.py": sha256(__file__),
                 "link_selection.py": sha256(
                     Path(__file__).parents[1] / "learning/link_selection.py"
+                ),
+                "link_actions.py": sha256(
+                    Path(__file__).parents[1] / "domain/link_actions.py"
                 ),
             },
             "environment": {
@@ -542,15 +621,20 @@ def run(dataset_directory, config_path, output, device_name):
             "numerical_error_labels_reclassified": int((~data["label_valid"]).sum()),
             "numerical_error_scenes": int((~data["label_valid"]).any(axis=1).sum()),
             "all_fail_scenes": int((labels.sum(axis=1) == 0).sum()),
-            "all_success_scenes": int((labels.sum(axis=1) == 10).sum()),
+            "all_success_scenes": int((labels.sum(axis=1) == len(actions)).sum()),
             "parameter_count": sum(
-                (parameter.numel() for parameter in LinkSuccessNet().parameters())
+                parameter.numel()
+                for parameter in LinkSuccessNet(actions=actions).parameters()
             ),
             "selection_policy": "argmax; ties use lowest index; no IK returns Direct",
-            "link_pairs": [list(pair) for pair in LINK_PAIRS],
             "selection_metric": metric,
             "checkpoint_selection": selection_description()
-            + "; exact ties keep earlier epoch/lower seed; all seeds frozen before test evaluation",
+            + "; exact ties keep earlier epoch/lower seed"
+            + (
+                "; all seeds frozen before test evaluation"
+                if has_test
+                else "; no test set"
+            ),
             "early_stopping_selection": selection_description(),
             **objective,
         }
@@ -560,8 +644,8 @@ def run(dataset_directory, config_path, output, device_name):
             key: {
                 "indices": indices.tolist(),
                 "case_ids": data["case_id"][indices].tolist(),
-                "successful_pair_count_histogram": np.bincount(
-                    labels[indices].sum(axis=1).astype(int), minlength=11
+                "successful_action_count_histogram": np.bincount(
+                    labels[indices].sum(axis=1).astype(int), minlength=len(actions) + 1
                 ).tolist(),
                 "numerical_error_labels": int((~data["label_valid"][indices]).sum()),
             }
@@ -573,7 +657,7 @@ def run(dataset_directory, config_path, output, device_name):
             case_id=data["case_id"],
             labels=labels.astype(np.int8),
             original_label_valid=data["label_valid"],
-            link_pairs=np.asarray(LINK_PAIRS),
+            **catalog_arrays(actions),
         )
         tensors = [
             torch.as_tensor(array, dtype=torch.float32, device=device)
@@ -582,7 +666,16 @@ def run(dataset_directory, config_path, output, device_name):
         training = {**settings["training"], "dataset_sha256": data["dataset_sha256"]}
         runs = [
             train_seed(
-                output, *tensors, split, mean, std, training, seed, fixed_pair, device
+                output,
+                *tensors,
+                split,
+                mean,
+                std,
+                training,
+                seed,
+                fixed_pair,
+                device,
+                actions=actions,
             )
             for seed in training["seeds"]
         ]
@@ -598,7 +691,8 @@ def run(dataset_directory, config_path, output, device_name):
                     "best_validation_selected_successes"
                 ],
                 "validation_bce": selected["best_validation_bce"],
-                "selected_before_test_evaluation": True,
+                "test_evaluation_performed": has_test,
+                **({"selected_before_test_evaluation": True} if has_test else {}),
                 "selected_utc": utc_now(),
             },
         )
@@ -615,6 +709,7 @@ def run(dataset_directory, config_path, output, device_name):
                     probabilities[index],
                     fixed_pair,
                     specification["seed"],
+                    actions=actions,
                 )
                 for key, index in split.items()
             }
@@ -633,7 +728,13 @@ def run(dataset_directory, config_path, output, device_name):
                 case_id=data["case_id"],
                 probabilities=probabilities,
                 selection_probabilities=selection_probabilities,
-                chosen_pair_index=probabilities.argmax(axis=1),
+                chosen_action_index=probabilities.argmax(axis=1),
+                **catalog_arrays(actions),
+                **(
+                    {"chosen_pair_index": probabilities.argmax(axis=1)}
+                    if actions == LINK_PAIRS
+                    else {}
+                ),
             )
             write_json(
                 output / f"seed-{trained['seed']}" / "metrics.json", trained["metrics"]
@@ -646,17 +747,21 @@ def run(dataset_directory, config_path, output, device_name):
                             "seed": trained["seed"],
                             "split": key,
                             "case_id": data["case_id"][index],
-                            "selected_pair_index": choice,
-                            "selected_pair": str(LINK_PAIRS[choice]),
+                            "selected_action_index": choice,
+                            "selected_action_id": action_id(actions[choice]),
+                            "selected_method": (
+                                "sequential" if actions[choice] else "direct"
+                            ),
+                            "intermediate_count": len(actions[choice]),
                             "selected_success": int(labels[index, choice]),
                             "selected_source_numerical_error": bool(
                                 not data["label_valid"][index, choice]
                             ),
-                            "fixed_pair_success": int(labels[index, fixed_pair]),
+                            "fixed_action_success": int(labels[index, fixed_pair]),
                             "oracle_success": int(labels[index].max()),
                             **{
-                                f"p_link{i}_link{j}": float(probabilities[index, k])
-                                for k, (i, j) in enumerate(LINK_PAIRS)
+                                f"p_{action_id(links)}": float(probabilities[index, k])
+                                for k, links in enumerate(actions)
                             },
                         }
                     )
@@ -666,34 +771,49 @@ def run(dataset_directory, config_path, output, device_name):
         for key, indices in split.items():
             baselines[key] = prediction_metrics(
                 labels[indices],
-                np.broadcast_to(train_rates, (len(indices), 10)),
+                np.broadcast_to(train_rates, (len(indices), len(actions))),
                 fixed_pair,
                 specification["seed"],
+                actions=actions,
             )
+        test_summary = {}
+        if has_test:
+            test_rates = [r["metrics"]["test"]["selected_success_rate"] for r in runs]
+            test_summary = {
+                "mean_test_selected_success_rate": float(np.mean(test_rates)),
+                "std_test_selected_success_rate_across_seeds": (
+                    float(np.std(test_rates, ddof=1)) if len(runs) > 1 else 0.0
+                ),
+            }
         report = {
             **objective,
             "model": MODEL_SPEC,
+            **catalog_metadata(actions),
+            "output_dim": len(actions),
             "selection_metric": metric,
             "split_policy": split_policy,
+            "evaluation_splits": list(split),
+            "test_evaluation_performed": has_test,
             "parameter_count": provenance["parameter_count"],
             "selected_seed": selected["seed"],
-            "fixed_pair_index": fixed_pair,
-            "fixed_pair": list(LINK_PAIRS[fixed_pair]),
+            "fixed_action_index": fixed_pair,
+            "fixed_action_id": action_id(actions[fixed_pair]),
+            **(
+                {
+                    "fixed_pair_index": fixed_pair,
+                    "fixed_pair": list(actions[fixed_pair]),
+                }
+                if actions == LINK_PAIRS
+                else {}
+            ),
             "baselines": baselines,
             "runs": runs,
-            "mean_test_selected_success_rate": float(
-                np.mean([r["metrics"]["test"]["selected_success_rate"] for r in runs])
-            ),
-            "std_test_selected_success_rate_across_seeds": (
-                float(
-                    np.std(
-                        [r["metrics"]["test"]["selected_success_rate"] for r in runs],
-                        ddof=1,
-                    )
+            "mean_validation_selected_success_rate": float(
+                np.mean(
+                    [r["metrics"]["validation"]["selected_success_rate"] for r in runs]
                 )
-                if len(runs) > 1
-                else 0.0
             ),
+            **test_summary,
             "elapsed_seconds": time.perf_counter() - started,
         }
         write_json(output / "evaluation.json", report)
@@ -707,6 +827,7 @@ def run(dataset_directory, config_path, output, device_name):
                 "selection_metric": metric,
                 **objective,
                 "selected_seed": selected["seed"],
+                "test_evaluation_performed": has_test,
                 "finished_utc": utc_now(),
             },
         )
@@ -723,7 +844,9 @@ def run(dataset_directory, config_path, output, device_name):
                 "selection_metric": metric,
                 **objective,
                 "labels": int(labels.size),
+                **catalog_metadata(actions),
                 "numerical_error_policy": "failure",
+                "test_evaluation_performed": has_test,
                 "selected_seed": selected["seed"],
                 "finished_utc": utc_now(),
                 "elapsed_seconds": time.perf_counter() - started,
@@ -735,7 +858,9 @@ def run(dataset_directory, config_path, output, device_name):
                 {
                     "status": "completed",
                     "selected_seed": selected["seed"],
-                    "test": selected["metrics"]["test"],
+                    "validation": selected["metrics"]["validation"],
+                    "test_evaluation_performed": has_test,
+                    **({"test": selected["metrics"]["test"]} if has_test else {}),
                     "output": str(output),
                 }
             ),

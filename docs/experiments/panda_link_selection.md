@@ -1,6 +1,69 @@
 # Panda link-selection model
 
-## Current experiment: softmax selection with successful completion time (2026-10-23)
+## Variable intermediate stages (2026-11-19)
+
+New datasets and models use one explicit, shared action catalog:
+indices 0–9 retain the historical ascending two-link pairs from link2–link6,
+indices 10–14 select link2, link3, link4, link5 or link6 alone, and index 15
+selects Direct with no intermediate task. Every action still ends at the same
+end-effector pose goal. A selected empty stage list is an explicit Direct action,
+not an absent prediction or a request to use default intermediate stages.
+
+The selected small backbone, input encoding and optimizer are unchanged.
+Only the final linear layer grows from 64→10 to 64→16; parameter count grows
+from 24,234 to 24,624. Robot MLP remains 23→64→64, obstacle MLP 4→32→32,
+cross attention remains 32-dimensional with one head, and the 64-dimensional
+context is concatenated with the robot representation. ReLU, hidden dropout
+0.1, joint-only normalization and AdamW are preserved.
+
+Both existing objectives support the expanded catalog. The initial comparison
+uses the success model: independent sigmoid success scores, with
+`BCE + 3 * negative_log_successful_softmax_mass`. BCE remains averaged over all
+observed scene/action outcomes; the selection term remains averaged over scenes.
+The time-reward alternative retains its existing softmax selection semantics,
+discount time scale and validation-reward criterion. Expanding the catalog does
+not itself change the loss weights or make softmax values success probabilities.
+
+Dataset NPZs include `action_schema_version`, `action_ids`, zero-padded
+`stage_links`, `stage_count`, and a boolean `observed` outcome mask. No object
+arrays or pickle are required. All sixteen actions must be observed before
+training: an unexecuted action must not be encoded as numerical failure.
+Executed numerical failures retain the established negative-label policy.
+Completed legacy ten-pair datasets remain readable and train with ten outputs.
+Catalogs, output dimensions and scene splits are included in exported artifacts.
+
+New checkpoints use schema 17 (success) or 18 (time), with explicit action
+metadata and output dimension. Existing schema 11/12/13 success checkpoints and
+schema 16 time checkpoints continue to load with exactly ten outputs and their
+original weight keys. They are never silently expanded or relabeled. Fresh
+training uses the catalog in the dataset; no automatic warm start is performed.
+`predict_selection` returns `action_id`, `action_index`, `method` and
+`link_frames`; the compatibility `pair_index` is defined only for two-link
+actions. No validated IK still bypasses the network and returns Direct, with
+no model-derived score. That fallback is distinct from selecting Direct among
+sixteen scored actions for a scene with a validated IK.
+
+Evaluation retains frozen scene IDs and reports selection success, fixed-action
+and uniform-random baselines, oracle success, paired comparisons, selection
+counts by number of intermediate tasks, and scenes rescued by the six added
+actions when all ten pairs fail. Existing pair labels can only be reused with
+matching controller/source, scene, IK, total-time and safety settings; old
+acceleration-constrained labels must not be mixed with newly unconstrained
+labels as if only the action choice changed. The pilot generates outcomes;
+it does not establish a learned selector's improvement or justify selecting
+hyperparameters on test scenes.
+
+The 10,000-scene action16 preset is
+`configs/training/panda_link_selection_action16.yaml`: 9,000 training scenes,
+1,000 validation scenes, and `test: 0`. The split is stratified by the number
+of successful actions with seed 20261016; the exact scene IDs are saved before
+training in `split.json`. Both trainers support this explicit no-test mode:
+they omit test predictions and metrics and record
+`test_evaluation_performed: false`. Validation selects checkpoints and seeds;
+its results are not independent test performance. Joint normalization and the
+best fixed-action baseline use training scenes only.
+
+## Historical experiment: softmax selection with successful completion time (2026-10-23)
 
 The user requested rewarding faster successful link-pair choices and changing
 the output to softmax. `LinkTimeSelectionNet` uses the same 24,234-parameter

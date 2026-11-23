@@ -1,5 +1,66 @@
 # Fixed-IK link selection dataset
 
+## Current 16-action catalog (2026-11-19)
+
+New runs evaluate sixteen actions from each saved initial state: the ten
+ascending pairs from link2–link6 (indices 0–9, unchanged), five single-link
+Sequential actions link2 through link6 (indices 10–14), and Direct (index 15).
+Direct means no intermediate task and uses no IK candidate during control.
+All fifteen Sequential choices use exactly the same selected IK, without
+switching. Final end-effector goals and success criteria are identical.
+
+The current dataset settings keep the 120 s total simulated budget, dt 0.02 s,
+pose tasks, slack weight 5,000, alpha 0.2, 1 mm scoring tolerance, joint stops,
+and safety evaluation at every integration state. The current QP has no
+acceleration bound. Results generated before that change must not be combined
+with newly generated actions as though the controller conditions were equal.
+Reusing saved scenes/IK is supported; old outcome labels are never imported.
+
+`dataset.npz` stores `success[N,16]`, `label_valid[N,16]`, and
+`observed[N,16]`, alongside the existing scene inputs. Its versioned catalog is
+`action_schema_version`, `action_ids[16]`, `stage_links[16,2]` (zero padded),
+and `stage_count[16]`. JSON manifests and completion files carry corresponding
+`actions` metadata. All sixteen results must exist before export; `observed`
+is then true even for a numerical solver failure. Numerical errors remain
+`success=-1, label_valid=false` in raw data and become failure zero for training.
+An unrun action is never represented as a numerical failure. Historical
+ten-pair datasets retain their original mapping and are not padded with zeros.
+
+To rerun ten existing contexts without a new IK search, prepare a JSONL file
+containing exactly those ten original context records, including `selected_ik`,
+then run on allocated GPUs:
+
+```bash
+python -m safe_ik.application.panda_link_dataset \
+  --experiment configs/experiments/panda_link_dataset.yaml \
+  --contexts-file /absolute/path/selected_contexts.jsonl \
+  --output /absolute/path/new_run \
+  --gpus 4 --cpus 15 --workers-per-gpu 4
+```
+
+This produces 160 fresh trajectories. It checks the saved starts against the
+current safety/joint margins and rechecks the exact saved IK against the current
+goal, joint limits and RDF safety model. Invalid inputs stop the run rather
+than trigger a new search or substitute another scene. The input JSONL is
+copied byte-for-byte to `reused_contexts.jsonl` and its path/hash are recorded.
+Imported contexts retain `original_ik_wall_time`; new `ik_wall_time` is null
+and `ik_search_performed` is false. Validation time is reported separately,
+so neither zero nor an old timing is presented as a fresh IK search time.
+No existing output directory is overwritten.
+
+Per-action paths are `CASE/link2_link3/`, `CASE/link2/`, and `CASE/direct/`.
+Current context progress uses `completed_actions` and `summed_action_wall_time`.
+Campaign counts derive from their recorded catalog, and merge rejects mixed
+catalogs or source/config identities. Scene-level train/validation/test splits
+must remain fixed across all actions. Ten scenes are a pipeline pilot, not a
+reliable estimate of a selection model's success rate.
+
+## Historical ten-pair generation and campaigns
+
+The following records describe the earlier ten-pair runs and remain historical;
+their trajectory counts, controller versions and timings are not current-run
+estimates.
+
 Submit from the repository root on UBAI:
 
 ```bash

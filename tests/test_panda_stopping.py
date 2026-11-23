@@ -190,24 +190,28 @@ class PandaStoppingTest(unittest.TestCase):
         self.assertTrue(controller.last_status.stalled)
 
     def test_reached_stages_reset_progress_and_velocity_history(self):
-        config = replace(
-            self.config,
-            trajectory=replace(
-                self.config.trajectory,
-                mode="sequential",
-                stage_position_tolerance=0.005,
-            ),
-        )
         candidate = SafeIKCandidate(np.array([0.1, 0, 0, 0, 0, 0, 0]), 0, 1, 0, 0, 1)
-        controller = self.controller(config, candidates=(candidate,))
-        for _ in range(100):
-            controller.get_velocity(np.zeros(7))
-            controller.record_applied_velocity(np.zeros(7))
-        controller.get_velocity(candidate.q)
-        self.assertEqual(controller.active_stage_name, "end_effector_pose")
-        self.assertFalse(controller.last_status.stalled)
-        self.assertEqual(len(controller._progress_best_errors), 1)
-        self.assertEqual(len(controller.applied_velocity_norms), 0)
+        for frames in (("link3",), ("link3", "link5")):
+            with self.subTest(frames=frames):
+                config = replace(
+                    self.config,
+                    trajectory=replace(
+                        self.config.trajectory,
+                        mode="sequential",
+                        stage_frames=frames,
+                        stage_position_tolerance=0.005,
+                    ),
+                )
+                controller = self.controller(config, candidates=(candidate,))
+                for _ in range(100):
+                    controller.get_velocity(np.zeros(7))
+                    controller.record_applied_velocity(np.zeros(7))
+                controller.get_velocity(candidate.q)
+                self.assertEqual(controller.active_stage_name, "end_effector_pose")
+                self.assertEqual(controller.stage_index, len(frames))
+                self.assertFalse(controller.last_status.stalled)
+                self.assertEqual(len(controller._progress_best_errors), 1)
+                self.assertEqual(len(controller.applied_velocity_norms), 0)
 
     def test_real_stall_switches_candidate_and_resets_progress(self):
         config = replace(

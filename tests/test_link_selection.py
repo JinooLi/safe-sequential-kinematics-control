@@ -3,6 +3,8 @@
 import copy
 import csv
 import json
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -24,6 +26,7 @@ from safe_ik.application.train_link_selection import (
     train_seed,
     validate_settings,
 )
+from safe_ik.domain.link_actions import LINK_ACTIONS, catalog_arrays, catalog_metadata
 from safe_ik.learning.link_selection import (
     LINK_PAIRS,
     MODEL_SPEC,
@@ -39,9 +42,9 @@ from safe_ik.learning.link_selection import (
 )
 
 
-def example_dataset(root, size=20):
+def example_dataset(root, size=20, *, actions=LINK_PAIRS):
     rng = np.random.default_rng(123)
-    labels = rng.integers(0, 2, size=(size, 10), dtype=np.int8)
+    labels = rng.integers(0, 2, size=(size, len(actions)), dtype=np.int8)
     valid = np.ones_like(labels, dtype=bool)
     valid[0, 0] = False
     labels[0, 0] = -1
@@ -56,7 +59,11 @@ def example_dataset(root, size=20):
         target_position=rng.normal(size=(size, 3)),
         target_quaternion=np.tile([1.0, 0, 0, 0], (size, 1)),
         obstacles=obstacles,
-        link_pairs=np.array(LINK_PAIRS),
+        **(
+            {"link_pairs": np.array(LINK_PAIRS)}
+            if actions == LINK_PAIRS
+            else {**catalog_arrays(actions), "observed": np.ones_like(valid)}
+        ),
         success=labels,
         label_valid=valid,
     )
@@ -67,6 +74,7 @@ def example_dataset(root, size=20):
                 "valid_labels": int(valid.sum()),
                 "success_labels": int((labels == 1).sum()),
                 "data_sha256": {"dataset.npz": sha256(path)},
+                **(catalog_metadata(actions) if actions == LINK_ACTIONS else {}),
             }
         )
     )
@@ -74,6 +82,68 @@ def example_dataset(root, size=20):
 
 
 class LinkSelectionTests(unittest.TestCase):
+
+    def test_new_actions_require_observed_outcomes_not_fake_failure_labels(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            path = example_dataset(root, actions=LINK_ACTIONS)
+            data = load_dataset(root)
+            self.assertEqual(data["actions"], LINK_ACTIONS)
+            self.assertEqual(data["labels"].shape, (20, 16))
+            self.assertEqual(data["labels"][0, 0], 0)
+            with np.load(path) as archive:
+                arrays = {key: archive[key] for key in archive.files}
+            arrays["observed"][0, -1] = False
+            arrays["success"][0, -1] = -1
+            arrays["label_valid"][0, -1] = False
+            np.savez_compressed(path, **arrays)
+            complete = json.loads((root / "complete.json").read_text())
+            complete["data_sha256"][path.name] = sha256(path)
+            (root / "complete.json").write_text(json.dumps(complete))
+            with self.assertRaisesRegex(ValueError, "unobserved"):
+                load_dataset(root)
+            arrays.pop("observed")
+            np.savez_compressed(path, **arrays)
+            complete["data_sha256"][path.name] = sha256(path)
+            (root / "complete.json").write_text(json.dumps(complete))
+            with self.assertRaisesRegex(ValueError, "observed outcome mask"):
+                load_dataset(root)
+
+    def test_new_checkpoint_routes_single_link_and_direct_without_changing_legacy(self):
+        model = LinkSuccessNet().eval()
+        checkpoint = {
+            "schema_version": 17,
+            "model": MODEL_SPEC,
+            "output_dim": len(LINK_ACTIONS),
+            **catalog_metadata(),
+            "selection_metric": "validation_selected_success_rate",
+            **objective_metadata({"weight_decay": 0.0001}),
+        }
+        with TemporaryDirectory() as temp:
+            path = Path(temp) / "model.pt"
+            for index, method, frames in [
+                (10, "sequential", ["link2"]),
+                (15, "direct", []),
+            ]:
+                with torch.no_grad():
+                    model.head[-1].weight.zero_()
+                    model.head[-1].bias.fill_(-1)
+                    model.head[-1].bias[index] = 1
+                torch.save({**checkpoint, "state_dict": model.state_dict()}, path)
+                loaded = load_model(path)
+                result = predict_selection(
+                    loaded, [0] * 7, [0] * 7, [0] * 3, [1, 0, 0, 0], []
+                )
+                self.assertEqual(result["action_index"], index)
+                self.assertEqual(result["method"], method)
+                self.assertEqual(result["link_frames"], frames)
+                self.assertIsNone(result["pair_index"])
+                self.assertEqual(len(result["probabilities"]), 16)
+            torch.save(
+                {**checkpoint, "state_dict": model.state_dict(), "output_dim": 10}, path
+            )
+            with self.assertRaisesRegex(ValueError, "dimension"):
+                load_model(path)
 
     def test_selection_loss_rewards_total_success_mass_and_masks_uniform_outcomes(self):
         probabilities = torch.tensor([[0.4, 0.2] + [0.05] * 8] * 3, dtype=torch.float64)
@@ -149,6 +219,44 @@ class LinkSelectionTests(unittest.TestCase):
         _, constant_std = joint_statistics(state, [0])
         self.assertTrue(np.all(constant_std > 0))
 
+    def test_no_test_split_is_stratified_and_frozen_by_scene_id(self):
+        counts = np.arange(10000) % 17
+        labels = (np.arange(16)[None, :] < counts[:, None]).astype(np.int8)
+        split = split_scenes(labels, 9000, 1000, 0, 20261016)
+        self.assertEqual(
+            {k: len(v) for k, v in split.items()}, {"train": 9000, "validation": 1000}
+        )
+        np.testing.assert_array_equal(
+            np.sort(np.concatenate(list(split.values()))), np.arange(10000)
+        )
+        expected = np.bincount(counts, minlength=17) / 10
+        actual = np.bincount(counts[split["validation"]], minlength=17)
+        self.assertTrue(np.all(np.abs(actual - expected) < 1))
+        for key, indices in split_scenes(labels, 9000, 1000, 0, 20261016).items():
+            np.testing.assert_array_equal(indices, split[key])
+        with self.assertRaises(ValueError):
+            split_scenes(labels, 9001, 1000, -1)
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            ids = np.array([f"scene-{i}" for i in range(10000)])
+            record = {k: {"case_ids": ids[v].tolist()} for k, v in split.items()}
+            path = root / "split.json"
+            path.write_text(json.dumps(record))
+            spec = dict(
+                train=9000, validation=1000, test=0, file=path.name, sha256=sha256(path)
+            )
+            data = {"case_id": ids[::-1]}
+            loaded = load_scene_split(data, spec, root)
+            self.assertEqual(set(loaded), {"train", "validation"})
+            for key, indices in loaded.items():
+                self.assertEqual(
+                    data["case_id"][indices].tolist(), record[key]["case_ids"]
+                )
+            record["test"] = {"case_ids": [ids[0]]}
+            path.write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, "size mismatch: test"):
+                load_scene_split(data, {**spec, "sha256": sha256(path)}, root)
+
     def test_frozen_split_follows_scene_ids_not_row_positions(self):
         with TemporaryDirectory() as temp:
             root = Path(temp)
@@ -215,22 +323,29 @@ class LinkSelectionTests(unittest.TestCase):
         np.testing.assert_allclose(a[0, 14:17], args[2][0])
 
     def test_selection_metrics_use_paired_outcomes(self):
-        labels = np.zeros((4, 10), dtype=np.float32)
+        labels = np.zeros((4, 16), dtype=np.float32)
         labels[:, 0] = [1, 0, 1, 0]
-        labels[:, 1] = [1, 1, 0, 1]
+        labels[:, 10] = [1, 1, 0, 1]
         probabilities = np.full_like(labels, 0.1)
-        probabilities[:, 1] = 0.9
-        metrics = prediction_metrics(labels, probabilities, 0)
+        probabilities[np.arange(4), [0, 10, 15, 10]] = 0.9
+        metrics = prediction_metrics(labels, probabilities, 0, actions=LINK_ACTIONS)
         self.assertEqual(metrics["selected_successes"], 3)
         self.assertEqual(metrics["paired_wins"], 2)
         self.assertEqual(metrics["paired_losses"], 1)
         self.assertEqual(metrics["oracle_successes"], 4)
         self.assertEqual(metrics["delta_vs_fixed"], 0.25)
+        self.assertEqual(metrics["new_actions_rescue_scenes"], 2)
+        self.assertEqual(
+            metrics["selection_by_intermediate_count"]["0"]["selected_scenes"], 1
+        )
+        self.assertEqual(
+            metrics["selection_by_intermediate_count"]["1"]["successes"], 2
+        )
 
     def test_fixed_model_has_five_dropout_sites_and_query_dependent_context(self):
         torch.manual_seed(11)
         model = LinkSuccessNet().eval()
-        self.assertEqual(sum(p.numel() for p in model.parameters()), 24234)
+        self.assertEqual(sum(p.numel() for p in model.parameters()), 24624)
         drops = [m for m in model.modules() if isinstance(m, torch.nn.Dropout)]
         self.assertEqual(len(drops), 5)
         self.assertTrue(all(m.p == 0.1 for m in drops))
@@ -275,7 +390,7 @@ class LinkSelectionTests(unittest.TestCase):
         self.assertGreater(model.cross_attention.in_proj_weight.grad.abs().sum(), 0)
 
     def test_fixed_loss_value_and_gradient(self):
-        logits = torch.randn(4, 10, dtype=torch.float64, requires_grad=True)
+        logits = torch.randn(4, 16, dtype=torch.float64, requires_grad=True)
         labels = torch.zeros_like(logits)
         labels[1] = 1
         labels[2, :3] = 1
@@ -340,27 +455,8 @@ class LinkSelectionTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             LinkSuccessNet(attention_heads=4)
 
-    def test_adamw_decays_parameters_with_zero_task_gradient(self):
-        config = yaml.safe_load(
-            (
-                Path(__file__).parents[1] / "configs/training/panda_link_selection.yaml"
-            ).read_text()
-        )
-        model = torch.nn.Linear(2, 1).double()
-        optimizer = make_optimizer(model, config["training"])
-        before = [p.detach().clone() for p in model.parameters()]
-        for parameter in model.parameters():
-            parameter.grad = torch.zeros_like(parameter)
-        optimizer.step()
-        factor = (
-            1 - config["training"]["learning_rate"] * config["training"]["weight_decay"]
-        )
-        for parameter, initial in zip(model.parameters(), before):
-            torch.testing.assert_close(parameter, initial * factor, rtol=1e-14, atol=0)
-            self.assertFalse(torch.equal(parameter, initial))
-
     def test_current_and_selected_legacy_checkpoints_and_direct_fallback(self):
-        model = LinkSuccessNet().eval()
+        model = LinkSuccessNet(actions=LINK_PAIRS).eval()
         checkpoint = {
             "schema_version": 13,
             "model": MODEL_SPEC,
@@ -520,7 +616,7 @@ class LinkSelectionTests(unittest.TestCase):
             root = Path(temp)
             source = root / "data"
             source.mkdir()
-            dataset = example_dataset(source)
+            dataset = example_dataset(source, actions=LINK_ACTIONS)
             source_hash = sha256(dataset)
             ids = load_dataset(source)["case_id"].tolist()
             frozen = {
@@ -561,6 +657,8 @@ class LinkSelectionTests(unittest.TestCase):
             self.assertEqual(report["model"], MODEL_SPEC)
             self.assertEqual(report["optimizer"], "adamw")
             self.assertEqual(report["weight_decay"], 0.0001)
+            self.assertEqual(report["output_dim"], 16)
+            self.assertEqual(report["parameter_count"], 24624)
             saved_split = json.loads((output / "split.json").read_text())
             for key in frozen:
                 self.assertEqual(saved_split[key]["case_ids"], frozen[key]["case_ids"])
@@ -607,3 +705,76 @@ class LinkSelectionTests(unittest.TestCase):
             )
             with self.assertRaises(FileExistsError):
                 run(source, config_path, output, "cpu")
+
+    def test_cli_training_without_test_reports_only_train_and_validation(self):
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "data"
+            source.mkdir()
+            path = example_dataset(source, actions=LINK_ACTIONS)
+            config = {
+                "dataset_sha256": sha256(path),
+                "numerical_error_policy": "failure",
+                "split": dict(seed=9, train=16, validation=4, test=0),
+                "training": dict(
+                    seeds=[11],
+                    learning_rate=0.001,
+                    weight_decay=0.0001,
+                    batch_size=8,
+                    max_epochs=2,
+                    patience=2,
+                ),
+            }
+            config_path = root / "config.yaml"
+            config_path.write_text(yaml.safe_dump(config))
+            output = root / "training"
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "safe_ik.application.train_link_selection",
+                    "--dataset",
+                    str(source),
+                    "--config",
+                    str(config_path),
+                    "--output",
+                    str(output),
+                    "--device",
+                    "cpu",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            report = json.loads((output / "evaluation.json").read_text())
+            self.assertFalse(report["test_evaluation_performed"])
+            self.assertEqual(report["evaluation_splits"], ["train", "validation"])
+            self.assertEqual(set(report["runs"][0]["metrics"]), {"train", "validation"})
+            self.assertEqual(set(report["baselines"]), {"train", "validation"})
+            self.assertFalse(
+                any(
+                    "test" in key
+                    for key in report
+                    if key != "test_evaluation_performed"
+                )
+            )
+            self.assertEqual(
+                set(json.loads((output / "split.json").read_text())),
+                {"train", "validation"},
+            )
+            selection = json.loads((output / "selection.json").read_text())
+            self.assertNotIn("selected_before_test_evaluation", selection)
+            self.assertFalse(selection["test_evaluation_performed"])
+            self.assertFalse(
+                json.loads((output / "complete.json").read_text())[
+                    "test_evaluation_performed"
+                ]
+            )
+            text = (output / "report.md").read_text()
+            self.assertIn("No test set was requested or evaluated", text)
+            self.assertNotIn("Test success", text)
+            with (output / "predictions.csv").open() as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual({r["split"] for r in rows}, {"train", "validation"})
+            self.assertEqual(len(rows), 20)

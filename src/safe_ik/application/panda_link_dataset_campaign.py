@@ -10,14 +10,21 @@ import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import yaml
 
+from ..domain.link_actions import (
+    LINK_ACTIONS,
+    LINK_PAIRS,
+    actions_from_arrays,
+    actions_from_metadata,
+    catalog_metadata,
+)
 from .artifacts import json_value
 from .panda_comparison import atomic_json, digest, fingerprint
 from .panda_experiment_configuration import load_panda_experiment
 from .panda_link_dataset import (
     DEFAULT_IK_REPLENISHMENT_ROUNDS,
-    LINK_PAIRS,
     export_dataset,
     utc_now,
 )
@@ -84,23 +91,38 @@ def verified_batch(directory, expected_contexts, expected_identity=None):
     if digest(directory / "manifest.json") != complete["manifest_sha256"]:
         raise ValueError(f"batch manifest hash mismatch: {directory}")
     manifest = json.loads((directory / "manifest.json").read_text())
+    actions = actions_from_metadata(manifest)
+    if "actions" in complete and actions_from_metadata(complete) != actions:
+        raise ValueError(f"batch completion action catalog mismatch: {directory}")
     if expected_identity is not None and manifest["identity"] != expected_identity:
         raise ValueError(f"batch source/config/model identity mismatch: {directory}")
     for name, expected in manifest["data_sha256"].items():
         if digest(directory / name) != expected:
             raise ValueError(f"batch data hash mismatch: {directory / name}")
+    with np.load(directory / "dataset.npz", allow_pickle=False) as data:
+        if actions_from_arrays(data) != actions:
+            raise ValueError(f"batch array action catalog mismatch: {directory}")
+        if data["success"].shape != (expected_contexts, len(actions)):
+            raise ValueError(f"batch label shape mismatch: {directory}")
+        if actions == LINK_ACTIONS and (
+            "observed" not in data
+            or data["observed"].dtype != np.bool_
+            or data["observed"].shape != data["success"].shape
+            or not data["observed"].all()
+        ):
+            raise ValueError(f"batch contains unobserved action outcomes: {directory}")
     contexts = [
         json.loads(line)
         for line in (directory / "contexts.jsonl").read_text().splitlines()
     ]
     rows = json.loads((directory / "results.json").read_text())
     eligible = {c["case_id"] for c in contexts if c["ik_available"]}
-    expected_keys = {(case_id, pair) for case_id in eligible for pair in LINK_PAIRS}
+    expected_keys = {(case_id, pair) for case_id in eligible for pair in actions}
     keys = {(r["case_id"], tuple(r["pair"])) for r in rows}
     if (
         complete["contexts"] != expected_contexts
         or len(eligible) != expected_contexts
-        or complete["rollouts"] != expected_contexts * len(LINK_PAIRS)
+        or complete["rollouts"] != expected_contexts * len(actions)
         or len(rows) != len(keys)
         or keys != expected_keys
     ):
@@ -127,6 +149,7 @@ def prepare_campaign(experiment, output, request):
         )
     return dict(
         schema_version=1,
+        **catalog_metadata(),
         request=request,
         identity=identity(experiment),
         created_utc=utc_now(),
@@ -137,6 +160,7 @@ def prepare_campaign(experiment, output, request):
 
 
 def publish_progress(output, campaign):
+    actions = campaign_actions(campaign)
     completed = [b for b in campaign["batches"] if b["status"] == "completed"]
     active = {}
     preparing = {}
@@ -156,12 +180,12 @@ def publish_progress(output, campaign):
             total_contexts=sum(b["contexts"] for b in campaign["batches"]),
             global_contexts=campaign["request"]["total_contexts"],
             total_rollouts=sum(b["contexts"] for b in campaign["batches"])
-            * len(LINK_PAIRS),
+            * len(actions),
             completed_batches=len(completed),
             total_batches=len(campaign["batches"]),
             completed_contexts=sum(b["contexts"] for b in completed)
             + active.get("completed_contexts", 0),
-            completed_rollouts=sum(b["contexts"] for b in completed) * len(LINK_PAIRS)
+            completed_rollouts=sum(b["contexts"] for b in completed) * len(actions)
             + active.get("completed_rollouts", 0),
             active_batch_progress=active,
             active_output=campaign.get("active_output"),
@@ -170,6 +194,13 @@ def publish_progress(output, campaign):
             updated_utc=utc_now(),
         ),
     )
+
+
+def campaign_actions(campaign):
+    # Historical campaigns predate the manifest-owned action catalog.
+    if "actions" not in campaign and "action_schema_version" not in campaign:
+        return LINK_PAIRS
+    return actions_from_metadata(campaign)
 
 
 def require_previous_job_stopped(attempt):
@@ -366,7 +397,7 @@ def execute_campaign(experiment_path, output, request, *, resume=False):
             if len({c["case_id"] for c in contexts}) != len(contexts):
                 raise ValueError("duplicate scene identity across batches")
             verify_inputs(campaign, experiment, output)
-            counts = export_dataset(output, contexts, rows)
+            counts = export_dataset(output, contexts, rows, campaign_actions(campaign))
             if counts["contexts"] != sum(b["contexts"] for b in campaign["batches"]):
                 raise ValueError("campaign context count mismatch")
             campaign.update(status="completed", finished_utc=utc_now(), counts=counts)

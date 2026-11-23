@@ -3,9 +3,11 @@
 import json
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from time import perf_counter
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
@@ -14,6 +16,7 @@ from safe_ik.application import panda_link_dataset as dataset
 from safe_ik.application.artifacts import json_value
 from safe_ik.application.panda_experiment_configuration import load_panda_experiment
 from safe_ik.application.panda_link_dataset import (
+    LINK_ACTIONS,
     LINK_PAIRS,
     export_dataset,
     validate_trace,
@@ -67,8 +70,8 @@ class LinkDatasetTests(unittest.TestCase):
         tasks = dataset.pair_tasks(
             contexts + [dict(case_id="excluded", ik_available=False)]
         )
-        self.assertEqual(len(tasks), 100)
-        self.assertEqual(len({(c["case_id"], p) for c, p in tasks}), 100)
+        self.assertEqual(len(tasks), 160)
+        self.assertEqual(len({(c["case_id"], p) for c, p in tasks}), 160)
         for c, _ in tasks:
             self.assertIs(c["selected_ik"], contexts[int(c["case_id"])]["selected_ik"])
 
@@ -86,21 +89,21 @@ class LinkDatasetTests(unittest.TestCase):
             with patch.object(dataset, "evaluate_pair", side_effect=finish):
                 with ThreadPoolExecutor(max_workers=16) as pool:
                     rows = dataset.collect_pairs(pool, contexts, output, perf_counter())
-            self.assertEqual(len(rows), 100)
+            self.assertEqual(len(rows), 160)
             progress = json.loads((output / "progress.json").read_text())
-            self.assertEqual(progress["completed_rollouts"], 100)
+            self.assertEqual(progress["completed_rollouts"], 160)
             self.assertEqual(progress["completed_contexts"], 10)
             for context in contexts:
                 directory = output / context["case_id"]
                 self.assertEqual(
                     json.loads((directory / "progress.json").read_text()),
-                    {"completed_pairs": 10},
+                    {"completed_actions": 16},
                 )
                 self.assertEqual(
                     json.loads((directory / "context.json").read_text())[
-                        "summed_pair_wall_time"
+                        "summed_action_wall_time"
                     ],
-                    20,
+                    32,
                 )
 
     def test_independent_pairs_use_shared_ik_without_search_or_overwrite(self):
@@ -131,7 +134,7 @@ class LinkDatasetTests(unittest.TestCase):
         def rollout(config, runtime, candidates, *, subdivisions):
             received.append((config, candidates, subdivisions))
             result = dict(
-                candidate_count=1,
+                candidate_count=len(candidates),
                 candidate_switch_count=0,
                 final_q=initial,
                 state_count=2,
@@ -144,9 +147,9 @@ class LinkDatasetTests(unittest.TestCase):
             trace = dict(
                 q=np.array([initial, initial]),
                 time=np.array([0, 0.02]),
-                candidate_q=np.array([candidates[0].q]),
+                candidate_q=np.array([c.q for c in candidates]),
                 stage_frames=np.array(config.trajectory.stage_frames),
-                candidate_index=np.zeros(2, int),
+                candidate_index=np.full(2, 0 if candidates else -1, int),
                 barrier_values=np.array([[0.01], [0.01]]),
                 joint_margin=np.array([0.1, 0.1]),
                 goal_reached=np.array([False, False]),
@@ -171,7 +174,7 @@ class LinkDatasetTests(unittest.TestCase):
                 patch.object(dataset, "OSQPSolver"),
                 patch.object(dataset, "comparison_rollout", side_effect=rollout),
             ):
-                for pair in LINK_PAIRS:
+                for pair in LINK_ACTIONS:
                     row = dataset.evaluate_pair((context, pair))
                     self.assertEqual(row["candidate_switch_count"], 0)
                     self.assertEqual(row["gpu"], "GPU-a")
@@ -183,10 +186,19 @@ class LinkDatasetTests(unittest.TestCase):
                 )
                 with self.assertRaisesRegex(ValueError, "prepared IK differs"):
                     dataset.evaluate_pair((context, LINK_PAIRS[0]))
-            self.assertEqual(len(received), 10)
-            for config, candidates, subdivisions in received:
-                self.assertEqual(len(candidates), 1)
-                np.testing.assert_array_equal(candidates[0].q, initial)
+            self.assertEqual(len(received), 16)
+            for action, (config, candidates, subdivisions) in zip(
+                LINK_ACTIONS, received
+            ):
+                self.assertEqual(
+                    config.trajectory.mode, "sequential" if action else "direct"
+                )
+                self.assertEqual(
+                    config.trajectory.stage_frames, tuple(f"link{i}" for i in action)
+                )
+                self.assertEqual(len(candidates), int(bool(action)))
+                if candidates:
+                    np.testing.assert_array_equal(candidates[0].q, initial)
                 np.testing.assert_array_equal(config.initial_q, initial)
                 self.assertEqual(config.trajectory.duration, 120)
                 self.assertEqual(subdivisions, 1)
@@ -231,6 +243,86 @@ class LinkDatasetTests(unittest.TestCase):
             ),
         )
 
+    def test_reused_ik_is_revalidated_without_search_and_preserves_inputs(self):
+        experiment = load_panda_experiment(
+            ROOT / "configs/experiments/panda_link_dataset.yaml"
+        )
+        experiment = replace(
+            experiment,
+            main=dict(seeds=[1], cases_per_seed=1),
+            sampling=replace(experiment.sampling, obstacle_count=1),
+        )
+        initial = experiment.config.initial_q.tolist()
+        selected = dict(
+            q=initial,
+            seed_index=2,
+            iterations=5,
+            position_error=0.0,
+            orientation_error=0.0,
+            minimum_barrier=0.1,
+        )
+        original = dict(
+            case_id="saved-case",
+            ik_available=True,
+            selected_ik=selected,
+            initial_q=initial,
+            ik_seed=4,
+            ik_wall_time=31.5,
+            obstacles=[dict(name="sphere", position=[0.5, 0.5, 0.5], radius=0.1)],
+            target_position=[0.1, 0.2, 0.3],
+            target_quaternion=[1, 0, 0, 0],
+        )
+        safe = dict(goal_reached=True, joint_margin=0.2)
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.jsonl"
+            source.write_text(json.dumps(original) + "\n")
+            before = source.read_bytes()
+            with (
+                patch.object(dataset, "prepare_ik") as search,
+                patch.object(dataset, "scene_safety") as safety,
+                patch.object(dataset, "measure_state") as measure,
+            ):
+                safety.return_value.evaluate.return_value = SimpleNamespace(minimum=0.1)
+                for label, samples, error in (
+                    ("safe", [safe, safe], None),
+                    (
+                        "unsafe-start",
+                        [dict(safe, joint_margin=0.05)],
+                        "start is not safe",
+                    ),
+                    (
+                        "invalid-ik",
+                        [safe, dict(safe, goal_reached=False)],
+                        "IK failed current validation",
+                    ),
+                ):
+                    output = root / label
+                    output.mkdir()
+                    measure.side_effect = samples
+                    if error:
+                        with self.assertRaisesRegex(ValueError, error):
+                            dataset.reuse_contexts(
+                                source, experiment, output, object(), object()
+                            )
+                        continue
+                    contexts, audit = dataset.reuse_contexts(
+                        source, experiment, output, object(), object()
+                    )
+                    self.assertEqual(contexts[0]["selected_ik"], selected)
+                    self.assertIsNone(contexts[0]["ik_wall_time"])
+                    self.assertEqual(contexts[0]["original_ik_wall_time"], 31.5)
+                    self.assertFalse(audit["search_performed"])
+                    self.assertEqual(audit["source_sha256"], dataset.digest(source))
+                    self.assertEqual(
+                        (output / "reused_contexts.jsonl").read_bytes(), before
+                    )
+                    ik = json.loads((output / "saved-case/ik.json").read_text())
+                    self.assertEqual(ik["selected"], selected)
+                    self.assertFalse(ik["search_performed"])
+                search.assert_not_called()
+            self.assertEqual(source.read_bytes(), before)
+
     def test_export_aligns_shuffled_results_and_masks_numerical_errors(self):
         context = dict(
             case_id="b",
@@ -244,7 +336,7 @@ class LinkDatasetTests(unittest.TestCase):
         no_ik = dict(context, case_id="a", ik_available=False, selected_ik=None)
         rows = [
             dict(case_id="b", pair=list(p), label_valid=i != 3, success=i % 2 == 0)
-            for i, p in enumerate(LINK_PAIRS)
+            for i, p in enumerate(LINK_ACTIONS)
         ]
         with TemporaryDirectory() as temp:
             directory = Path(temp)
@@ -252,22 +344,35 @@ class LinkDatasetTests(unittest.TestCase):
             with np.load(directory / "dataset.npz", allow_pickle=False) as data:
                 np.testing.assert_array_equal(data["case_id"], ["b"])
                 np.testing.assert_array_equal(
-                    data["success"], [[1, 0, 1, -1, 1, 0, 1, 0, 1, 0]]
+                    data["success"], [[1, 0, 1, -1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]]
                 )
                 self.assertFalse(data["label_valid"][0, 3])
+                self.assertTrue(data["observed"].all())
                 self.assertEqual(data["obstacles"].shape, (1, 1, 4))
             self.assertEqual(counts["no_ik_contexts"], 1)
-            self.assertEqual(counts["valid_labels"], 9)
+            self.assertEqual(counts["valid_labels"], 15)
             self.assertEqual(
                 len((directory / "contexts.jsonl").read_text().splitlines()), 2
             )
             self.assertEqual(
-                len(json.loads((directory / "results.json").read_text())), 10
+                len(json.loads((directory / "results.json").read_text())), 16
             )
             with self.assertRaisesRegex(ValueError, "missing, extra or duplicate"):
                 export_dataset(directory, [context], rows[:-1])
             with self.assertRaisesRegex(ValueError, "missing, extra or duplicate"):
                 export_dataset(directory, [context], rows + rows[:1])
+            with self.assertRaisesRegex(ValueError, "unobserved"):
+                export_dataset(
+                    directory, [context], [dict(rows[0], observed=False), *rows[1:]]
+                )
+            # An explicit legacy export keeps ten labels; it must never fabricate
+            # failure labels for the six actions that were not run historically.
+            legacy = directory / "legacy"
+            legacy.mkdir()
+            legacy_counts = export_dataset(legacy, [context], rows[:10], LINK_PAIRS)
+            self.assertEqual(legacy_counts["action_schema_version"], 1)
+            with np.load(legacy / "dataset.npz", allow_pickle=False) as data:
+                self.assertEqual(data["success"].shape, (1, 10))
 
     def test_trace_validation_rejects_changed_ik_start_or_success(self):
         config = load_panda_experiment(

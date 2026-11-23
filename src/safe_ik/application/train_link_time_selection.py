@@ -16,8 +16,13 @@ import numpy as np
 import torch
 import yaml
 
-from ..learning.link_selection import (
+from ..domain.link_actions import (
     LINK_PAIRS,
+    catalog_arrays,
+    catalog_metadata,
+    validate_actions,
+)
+from ..learning.link_selection import (
     MODEL_SPEC,
     joint_statistics,
     load_dataset,
@@ -64,7 +69,7 @@ def objective_metadata(settings, scale):
         optimization_loss=OBJECTIVE,
         time_scale_seconds=scale,
         output_activation="softmax",
-        output_semantics="link_pair_selection_probability",
+        output_semantics="action_selection_probability",
         bce_loss_weight=0.0,
         optimizer="adamw",
         weight_decay=settings["weight_decay"],
@@ -93,14 +98,17 @@ def select_run(runs):
     )
 
 
-def train_seed(output, tensors, split, mean, std, settings, scale, seed):
+def train_seed(output, tensors, split, mean, std, settings, scale, seed, *, actions):
     state, obstacles, labels, times, rewards = tensors
+    actions = validate_actions(actions)
+    if labels.shape[1] != len(actions):
+        raise ValueError("training label/action dimension mismatch")
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if state.device.type == "cuda":
         torch.cuda.manual_seed_all(seed)
-    model = LinkTimeSelectionNet(mean, std).to(state.device)
+    model = LinkTimeSelectionNet(mean, std, actions=actions).to(state.device)
     optimizer = make_optimizer(model, settings)
     batch_rng = np.random.default_rng(seed)
     dest = output / f"seed-{seed}"
@@ -184,10 +192,11 @@ def train_seed(output, tensors, split, mean, std, settings, scale, seed):
         checkpoint=f"seed-{seed}/best.pt",
     )
     checkpoint = dict(
-        schema_version=16,
+        schema_version=18,
         model=MODEL_SPEC,
         state_dict=best_state,
-        link_pairs=[list(p) for p in LINK_PAIRS],
+        **catalog_metadata(actions),
+        output_dim=len(actions),
         dataset_sha256=settings["dataset_sha256"],
         input_encoding="q_zscore_7,ik_zscore_7,goal_position_metres_3,rotation_first_two_columns_6",
         obstacle_encoding="world_xyz_radius_metres_raw_shared_mlp_cross_attention",
@@ -237,7 +246,9 @@ def run(dataset_directory, config_path, output, device_name):
     validate_time_settings(config)
     scale = config["objective"]["time_scale_seconds"]
     data = load_dataset(dataset_directory, config["dataset_sha256"])
+    actions = data["actions"]
     split = load_scene_split(data, config["split"], dataset_directory)
+    has_test = "test" in split
     times, timing_sources = load_completion_times(data, dataset_directory)
     rewards = discounted_rewards(data["labels"], times, scale)
     state = make_state(
@@ -266,11 +277,17 @@ def run(dataset_directory, config_path, output, device_name):
             created_utc=utc_now(),
             dataset_directory=str(Path(dataset_directory).resolve()),
             dataset_sha256=data["dataset_sha256"],
+            evaluation_splits=list(split),
+            test_evaluation_performed=has_test,
             settings=config,
             model=MODEL_SPEC,
+            **catalog_metadata(actions),
+            output_dim=len(actions),
             **metadata,
             timing_sources=timing_sources,
-            parameter_count=sum(p.numel() for p in LinkTimeSelectionNet().parameters()),
+            parameter_count=sum(
+                p.numel() for p in LinkTimeSelectionNet(actions=actions).parameters()
+            ),
             normalization=dict(
                 joint_mean=mean.tolist(),
                 joint_std=std.tolist(),
@@ -284,6 +301,7 @@ def run(dataset_directory, config_path, output, device_name):
                     Path(__file__).with_name("train_link_selection.py"),
                     Path(__file__).parents[1] / "learning/link_time_selection.py",
                     Path(__file__).parents[1] / "learning/link_selection.py",
+                    Path(__file__).parents[1] / "domain/link_actions.py",
                 ]
             },
             environment=dict(
@@ -318,7 +336,7 @@ def run(dataset_directory, config_path, output, device_name):
             labels=data["labels"].astype(np.int8),
             completion_time=times,
             rewards=rewards,
-            link_pairs=np.asarray(LINK_PAIRS),
+            **catalog_arrays(actions),
         )
         tensors = [
             torch.as_tensor(x, dtype=torch.float32, device=device)
@@ -326,7 +344,17 @@ def run(dataset_directory, config_path, output, device_name):
         ]
         tensors.append(torch.as_tensor(rewards, dtype=torch.float64, device=device))
         runs = [
-            train_seed(output, tensors, split, mean, std, settings, scale, seed)
+            train_seed(
+                output,
+                tensors,
+                split,
+                mean,
+                std,
+                settings,
+                scale,
+                seed,
+                actions=actions,
+            )
             for seed in settings["seeds"]
         ]
         selected = select_run(runs)
@@ -335,7 +363,8 @@ def run(dataset_directory, config_path, output, device_name):
             dict(
                 **selected,
                 criterion=SELECTION_METRIC,
-                selected_before_test_evaluation=True,
+                test_evaluation_performed=has_test,
+                **({"selected_before_test_evaluation": True} if has_test else {}),
                 selected_utc=utc_now(),
             ),
         )
@@ -370,21 +399,50 @@ def run(dataset_directory, config_path, output, device_name):
                 case_id=data["case_id"],
                 probabilities=probabilities,
                 logits=raw_logits,
-                chosen_pair_index=probabilities.argmax(axis=1),
+                chosen_action_index=probabilities.argmax(axis=1),
+                **catalog_arrays(actions),
+                **(
+                    {"chosen_pair_index": probabilities.argmax(axis=1)}
+                    if actions == LINK_PAIRS
+                    else {}
+                ),
             )
             trained["metrics"] = metrics
             write_json(output / f'seed-{trained["seed"]}' / "metrics.json", metrics)
+        test_summary = {}
+        if has_test:
+            test_summary = {
+                "mean_test_selected_success_rate": float(
+                    np.mean(
+                        [r["metrics"]["test"]["selected_success_rate"] for r in runs]
+                    )
+                ),
+                "mean_test_selected_time_reward": float(
+                    np.mean(
+                        [r["metrics"]["test"]["selected_time_reward"] for r in runs]
+                    )
+                ),
+            }
         report = dict(
             **metadata,
             model=MODEL_SPEC,
+            **catalog_metadata(actions),
+            output_dim=len(actions),
             selected_seed=selected["seed"],
+            evaluation_splits=list(split),
+            test_evaluation_performed=has_test,
             runs=runs,
-            mean_test_selected_success_rate=float(
-                np.mean([r["metrics"]["test"]["selected_success_rate"] for r in runs])
+            mean_validation_selected_success_rate=float(
+                np.mean(
+                    [r["metrics"]["validation"]["selected_success_rate"] for r in runs]
+                )
             ),
-            mean_test_selected_time_reward=float(
-                np.mean([r["metrics"]["test"]["selected_time_reward"] for r in runs])
+            mean_validation_selected_time_reward=float(
+                np.mean(
+                    [r["metrics"]["validation"]["selected_time_reward"] for r in runs]
+                )
             ),
+            **test_summary,
             elapsed_seconds=time.perf_counter() - started,
         )
         write_json(output / "evaluation.json", report)
@@ -395,6 +453,7 @@ def run(dataset_directory, config_path, output, device_name):
                 status="completed",
                 runs=len(runs),
                 selected_seed=selected["seed"],
+                test_evaluation_performed=has_test,
                 finished_utc=utc_now(),
             ),
         )
@@ -409,8 +468,10 @@ def run(dataset_directory, config_path, output, device_name):
                 runs=len(runs),
                 scenes=len(data["labels"]),
                 labels=int(data["labels"].size),
+                **catalog_metadata(actions),
                 **metadata,
                 selected_seed=selected["seed"],
+                test_evaluation_performed=has_test,
                 elapsed_seconds=time.perf_counter() - started,
                 finished_utc=utc_now(),
                 data_sha256=hashes,

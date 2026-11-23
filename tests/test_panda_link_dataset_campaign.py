@@ -12,7 +12,8 @@ import numpy as np
 from safe_ik.application import panda_link_dataset_campaign as campaign
 from safe_ik.application.artifacts import json_value
 from safe_ik.application.panda_experiment_configuration import load_panda_experiment
-from safe_ik.application.panda_link_dataset import LINK_PAIRS, export_dataset
+from safe_ik.application.panda_link_dataset import LINK_ACTIONS, export_dataset
+from safe_ik.domain.link_actions import catalog_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPERIMENT = ROOT / "configs/experiments/panda_link_dataset.yaml"
@@ -66,12 +67,13 @@ def fake_batch(command, **kwargs):
         )
         rows.extend(
             dict(case_id=case_id, pair=list(pair), label_valid=True, success=j % 2 == 0)
-            for j, pair in enumerate(LINK_PAIRS)
+            for j, pair in enumerate(LINK_ACTIONS)
         )
     counts = export_dataset(directory, contexts, rows)
     campaign.atomic_json(
         directory / "manifest.json",
         dict(
+            **catalog_metadata(),
             identity=campaign.identity(experiment),
             data_sha256={p.name: campaign.digest(p) for p in directory.iterdir()},
         ),
@@ -159,7 +161,7 @@ class DatasetCampaignTests(unittest.TestCase):
                 with self.assertRaises(FileExistsError):
                     campaign.execute_campaign(EXPERIMENT, output, request())
             with np.load(output / "dataset.npz") as data:
-                self.assertEqual(data["success"].shape, (3, 10))
+                self.assertEqual(data["success"].shape, (3, 16))
                 self.assertEqual(len(set(data["case_id"])), 3)
             complete = json.loads((output / "complete.json").read_text())
             for name, expected in complete["data_sha256"].items():

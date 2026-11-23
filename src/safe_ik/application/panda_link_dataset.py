@@ -1,7 +1,8 @@
-"""Fixed-IK Sequential labels with multiple independent workers per GPU.
+"""Fixed-IK action labels with multiple independent workers per GPU.
 
 No controller or IK algorithm is changed here. Each context is evaluated from
-the same initial state against the same single validated IK for all ten pairs.
+the same initial state against the same single validated IK for Sequential.
+The action catalog also contains one-stage Sequential and IK-free Direct.
 Outputs are exclusive to this invocation; existing directories are refused.
 """
 
@@ -22,7 +23,6 @@ from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timezone
 from importlib.metadata import version
-from itertools import combinations
 from pathlib import Path
 from time import perf_counter
 
@@ -32,7 +32,15 @@ from threadpoolctl import threadpool_limits
 from ..adapters.mujoco_plant import MujocoPlant
 from ..adapters.osqp_solver import OSQPSolver
 from ..domain.ik_contracts import SafeIKCandidate
-from ..experiments.panda_comparison import case_config, generate_cases
+from ..domain.link_actions import (
+    LINK_ACTIONS,
+    LINK_PAIRS,
+    action_id,
+    actions_from_metadata,
+    catalog_arrays,
+    catalog_metadata,
+)
+from ..experiments.panda_comparison import case_config, generate_cases, measure_state
 from .artifacts import json_value
 from .panda_comparison import atomic_json, digest, fingerprint, prepare_ik, scene_safety
 from .panda_comparison_rollout import comparison_rollout
@@ -41,7 +49,6 @@ from .panda_experiment_configuration import load_panda_experiment
 from .panda_runtime import PandaRuntime
 from .paths import project_root
 
-LINK_PAIRS = tuple(combinations(range(2, 7), 2))
 DEFAULT_IK_REPLENISHMENT_ROUNDS = 100
 _worker = None
 
@@ -145,11 +152,19 @@ def validate_trace(config, case, selected, pair, result, trace, subdivisions):
     if not np.isfinite(q).all() or not np.isfinite(trace["barrier_values"]).all():
         raise ValueError("nonfinite trajectory")
     np.testing.assert_array_equal(q[0], case["initial_q"])
-    np.testing.assert_array_equal(trace["candidate_q"], [selected["q"]])
+    if pair:
+        np.testing.assert_array_equal(trace["candidate_q"], [selected["q"]])
+    elif np.asarray(trace["candidate_q"]).size:
+        raise ValueError("Direct must not use an IK candidate")
     np.testing.assert_array_equal(trace["stage_frames"], [f"link{i}" for i in pair])
-    np.testing.assert_array_equal(trace["candidate_index"], np.zeros(len(q), int))
+    np.testing.assert_array_equal(
+        trace["candidate_index"], np.full(len(q), 0 if pair else -1, int)
+    )
     np.testing.assert_array_equal(q[-1], result["final_q"])
-    if result["candidate_count"] != 1 or result["candidate_switch_count"] != 0:
+    if (
+        result["candidate_count"] != int(bool(pair))
+        or result["candidate_switch_count"] != 0
+    ):
         raise ValueError("a fixed-IK label must never switch candidates")
     if len(q) != result["state_count"] or len(time) != len(q):
         raise ValueError("trajectory length mismatch")
@@ -206,19 +221,161 @@ def prepare_context(case):
     return context
 
 
-def pair_tasks(contexts):
+def reuse_contexts(source, experiment, output, kin, self_safety):
+    """Validate saved scenes/IK with current models without searching or relabeling."""
+    source = Path(source).resolve()
+    payload = source.read_bytes()
+    # Keep the exact imported input separate from new validation/output metadata.
+    snapshot = output / "reused_contexts.jsonl"
+    with snapshot.open("xb") as stream:
+        stream.write(payload)
+    source_hash = digest(snapshot)
+    if digest(source) != source_hash:
+        raise ValueError("reused context source changed while reading")
+    imported = [
+        json.loads(line) for line in payload.decode().splitlines() if line.strip()
+    ]
+    if len(imported) != experiment.main["cases_per_seed"]:
+        raise ValueError("reused context count must match cases_per_seed")
+    ids = [row["case_id"] for row in imported]
+    if len(set(ids)) != len(ids) or any(
+        not isinstance(name, str) or name in ("", ".", "..") or Path(name).name != name
+        for name in ids
+    ):
+        raise ValueError("invalid or duplicate reused context identity")
+    contexts = []
+    for original in imported:
+        if not original["ik_available"] or original.get("selected_ik") is None:
+            raise ValueError("reused training context requires one saved IK")
+        for name, size in (
+            ("initial_q", 7),
+            ("target_position", 3),
+            ("target_quaternion", 4),
+        ):
+            value = np.asarray(original[name], dtype=float)
+            if value.shape != (size,) or not np.isfinite(value).all():
+                raise ValueError(f"invalid reused {name}")
+        if not np.isclose(np.linalg.norm(original["target_quaternion"]), 1.0):
+            raise ValueError("reused goal quaternion must be normalized")
+        if len(original["obstacles"]) != experiment.sampling.obstacle_count:
+            raise ValueError("reused obstacle count differs from experiment")
+        for obstacle in original["obstacles"]:
+            position = np.asarray(obstacle["position"], dtype=float)
+            radius = obstacle["radius"]
+            if (
+                position.shape != (3,)
+                or not np.isfinite(position).all()
+                or not np.isfinite(radius)
+                or radius <= 0
+            ):
+                raise ValueError("invalid reused obstacle")
+        selected = original["selected_ik"]
+        candidate = SafeIKCandidate(
+            **{**selected, "q": np.asarray(selected["q"], dtype=float)}
+        )
+        if candidate.q.shape != (7,) or not np.isfinite(candidate.q).all():
+            raise ValueError("invalid reused IK configuration")
+        started, started_utc = perf_counter(), utc_now()
+        cfg = case_config(experiment.config, original)
+        safety = scene_safety(cfg, kin, self_safety)
+        initial_barrier = safety.evaluate(cfg.initial_q)
+        initial = measure_state(cfg, kin, cfg.initial_q, initial_barrier)
+        if (
+            initial["joint_margin"] < experiment.sampling.joint_limit_margin
+            or initial_barrier.minimum < experiment.sampling.minimum_barrier
+        ):
+            raise ValueError(f"reused start is not safe: {original['case_id']}")
+        barrier = safety.evaluate(candidate.q)
+        candidate_check = measure_state(cfg, kin, candidate.q, barrier)
+        if (
+            not candidate_check["goal_reached"]
+            or candidate_check["joint_margin"] < 0
+            or barrier.minimum < 0
+        ):
+            raise ValueError(
+                f"reused IK failed current validation: {original['case_id']}"
+            )
+        elapsed = perf_counter() - started
+        provenance = dict(source_path=str(source), source_sha256=source_hash)
+        context = dict(
+            **original,
+        )
+        context.update(
+            ik_wall_time=None,
+            ik_search_performed=False,
+            ik_reused=True,
+            original_ik_wall_time=original.get("ik_wall_time"),
+            reused_source=provenance,
+            preparation_wall_time=elapsed,
+            preparation_started_utc=started_utc,
+            prepared_utc=utc_now(),
+            preparation_gpu=None,
+            reuse_validation=dict(
+                initial=initial,
+                initial_minimum_barrier=float(initial_barrier.minimum),
+                candidate=candidate_check,
+                candidate_minimum_barrier=float(barrier.minimum),
+                wall_time=elapsed,
+            ),
+        )
+        directory = output / context["case_id"]
+        directory.mkdir()
+        case = {
+            key: original[key]
+            for key in (
+                "case_id",
+                "initial_q",
+                "ik_seed",
+                "obstacles",
+                "target_position",
+                "target_quaternion",
+            )
+        }
+        atomic_json(directory / "case.json", case)
+        atomic_json(
+            directory / "ik.json",
+            dict(
+                selected=selected,
+                accepted_candidates=[selected],
+                checks=[
+                    dict(
+                        seed_index=candidate.seed_index,
+                        passed=True,
+                        minimum_barrier=float(barrier.minimum),
+                    )
+                ],
+                reason=None,
+                wall_time=None,
+                search_performed=False,
+                reused=True,
+                source=provenance,
+                validation=context["reuse_validation"],
+            ),
+        )
+        atomic_json(directory / "prepared_context.json", context)
+        contexts.append(context)
+    return contexts, dict(
+        source_path=str(source),
+        source_sha256=source_hash,
+        contexts=len(contexts),
+        search_performed=False,
+        validation_wall_time=sum(c["preparation_wall_time"] for c in contexts),
+    )
+
+
+def pair_tasks(contexts, actions=LINK_ACTIONS):
     """Schedule pairs independently, including when there are fewer scenes than workers."""
     usable = sorted(
         (c for c in contexts if c["ik_available"]), key=lambda c: c["case_id"]
     )
-    return [(context, pair) for pair in LINK_PAIRS for context in usable]
+    return [(context, pair) for pair in actions for context in usable]
 
 
 def evaluate_pair(task):
     context, pair = task
     experiment, kin, self_safety, output, gpu = _worker
-    if pair not in LINK_PAIRS or not context["ik_available"]:
-        raise ValueError("rollout needs a supported pair and a prepared IK")
+    if pair not in LINK_ACTIONS or not context["ik_available"]:
+        raise ValueError("rollout needs a supported action and a prepared context")
     run_start, started_utc = perf_counter(), utc_now()
     directory = output / context["case_id"]
     cfg = case_config(experiment.config, context)
@@ -229,16 +386,20 @@ def evaluate_pair(task):
         != json.loads((directory / "ik.json").read_text())["selected"]
     ):
         raise ValueError("prepared IK differs from the shared context artifact")
-    candidate = SafeIKCandidate(**{**selected, "q": np.asarray(selected["q"])})
+    candidates = (
+        (SafeIKCandidate(**{**selected, "q": np.asarray(selected["q"])}),)
+        if pair
+        else ()
+    )
     method_cfg = replace(
         cfg,
         trajectory=replace(
             cfg.trajectory,
-            mode="sequential",
+            mode="sequential" if pair else "direct",
             stage_frames=tuple(f"link{i}" for i in pair),
         ),
     )
-    run_dir = directory / f"link{pair[0]}_link{pair[1]}"
+    run_dir = directory / action_id(pair)
     run_dir.mkdir()  # Each pair has an exclusive output directory.
     runtime = PandaRuntime(
         kin,
@@ -251,7 +412,7 @@ def evaluate_pair(task):
         MujocoPlant(method_cfg),
     )
     result, trace = comparison_rollout(
-        method_cfg, runtime, (candidate,), subdivisions=experiment.subdivisions
+        method_cfg, runtime, candidates, subdivisions=experiment.subdivisions
     )
     validate_trace(
         method_cfg, context, selected, pair, result, trace, experiment.subdivisions
@@ -260,9 +421,10 @@ def evaluate_pair(task):
     result.update(
         case_id=context["case_id"],
         pair=list(pair),
-        method="sequential",
+        action_id=action_id(pair),
+        method=method_cfg.trajectory.mode,
         label_valid=result["reason"] != "qp_solver_failure",
-        candidate_policy="one_nearest_no_switch",
+        candidate_policy="one_nearest_no_switch" if pair else "no_ik",
         case_sha256=digest(directory / "case.json"),
         ik_sha256=digest(directory / "ik.json"),
         trace_sha256=digest(run_dir / "trajectory.npz"),
@@ -281,12 +443,12 @@ def evaluate_pair(task):
     return result
 
 
-def collect_pairs(pool, contexts, output, start):
+def collect_pairs(pool, contexts, output, start, actions=LINK_ACTIONS):
     """Only the coordinator writes shared progress/context metadata."""
     by_id = {c["case_id"]: c for c in contexts}
     if len(by_id) != len(contexts):
         raise ValueError("duplicate context identity")
-    tasks = pair_tasks(contexts)
+    tasks = pair_tasks(contexts, actions)
     futures = [pool.submit(evaluate_pair, task) for task in tasks]
     rows, counts = [], Counter()
     for future in as_completed(futures):
@@ -295,11 +457,11 @@ def collect_pairs(pool, contexts, output, start):
         case_id = row["case_id"]
         counts[case_id] += 1
         atomic_json(
-            output / case_id / "progress.json", dict(completed_pairs=counts[case_id])
+            output / case_id / "progress.json", dict(completed_actions=counts[case_id])
         )
-        if counts[case_id] == len(LINK_PAIRS):
+        if counts[case_id] == len(actions):
             context = by_id[case_id]
-            context["summed_pair_wall_time"] = sum(
+            context["summed_action_wall_time"] = sum(
                 r["task_wall_time"] for r in rows if r["case_id"] == case_id
             )
             context["finished_utc"] = utc_now()
@@ -310,7 +472,7 @@ def collect_pairs(pool, contexts, output, start):
                 phase="rollout",
                 total_rollouts=len(tasks),
                 completed_rollouts=len(rows),
-                completed_contexts=sum(n == len(LINK_PAIRS) for n in counts.values()),
+                completed_contexts=sum(n == len(actions) for n in counts.values()),
                 prepared_contexts=sum(c["ik_available"] for c in contexts),
                 elapsed_wall_time=perf_counter() - start,
                 updated_utc=utc_now(),
@@ -319,20 +481,35 @@ def collect_pairs(pool, contexts, output, start):
     return rows
 
 
-def export_dataset(output, contexts, rows):
+def export_dataset(output, contexts, rows, actions=LINK_ACTIONS):
     """Exclude no-IK contexts; mask numerical failures instead of labeling them 0."""
+    metadata = catalog_metadata(actions)
     contexts = sorted(contexts, key=lambda c: c["case_id"])
-    write_jsonl(output / "contexts.jsonl", contexts)
+    if len({c["case_id"] for c in contexts}) != len(contexts):
+        raise ValueError("duplicate context identity")
     usable = [c for c in contexts if c["ik_available"]]
     by_key = {(r["case_id"], tuple(r["pair"])): r for r in rows}
-    expected_keys = {(c["case_id"], p) for c in usable for p in LINK_PAIRS}
+    expected_keys = {(c["case_id"], p) for c in usable for p in actions}
     if len(by_key) != len(rows) or set(by_key) != expected_keys:
         raise ValueError("missing, extra or duplicate context/pair results")
-    ordered = [by_key[c["case_id"], p] for c in usable for p in LINK_PAIRS]
-    labels = np.full((len(usable), len(LINK_PAIRS)), -1, dtype=np.int8)
+    ordered = [dict(by_key[c["case_id"], p]) for c in usable for p in actions]
+    for row in ordered:
+        links = tuple(row["pair"])
+        if (
+            row.get("action_id", action_id(links)) != action_id(links)
+            or row.get("method", "sequential" if links else "direct")
+            != ("sequential" if links else "direct")
+            or row.get("observed", True) is not True
+        ):
+            raise ValueError("inconsistent or unobserved action outcome")
+        row.update(
+            action_id=action_id(links), method="sequential" if links else "direct"
+        )
+    write_jsonl(output / "contexts.jsonl", contexts)
+    labels = np.full((len(usable), len(actions)), -1, dtype=np.int8)
     valid = np.zeros_like(labels, dtype=bool)
     for i, c in enumerate(usable):
-        for j, p in enumerate(LINK_PAIRS):
+        for j, p in enumerate(actions):
             row = by_key[c["case_id"], p]
             valid[i, j] = row["label_valid"]
             if valid[i, j]:
@@ -347,14 +524,17 @@ def export_dataset(output, contexts, rows):
         ),
         target_position=np.asarray([c["target_position"] for c in usable]),
         target_quaternion=np.asarray([c["target_quaternion"] for c in usable]),
-        link_pairs=np.asarray(LINK_PAIRS, dtype=int),
+        **catalog_arrays(actions),
         success=labels,
         label_valid=valid,
+        observed=np.ones_like(valid),
     )
     atomic_json(output / "results.json", ordered)
     columns = (
         "case_id",
         "pair",
+        "action_id",
+        "method",
         "label_valid",
         "success",
         "goal_reached",
@@ -381,6 +561,7 @@ def export_dataset(output, contexts, rows):
         writer.writeheader()
         writer.writerows(ordered)
     return dict(
+        **metadata,
         contexts=len(usable),
         attempted_contexts=len(contexts),
         no_ik_contexts=len(contexts) - len(usable),
@@ -401,6 +582,7 @@ def run(
     phase="all",
     ik_context_workers=None,
     ik_replenishment_rounds=DEFAULT_IK_REPLENISHMENT_ROUNDS,
+    contexts_file=None,
 ):
     start = perf_counter()
     started = utc_now()
@@ -417,6 +599,8 @@ def run(
         raise ValueError("parallel GPU dataset runner requires rdf_device: cuda")
     if phase not in ("all", "prepare", "rollout"):
         raise ValueError("unknown dataset phase")
+    if phase == "rollout" and contexts_file is not None:
+        raise ValueError("--contexts-file is only used during preparation")
     ik_context_workers = gpu_count if ik_context_workers is None else ik_context_workers
     if not 1 <= ik_context_workers <= gpu_count:
         raise ValueError("IK context workers must be between one and GPU count")
@@ -450,7 +634,7 @@ def run(
     )
     manifest = dict(
         identity=identity,
-        link_pairs=LINK_PAIRS,
+        **catalog_metadata(),
         started_utc=started,
         git_commit=subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=root, text=True
@@ -464,11 +648,12 @@ def run(
         cpus=cpu_count,
         workers_per_gpu=workers_per_gpu,
         rollout_workers=rollout_workers,
-        ik_context_workers=ik_context_workers,
+        ik_context_workers=ik_context_workers if contexts_file is None else 0,
+        ik_preparation_mode="search" if contexts_file is None else "reuse_and_validate",
         ik_replenishment_rounds=ik_replenishment_rounds,
         candidate_validation="values_only_batched_float64",
         ik_workers_per_context=experiment.config.safe_ik.workers,
-        scheduling_unit="context_link_pair",
+        scheduling_unit="context_action",
         rollout_workers_share_allocated_cpus=rollout_workers > cpu_count,
         slurm_job_id=os.environ.get("SLURM_JOB_ID"),
         nvidia_smi=subprocess.check_output(["nvidia-smi"], text=True),
@@ -487,48 +672,71 @@ def run(
     target = experiment.main["cases_per_seed"]
     base_seed = experiment.main["seeds"][0]
     try:
-        with worker_pool(
-            visible[:ik_context_workers], 1, experiment.path, output, "preparation"
-        ) as pool:
-            for sampling_seed, deficit in replenishment_plan(
-                contexts, target, base_seed, ik_replenishment_rounds
-            ):
-                phase_start = perf_counter()
-                batch, sampling = generate_cases(
-                    experiment.config,
-                    kin,
-                    self_safety,
-                    [sampling_seed],
-                    deficit,
-                    experiment.sampling,
-                )
-                sampling_wall += perf_counter() - phase_start
-                cases.extend(batch)
-                write_jsonl(output / "cases.jsonl", cases)
-                manifest["sampling_rounds"].append(
-                    dict(seed=sampling_seed, count=deficit, statistics=sampling)
-                )
-                manifest["data_sha256"]["cases.jsonl"] = digest(output / "cases.jsonl")
-                atomic_json(output / "manifest.json", manifest)
-                phase_start = perf_counter()
-                futures = [pool.submit(prepare_context, c) for c in batch]
-                for future in as_completed(futures):
-                    context = future.result()
-                    contexts.append(context)
-                    atomic_json(
-                        output / "progress.json",
-                        dict(
-                            phase="preparation",
-                            target_contexts=target,
-                            prepared_contexts=sum(c["ik_available"] for c in contexts),
-                            completed_contexts=0,
-                            attempted_contexts=len(contexts),
-                            completed_rollouts=len(rows),
-                            elapsed_wall_time=perf_counter() - start,
-                            updated_utc=utc_now(),
-                        ),
+        if contexts_file is not None:
+            contexts, reuse = reuse_contexts(
+                contexts_file, experiment, output, kin, self_safety
+            )
+            cases = [
+                json.loads((output / c["case_id"] / "case.json").read_text())
+                for c in contexts
+            ]
+            write_jsonl(output / "cases.jsonl", cases)
+            manifest["reused_contexts"] = reuse
+            manifest["candidate_validation"] = "reused_current_pose_joint_and_rdf"
+            manifest["data_sha256"].update(
+                {
+                    name: digest(output / name)
+                    for name in ("cases.jsonl", "reused_contexts.jsonl")
+                }
+            )
+            atomic_json(output / "manifest.json", manifest)
+        else:
+            with worker_pool(
+                visible[:ik_context_workers], 1, experiment.path, output, "preparation"
+            ) as pool:
+                for sampling_seed, deficit in replenishment_plan(
+                    contexts, target, base_seed, ik_replenishment_rounds
+                ):
+                    phase_start = perf_counter()
+                    batch, sampling = generate_cases(
+                        experiment.config,
+                        kin,
+                        self_safety,
+                        [sampling_seed],
+                        deficit,
+                        experiment.sampling,
                     )
-                ik_wall += perf_counter() - phase_start
+                    sampling_wall += perf_counter() - phase_start
+                    cases.extend(batch)
+                    write_jsonl(output / "cases.jsonl", cases)
+                    manifest["sampling_rounds"].append(
+                        dict(seed=sampling_seed, count=deficit, statistics=sampling)
+                    )
+                    manifest["data_sha256"]["cases.jsonl"] = digest(
+                        output / "cases.jsonl"
+                    )
+                    atomic_json(output / "manifest.json", manifest)
+                    phase_start = perf_counter()
+                    futures = [pool.submit(prepare_context, c) for c in batch]
+                    for future in as_completed(futures):
+                        context = future.result()
+                        contexts.append(context)
+                        atomic_json(
+                            output / "progress.json",
+                            dict(
+                                phase="preparation",
+                                target_contexts=target,
+                                prepared_contexts=sum(
+                                    c["ik_available"] for c in contexts
+                                ),
+                                completed_contexts=0,
+                                attempted_contexts=len(contexts),
+                                completed_rollouts=len(rows),
+                                elapsed_wall_time=perf_counter() - start,
+                                updated_utc=utc_now(),
+                            ),
+                        )
+                    ik_wall += perf_counter() - phase_start
         write_jsonl(
             output / "contexts.jsonl", sorted(contexts, key=lambda c: c["case_id"])
         )
@@ -558,6 +766,10 @@ def run(
                 sampler_setup_seconds=setup_wall,
                 sampling_seconds=sampling_wall,
                 parallel_ik_seconds=ik_wall,
+                reused_context_validation_seconds=sum(
+                    c.get("reuse_validation", {}).get("wall_time", 0.0)
+                    for c in contexts
+                ),
                 data_sha256={
                     str(p.relative_to(output)): digest(p)
                     for p in output.rglob("*")
@@ -621,6 +833,11 @@ def verified_preparation(experiment, output):
 def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
     prepared, contexts = verified_preparation(experiment, output)
     manifest = json.loads((output / "manifest.json").read_text())
+    actions = actions_from_metadata(manifest)
+    if actions != LINK_ACTIONS:
+        raise ValueError(
+            "historical action catalogs cannot be resumed with current code"
+        )
     if (
         manifest["gpus"] != len(visible)
         or manifest["workers_per_gpu"] != workers_per_gpu
@@ -645,7 +862,7 @@ def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
             output / "progress.json",
             dict(
                 phase="rollout",
-                total_rollouts=target * len(LINK_PAIRS),
+                total_rollouts=target * len(actions),
                 completed_rollouts=0,
                 completed_contexts=0,
                 prepared_contexts=target,
@@ -656,9 +873,9 @@ def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
         with worker_pool(
             visible, workers_per_gpu, experiment.path, output, "rollout"
         ) as pool:
-            rows = collect_pairs(pool, contexts, output, start)
+            rows = collect_pairs(pool, contexts, output, start, actions)
         rollout_wall = perf_counter() - phase_start
-        counts = export_dataset(output, contexts, rows)
+        counts = export_dataset(output, contexts, rows, actions)
         if (
             fingerprint(
                 experiment.config,
@@ -673,7 +890,7 @@ def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
         # Verify every persisted trace and its shared case/IK provenance.
         for row in rows:
             directory = output / row["case_id"]
-            run_dir = directory / f"link{row['pair'][0]}_link{row['pair'][1]}"
+            run_dir = directory / action_id(row["pair"])
             for path, expected in (
                 (directory / "case.json", row["case_sha256"]),
                 (directory / "ik.json", row["ik_sha256"]),
@@ -690,7 +907,14 @@ def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
             parallel_processing_seconds=ik_wall + rollout_wall,
             parallel_ik_seconds=ik_wall,
             parallel_rollout_seconds=rollout_wall,
-            summed_ik_seconds=sum(c["ik_wall_time"] for c in contexts),
+            summed_ik_seconds=sum(c["ik_wall_time"] or 0 for c in contexts),
+            ik_search_contexts=sum(
+                c.get("ik_search_performed", True) for c in contexts
+            ),
+            reused_contexts=sum(c.get("ik_reused", False) for c in contexts),
+            reused_context_validation_seconds=prepared.get(
+                "reused_context_validation_seconds", 0.0
+            ),
             summed_rollout_seconds=sum(r["rollout_wall_time"] for r in rows),
             summed_validation_seconds=sum(r["validation_wall_time"] for r in rows),
             summed_task_seconds=sum(r["task_wall_time"] for r in rows),
@@ -710,6 +934,7 @@ def run_prepared_rollouts(experiment, output, visible, workers_per_gpu):
                 **counts,
                 finished_utc=utc_now(),
                 manifest_sha256=digest(output / "manifest.json"),
+                data_sha256=manifest["data_sha256"],
             ),
         )
         print(json.dumps(dict(**counts, **timing)), flush=True)
@@ -733,6 +958,11 @@ def main():
     parser.add_argument("--phase", choices=("all", "prepare", "rollout"), default="all")
     parser.add_argument("--ik-context-workers", type=int)
     parser.add_argument(
+        "--contexts-file",
+        type=Path,
+        help="reuse exact saved JSONL scenes and selected IK; validate without an IK search",
+    )
+    parser.add_argument(
         "--ik-replenishment-rounds",
         type=int,
         default=DEFAULT_IK_REPLENISHMENT_ROUNDS,
@@ -748,6 +978,7 @@ def main():
         phase=args.phase,
         ik_context_workers=args.ik_context_workers,
         ik_replenishment_rounds=args.ik_replenishment_rounds,
+        contexts_file=args.contexts_file,
     )
 
 
