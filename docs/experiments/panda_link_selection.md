@@ -63,6 +63,73 @@ they omit test predictions and metrics and record
 its results are not independent test performance. Joint normalization and the
 best fixed-action baseline use training scenes only.
 
+## Sixteen-action training on 10,000 completed scenes (2026-11-23)
+
+The completed UBAI export `production-10000-action16-20261119T044531Z`
+was transferred to lab-server with all five export-file SHA256 hashes verified.
+It contains 10,000 distinct IK-valid scenes and all 160,000 observed outcomes.
+The 378 rejected no-IK attempts are outside this dataset. The additional
+10,000-scene campaign started on November 22 remains separate and running.
+Historical ten-action datasets and their validation/test sets were not mixed in.
+
+Train from scratch on 9,000 scenes and reserve 1,000 for validation, using the
+action16 preset above and training commit `8ec10c1dfe3fea5cf8298eb6eacd26ed1e02532f`.
+All five seeds use the same scene split. All 8,025 executed numerical-error
+outcomes remain failure labels (7,236 train; 789 validation); no scene is removed
+based on its controller outcomes. Training-only joint normalization and fixed
+action selection are preserved. Checkpoints and the final seed are selected by
+validation success, then BCE. There is no test set in this run.
+
+| Seed | Best epoch | Validation successes / 1,000 | Validation BCE |
+| --- | ---: | ---: | ---: |
+| **11 (selected)** | 38 | **604 (60.40%)** | 0.5966 |
+| 23 | 21 | 592 (59.20%) | 0.5875 |
+| 37 | 26 | 597 (59.70%) | 0.5991 |
+| 53 | 23 | 599 (59.90%) | 0.5970 |
+| 71 | 56 | 601 (60.10%) | 0.6049 |
+
+Mean across seeds is 59.86%, with sample standard deviation 0.45 percentage
+points. The selected checkpoint's training selection rate is 68.70% (6,183/9,000),
+and its train/validation BCE values are 0.5379/0.5966.
+
+| Choice on the same validation scenes | Success |
+| --- | ---: |
+| Selected model | 604/1,000 (60.40%) |
+| Fixed link2 + link5, selected using training labels | 562/1,000 (56.20%) |
+| Direct | 429/1,000 (42.90%) |
+| Uniform random over all 16 actions (expectation) | 51.20625% |
+| Oracle: at least one successful action | 844/1,000 (84.40%) |
+
+The model gains 42 scenes over fixed link2 + link5: 104 wins and 62 losses on
+paired outcomes. The exploratory paired-bootstrap 95% interval is +1.6 to +6.6
+percentage points, but validation was used to select both epoch and seed, so
+this is **not independent test evidence**. The 16-action random baseline is
+different from historical random choice among ten pairs.
+
+The model selects Direct on 87 scenes (30 successes), one intermediate link on
+97 (37 successes), and two links on 816 (537 successes). The added six actions
+offer a success on 32 scenes where all ten pairs fail; the model actually selects
+a successful added action on 9 of those scenes. These conditional selection
+rates do not compare methods on identical subsets.
+
+All five runs, final evaluation and figure generation took 140.5 seconds on the
+lab-server RTX 4070 (Python 3.11.14, PyTorch 2.8.0+cu128). Training artifacts are in
+`outputs/panda_link_selection/runs/success-action16-10000-20261123T003600Z/training/`
+on lab-server and locally, including all five checkpoints and exact `split.json`.
+The selected checkpoint is `seed-11/best.pt`. It is saved for use; this run does
+not deploy a controller. Keep the validation IDs fixed when adding future data.
+The 26 selector regression tests pass on lab-server. All 35 training artifact
+hashes pass, and reloading all five checkpoints on CPU reproduces every one of
+the 50,000 stored action choices. Maximum probability discrepancy is below
+4.2e-7. Split coverage, training-only normalization, best-epoch/seed selection
+and outcome counts were independently checked.
+
+Versioned evidence: [summary and provenance](results/panda_action16_validation_1000_20261123/summary.json),
+[seed results](results/panda_action16_validation_1000_20261123/seed_results.csv), and
+[the 1,000 held-out IDs with selected outcomes](results/panda_action16_validation_1000_20261123/validation_predictions.csv).
+[Independent verification](results/panda_action16_validation_1000_20261123/independent-verification.json)
+records the checks and CPU/GPU numerical tolerances.
+
 ## Historical experiment: softmax selection with successful completion time (2026-10-23)
 
 The user requested rewarding faster successful link-pair choices and changing
