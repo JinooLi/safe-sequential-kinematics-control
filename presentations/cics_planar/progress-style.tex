@@ -1,0 +1,77 @@
+% Top navigation: section labels and one dot per main slide.
+% Completed: filled gray. Current: larger blue. Upcoming: hollow gray.
+% The cover is excluded; backup slides have an independent page count.
+\makeatletter
+\providecommand{\DefenseProgressStage}{}
+\newcommand{\AppendixContentsText}{Appendix contents}
+\newcommand{\defensepart}[1]{\gdef\DefenseProgressStage{#1}}
+\input{progress-data.tex}
+\def\defense@label@Motivation{Motivation}
+\def\defense@label@Background{Background}
+\def\defense@label@Method{Method}
+\def\defense@label@Results{Results}
+\def\defense@label@Closing{Closing}
+
+\newcommand{\defense@group}[3]{%
+  \def\defense@width{18mm}%
+  \def\defense@candidate{#1}%
+  \def\defense@name{Motivation}\ifx\defense@candidate\defense@name\def\defense@width{22mm}\fi
+  \def\defense@name{Background}\ifx\defense@candidate\defense@name\def\defense@width{22mm}\fi
+  \def\defense@name{Learning}\ifx\defense@candidate\defense@name\def\defense@width{17mm}\fi
+  \makebox[\defense@width][c]{%
+    \begin{tikzpicture}[x=1mm,y=1mm,baseline=0mm]
+      \path[use as bounding box] (-8.5,0) rectangle (8.5,4);
+      \def\defense@candidate{#1}%
+      \ifx\DefenseProgressStage\defense@candidate
+        \node[anchor=base,inner sep=0pt,font=\fontsize{7.5}{9}\selectfont\bfseries,text=Accent] at (0,2.02) {\csname defense@label@#1\endcsname};
+      \else
+        \node[anchor=base,inner sep=0pt,font=\fontsize{7.5}{9}\selectfont,text=black!75] at (0,2.02) {\csname defense@label@#1\endcsname};
+      \fi
+      \foreach \defense@page in {#2,...,#3}{%
+          \pgfmathsetmacro{\defense@x}{(\defense@page-(#2+#3)/2)*1.4}%
+          \ifnum\defense@page<\c@framenumber
+            \fill[black!55] (\defense@x,.65) circle[radius=.38];
+          \else\ifnum\defense@page=\c@framenumber
+              \fill[Accent] (\defense@x,.65) circle[radius=.55];
+            \else
+              \draw[black!45,line width=.25pt] (\defense@x,.65) circle[radius=.38];
+            \fi\fi
+        }%
+    \end{tikzpicture}}}
+
+\setbeamertemplate{headline}{%
+  \leavevmode
+  \begingroup
+  \normalfont\fontsize{9}{10.8}\selectfont
+  \vbox to 2.5mm{%
+      \offinterlineskip
+      \vskip1mm
+      \hbox to \paperwidth{%
+        \hskip5mm%
+        \ifbeamer@inappendix
+          \vrule width0pt height4mm depth0pt%
+          \raisebox{1.6mm}{\makebox[\dimexpr\paperwidth-24mm\relax][l]{\hyperlink{appendix-contents}{\color{Accent}\AppendixContentsText}}}%
+          \raisebox{1.6mm}{\makebox[14mm][r]{\fontsize{7}{8.4}\selectfont\color{black!75}\insertframenumber\,/\,\inserttotalframenumber}}%
+        \else
+          \DefenseProgressGroups%
+          \raisebox{1.6mm}{\makebox[14mm][r]{\fontsize{7}{8.4}\selectfont\color{black!75}\insertframenumber\,/\,\insertmainframenumber}}%
+        \fi
+        \hskip5mm\hss%
+      }%
+      \vss
+    }%
+  \endgroup
+}
+% Fixed-height reference area keeps the body aligned on every slide.
+% Reference details are the small-font exception; body text stays at 10 pt.
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \hbox to \paperwidth{\hskip5mm%
+    \vbox to 9mm{%
+        \hsize=\dimexpr\paperwidth-10mm\relax
+        \normalfont\fontsize{6.5}{7.6}\selectfont\color{black!85}%
+        \raggedright\parindent=0pt\parskip=0pt
+        \SlideReferenceFootnotes\vfil
+      }\hss\hskip5mm}%
+}
+\makeatother

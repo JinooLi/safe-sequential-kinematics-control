@@ -1,0 +1,48 @@
+CICS 질의응답 메모 — 한국어
+
+1. 왜 처음부터 end-effector pose를 제어하지 않는가?
+   최종 위치 두 성분과 yaw를 동시에 규정하면 일반적인 configuration에서 task Jacobian rank가 3이다. 안전 제약과 추종 요구가 충돌하면 slack이 증가하고 목표 진행이 정체될 수 있다. Link-position subtask에서 먼저 팔을 재배치하는 것이 제안 방법의 직관이다.
+
+2. Link 위치를 제어하면 항상 자유도가 하나 남는가?
+   Link 1 끝점은 q1에만 의존하므로 일반적인 rank가 1이고 nullity는 2이다. Link 2 위치는 일반적인 rank가 2, nullity는 1이다. 이는 task Jacobian에 대한 국소 차원이며 실제 QP에서는 CBF와 input limits가 가용 운동을 제한한다. Singular configuration에서는 rank도 달라진다. Scalar CLF 부등식 하나가 task Jacobian 전체를 등식으로 고정하는 것도 아니다.
+
+3. 선택한 IK 자세까지 정확히 수렴하는가?
+   아니다. IK는 각 link의 subtask 목표를 추출하는 데 사용한다. 마지막 목표는 원래 end-effector 위치와 yaw이다. Episode 30의 최종 configuration은 선택한 IK와 다른 elbow branch일 수 있다. 원고의 p_i*=p_i(q)는 문맥상 p_i(q*)로 읽는다.
+
+4. IK 해는 어떻게 선택하는가?
+   목표 pose를 만족하고 관절 한계와 충돌 검사를 통과한 후보 중 시작 자세와의 wrapped joint distance가 가장 작은 후보를 사용한다. 원자료에서는 link 1–3 선분 교차도 별도 검사한다. 도달 가능한 pose에 대해 안전한 IK 후보가 있는 episodes만 비교한다. 따라서 전체 임의 환경에 대한 성공 확률로 일반화하지 않는다.
+
+5. 중간 목표에 실패하면 어떻게 하는가?
+   원고는 link 목표 도달 또는 국소 정체 판단 후 다음 단계로 전환한다. 저장 구현은 boundary-stall 및 solver 상태에 대한 예외 전환도 포함한다. 발표의 방법 설명은 원고의 개념 수준이며, 모든 link 목표를 정확히 달성해야만 다음 단계로 진행하는 방식이라고 설명하지 않는다.
+
+6. QP의 slack이 실행 가능성을 항상 보장하는가?
+   아니다. Slack은 CLF 요구만 완화한다. Hard CBF 조건과 속도 제한 사이의 충돌, 모델·수치·구현 문제까지 해소하지 않는다. 특히 실행 결과에 infeasibility가 존재한다는 이유만으로 CLF–CBF conflict 자체가 유일한 원인이라고 단정할 수 없다.
+
+7. 원고 Figure 1은 정말 평형점에 도달한 사례인가?
+   저장된 episode 30이며 Direct의 최종 분류는 qp_infeasible, 기록된 infeasible 횟수는 3이다. 외형상 정체와 큰 최종 오차를 보이지만 수학적으로 입증된 평형점이나 순수 timeout 사례라고 단정하지 않는다. Tan의 평형점 분석은 일반적 이론 배경으로 소개한다.
+
+8. 12.33% 개선인가, 12.33 percentage points인가?
+   253/300−216/300=37/300이므로 12.33 percentage points이다. 같은 300개에서 두 방법 성공 206, Sequential만 성공 47, Direct만 성공 10, 모두 실패 37이다. Sequential이 모든 episode에서 우월한 것은 아니다.
+
+9. 안전성은 완전히 보장되는가?
+   연속시간 CBF 조건의 불변성은 안전한 초기 상태, 정확한 모델, 적절한 미분 가능성 및 제약을 만족하는 실행 가능한 입력 등의 가정을 전제로 한다. 표에는 safety violation이 Direct 2개, Sequential 1개 남아 있다. 수치 성공 기준의 −0.01 m 허용을 엄밀한 무충돌과 동일하게 설명하지 않는다.
+
+10. 두 self-collision barrier만으로 충분한가?
+    발표는 원고의 동일 길이 link 모델에서 사용한 두 거리 제약을 설명한다. 임의의 configuration에서 두 endpoint-to-link 거리만 양수라는 조건으로 모든 선분 교차를 점별로 배제한다는 보편적 주장은 피한다. 초기 비충돌 상태의 연속 운동과 안전영역 조건, IK의 별도 교차 검사를 함께 고려해야 한다. 본문에서 전역적인 collision-free 증명을 주장하지 않는다.
+
+11. 그래프의 CLF 계수는 무엇인가?
+    저장 구현의 10[||e_p||²+0.5(1−cos e_psi)]를 원고의 w_v||e_p||²+w_psi(1−cos e_psi)와 맞추면 w_v=10,w_psi=5이다. Link 1,2는 w_v=10이다. 원고는 기호를 일반화했으며 본문에 계수값을 별도로 명시하지 않았다. 부록의 값은 제출 그림과 저장 데이터를 대응시킨 값이다.
+
+12. 이번 발표에 학습 또는 Panda 실험이 포함되는가?
+    아니다. 제출 CICS 원고의 3-DOF planar 결과만 제시한다. Spatial 확장은 원고 결론의 후속 연구 방향이다. Motivation 사진 역시 응용 예시이며 이번 연구의 실험 플랫폼은 아니다.
+
+13. 기존 task sequencing과 무엇이 다른가?
+    Mansard·Chaumette(2007)는 전체 sensor-based task의 일부를 비활성화하고 다시 활성화하여 제약에 대응한다. 본 연구는 선택한 하나의 goal IK configuration에서 link 1과 link 2의 위치 목표를 forward kinematics로 계산하고, 이를 일시적 regulation task로 사용한다. Task 분해나 sequencing 자체의 최초성을 주장하지 않고 목표 구성 규칙과 순차 실행의 실험 효과를 설명한다.
+    원문: https://gepettoweb.laas.fr/uploads/Publications/2007-mansard-itro.pdf
+
+14. CLF–CBF QP를 계층적으로 푸는 기존 연구와 같은가?
+    Basso·Pettersen(2020)은 같은 제어 시점에서 priority level별 QP를 풀어 상위 task 성능을 보존한다. 본 연구는 시간에 따라 활성 regulation CLF를 하나씩 교체하고 이전 link CLF는 해제한다. 이전 link 목표를 계속 유지해야 한다는 제약은 없으며, 안전 제약과 입력 제한은 모든 단계에 유지한다. CBF–QP에서 task를 전환하는 일반 구조 자체를 새로운 것으로 주장하지 않는다.
+    원문: https://arxiv.org/abs/2001.07547
+
+15. 기존 방법보다 우월하다는 것을 검증했는가?
+    현재 비교 대상은 동일한 조건의 Direct 제어이다. Mansard 또는 Basso 방법과의 직접적인 성능 비교는 수행하지 않았다. 동일한 300개 episode에서 Sequential의 성공률이 높았지만 Direct만 성공한 10개 episode도 있다. 하나의 안전한 IK가 모든 link 목표의 공통 근거라는 사실은 각 subtask나 전체 순서의 도달 가능성을 보장하지 않는다. IK 후보, task 순서, 전환 조건에 대한 추가 검증이 필요하다.

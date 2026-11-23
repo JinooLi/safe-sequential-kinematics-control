@@ -7,10 +7,10 @@
         362.835,
         272.126
       ],
-      "extracted_words": 4643,
+      "extracted_words": 5025,
       "out_of_page_text_boxes": 0,
       "layout_or_font_errors": [],
-      "sha256": "16a63a5ae86dc084753ce3c2b59cdb7cf82eb1e21e26af43acb3cf787c674b16"
+      "sha256": "f1eb796083319ef39aa91f460244d9fb25bf3d9f57724a85394f84921620b446"
     },
     "presenter": {
       "pages": 93,
@@ -18,10 +18,10 @@
         362.835,
         272.126
       ],
-      "extracted_words": 9237,
+      "extracted_words": 10025,
       "out_of_page_text_boxes": 0,
       "layout_or_font_errors": [],
-      "sha256": "34deaee3775ae8bea387242090adb6ec4d64037b7eefeb43c4d439a5fa3c3602"
+      "sha256": "d84f1673be9c34b28026bb4ec06103fec6762902ef3f7c7f67ec02fc3404f4a5"
     }
   },
   "issues": [],
@@ -50,9 +50,10 @@
       "background-clf",
       "background-cbf",
       "background-qp",
-      "literature"
+      "literature",
+      "planar-direct"
     ],
-    "main_takeaways": 9,
+    "main_takeaways": 8,
     "takeaways_at_top_in_black": true,
     "progress_parts": [
       "Motivation",
@@ -71,8 +72,9 @@
     "progressive_planar_stages": 6,
     "fixed_geometry_transform": true,
     "archived_case": 30,
-    "motivation_static_illustration": true,
-    "motivation_same_camera": true
+    "motivation_real_photographs": 2,
+    "motivation_photograph_source": "https://www.liverpool.ac.uk/cooper-group/news/stories/title,1215738,en.php",
+    "motivation_safety_static_illustration": true
   },
   "refinement_checks": {
     "learning_task_before_architecture": true,
@@ -86,10 +88,40 @@
       23.41999999999959
     ]
   },
+  "two_link_average": {
+    "success_percent": 54.73,
+    "common_success_episode_pair_records": 4545,
+    "unique_episodes_in_time_comparison": 577,
+    "paired_means_seconds": [
+      46.98710231023227,
+      35.048893289329264
+    ],
+    "time_reduction_percent": 25.407417001544374,
+    "main_results_reference": "10-pair mean",
+    "page_number_font_pt": 7,
+    "raw_outcomes_unchanged": true
+  },
+  "pair_mean_results": {
+    "reference": "10-pair mean",
+    "success_gain_pp": 5.7,
+    "bootstrap_95_ci_pp": [
+      3.74,
+      7.650249999999996
+    ],
+    "bootstrap_unit": "episode",
+    "paired_time_seconds": [
+      36.04655676126916,
+      36.20300918197035
+    ],
+    "common_success_episode_pair_records": 4792,
+    "unique_common_success_episodes": 609,
+    "train_best_fixed_reference_retained_in_appendix": true,
+    "raw_outcomes_unchanged": true
+  },
   "bibliography": {
     "backend": "BibTeX",
     "style": "IEEEtran",
-    "cited_entries": 10,
+    "cited_entries": 12,
     "continuation_pages": 3
   },
   "literature_and_rdf": {
@@ -97,11 +129,19 @@
     "geometry_reference_used_at_rdf_method": true,
     "query_to_barrier_to_qp_explicit": true,
     "field_figure_is_schematic": true,
-    "source_surface_query_residual": 1.3877787807814457e-16
+    "displayed_figure": "rdf_complex_query_field.pdf",
+    "figure_source": "scripts/build_rdf_complex_query_figure.py",
+    "surface_query_residual": 0.0,
+    "queries_on_source_surface": true,
+    "no_query_motion_arrow": true,
+    "archived_original_paper_asset_unchanged": true,
+    "archived_schematic_surface_query_residual": 1.3877787807814457e-16
   },
   "section_subtitles": {
     "frames": 51,
-    "source": "evidence/chapter_mapping.json"
+    "source": "evidence/chapter_mapping.json",
+    "numbered_subtitles": 50,
+    "numbering_evidence": "evidence/thesis_section_numbers.json"
   },
   "terminology": {
     "presentation_title_preserved": true,
@@ -119,6 +159,28 @@
     ],
     "physics_steps": 0,
     "max_frame_residual_m": 2.886579864025407e-15
+  },
+  "explicit_qp_input_bounds": {
+    "main_pages": [
+      13,
+      14,
+      15
+    ],
+    "joint_limit_cbf_bounds": true,
+    "velocity_bounds": true,
+    "all_joint_and_collision_indices_explicit": true,
+    "shared_macro_across_stages": true
+  },
+  "notation_sync": {
+    "current_method_sources_checked": 10,
+    "unchanged_figure_sources_checked": 7,
+    "planar_re_evaluation_scale": 0.05,
+    "max_planar_re_evaluation_error": 2.6645352591003757e-15,
+    "new_controller_rollout": false,
+    "controller_equivalence_claimed": false,
+    "raw_experiment_outcomes_preserved": true,
+    "mixed_thesis_notation_documented": 6,
+    "review": "reviews/notation_sync_revision.json"
   },
   "main_slides": 36,
   "appendix_slides": 21,

@@ -1,0 +1,41 @@
+{
+  "revision": "future_work_details_revision",
+  "request": "Add concrete subitems to the two future-work directions on page 35",
+  "changed_main_frames": [
+    35
+  ],
+  "directions": {
+    "Physical-robot experiments": [
+      "Closed-loop control on the physical robot",
+      "Success rate, minimum clearance, and completion time"
+    ],
+    "Neural-network-based sequencing improvements": [
+      "Relative-geometry features and network architecture",
+      "Success- and time-aware training objectives"
+    ]
+  },
+  "current_method_basis": {
+    "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+    "current_loss": "BCE plus selection loss; no direct completion-time term",
+    "current_geometry_inputs_and_attention_acknowledged": true,
+    "future_timing_objective": "Improve efficiency among successful candidates while retaining safety constraints"
+  },
+  "notes_changed": [
+    "future-work"
+  ],
+  "future_work_seconds": 30,
+  "speech_seconds": 1140,
+  "main_slides": 36,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "validation": {
+    "artifact_verifier": "passed",
+    "page_35_visual_review": "Two main headings and two subitems per heading; readable 10pt text, no overlap or wrapping",
+    "other_frames_unchanged": true,
+    "other_35_notes_unchanged": true,
+    "independent_review": "pair_mean_scope_review checked current learning objective and synchronized Korean documents"
+  },
+  "new_results_claimed": false,
+  "raw_experiment_data_changed": false,
+  "thesis_source_changed": false
+}

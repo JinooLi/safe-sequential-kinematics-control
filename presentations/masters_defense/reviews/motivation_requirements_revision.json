@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    3
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "removed": [
+    "Objects and equipment",
+    "Limited free space",
+    "Safety of every link"
+  ],
+  "replacement": {
+    "Goal reaching": "Reach the target pose",
+    "Collision avoidance": "Keep every link clear of obstacles"
+  },
+  "connection": "Goal reaching motivates the next CLF slide; collision avoidance motivates the following CBF slide.",
+  "semantic_review": {
+    "agent": "literature_positioning_review",
+    "required_changes": []
+  },
+  "visual_review": {
+    "no_overlap_or_clipping": true
+  },
+  "new_simulations_or_training": false
+}

@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    5
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "figure_change": "Pale green even-odd fill outside the dashed clearance boundary; white inside; original grey obstacle and distance arrows preserved.",
+  "safe_region_label": "Safe side: h(q) >= 0",
+  "safe_set_definition": "Configuration-space definition remains in the right column.",
+  "semantic_review": {
+    "agent": "literature_positioning_review",
+    "suggestion_applied": "Use Safe side in the workspace distance schematic rather than identifying the shaded region literally with configuration space."
+  },
+  "visual_review": {
+    "no_overlap_or_clipping": true,
+    "boundary_and_distance_arrows_legible": true
+  },
+  "user_source_formatting_preserved": true,
+  "new_simulations_or_training": false
+}

@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-11-11T14:53:32.903670+09:00",
+  "scope": "5쪽 Direct 정의의 소개 순서",
+  "title": "CLF–CBF QP 기반 목표 추종",
+  "order": [
+    "CLF 정의",
+    "CLF–CBF QP와 입력 제한",
+    "완화변수 및 계수 설명",
+    "Direct 제어: 최종 end-effector pose를 처음부터 추종"
+  ],
+  "narration": "Direct를 본 연구의 제어 방식 명칭으로 정의한 뒤 다음 실패 사례에 연결",
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      5
+    ],
+    "note_seconds": 40,
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_review_complete": true,
+    "equations_figures_and_data_unchanged": true
+  }
+}

@@ -28,5 +28,7 @@
   "max_reconstructed_clf_error": 1.7763568394002505e-14,
   "geometry": "Recorded q, 1 m links and 0.05 m physical link radius; spatial close-up omits distant second obstacle. No exact RDF contour drawn.",
   "plotting": "Every stored sample; no smoothing, new simulation, or QP re-solve. Shaded interval 15–35 s.",
-  "interpretation": "Observed boundary approach, vanishing command and residual task error; no claim of a universal cause for all failures or a proof of stable equilibrium."
+  "interpretation": "Observed boundary approach, vanishing command and residual task error; no claim of a universal cause for all failures or a proof of stable equilibrium.",
+  "clf_audit_values": "Original archived CLF/slack scale, not plotted; retained for raw-data verification.",
+  "plotted_error_symbol": "||e_{mathrm{p}}||"
 }

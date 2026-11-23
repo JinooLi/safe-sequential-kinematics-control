@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-09",
+  "scope_ko": "페이지 번호 축소와 학습 소개 전 10개 후보 평균으로 단계 축소 설명",
+  "content_pages": [
+    26,
+    27,
+    28,
+    31
+  ],
+  "page_counter_font_pt": 7,
+  "body_and_progress_label_font_sizes_preserved": true,
+  "candidate_selection_before_learning": "Uniform weights over all 10 candidates, not the Train-selected (3,5) baseline",
+  "success_percent": 54.73,
+  "paired_time_comparison": {
+    "both_success_records": 4545,
+    "unique_common_success_episodes": 577,
+    "reference_only_success_records": 1355,
+    "candidate_only_success_records": 928,
+    "both_failure_records": 3172,
+    "all_links_mean_seconds": 46.98710231023227,
+    "two_link_mean_seconds": 35.048893289329264,
+    "mean_paired_difference_seconds": -11.938209020903003,
+    "relative_reduction_percent": 25.407417001544374
+  },
+  "time_estimand": "Conditional paired mean under a uniform episode-pair prior; records are not independent episodes",
+  "first_preset_definition_page": 31,
+  "learning_label_vector_special_pair_emphasis_removed": true,
+  "test_success_results_and_confidence_interval_unchanged": true,
+  "speech_seconds": 1140,
+  "new_simulation": false,
+  "new_training": false,
+  "independent_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      26,
+      27,
+      28,
+      31,
+      37
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "mean_vs_oracle_vs_training_flow_consistent": true,
+    "page_number_readable": true
+  },
+  "data_validation": "All 10000 Validation outcomes and 5473 successful completion times cross-checked against original NPZ/CSV; existing (3,5) comparison reproduced"
+}

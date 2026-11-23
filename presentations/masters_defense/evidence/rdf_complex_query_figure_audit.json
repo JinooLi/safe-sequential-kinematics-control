@@ -1,0 +1,259 @@
+{
+  "representation": "Exact signed distance to a concave target polygon; original 2D teaching illustration",
+  "actual_panda_rdf": false,
+  "fitted_rdf": false,
+  "capsule_approximation": false,
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "font_rendering": "pdfLaTeX + Latin Modern Sans; PNG rasterized from vector PDF",
+  "font_size_pt": 29.5,
+  "size_inches": [
+    6.5,
+    5.5
+  ],
+  "recommended_slide_size_mm": [
+    56,
+    51
+  ],
+  "source_target_convention": "Source a surface samples, target b signed-distance field",
+  "coordinate_convention": "All geometry shown in the target b frame; no query motion",
+  "runtime_field_symbol": "tilde d_b",
+  "query_coordinate_symbol": "xi_ab,k",
+  "source_polygon_vertices": [
+    [
+      -1.15,
+      0.3
+    ],
+    [
+      -1.15,
+      0.95
+    ],
+    [
+      -0.9,
+      1.1
+    ],
+    [
+      -0.67,
+      1.1
+    ],
+    [
+      -0.67,
+      0.83
+    ],
+    [
+      -0.36,
+      0.83
+    ],
+    [
+      -0.36,
+      0.52
+    ],
+    [
+      -0.6,
+      0.52
+    ],
+    [
+      -0.6,
+      0.28
+    ],
+    [
+      -0.85,
+      0.28
+    ],
+    [
+      -0.85,
+      0.47
+    ],
+    [
+      -1.0,
+      0.47
+    ],
+    [
+      -1.0,
+      0.3
+    ]
+  ],
+  "target_polygon_vertices": [
+    [
+      0.05,
+      -0.75
+    ],
+    [
+      0.9,
+      -0.75
+    ],
+    [
+      1.13,
+      -0.53
+    ],
+    [
+      1.13,
+      -0.2
+    ],
+    [
+      0.87,
+      -0.2
+    ],
+    [
+      0.87,
+      0.15
+    ],
+    [
+      1.08,
+      0.15
+    ],
+    [
+      1.08,
+      0.55
+    ],
+    [
+      0.8,
+      0.75
+    ],
+    [
+      0.4,
+      0.75
+    ],
+    [
+      0.4,
+      0.5
+    ],
+    [
+      0.1,
+      0.5
+    ],
+    [
+      0.1,
+      0.2
+    ],
+    [
+      0.5,
+      0.2
+    ],
+    [
+      0.5,
+      -0.3
+    ],
+    [
+      0.05,
+      -0.3
+    ]
+  ],
+  "both_polygons_simple": true,
+  "both_polygons_concave": true,
+  "query_count": 11,
+  "query_edge_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    11
+  ],
+  "query_edge_fractions": [
+    0.44,
+    0.45,
+    0.55,
+    0.48,
+    0.5,
+    0.6,
+    0.52,
+    0.55,
+    0.52,
+    0.5,
+    0.6
+  ],
+  "query_coordinates": [
+    [
+      -1.15,
+      0.586
+    ],
+    [
+      -1.0374999999999999,
+      1.0175
+    ],
+    [
+      -0.7735000000000001,
+      1.1
+    ],
+    [
+      -0.67,
+      0.9704
+    ],
+    [
+      -0.515,
+      0.83
+    ],
+    [
+      -0.36,
+      0.644
+    ],
+    [
+      -0.4848,
+      0.52
+    ],
+    [
+      -0.6,
+      0.388
+    ],
+    [
+      -0.73,
+      0.28
+    ],
+    [
+      -0.925,
+      0.47
+    ],
+    [
+      -1.0,
+      0.368
+    ]
+  ],
+  "query_distances_illustrative": [
+    1.252954907408882,
+    1.2496849602999947,
+    1.0597180049428245,
+    0.9023171061217891,
+    0.6979434074479104,
+    0.48201244797204146,
+    0.5851418973206414,
+    0.7,
+    0.83,
+    1.0250000000000001,
+    1.1
+  ],
+  "highlight_index": 5,
+  "surface_query_residual_max": 0.0,
+  "target_surface_residual_max": 1.1102230246251565e-16,
+  "queries_all_on_source_surface": true,
+  "queries_all_outside_target": true,
+  "field_negative_inside_target_and_zero_on_surface_verified": true,
+  "concave_opening_positive_verified": true,
+  "analytic_square_reference_verified": true,
+  "field_grid_includes_every_query": true,
+  "distance_computation": "Minimum Euclidean distance to exact boundary segments; ray-crossing inside test",
+  "no_query_motion_arrow": true,
+  "sources": [
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/scripts/build_rdf_complex_query_figure.py",
+      "sha256": "2d78081adc0b743a0ef9100a600b7f5af5507df8652e49fe14d5784705af57b8"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/scripts/build_rdf_query_figure.py",
+      "sha256": "3e5da183f56b0c7620102c6c49b49314864c4a4db95a468ad21475ed6cd3d2fd"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/RDF_CBF.tex",
+      "sha256": "b86fe78114e25ba9ed742708851d291b645469fb25fe2c79b9dd772351cee33f"
+    }
+  ],
+  "output_sha256": {
+    "rdf_complex_query_field.pdf": "ffbf09b48e2f173a7b7037f2ef97437bc3f17479da4c8cc59ba3f72bb6afe73c",
+    "rdf_complex_query_field.png": "7ec5eb73a089fdec1c85474a9e2ffbb5774feb0d32ca2c7eb68e6caea1ac437c"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "checked_at": "2026-11-11T14:58:46.578998+09:00",
+  "scope": "5쪽 QP 제약식의 역할 명시",
+  "labels": [
+    "CLF 제약",
+    "CBF 제약",
+    "관절 속도 제한"
+  ],
+  "layout": "alignedat의 오른쪽 열에 라벨 정렬; CLF는 파랑, CBF는 초록, 관절 속도 제한은 검정",
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      5
+    ],
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_review_complete": true,
+    "equations_notes_figures_and_data_unchanged": true
+  },
+  "independent_review": "기구학 모델에서 u = qdot이므로 관절 속도 제한이 정확하며, CLF 완화는 기존 delta 설명으로 충분"
+}

@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import csv
+import hashlib
 import json
 import os
 import subprocess
@@ -180,7 +181,7 @@ for ax,item,color in zip(axes,timing,[GRAY,GREEN]):
     b=ax.barh(['All-link\nSequential',item['candidate'].replace('Learned selection', 'Learned\nselection')],vals,color=[BLUE,color],height=.48)
     ax.bar_label(b,labels=[f'{x:.2f} s' for x in vals],padding=6)
     ax.invert_yaxis(); ax.set_xlim(0,63); ax.set_xlabel('Mean completion time (s)')
-    ax.set_title(f"{item['n']} shared successes\n{item['reduction_percent']:.2f}% reduction",fontsize=FONT_SIZE,pad=14)
+    ax.set_title(f"Success in both: {item['n']}\n{item['reduction_percent']:.2f}% reduction",fontsize=FONT_SIZE,pad=14)
     decorate(ax)
 fig.tight_layout(w_pad=2); save(fig,'paired_time'); audit['validation_paired_time']=timing
 
@@ -193,7 +194,7 @@ ax.bar_label(b,labels=[f'{x:.1f}' for x in vals],label_type='center',
              fontsize=FONT_SIZE,color='white')
 ax.axhline(59,color=RED,ls='--',lw=1,label='All-link Sequential: 59.0%')
 ax.set_xticks(np.arange(10),[f'{p[0]},{p[1]}' for p in pairs]); ax.set_ylim(0,82)
-ax.set_ylabel('Success rate (%)'); ax.set_xlabel('Selected intermediate link pair')
+ax.set_ylabel('Success rate (%)'); ax.set_xlabel('Selected link pair')
 ax.legend(frameon=False,loc='upper right',fontsize=FONT_SIZE); fig.tight_layout(); save(fig,'pair_variability')
 
 # Revision cycle 1: show actual stage changes and the orientation failure.
@@ -310,7 +311,7 @@ for ax,item in zip(axes,test_timing):
     ax.bar_label(bars,labels=[f'{v:.2f} s' for v in vals],padding=6,fontsize=FONT_SIZE)
     ax.invert_yaxis();ax.set_xlim(0,65);ax.set_xlabel('Mean completion time (s)')
     change=f"{item['difference_seconds']:+.2f} s"
-    ax.set_title(f"Test: {item['n']} shared successes\nDifference: {change}",fontsize=FONT_SIZE,pad=14)
+    ax.set_title(f"Test / success in both: {item['n']}\nDifference: {change}",fontsize=FONT_SIZE,pad=14)
     decorate(ax)
 fig.tight_layout(w_pad=2);save(fig,'paired_time_test')
 audit['test_paired_time']=test_timing
@@ -342,13 +343,21 @@ audit['test_paired_time_main'] = {
 # Inactive functions are evaluated for explanation; only one CLF is constrained.
 seq=traces['sequential']; angles=np.cumsum(seq['q'],axis=1)
 points=np.cumsum(np.stack([np.cos(angles),np.sin(angles)],axis=-1),axis=1)
-values=10*np.sum((points-goals)**2,axis=-1)
-values[:,-1]+=5*(1-np.cos(seq['final_yaw']-case['target_yaw']))
+archived_w_v = 2 * reconstruction['lyapunov_reconstruction']['clf_weight']
+w_o = reconstruction['lyapunov_reconstruction']['final_yaw_weight']
+raw_values=archived_w_v*np.sum((points-goals)**2,axis=-1)
+raw_values[:,-1]+=archived_w_v*w_o*(1-np.cos(seq['final_yaw']-case['target_yaw']))
 active=seq['active_link'].astype(int)
-np.testing.assert_allclose(values[np.arange(len(active)),active-1],seq['clf'],atol=1e-10,rtol=1e-11)
+np.testing.assert_allclose(raw_values[np.arange(len(active)),active-1],seq['clf'],atol=1e-10,rtol=1e-11)
+# Re-evaluate the current thesis definition on the unchanged archived motion.
+# This changes the plotted function scale, not the recorded controller or data.
+values=.5*np.sum((points-goals)**2,axis=-1)
+values[:,-1]+=.5*w_o*(1-np.cos(seq['final_yaw']-case['target_yaw']))
+np.testing.assert_allclose(values,raw_values/(2*archived_w_v),atol=1e-12,rtol=1e-12)
+np.testing.assert_allclose(values[np.arange(len(active)),active-1],seq['clf']/(2*archived_w_v),atol=1e-11,rtol=1e-11)
 fig,axes=plt.subplots(3,1,figsize=(9,4.8),sharex=True)
 colors=[BLUE,GREEN,'#966233']
-labels=[r'$V_1$',r'$V_2$',r'$V_{\mathrm{ee}}$']
+labels=[r'$V_1$',r'$V_2$',r'$V_{\mathrm{e}}$']
 stop=int(np.searchsorted(seq['t'],20))
 for j,(ax,color,label) in enumerate(zip(axes,colors,labels)):
     mask=active==j+1
@@ -364,26 +373,28 @@ for j,(ax,color,label) in enumerate(zip(axes,colors,labels)):
 axes[-1].set_xlabel('Simulation time (s)')
 axes[-1].set_xticks([0,5,10,15,20])
 fig.tight_layout(h_pad=.35);save(fig,'planar_clf_time')
-audit['planar_clf_time']={'function':'V1,V2=10||e_p||^2; Vee=10||e_p||^2+5(1-cos(e_yaw))',
-    'active_samples_verified':len(active),'max_active_error':float(abs(values[np.arange(len(active)),active-1]-seq['clf']).max()),
+audit['planar_clf_time']={'function':'V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d)); w_o=0.5',
+    'active_samples_verified':len(active),'max_active_error':float(abs(raw_values[np.arange(len(active)),active-1]-seq['clf']).max()),
+    'max_normalized_active_error':float(abs(values[np.arange(len(active)),active-1]-seq['clf']/(2*archived_w_v)).max()),
+    'max_normalization_error':float(abs(values-raw_values/(2*archived_w_v)).max()),
+    'archive_to_current_scale':1/(2*archived_w_v),'orientation_weight':w_o,
     'time_range_seconds':[0,20],'first_goal_seconds':case['sequential']['completion_time'],
     'inactive_functions':'Re-evaluated on the same stored trajectory, not separate simulated runs.'}
 
-# Qualitative function shapes with positive symbolic weights; the archived
-# trajectory values retain their actual w_V=10 and w_psi=0.5 below.
-shape_w_V, shape_w_psi = 1.0, 0.5
+# Qualitative surfaces follow the current thesis definition, including 1/2.
+shape_w_o = 0.5
 fig=plt.figure(figsize=(11.8,4.0))
 e=np.linspace(-1,1,51);ex,ey=np.meshgrid(e,e)
 for j in range(3):
     ax=fig.add_subplot(1,3,j+1,projection='3d')
     if j<2:
-        x,y,z=ex,ey,shape_w_V*(ex**2+ey**2)
-        xlabel,ylabel=r'$e_{'+str(j+1)+r',x}$ (m)',r'$e_{'+str(j+1)+r',y}$ (m)'
+        x,y,z=ex,ey,.5*(ex**2+ey**2)
+        xlabel,ylabel=r'$e_{\mathrm{p},'+str(j+1)+r',x}$ (m)',r'$e_{\mathrm{p},'+str(j+1)+r',y}$ (m)'
         ax.set_xticks([-1,0,1]);ax.set_yticks([-1,0,1]);ax.set_zticks([0,10,20])
     else:
         x,y=np.meshgrid(np.linspace(0,1,51),np.linspace(-np.pi,np.pi,65))
-        z=shape_w_V*(x*x+shape_w_psi*(1-np.cos(y)))
-        xlabel,ylabel=r'$\|e_p\|$ (m)',r'$e_\psi$ (rad)'
+        z=.5*x*x+.5*shape_w_o*(1-np.cos(y))
+        xlabel,ylabel=r'$\|p_{\mathrm{e}}-p_{\mathrm{d}}\|$ (m)',r'$\psi_{\mathrm{e}}-\psi_{\mathrm{d}}$ (rad)'
         ax.set_xticks([0,.5,1]);ax.set_yticks([-np.pi,0,np.pi]);ax.set_yticklabels([r'$-\pi$','0',r'$\pi$']);ax.set_zticks([0,10,20])
     ax.plot_surface(x,y,z,cmap='Blues' if j==0 else 'Greens' if j==1 else 'YlOrBr',alpha=.9,
                     linewidth=.2,edgecolor='white',rstride=3,cstride=3)
@@ -393,10 +404,10 @@ for j in range(3):
     ax.tick_params(labelsize=FONT_SIZE,pad=0);ax.set_box_aspect((1,1,.78));ax.view_init(elev=27,azim=-55)
 fig.subplots_adjust(left=0,right=.99,wspace=.12,bottom=.13,top=.9)
 save(fig,'planar_clf_shapes')
-audit['planar_clf_shapes']={'coordinates':'task error coordinates; Vee plotted versus position-error norm and yaw error',
-    'symbolic_formula':'V_i=w_V||e_p,i||^2; Vee=w_V(||e_p||^2+w_psi(1-cos(e_psi)))',
-    'illustrative_weights':{'w_V':shape_w_V,'w_psi':shape_w_psi},'archived_weights':{'w_V':10,'w_psi':0.5},
-    'display':'qualitative shapes; vertical magnitude unlabelled; no changes to archived trajectory values'}
+audit['planar_clf_shapes']={'coordinates':'task error coordinates; V_e plotted versus ||p_e-p_d|| and psi_e-psi_d',
+    'symbolic_formula':'V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d))',
+    'illustrative_weights':{'w_o':shape_w_o},'archived_weights':{'w_V':10,'w_psi':0.5},
+    'display':'current thesis function shapes; vertical magnitude unlabelled; unchanged archived trajectories'}
 
 
 # Case 30: reference-style same-time comparison, reproduced from frozen records.
@@ -412,11 +423,18 @@ points30=np.array([fk(q)[1:] for q in sq['q']])
 np.testing.assert_allclose(points30[:,-1],sq['final_xy'],atol=1e-12)
 w_v30=2*report30['lyapunov_reconstruction']['clf_weight']
 w_psi30=report30['lyapunov_reconstruction']['final_yaw_weight']
-v30=w_v30*np.sum((points30-goals30)**2,axis=-1)
-v30[:,-1]+=w_v30*w_psi30*(1-np.cos(sq['final_yaw']-case30['target_yaw']))
-direct30=w_v30*(np.sum((di['final_xy']-case30['target'])**2,axis=1)+w_psi30*(1-np.cos(di['final_yaw']-case30['target_yaw'])))
-np.testing.assert_allclose(v30[np.arange(len(t30)),ac30-1],sq['clf'],rtol=1e-11,atol=1e-10)
-np.testing.assert_allclose(direct30,di['clf'],rtol=1e-11,atol=1e-10)
+raw_v30=w_v30*np.sum((points30-goals30)**2,axis=-1)
+raw_v30[:,-1]+=w_v30*w_psi30*(1-np.cos(sq['final_yaw']-case30['target_yaw']))
+raw_direct30=w_v30*(np.sum((di['final_xy']-case30['target'])**2,axis=1)+w_psi30*(1-np.cos(di['final_yaw']-case30['target_yaw'])))
+np.testing.assert_allclose(raw_v30[np.arange(len(t30)),ac30-1],sq['clf'],rtol=1e-11,atol=1e-10)
+np.testing.assert_allclose(raw_direct30,di['clf'],rtol=1e-11,atol=1e-10)
+v30=.5*np.sum((points30-goals30)**2,axis=-1)
+v30[:,-1]+=.5*w_psi30*(1-np.cos(sq['final_yaw']-case30['target_yaw']))
+direct30=.5*np.sum((di['final_xy']-case30['target'])**2,axis=1)+.5*w_psi30*(1-np.cos(di['final_yaw']-case30['target_yaw']))
+np.testing.assert_allclose(v30,raw_v30/(2*w_v30),rtol=1e-12,atol=1e-12)
+np.testing.assert_allclose(direct30,raw_direct30/(2*w_v30),rtol=1e-12,atol=1e-12)
+np.testing.assert_allclose(v30[np.arange(len(t30)),ac30-1],sq['clf']/(2*w_v30),rtol=1e-11,atol=1e-11)
+np.testing.assert_allclose(direct30,di['clf']/(2*w_v30),rtol=1e-11,atol=1e-11)
 snap30=report30['snapshots'];indices30=[x['sample_index'] for x in snap30]
 np.testing.assert_array_equal(np.flatnonzero(np.diff(ac30)!=0)+1,indices30[:2])
 np.testing.assert_allclose(t30[indices30],[2.128,6.874,18.226],atol=1e-9)
@@ -487,10 +505,10 @@ def clf30(ax,j,title=True):
     for x in t30[indices30[:2]]:ax.axvline(x,color='#999999',ls=':',lw=1)
     ax.set_xlim(0,35);ax.set_ylim(bottom=0);ax.set_xticks([0,10,20,35]);ax.grid(axis='y',alpha=.17)
     if j == 2:
-        ax.set_ylim(0, 210)
-        ax.set_yticks([0, 100, 200])
+        ax.set_ylim(0, 10.5)
+        ax.set_yticks([0, 5, 10])
     ax.set_xlabel('Time (s)',fontsize=FONT_SIZE);ax.tick_params(labelsize=FONT_SIZE)
-    if title:ax.set_title([r'Sequential: $V_1$',r'Sequential: $V_2$',r'Common EE CLF $V_{\mathrm{ee}}$'][j],fontsize=FONT_SIZE,pad=10)
+    if title:ax.set_title([r'Sequential: $V_1$',r'Sequential: $V_2$',r'Common EE CLF $V_{\mathrm{e}}$'][j],fontsize=FONT_SIZE,pad=10)
 
 fig,axes=plt.subplots(1,3,figsize=(10.5,3.25))
 for j,ax in enumerate(axes):clf30(ax,j)
@@ -511,8 +529,12 @@ audit['case30']={'case_id':30,'snapshots_seconds':times30,'shared_last_snapshot_
     'direct_qp_infeasible_count':case30['direct']['qp_infeasible_count'],
     'direct_same_time_position_error':float(np.linalg.norm(di['final_xy'][end30]-case30['target'])),
     'direct_same_time_yaw_error':float(abs(np.arctan2(np.sin(di['final_yaw'][end30]-case30['target_yaw']),np.cos(di['final_yaw'][end30]-case30['target_yaw'])))),
-    'raw_samples_per_method':len(t30),'max_active_clf_error':float(np.max(abs(v30[np.arange(len(t30)),ac30-1]-sq['clf']))),
-    'max_direct_clf_error':float(np.max(abs(direct30-di['clf']))),
+    'raw_samples_per_method':len(t30),'max_active_clf_error':float(np.max(abs(raw_v30[np.arange(len(t30)),ac30-1]-sq['clf']))),
+    'max_direct_clf_error':float(np.max(abs(raw_direct30-di['clf']))),
+    'max_normalized_active_clf_error':float(np.max(abs(v30[np.arange(len(t30)),ac30-1]-sq['clf']/(2*w_v30)))),
+    'max_normalized_direct_clf_error':float(np.max(abs(direct30-di['clf']/(2*w_v30)))),
+    'max_normalization_error':float(max(abs(v30-raw_v30/(2*w_v30)).max(),abs(direct30-raw_direct30/(2*w_v30)).max())),
+    'archive_to_current_scale':1/(2*w_v30),'current_orientation_weight':w_psi30,
     'actual_weights':{'w_V':w_v30,'w_psi':w_psi30},'all_geometry_inside_common_axes':True,
     'obstacle_halo':'Nominal geometric 0.08 m margin, matching archived reference; not exact RDF contours',
     'figure_files':['case030_stages','case030_clf_time','case030_overview'],'no_new_simulation':True}
@@ -520,8 +542,36 @@ for item in tr30.values():item.close()
 
 for t in traces.values(): t.close()
 assert requested_figures <= set(generated_figures), f'Unknown figure stems: {requested_figures - set(generated_figures)}'
+notation_figures = {'planar_clf_time','planar_clf_shapes','case030_clf_time','case030_overview'}
+if not requested_figures or requested_figures & notation_figures:
+    source_names = ['case_011_direct.npz','case_011_sequential.npz',
+                    'case_030_direct.npz','case_030_sequential.npz',
+                    'planar_cases.json','planar_goal_reconstruction.json','case030_report.json']
+    source_hashes = {name:hashlib.sha256((DATA/name).read_bytes()).hexdigest() for name in source_names}
+    for record in [reconstruction,report30]:
+        for original_path,expected_hash in record['source_sha256'].items():
+            if original_path.endswith('.npz'):
+                assert source_hashes[Path(original_path).name] == expected_hash
+    notation_audit = {
+        'thesis_source':'sections/Method/Planar_Control.tex, eq:planar-final-clf',
+        'displayed_definition':audit['planar_clf_shapes']['symbolic_formula'],
+        'orientation_weight':w_o,'archive_to_current_scale':1/(2*archived_w_v),
+        'case11':audit['planar_clf_time'],'case30':audit['case30'],
+        'regenerated_figures':sorted(set(generated_figures) & notation_figures),
+        'source_sha256':source_hashes,'trajectory_hashes_match_original_archive':True,
+        'operation':'Re-evaluate current thesis functions on saved trajectories; no new simulation, QP solve or training.',
+        'unchanged':'Recorded q, u, t, CLF/slack logs, success labels, completion times and all empirical outcomes.',
+        'controller_equivalence_claimed':False,
+        'controller_equivalence_note':'Scaling V alone does not preserve a soft-CLF QP optimizer. An equivalent reformulation would also scale the slack and compensate its penalty; no such controller rerun is represented by these plots.'
+    }
+    (DATA/'notation_figure_audit.json').write_text(json.dumps(notation_audit,ensure_ascii=False,indent=2)+'\n')
 if requested_figures:
-    # A presentation-only partial render leaves the complete data audit intact.
+    # Keep unrelated evidence checks from the complete audit during a partial render.
+    if requested_figures & notation_figures:
+        saved_audit = read('figure_audit.json')
+        for key in ['planar_clf_time','planar_clf_shapes','case30']:
+            saved_audit[key] = audit[key]
+        (DATA/'figure_audit.json').write_text(json.dumps(saved_audit,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'regenerated_figures': generated_figures, 'all_data_checks_passed': True}, indent=2))
 else:
     (DATA/'figure_audit.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2)+'\n')

@@ -1,0 +1,27 @@
+{
+  "checked_at": "2026-11-11T16:46:47.274378+09:00",
+  "scope": "6쪽 목표 도달 한계 문구와 대본",
+  "takeaway": "CLF–CBF QP를 통한 목표 추종에도 목표 미도달 가능",
+  "narration": [
+    "CLF 완화로 감소가 항상 강제되지는 않음",
+    "실제 episode: QP 실행 불가능",
+    "별도 문헌 분석: 비목표 평형점"
+  ],
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      6
+    ],
+    "changed_presenter_pages": [
+      11,
+      12
+    ],
+    "note_seconds": 25,
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "visual_review_complete": true,
+    "other_notes_figures_and_experiment_data_unchanged": true
+  }
+}

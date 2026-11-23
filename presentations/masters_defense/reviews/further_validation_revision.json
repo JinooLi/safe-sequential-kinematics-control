@@ -1,0 +1,30 @@
+{
+  "revision": "further_validation_revision",
+  "request": "Limit page 35 future work to physical-robot experiments and neural-network-based sequencing improvements",
+  "changed_main_frames": [
+    35
+  ],
+  "items": [
+    "Physical-robot experiments",
+    "Neural-network-based sequencing improvements"
+  ],
+  "title": "Future Work: Experiments and Sequencing",
+  "notes_changed": [
+    "conclusion",
+    "future-work"
+  ],
+  "future_work_seconds": 30,
+  "speech_seconds": 1140,
+  "main_slides": 36,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "validation": {
+    "artifact_verifier": "passed",
+    "page_35_visual_review": "Two readable items with even spacing, no overlaps",
+    "other_main_frames_unchanged": true,
+    "existing_user_source_edits_preserved": true,
+    "independent_document_sync": "pair_mean_scope_review"
+  },
+  "raw_experiment_data_changed": false,
+  "thesis_source_changed": false
+}

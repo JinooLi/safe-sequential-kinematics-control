@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-09",
+  "figure": "Fig. 1(a)",
+  "paper_title": "Representing Robot Geometry as Distance Fields: Applications to Whole-body Manipulation",
+  "bibtex_key": "li2024rdf",
+  "paper_url": "https://arxiv.org/html/2307.00533v3",
+  "original_image_url": "https://arxiv.org/html/2307.00533v3/fig/robot_sdf_compressed.png",
+  "source_local_path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/figs/rdf_robot_sdf_li2024.png",
+  "source_local_sha256": "99d1a7210ae00b708da70ab15bf20f47687acf98387d14bc7af18b3a436ee4eb",
+  "display_file": "Fig/rdf_robot_sdf_li2024.png",
+  "display_sha256": "99d1a7210ae00b708da70ab15bf20f47687acf98387d14bc7af18b3a436ee4eb",
+  "pixel_size": [
+    651,
+    732
+  ],
+  "source_copied_without_modification": true,
+  "representation": "Original-paper visualization of a Franka robot signed distance field",
+  "actual_thesis_controller_result": false,
+  "link_pair_query_diagram": false,
+  "caption_cites_original": true,
+  "attribution": "Li et al., Fig. 1(a)",
+  "new_simulation": false,
+  "new_training": false,
+  "previous_schematic_retained_for_reproducibility": "evidence/rdf_query_figure_audit.json"
+}

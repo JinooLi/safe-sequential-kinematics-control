@@ -1,0 +1,287 @@
+{
+  "date": "2026-11-08",
+  "task": "현재 논문 기호와 발표자료 동기화",
+  "status": "완료: audience 57페이지 / presenter 93페이지 빌드 및 전체 artifact 검증 통과",
+  "authoritative_rule": "현재 Method의 명시적 정의 우선; 기호표와 수정 중 문단의 구표기는 그대로 되돌리지 않음",
+  "thesis_root": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis",
+  "thesis_modified": false,
+  "thesis_source_sha256": {
+    "sections/Method/Problem_Formulation.tex": "98e383b9dc8203937c9b99ca3bc3f53f2ca11cf341843c049addad53c2f9f529",
+    "sections/Method/Kinematic_Control.tex": "05dcea10372f074dee345c961ab935f3e765ab1dfd649befb2a5071d8d514b2b",
+    "sections/Method/Sequential_Frames.tex": "6591ba1f21514303ec3a64f60f592209702348654bddea9ff00b848850713a5c",
+    "sections/Method/Planar_Control.tex": "5e6c9fe641de55385e78f78088c60dd356b3c5f91557c31751b71e6a8b5c2adc",
+    "sections/Method/Panda_Frames.tex": "0bd9fae19c20f10e90b9f466600fafbf6c78ed01c22fb90608fbfe1752870435",
+    "sections/Method/Panda_Execution.tex": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5",
+    "sections/Method/Link_Selection.tex": "9e5abe73a0b4e0c8b6406d8e291b480fcdda55ea3cbbc8d7751b756982dbf4ef",
+    "sections/Method/Safe_IK.tex": "4102dd4542800859401f3567e9b716e2aa77df1577e40defe6f223917527ddf8",
+    "sections/Preliminaries/CLF_CBF_QP.tex": "d0cd68c458ee22e2ac42fc50b0b30369c44f33e06808e97f40029c4b2fd180c5",
+    "sections/notation.tex": "816b06f542728b32f8a3108855e373b3304c37e9267175ba48a3bf4b85a7b7c4"
+  },
+  "changes": [
+    {
+      "topic": "목표와 시간",
+      "from": [
+        "T",
+        "varepsilon_p",
+        "varepsilon_R"
+      ],
+      "to": [
+        "T_d",
+        "delta_p",
+        "delta_o"
+      ],
+      "pages": [
+        18,
+        51
+      ],
+      "source": "sections/Method/Problem_Formulation.tex",
+      "detail": "최종 목표 정의를 동기화. IK 및 intermediate-stage tolerance의 다른 역할은 보존."
+    },
+    {
+      "topic": "방법 QP",
+      "from": [
+        "V_s",
+        "c_V",
+        "W_u",
+        "gamma_J",
+        "unspecified input set"
+      ],
+      "to": [
+        "V_i",
+        "c_i",
+        "W_{rm u}",
+        "alpha_j",
+        "v_min,j <= u_j <= v_max,j"
+      ],
+      "pages": [
+        13,
+        14,
+        15,
+        52
+      ],
+      "source": "sections/Method/Kinematic_Control.tex",
+      "detail": "요약식은 U(q)로 joint/velocity limits를 묶고 A12에서 명시. 배경 c_V는 유지."
+    },
+    {
+      "topic": "전체 task sequence",
+      "from": [
+        "S=(i_1,...,i_L)"
+      ],
+      "to": [
+        "mathcal S=(i_1,...,i_L,i_{L+1})",
+        "Planar mathcal S=(1,2,3)"
+      ],
+      "pages": [
+        12,
+        17,
+        53
+      ],
+      "source": "sections/Method/Sequential_Frames.tex",
+      "detail": "최종 EE를 포함. Spatial S_all의 중간 frame 7개+EE 1개는 총 8개로 보존."
+    },
+    {
+      "topic": "Planar CLF",
+      "from": [
+        "V_i=w_V ||e_p,i||^2",
+        "V_ee=w_V(||e_p,ee||^2+w_psi(1-cos(e_psi)))"
+      ],
+      "to": [
+        "V_i=0.5||p_i-p_i*||^2",
+        "V_e=0.5||p_e-p_d||^2+0.5w_o(1-cos(psi_e-psi_d))",
+        "V_3=V_e"
+      ],
+      "pages": [
+        8,
+        13,
+        14,
+        15,
+        16,
+        19,
+        50,
+        56
+      ],
+      "source": "sections/Method/Planar_Control.tex",
+      "detail": "함수 그림과 저장 궤적 위의 값 재평가. 새 QP 실행이나 원시 실험 변경 없음."
+    },
+    {
+      "topic": "Spatial orientation error",
+      "from": [
+        "epsilon_i"
+      ],
+      "to": [
+        "epsilon_i preserved",
+        "e_o=epsilon_ee for the final spatial goal"
+      ],
+      "pages": [
+        23,
+        51
+      ],
+      "source": "sections/Method/Panda_Frames.tex",
+      "detail": "상대 unit quaternion의 vector part. Spatial 가중치 w_R 유지."
+    },
+    {
+      "topic": "후보 집합과 선택",
+      "from": [
+        "mathcal S as a set of candidate pairs"
+      ],
+      "to": [
+        "Omega",
+        "S_k",
+        "S_hat_k(z)"
+      ],
+      "pages": [
+        26,
+        30
+      ],
+      "source": "sections/Method/Link_Selection.tex",
+      "detail": "후보 pair S_k와 선택 S_hat_k(z)는 현 논문과 일치하므로 유지."
+    },
+    {
+      "topic": "학습 문맥",
+      "from": [
+        "rho(R_d) in abstract context"
+      ],
+      "to": [
+        "z=(q_0,q*,p_d,R_d,mathcal O)"
+      ],
+      "pages": [
+        29,
+        30
+      ],
+      "source": "sections/Method/Link_Selection.tex",
+      "detail": "실제 network 입력에서는 회전행렬 첫 두 열의 6D 인코딩을 사용해 23D 입력 유지."
+    },
+    {
+      "topic": "학습 목적함수",
+      "from": [
+        "N",
+        "literal coefficient 3"
+      ],
+      "to": [
+        "N_tr",
+        "lambda_sel",
+        "lambda_sel=3"
+      ],
+      "pages": [
+        28,
+        48
+      ],
+      "source": "sections/Method/Link_Selection.tex",
+      "detail": "전체 Train episode의 평균. BCE pair 평균과 all-failure inclusion 유지."
+    }
+  ],
+  "thesis_inconsistencies": [
+    {
+      "source": "sections/notation.tex",
+      "issue": "기호표에 V_s, c_V, w_V, w_psi, S, 후보집합 mathcal S, 목표 varepsilon_p/varepsilon_R, T가 남아 있음.",
+      "handling": "수정된 Method의 명시적 정의 우선. 기호표 자체는 수정하지 않음."
+    },
+    {
+      "source": "sections/Method/Planar_Control.tex",
+      "issue": "현재 V_e 정의 다음의 도함수에 p_d*와 w_psi가 남고, yaw 항 계수가 새 w_o/2 정의와 불일치.",
+      "handling": "발표에 해당 도함수를 그대로 전사하지 않음. 현재 정의로 함수와 그림 구성."
+    },
+    {
+      "source": "sections/Method/Panda_Frames.tex",
+      "issue": "S_all=(1,...,7)은 중간 frame들만 가리키지만 일반 mathcal S는 최종 EE까지 포함.",
+      "handling": "발표에서 중간 frame sequence임을 명시하고 이후 EE 추가. 보관 실행의 총 8-task 유지."
+    },
+    {
+      "source": "sections/Method/Kinematic_Control.tex",
+      "issue": "확정 QP 뒤 수정 중 문단에 c_V/gamma_J와 이전 input bounds 설명 잔존.",
+      "handling": "상단 QP의 V_i/c_i/alpha_j 및 v_min/v_max를 우선. 배경 이론 c_V까지 전역 치환하지 않음."
+    },
+    {
+      "source": "sections/Method/Safe_IK.tex; sections/Method/Panda_Execution.tex",
+      "issue": "IK acceptance varepsilon_p/varepsilon_R, 중간-stage varepsilon_p,stage/varepsilon_R,stage와 최종 목표 delta_p/delta_o가 서로 다른 역할.",
+      "handling": "기호가 비슷하다는 이유로 tolerance 값을 병합하거나 제어/평가 기준을 바꾸지 않음."
+    },
+    {
+      "source": "sections/Method/Link_Selection.tex",
+      "issue": "추상 z에는 R_d로 수정되었으나 실제 입력 차원은 23으로 유지하며 6D encoding 설명은 주석 처리됨.",
+      "handling": "슬라이드 추상 z는 R_d로 맞추고 한국어 Q&A에 첫 두 열의 6D encoding을 명시."
+    }
+  ],
+  "planar_re_evaluation": {
+    "archive_task_weight_w_V": 10.0,
+    "archive_yaw_weight_w_psi": 0.5,
+    "current_orientation_weight_w_o": 0.5,
+    "current_over_archive_scale": 0.05,
+    "data_scope": "저장된 동일한 configuration·time trajectory 위의 함수 재평가",
+    "new_rollout": false,
+    "source_trajectories_modified": false,
+    "success_labels_modified": false,
+    "completion_times_modified": false,
+    "qp_equivalence_claimed": false,
+    "explanation": "CLF scaling을 바꾸고 slack penalty를 고정하면 일반적으로 최적 제어가 달라질 수 있음. 동일 제어의 단순 재실행으로 주장하지 않음.",
+    "raw_slack_preserved": true
+  },
+  "preserved": {
+    "main_slides": 36,
+    "appendix_pages": 21,
+    "audience_pages": 57,
+    "presenter_pages": 93,
+    "speech_seconds": 1140,
+    "buffer_seconds": 60,
+    "slide_language": "English",
+    "notes_language": "Korean"
+  },
+  "artifacts": [
+    "main.tex",
+    "speaker-notes.tex",
+    "발표대본.txt",
+    "발표구성.txt",
+    "질의응답_메모.txt",
+    "기호_동기화_기록.txt",
+    "Fig/",
+    "scripts/",
+    "evidence/refinement_claims_audit.json"
+  ],
+  "figure_audit": "evidence/notation_figure_audit.json",
+  "notes_export": {
+    "notes": 36,
+    "speech_seconds": 1140,
+    "presenter_pages": 93
+  },
+  "verification": {
+    "result": "passed",
+    "report": "evidence/verification.json",
+    "notation_sync": {
+      "current_method_sources_checked": 10,
+      "unchanged_figure_sources_checked": 7,
+      "planar_re_evaluation_scale": 0.05,
+      "max_planar_re_evaluation_error": 2.6645352591003757e-15,
+      "new_controller_rollout": false,
+      "controller_equivalence_claimed": false,
+      "raw_experiment_outcomes_preserved": true,
+      "mixed_thesis_notation_documented": 6,
+      "review": "reviews/notation_sync_revision.json"
+    },
+    "pdfs": {
+      "main": {
+        "pages": 57,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 4754,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "c8b04de2bb5e57fd674b6ef5545287f4eea3f65eeb6ad1befd8b964afe6d3fce"
+      },
+      "presenter": {
+        "pages": 93,
+        "page_size_points": [
+          362.835,
+          272.126
+        ],
+        "extracted_words": 9435,
+        "out_of_page_text_boxes": 0,
+        "layout_or_font_errors": [],
+        "sha256": "b2f1f4daac737e4801a554e62a6ae709c9ee037be1dffb6daaabcf8b2dfd7d2b"
+      }
+    },
+    "speech_seconds": 1140,
+    "main_note_count": 36
+  }
+}

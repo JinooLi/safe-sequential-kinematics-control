@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-09",
+  "scope_ko": "로봇팔 구조 및 IK 정보를 중간 link task로 변환하는 기여로 발표의 비교 초점 수정",
+  "pages": [
+    7,
+    11,
+    12,
+    17
+  ],
+  "literature_columns": [
+    "Method",
+    "Design focus",
+    "How motion is guided"
+  ],
+  "research_question": "How can the manipulator's kinematic structure guide progress toward the goal?",
+  "method_exposition": "Selected IK posture q* -> intermediate link targets p_i*=p_i(q*) -> ordered tasks",
+  "not_used_as_novelty": [
+    "QP form retention",
+    "Residual equilibria in Tan",
+    "IK use alone",
+    "No manipulator information in prior work"
+  ],
+  "research_scope_ko": "비교한 세 논문에 IK 해에서 중간 link 목표와 순서를 구성하는 절차가 제시되지 않았다는 범위. 전체 분야 최초나 직접 성능 우위를 주장하지 않음.",
+  "primary_sources": [
+    {
+      "study": "Reis et al.",
+      "url": "https://arxiv.org/html/2003.07819v4#S4",
+      "design_focus": "CLF geometry"
+    },
+    {
+      "study": "Tan & Dimarogonas",
+      "url": "https://arxiv.org/html/2104.14895v4#S4",
+      "design_focus": "CLF-compatible nominal input"
+    },
+    {
+      "study": "Goncalves et al.",
+      "url": "https://arxiv.org/html/2307.09901v1#S5.SS1",
+      "design_focus": "Circulation constraint",
+      "qualification_ko": "4-DOF 예제에서 link 거리, joint limit, 목표 configuration 사용. 목표 q_g를 IK로 계산했는지는 명시되지 않음."
+    }
+  ],
+  "notes_labels": [
+    "literature",
+    "planar-setup",
+    "algorithm-overview"
+  ],
+  "notes_seconds": [
+    40,
+    10,
+    25
+  ],
+  "speech_seconds": 1140,
+  "new_simulation": false,
+  "independent_review": {
+    "agent": "literature_positioning_review",
+    "pages": [
+      7,
+      12,
+      17
+    ],
+    "required_changes_resolved": [
+      "whole-arm goal -> whole-arm posture"
+    ],
+    "minor_spacing_change": "Collision functions -> Collision model"
+  },
+  "user_feedback_source_preserved": true
+}

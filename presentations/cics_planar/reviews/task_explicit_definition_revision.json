@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-11-12T09:46:26.630325+09:00",
+  "correction": "이전 슬라이드에는 Task 명칭과 예시만 있고 일반 정의는 대본에만 있었으므로 본문에 명시",
+  "slide": 3,
+  "definition": "Task: 로봇이 달성해야 하는 제어 목표",
+  "example": "본 연구: End-effector의 목표 pose 도달",
+  "validation": {
+    "changed_pdf_pages": {
+      "main.pdf": [
+        3
+      ],
+      "presenter.pdf": [
+        5,
+        6
+      ]
+    },
+    "compile_warnings": 0,
+    "visual_review": "정의와 예시 각각 한 줄 유지; 내용 겹침 없음"
+  },
+  "speaker_script_unchanged": true
+}

@@ -1,0 +1,167 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    17,
+    37,
+    40,
+    41,
+    42,
+    49,
+    51,
+    52,
+    53,
+    54
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "planar_alignment": {
+    "image_width_mm": 47.2,
+    "common_column_height_mm": 64,
+    "static_obstacle_patch_xyxy": [
+      380,
+      325,
+      520,
+      455
+    ],
+    "identical_obstacle_pixels_and_base_bboxes": true,
+    "frames": [
+      {
+        "page": 11,
+        "image_pixels": [
+          1500,
+          1125
+        ],
+        "upper_obstacle_patch_sha256": "f9839bd6461a9d512ac8a904676c75504a70f17700265b40bebe8f44b421e052",
+        "base_marker_bbox_pixels": [
+          151,
+          564,
+          169,
+          582
+        ]
+      },
+      {
+        "page": 12,
+        "image_pixels": [
+          1500,
+          1125
+        ],
+        "upper_obstacle_patch_sha256": "f9839bd6461a9d512ac8a904676c75504a70f17700265b40bebe8f44b421e052",
+        "base_marker_bbox_pixels": [
+          151,
+          564,
+          169,
+          582
+        ]
+      },
+      {
+        "page": 13,
+        "image_pixels": [
+          1500,
+          1125
+        ],
+        "upper_obstacle_patch_sha256": "f9839bd6461a9d512ac8a904676c75504a70f17700265b40bebe8f44b421e052",
+        "base_marker_bbox_pixels": [
+          151,
+          564,
+          169,
+          582
+        ]
+      },
+      {
+        "page": 14,
+        "image_pixels": [
+          1500,
+          1125
+        ],
+        "upper_obstacle_patch_sha256": "f9839bd6461a9d512ac8a904676c75504a70f17700265b40bebe8f44b421e052",
+        "base_marker_bbox_pixels": [
+          151,
+          564,
+          169,
+          582
+        ]
+      },
+      {
+        "page": 15,
+        "image_pixels": [
+          1500,
+          1125
+        ],
+        "upper_obstacle_patch_sha256": "f9839bd6461a9d512ac8a904676c75504a70f17700265b40bebe8f44b421e052",
+        "base_marker_bbox_pixels": [
+          151,
+          564,
+          169,
+          582
+        ]
+      }
+    ]
+  },
+  "appendix_corrections": {
+    "A3": "Nonnegative first-order secondary-term change, before clipping",
+    "A4": "Fixed selected query set; explicit soft-min weights and approximation scope",
+    "A5": "Intermediate-task comparison; model-specific stall conditions",
+    "A9": "Collision and joint-limit barriers; absolute continuity, actual velocity, finite switches",
+    "A11": "Joint limits included in safe set",
+    "A12": "Shared rather than Full QP, matching the common basic formulation",
+    "A13": "Same transition/termination flow as body page 17",
+    "A14": "Recorded limitations and CI interpretation; outdated fresh/revised-QP recommendations removed"
+  },
+  "unchanged_values_checked": [
+    "A1",
+    "A2",
+    "A6",
+    "A8",
+    "A10",
+    "A15",
+    "A16"
+  ],
+  "related_work_assumptions_checked": "A17",
+  "new_simulations_or_training": false,
+  "raw_results_changed": false,
+  "subagent_review": {
+    "math_and_visual": "literature_positioning_review",
+    "numerics_and_notes": "page25_color_check",
+    "required_changes_remaining": []
+  },
+  "thesis_sources": [
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Kinematic_Control.tex",
+      "sha256": "05dcea10372f074dee345c961ab935f3e765ab1dfd649befb2a5071d8d514b2b"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Problem_Formulation.tex",
+      "sha256": "98e383b9dc8203937c9b99ca3bc3f53f2ca11cf341843c049addad53c2f9f529"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Safe_IK.tex",
+      "sha256": "4102dd4542800859401f3567e9b716e2aa77df1577e40defe6f223917527ddf8"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/RDF_CBF.tex",
+      "sha256": "b86fe78114e25ba9ed742708851d291b645469fb25fe2c79b9dd772351cee33f"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Execution.tex",
+      "sha256": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "sha256": "0f6442be70bdd5a84b2fb05f75a2670da1df30fbd6742a7233dd3c39083a530f"
+    }
+  ],
+  "joint_gain_note": "Per-joint alpha_j from the current common QP; the same comparison proof as the thesis invariance paragraph with a common gamma_J."
+}

@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    16
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "scope": "Page 16 layout only",
+  "transition_labels": "Centered above each arrow",
+  "qp_and_plot_centers_aligned": true,
+  "original_plot_and_font_sizes_preserved": true,
+  "three_formula_and_constraint_rows_aligned": true,
+  "lower_formula_and_shared_text_spacing_increased": true,
+  "independent_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      16
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "lower_text_spacing_sufficient": true
+  }
+}

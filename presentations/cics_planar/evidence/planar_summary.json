@@ -1,0 +1,284 @@
+{
+  "settings": {
+    "cases": 300,
+    "workers": 12,
+    "seed": 2332,
+    "duration": 35.0,
+    "goal_tolerance": 0.1,
+    "yaw_tolerance": 0.1,
+    "barrier_tolerance": -0.01,
+    "slack_active_threshold": 0.01,
+    "control_mode": null,
+    "initial_q": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "output_dir": "outputs/sequential_comparison",
+    "target_radius_range": [
+      0.6,
+      2.7
+    ],
+    "target_angle_range": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "target_orientation_range": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "obstacle_position_range": [
+      -2.2,
+      2.2
+    ],
+    "obstacle_radius_range": [
+      0.2,
+      0.35
+    ],
+    "initial_clearance_margin": 0.03,
+    "target_clearance_margin": 0.1,
+    "max_case_attempts": 10000,
+    "max_obstacle_attempts": 1000,
+    "resolved_control_mode": "clf",
+    "kinematic": true,
+    "link_lengths": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "analysis": {
+    "case_count": 300,
+    "methods": {
+      "direct": {
+        "success_count": 216,
+        "success_rate": 0.72,
+        "failure_reasons": {
+          "timeout": 65,
+          "qp_infeasible": 17,
+          "safety_violation": 2
+        },
+        "metrics": {
+          "position_error": {
+            "count": 300,
+            "mean": 0.10980845465539327,
+            "median": 0.011569300850589173,
+            "q25": 0.008335316642220033,
+            "q75": 0.0850185830196719
+          },
+          "yaw_error": {
+            "count": 300,
+            "mean": 0.2585029670885877,
+            "median": 0.04968933522872576,
+            "q25": 0.03826288810433953,
+            "q75": 0.11166369576276391
+          },
+          "min_barrier": {
+            "count": 300,
+            "mean": 0.2591468245909783,
+            "median": 0.1365873563661735,
+            "q25": 1.0584588761020086e-13,
+            "q75": 0.4168959782704694
+          },
+          "control_effort": {
+            "count": 300,
+            "mean": 5.586711515903297,
+            "median": 4.338077943429168,
+            "q25": 3.2480198474546533,
+            "q75": 5.862910591404088
+          },
+          "max_joint_velocity": {
+            "count": 300,
+            "mean": 3.4274498087772978,
+            "median": 3.7252035561834917,
+            "q25": 2.1296805987788567,
+            "q75": 4.76856552479994
+          },
+          "total_qp_solve_time": {
+            "count": 300,
+            "mean": 4.304947781391286,
+            "median": 4.201810565718915,
+            "q25": 4.120510027220007,
+            "q75": 4.390935421164613
+          },
+          "mean_qp_solve_time": {
+            "count": 300,
+            "mean": 0.0002459970160795021,
+            "median": 0.00024010346089822372,
+            "q25": 0.00023545771584114326,
+            "q75": 0.00025091059549512074
+          },
+          "mean_clf_slack": {
+            "count": 300,
+            "mean": 1.616968373570501,
+            "median": 0.05281856017363618,
+            "q25": 0.02446286246570525,
+            "q75": 0.7050787839461164
+          },
+          "max_clf_slack": {
+            "count": 300,
+            "mean": 32.84436731094684,
+            "median": 5.69746774193259,
+            "q25": 0.21139431983783863,
+            "q75": 46.044720717114785
+          },
+          "nonzero_clf_slack_ratio_to_goal": {
+            "count": 218,
+            "mean": 0.7361881655745869,
+            "median": 0.7884907634022813,
+            "q25": 0.672536830605896,
+            "q75": 0.9011942933110204
+          }
+        }
+      },
+      "sequential": {
+        "success_count": 253,
+        "success_rate": 0.8433333333333334,
+        "failure_reasons": {
+          "timeout": 36,
+          "qp_infeasible": 10,
+          "safety_violation": 1
+        },
+        "metrics": {
+          "position_error": {
+            "count": 300,
+            "mean": 0.0989555584133426,
+            "median": 0.011192314319491544,
+            "q25": 0.008999531585270542,
+            "q75": 0.019333923466594828
+          },
+          "yaw_error": {
+            "count": 300,
+            "mean": 0.16991504923439077,
+            "median": 0.04892784342097167,
+            "q25": 0.03919700745426735,
+            "q75": 0.06194366945741464
+          },
+          "min_barrier": {
+            "count": 300,
+            "mean": 0.2356347060214394,
+            "median": 0.06725135401410134,
+            "q25": 0.005656194681307236,
+            "q75": 0.3642422463069115
+          },
+          "control_effort": {
+            "count": 300,
+            "mean": 5.807431486509393,
+            "median": 4.838420249735288,
+            "q25": 3.9546114076623757,
+            "q75": 6.472685911833043
+          },
+          "max_joint_velocity": {
+            "count": 300,
+            "mean": 2.6146662827961915,
+            "median": 2.2439308794880737,
+            "q25": 1.4890194341423668,
+            "q75": 3.7540422042886434
+          },
+          "total_qp_solve_time": {
+            "count": 300,
+            "mean": 4.271625740650731,
+            "median": 4.26172111852793,
+            "q25": 4.143012404820183,
+            "q75": 4.375188847479876
+          },
+          "mean_qp_solve_time": {
+            "count": 300,
+            "mean": 0.00024409289946575606,
+            "median": 0.00024352692105873887,
+            "q25": 0.00023674356598972477,
+            "q75": 0.00025001079128456435
+          },
+          "mean_clf_slack": {
+            "count": 300,
+            "mean": 1.4105314943133496,
+            "median": 0.025134722459128928,
+            "q25": 0.01857768709390322,
+            "q75": 0.10972107908119191
+          },
+          "max_clf_slack": {
+            "count": 300,
+            "mean": 11.383493516017259,
+            "median": 3.332594273003698,
+            "q25": 0.19931568328912508,
+            "q75": 17.876314708371
+          },
+          "nonzero_clf_slack_ratio_to_goal": {
+            "count": 254,
+            "mean": 0.675628166671883,
+            "median": 0.6851424826921361,
+            "q25": 0.6178757906904656,
+            "q75": 0.7511728733309674
+          }
+        }
+      }
+    },
+    "comparisons": {
+      "task_decomposition": {
+        "baseline": "direct",
+        "candidate": "sequential",
+        "outcomes": {
+          "both_failed": 37,
+          "candidate_only_success": 47,
+          "baseline_only_success": 10,
+          "both_succeeded": 206
+        },
+        "paired_both_success": {
+          "sequential_minus_direct_completion_time": {
+            "count": 206,
+            "mean": 3.939242718446519,
+            "median": 3.980000000000346,
+            "q25": 1.746000000000583,
+            "q75": 6.446000000000405
+          },
+          "sequential_minus_direct_control_effort": {
+            "count": 206,
+            "mean": 0.509486120583233,
+            "median": 0.5204171311046595,
+            "q25": -0.11859289181359511,
+            "q75": 1.2848610997735237
+          },
+          "sequential_minus_direct_min_barrier": {
+            "count": 206,
+            "mean": -0.06682408247524904,
+            "median": -0.014294180328398576,
+            "q25": -0.14264959172666397,
+            "q75": 4.4066120058472436e-09
+          },
+          "sequential_minus_direct_max_clf_slack": {
+            "count": 206,
+            "mean": -17.528416106448468,
+            "median": -0.09117328875943502,
+            "q25": -16.29078998917332,
+            "q75": 0.19242945379967683
+          },
+          "sequential_minus_direct_nonzero_clf_slack_ratio_to_goal": {
+            "count": 206,
+            "mean": -0.0510217605231587,
+            "median": -0.08723026755416399,
+            "q25": -0.19930135391618894,
+            "q75": 0.01196230717613092
+          },
+          "sequential_minus_direct_position_error": {
+            "count": 206,
+            "mean": 0.0006857671866672606,
+            "median": 0.0007219170589786088,
+            "q25": 3.577798219368128e-05,
+            "q75": 0.001868130916154198
+          },
+          "sequential_minus_direct_yaw_error": {
+            "count": 206,
+            "mean": 0.0028508969266068216,
+            "median": 0.0031147371427648896,
+            "q25": -0.00046942799321758773,
+            "q75": 0.007384507197936764
+          }
+        }
+      }
+    }
+  },
+  "sampling": {
+    "ik_rejections_before_acceptance": 340,
+    "note": "Only cases with at least one collision-free IK branch are executed in both methods."
+  }
+}

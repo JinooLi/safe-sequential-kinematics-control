@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-09",
+  "slide": 9,
+  "title": "Human-Inspired Intuition: Posture and Intermediate Goals",
+  "sources": [
+    {
+      "key": "menger2012posture",
+      "doi": "10.1016/j.actpsy.2012.06.006",
+      "primary_url": "https://doi.org/10.1016/j.actpsy.2012.06.006",
+      "abstract_url": "https://pubmed.ncbi.nlm.nih.gov/22820453/",
+      "supported_claim": "Starting arm posture changes obstacle-avoidance reaching trajectories.",
+      "limit": "Does not establish a shoulder-first then hand-reaching execution rule."
+    },
+    {
+      "key": "lukic2014coordination",
+      "doi": "10.1007/s00422-014-0591-9",
+      "primary_url": "https://doi.org/10.1007/s00422-014-0591-9",
+      "full_text_url": "https://infoscience.epfl.ch/server/api/core/bitstreams/19570b6b-7f4f-42fb-a925-3a6f4f4fdbf8/content",
+      "supported_claim": "Human gaze and arm/hand measurements support interpreting obstacle avoidance through an intermediary target; the robot controller uses a via-point before the final goal.",
+      "limit": "Does not directly validate sequential IK-derived link targets or a shoulder-first execution order."
+    }
+  ],
+  "schematic_is_human_experiment_data": false,
+  "our_design": "Use IK-derived intermediate link targets to guide reaching.",
+  "only_main_frame_changed": "human-inspiration",
+  "existing_user_edits_preserved": true,
+  "speech_seconds": 20,
+  "total_speech_seconds": 1140,
+  "citations": {
+    "backend": "BibTeX",
+    "style": "IEEEtran",
+    "entries": 12,
+    "menger": 6,
+    "lukic": 7
+  },
+  "visual_review": {
+    "agent": "human_intuition_slide_review",
+    "pages": [
+      9,
+      45,
+      46
+    ],
+    "required_changes": [],
+    "title_one_line": true,
+    "no_overlap_or_clipping": true
+  },
+  "new_simulations_or_training": false,
+  "artifact_verification_passed": true,
+  "audience_pages": 57,
+  "presenter_pages": 93
+}

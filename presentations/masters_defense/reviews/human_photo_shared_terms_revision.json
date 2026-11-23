@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-09",
+  "changed_pdf_pages": [
+    9,
+    16,
+    23,
+    29,
+    30,
+    31,
+    33,
+    37,
+    43,
+    52
+  ],
+  "photo": {
+    "asset": "Fig/human_demonstration_lukic2014.png",
+    "source": "/home/jinoo/.codex/attachments/e789c46b-c192-474d-946a-28684bafc940/codex-clipboard-d69007e4-dedb-4575-b735-b7956ec73101.png",
+    "sha256": "193ca481d13ed788615a20d8e9ccf0ddcc8fb41a6ad9850b44f24a68438fa0e0",
+    "reference": 7,
+    "bibtex_key": "lukic2014coordination",
+    "width_mm": 50,
+    "credit_font_pt": 7,
+    "copied_without_modification": true,
+    "conceptual_diagram_retained": true,
+    "human_demonstration_not_robot_result": true
+  },
+  "wording": {
+    "encoder": "Common obstacle encoder",
+    "stage_invariants": "Unchanged QP objective, CBFs, and input limits",
+    "clf": "Identical CLF form",
+    "evaluation": "identical success criteria",
+    "initial_state": "Common initial state and each method’s final configuration",
+    "comparison_title": "Paired Test Comparisons",
+    "common_successes": "Success in both",
+    "qp": "Common CLF–CBF QP"
+  },
+  "no_shared_in_audience_or_presenter_pdf": true,
+  "notes_review": "pair_mean_scope_review: source distinction, encoder parameter identity and statistical units retained; notes 9/29 updated, other 34 notes unchanged",
+  "visual_review": {
+    "agent": "pair_mean_figures",
+    "pages": [
+      9,
+      16,
+      23,
+      29,
+      30,
+      31,
+      33,
+      37,
+      43,
+      52
+    ],
+    "required_changes_remaining": [],
+    "root_refinement": "Explicit line break before obstacle avoidance to avoid automatic word hyphenation"
+  },
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "notes": 36,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "artifact_verification_passed": true,
+  "raw_data_unchanged": true,
+  "new_simulations_or_training": false
+}

@@ -1,0 +1,132 @@
+{
+  "split": "test",
+  "episodes": 1000,
+  "pairs_per_episode": 10,
+  "selector_family": "baseline",
+  "selector_seed": 11,
+  "baseline_definition": "Arithmetic mean of ten candidate-pair success indicators per episode",
+  "success_plot": {
+    "labels": [
+      "Direct",
+      "All-link Sequential",
+      "10-pair mean",
+      "Best single pair (3,5)",
+      "Learned selection"
+    ],
+    "rates_percent": [
+      45.5,
+      55.2,
+      55.2,
+      58.699999999999996,
+      60.9
+    ],
+    "figure_size_inches": [
+      8.8,
+      3.7
+    ]
+  },
+  "best_single_pair": {
+    "definition": "Highest aggregate Test success among ten fixed candidate pairs; one same pair across all episodes",
+    "pair": [
+      3,
+      5
+    ],
+    "pair_index": 5,
+    "successes": 587,
+    "episodes": 1000,
+    "success_rate_percent": 58.699999999999996,
+    "all_pair_success_counts": [
+      539,
+      546,
+      578,
+      528,
+      535,
+      587,
+      560,
+      564,
+      553,
+      530
+    ],
+    "unique_maximum": true,
+    "selected_after_evaluation": true,
+    "episode_wise_oracle": false
+  },
+  "difference_plot": {
+    "definition": "d_i = selected success - mean of ten pair successes in the same episode",
+    "values": [
+      -0.9,
+      -0.8,
+      -0.7,
+      -0.6,
+      -0.5,
+      -0.4,
+      -0.3,
+      -0.2,
+      -0.1,
+      0.0,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "counts": [
+      5,
+      7,
+      16,
+      19,
+      22,
+      28,
+      26,
+      31,
+      39,
+      465,
+      70,
+      53,
+      51,
+      53,
+      27,
+      31,
+      30,
+      17,
+      10
+    ],
+    "mean": 0.05700000000000001,
+    "mean_percentage_points": 5.700000000000001,
+    "bin_width": 0.1,
+    "rendered_bar_width": 0.075,
+    "negative_episodes": 193,
+    "zero_episodes": 465,
+    "positive_episodes": 342,
+    "figure_size_inches": [
+      8.8,
+      3.7
+    ]
+  },
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern Sans; PNG rasterized from PDF",
+  "font_size_pt": 22,
+  "emphasis_colors": {
+    "blue": "#0000FF",
+    "red": "#FF0000",
+    "green": "#008000"
+  },
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "source_sha256": {
+    "scripts/build_pair_mean_results_figures.py": "f5c32b128c2705711541970a742ed9094ae8bcb7c8407b527b1b31b1eebe83c2",
+    "evidence/pair_outcomes.csv": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4",
+    "evidence/selector_choices.csv": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d",
+    "evidence/test_baselines_comparison.csv": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869",
+    "evidence/recomputed_summary.json": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b"
+  },
+  "output_sha256": {
+    "test_success_pair_mean.pdf": "e533f54ce26ad54c77a3f81059f1d9f8421fb405c416a1c8bf32c890d83638c3",
+    "test_success_pair_mean.png": "1eec59ebeeee9a8b74e06ba9a967809da2374efa6f8bd0a827602225c500db54",
+    "selection_gain_pair_mean.pdf": "5030686a3a4b3dab8333ce502b9cbe79c4b2ef31b32789ca5ab6257f7c5cc141",
+    "selection_gain_pair_mean.png": "c022ff44603870ed03f416d291c98a15596310e0cbf9a4dcf47dd441f2a9f463"
+  }
+}

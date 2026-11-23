@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    35
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "removed_from_page_35": [
+    "A common, fresh evaluation",
+    "Corrected QP + frozen selector + previously unseen episodes"
+  ],
+  "future_work_topics": [
+    "Online execution and timing",
+    "Geometry and sensing uncertainty",
+    "Physical-robot experiments"
+  ],
+  "not_completed_experiments": true,
+  "semantic_review": {
+    "agent": "page25_color_check",
+    "required_changes": []
+  },
+  "thesis_sources": [
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Conclusion.tex",
+      "sha256": "f9621436278ae1b384a6fd501c81014b4df7e2058021a5b135c76ebfae4c1410"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "sha256": "0f6442be70bdd5a84b2fb05f75a2670da1df30fbd6742a7233dd3c39083a530f"
+    }
+  ],
+  "editorial_detail": "Measurement items specify future experiments; no new empirical results or guarantees.",
+  "visual_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      35
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "six_bullets_on_single_lines": true
+  }
+}

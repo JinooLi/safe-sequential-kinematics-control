@@ -1,0 +1,79 @@
+{
+  "thesis_source": "sections/Method/Planar_Control.tex, eq:planar-final-clf",
+  "displayed_definition": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d))",
+  "orientation_weight": 0.5,
+  "archive_to_current_scale": 0.05,
+  "case11": {
+    "function": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d)); w_o=0.5",
+    "active_samples_verified": 17500,
+    "max_active_error": 4.263256414560601e-14,
+    "max_normalized_active_error": 1.7763568394002505e-15,
+    "max_normalization_error": 1.7763568394002505e-15,
+    "archive_to_current_scale": 0.05,
+    "orientation_weight": 0.5,
+    "time_range_seconds": [
+      0,
+      20
+    ],
+    "first_goal_seconds": 17.17600000000136,
+    "inactive_functions": "Re-evaluated on the same stored trajectory, not separate simulated runs."
+  },
+  "case30": {
+    "case_id": 30,
+    "snapshots_seconds": [
+      0.0,
+      2.1279999999999872,
+      6.873999999999465,
+      18.226000000000777,
+      18.226000000000777
+    ],
+    "shared_last_snapshot_time": 18.226000000000777,
+    "same_initial_state": true,
+    "sequential_success": true,
+    "direct_success": false,
+    "direct_failure_class": "qp_infeasible",
+    "direct_qp_infeasible_count": 3,
+    "direct_same_time_position_error": 2.4063806913888715,
+    "direct_same_time_yaw_error": 1.0162542309890727,
+    "raw_samples_per_method": 17500,
+    "max_active_clf_error": 2.842170943040401e-14,
+    "max_direct_clf_error": 5.684341886080802e-14,
+    "max_normalized_active_clf_error": 1.3322676295501878e-15,
+    "max_normalized_direct_clf_error": 2.6645352591003757e-15,
+    "max_normalization_error": 1.7763568394002505e-15,
+    "archive_to_current_scale": 0.05,
+    "current_orientation_weight": 0.5,
+    "actual_weights": {
+      "w_V": 10.0,
+      "w_psi": 0.5
+    },
+    "all_geometry_inside_common_axes": true,
+    "obstacle_halo": "Nominal geometric 0.08 m margin, matching archived reference; not exact RDF contours",
+    "figure_files": [
+      "case030_stages",
+      "case030_clf_time",
+      "case030_overview"
+    ],
+    "no_new_simulation": true
+  },
+  "regenerated_figures": [
+    "case030_clf_time",
+    "case030_overview",
+    "planar_clf_shapes",
+    "planar_clf_time"
+  ],
+  "source_sha256": {
+    "case_011_direct.npz": "1f7c52b491fcf117613cf9e29c1409b94cad8c510ef82374aee20ba695557747",
+    "case_011_sequential.npz": "cca58b612c5c9c57246a52540456ca8aee1abe8006d582696eb079a9bea20cb1",
+    "case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8",
+    "planar_cases.json": "28b7cf61b556091d299da4492b67973bfca4e074c43932fff413f55bb9c0c86c",
+    "planar_goal_reconstruction.json": "21fedb9effaa3c9421d7887518294e34adcc922ff7401bec5e1cebcd75de84ca",
+    "case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312"
+  },
+  "operation": "Re-evaluate current thesis functions on saved trajectories; no new simulation, QP solve or training.",
+  "unchanged": "Recorded q, u, t, CLF/slack logs, success labels, completion times and all empirical outcomes.",
+  "controller_equivalence_claimed": false,
+  "controller_equivalence_note": "Scaling V alone does not preserve a soft-CLF QP optimizer. An equivalent reformulation would also scale the slack and compensate its penalty; no such controller rerun is represented by these plots.",
+  "trajectory_hashes_match_original_archive": true
+}

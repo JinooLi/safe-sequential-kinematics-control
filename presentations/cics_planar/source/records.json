@@ -1,0 +1,1082 @@
+[
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]  [CTRL]  [CTRL]  [CTRL] \n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "3축 평면 로봇 매니퓰레이터의 QP 기반 순차적 기구학 제어\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "이진우 [CTRL] , 박경훈 [CTRL] , 김형종 [CTRL] , 이승준 [CTRL] , 최성현 [CTRL] \n"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{1}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\b{}^{1,*}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "서울시립대학교 [CTRL] , 한국생산기술연구원 [CTRL]  (교신저자 :  [CTRL] )\n"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{1}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{*}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "QP-based Sequential Kinematics Control of 3-DOF Planar Robot Manipulator \n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "Jinwoo Lee [CTRL] , Gyunghoon Park [CTRL] , Hyungjong Kim [CTRL] , Seung-Joon Lee [CTRL] , Sunghyun Choi [CTRL] \n"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{1}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{1}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "University of Seoul [CTRL] , Korea Institute of Industrial Technology [CTRL] \n"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{1}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 4,
+    "equation_raw": "\u0000\u0000\u0006{}^{2}̠\u0000\u0000\u0000f\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "-  [CTRL]  -\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "Abstract - 본 논문은 3자유도 평면 로봇 매니퓰레이터가 장애물 및 링크 간의 충돌 없이 로봇 말단점의 추종제어 목표를 달성하도록 하는 QP(quadratic programming, 이차계획법) 기반 순차적 기구학 제어 방법을 제안한다. 작업공간 상에 장애물이 존재하는 상황에서 로봇 말단점부터 제어하는 경우, 여유 자유도 부족 등으로 인해 목표점에 도달하지 못하고 평형상태에 도달하는 등의 실패 경우가 다수 발생한다. 이를 해결하기 위해 본 논문에서는 로봇 말단점을 제어하기 전에 기저에서 가까운 순서대로 로봇 링크 끝점들의 위치 제어를 우선적으로 수행함으로써, 로봇 말단점이 제어가 용이한 위치로 이동하도록 유도한다. 모의실험을 통해 순차적 제어가 추종 목표 성공률을 향상시킬 수 있음을 확인한다. \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "1. 서   론\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "장애물이 존재하는 환경에서 로봇 매니퓰레이터(robot manipulator)는 목표를 추종하는 동시에 이동 과정의 충돌을 방지해야 한다. Ames 등은 제어 리아푸노프 함수(control Lyapunov function, CLF)와 제어 장벽 함수(control barrier function, CBF)를 결합한 QP(quadratic programming, 이차계획법)로 안전 제약과 추종 요구를 조정하였다[1]. Tan과 Dimarogonas는 이방법론에서 안전 제약을 만족하면서도 목표에 도달하지 못하는 평형점이 발생할 수 있음을 분석하였다[2]. 이는 안전 제약의 만족과 목표 도달이 항상 동시에 보장되지 않음을 보여준다.\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "본 논문은 중간 링크의 위치를 먼저 추종하여 로봇의 배치를 바꾸는 QP 기반의 순차적 기구학 제어를 제안한다. 중간 단계의 추종 작업 차원을 낮추어 관절 움직임의 여지를 확보하고, 이후 로봇 말단(end-effector)의 목표 위치(position)와 방향(orientation) 추종에 유리한 구성을 유도한다. 3자유도 평면 로봇 매니퓰레이터(planar robot manipulator)의 역기구학 해로 링크별 목표를 정하고, 기저(base)에 가까운 링크부터 QP 기반 기구학 제어기로 추종한다. 모든 단계에서 장애물과 자기 충돌, 관절각 한계에 대한 제어 장벽 함수 제약을 유지하며, 단일 QP 기반 기구학 제어기와의 모의실험 비교로 제한 시간 내 목표 달성 효과를 확인한다.\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "2. 본    론\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  2.1 시스템 모델과 제어 목표\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  본 논문에서는 3개의 회전 관절(revolute joint)로 구현되는 평면 로봇 매니퓰레이터의 기구학 제어 문제를 다룬다. 만약 회전 관절의 각도 벡터를  [CTRL] , 관절 속도 입력을  [CTRL] 라 하면, 로봇 매니퓰레이터의 기구학 모델은 \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000fq ~IN~ VecR^{3}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0010u ~ IN ~ VecR^3 ̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]   [CTRL]  [CTRL]  [CTRL] (1)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\tdotq~ = u̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "로 계산된다. 만약 평면 로봇 매니퓰레이터의  [CTRL] 번째 링크의 길이를  [CTRL] 라 하면,  [CTRL] 번째 링크의 끝점의 위치  [CTRL] 와 방향  [CTRL] 는 다음과 같이 계산된다[3]. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006l _{i}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0013p _{i} ∊ VecR  ^{2}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016psi  _{i} ∊ VecR  ^{1}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]                   (2)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000p _{i} (q) & = sum _{j=1} ^{i} LITER  _{j} LEFT [ pile{cos` psi  _{j}#sin` psi  _{j}} RIGHT ] ,```` psi  _{i} (q) & = sum _{j=1} ^{i} q _{j}̠\u0000\u0000\u0000@\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "편의상 기저(base) 프레임의 원점 위치와 방향은 각각  [CTRL] 와  [CTRL] 로 표현한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\tp _{0} =0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\fpsi  _{0} =0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  로봇 말단의 목표 위치와 방향을  [CTRL] 와  [CTRL] 라고 하자. 기구학 제어 문제의 기본 목표는 주어진 시간  [CTRL]  초 안에 관절각 벡터  [CTRL] 가 다음의 목표 집합 \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0013p _{d} ∊ VecR  ^{2}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016psi  _{d} ∊ VecR  ^{1}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001T̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0004q(t)̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]         (3)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000G= LEFT { q: LEFT ∥ p _{3} (q)-p _{d} RIGHT ∥ LEQ  epsilon  _{p} ,~ LEFT |  wrap( psi  _{3} (q)- psi  _{d} ) RIGHT | LEQ  epsilon  _{psi } RIGHT }̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "에 도달하는 것이다. 여기서  [CTRL] 는 위치 허용오차,  [CTRL] 는 방향 허용오차이고,   [CTRL] 은 입력 각도를  [CTRL]  범위로 환산하는 함수이다. 본 논문에서는 위의 추종 목표를 달성하는 동시에, 다수의 원형 장애물을 회피하는 안전 보장 기구학 제어 문제(safety-critical kinematics control)을 다룬다. 특히 장애물과의 충돌 외에도 각 링크 간의 충돌도 방지하도록 하며, 관절각의 한계조건\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\tepsilon_p̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\repsilon_{psi}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\fwrap(cdot)  ̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000e(- pi  , pi  ]̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL] \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000'q _{i,min}  LEQ q _{i}  LEQ  q _{i,max}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "도 함께 만족하도록 한다.  \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  2.2 링크-장애물 및 링크-링크 충돌 방지를 위한 제어 장벽 함수 기반 안전 제약 조건 설계\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  본 논문에서는 링크와 장애물, 링크와 링크 간의 충돌을 방지하기 위해, 제어 장벽 함수 기반의 안전 제약 조건을 설계한다. 이를 위해,  [CTRL]  공간 상에서  [CTRL] 번째 링크가 차지하는 영역을,  [CTRL] 번째 링크의 중심 선분인  [CTRL] 와 거리가  [CTRL] 보다 작거나 같은 점들의 집합으로 근사한다. 이제  [CTRL] 번째 원형 장애물의 중심과 반경을 각각  [CTRL] 와  [CTRL] 라 하면, 링크와 장애물 사이의 거리에 안전 여유  [CTRL] 를 추가로 뺀 다음의 제어 장벽 함수를 제안한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nVecR  ^{2}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0013[p _{i-1} ,p _{i} ]̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0004rho ̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001j̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006c _{j}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006r _{j}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0003m_o̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]                (3)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000Xh _{ij}^{obs} (q)=dist LEFT ( c _{j} ,[p _{i-1} ,p _{i} ] RIGHT ) - rho  -r _{j} -m _{o}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "여기서  [CTRL] 는  [CTRL]  상의 벡터  [CTRL] ,  [CTRL] ,  [CTRL] 에 대하여, 선분  [CTRL] 와 점  [CTRL]  사이의 최소거리로 정의한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000e dist(c,[a,b])̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nVecR  ^{2}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001a̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001b̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001c̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0005[a,b]̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001c̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  각 링크 간 충돌 방지를 위한 장벽함수 역시, 식 (3)과 유사한 형태로 설계할 수 있다. 특히 로봇의 기구학적 특징에 따라 발생 가능한 링크 간 충돌의 경우의 수가 제한될 수 있음에 주목하면, 자기충돌 방지를 위한 제약조건을 보다 간소한 형태로 도출할 수 있다. 이를 위해 본 논문에서는 모든 링크의 길이가 동일하다고 가정한다. 즉,  [CTRL] 라 하자.  이 경우 말단점과 1번째 링크, 기저점과 3번째 링크 사이의 충돌만 방지하면 서로 다른 링크들 간의 충돌이 모두 방지된다. 이제 링크 두께를 고려한 거리 여유  [CTRL] 을 도입하면, 다음의 링크 간 충돌 방지를 위한 제어장벽함수를 추가로 얻는다.\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016l _{1} =l _{2} =l _{3}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\rm _{epsilon }̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "   [CTRL] ,   [CTRL]  [CTRL] (4)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000Gh _{1}^{link} (q):=dist(p _{3} ,[p _{0} ,p _{1} ])- rho  -m _{epsilon }̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "   [CTRL]  [CTRL]  [CTRL] (5)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000Gh _{2}^{link} (q):=dist(p _{0} ,[p _{2} ,p _{3} ])- rho  -m _{epsilon }̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "함수들의 정의에 따라, 식 (3)-(5)에 정의된 모든 함수들이 양의 값을 유지한다면, 링크-장애물 및 링크-링크 간 충돌을 모두 방지할 수 있다. \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  2.3 단일 QP 기반 안전 보장 기구학 제어기\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "본 절에서는 2.2절에서 정의한 제어장벽함수  [CTRL] 을 활용하여 2.1절의 제어 문제를 다루는 QP 기반의 안전 보장 역기구학 제어기를 제안한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nh _{r} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "앞서 소개한 대로, 본 연구에서는 충돌 이외에도 관절각에 대한 물리적인 제약조건인  [CTRL] 도 동시에 만족하는 제어기를 설계하고자 한다. 이때 관절각 제약조건은   [CTRL] 와  [CTRL] 의 선형부등식 형태로 표현할 수 있기 때문에, 이에 대한 제어장벽함수를 쉽게 도출할 수 있다. 이후 설명의 편의를 위해, 본 논문에서는 위에서 정의된 모든 제어장벽함수들을 각각  [CTRL] 로 표현하도록 한다. 만약 각 제어 장벽함수  [CTRL] 에 대하여  [CTRL] 이 만족된다면, 비교 보조정리(comparison lemma)를 통해   [CTRL] 를 얻게되어 모든 시간에 대해  [CTRL] 이 보장됨이 잘 알려져 있다[1].\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000'q _{i,min}  LEQ q _{i}  LEQ  q _{i,max}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0019q _{i} -q _{i,min} GEQ  0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0019q _{i,max} -q _{i} GEQ  0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nh _{r} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006h _{r}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000{dot{h}} _{r} = LEFT ( NABLA  _{q} h _{r} RIGHT ) ^{TOP } {dot{q}} = LEFT ( NABLA  _{q} h _{r} RIGHT ) ^{TOP } u GEQ  - gamma  _{r}  h _{r}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000/h _{r} (t) GEQ  e ^{- gamma  _{r} t} h _{r} (0)̠\u0000\u0000\u0000M\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\fh _{r} (t)>0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "이제 2.1절에서 소개된 또 다른 제어목표인  [CTRL] ,  [CTRL] 을 만족시키는 제어 전략에 대해 고찰한다. 이를 위해 직교공간에서 로봇 말단점의 위치와 자세에 대한 제어 리아프노프 함수(control Lyapunov function)로써\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006q(t)∊G̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0010FORALL  t GEQ  0̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]  \n를 고려하자. 여기에서  [CTRL] 는 위치 가중치이고,  [CTRL] 는 방향 가중치이다. 만약 위의 함수가  [CTRL] 를 만족하도록 제어할 수 있다면,  [CTRL] 의 함수값이 계속 감소하게 되어 2.1절의 제어 목표를 달성할 수 있다. 이를 구현하기 위해 다음의 QP 기반 안전 보장 기구학 제어기를 고려할 수 있다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000`V _{3} (q)=w _{v} LEFT ∥ p _{3} -p _{d} RIGHT ∥ ^{2} +w _{psi } [1-cos( psi  _{3} - psi  _{d} )]̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nw _{v} > 0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\tw_psi > 0̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000{dot{V}} _{3} (q)= LEFT ( NABLA  _{q} V _{3} RIGHT ) ^{TOP } {dot{q}} = LEFT ( NABLA  _{q} V _{3} RIGHT ) ^{TOP } u LEQ  -c _{3} V _{3}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006V _{3}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "    [CTRL]   [CTRL]  [CTRL]  [CTRL] (6)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\ru=QP _{3} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "여기서  [CTRL] 는 다음의 QP의 부분해  [CTRL] 를 의미한다.\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000bQP _{3} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006u ^{*}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]                  (7)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000Ņ(u ^{AST } , delta  ^{AST } ) & =arg~min _{u, delta } LEFT { {1} over {2} u ^{TOP } Wu+ {1} over {2} w _{delta } delta  ^{2} RIGHT }#\r\ns.t.~~ & NABLA  _{q} V _{3}^{TOP } u LEQ  -c _{3} V _{3} + delta  ,#\r\n~~~~~ & NABLA  _{q} h _{r}^{TOP } u GEQ  - gamma  _{r} h _{r} ,#\r\n& u _{j,min} LEQ  u _{j} LEQ  u _{j,max} ,`````j=1,2,3̠\u0000\u0000\u0000\u0018\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "여기서  [CTRL] 는 양의 정부호인 가중행렬(weighting matrix)이고, 완화변수(slack variable)  [CTRL] 는 위의 QP가 실행할 수 있도록(feasible) 하는 변수이다. 일반적으로 시스템의 안전성(safety)와 물리적 제약조건이 추종 목표 달성보다 중요한 제어목표로 여겨지기 때문에, 완화변수  [CTRL] 는  [CTRL] 에 대한 제약조건에 추가되었음에 유의하자. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016W∊ VecR  ^{3 TIMES  3}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0005delta̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006delta ̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006V _{3}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  2.4  순차적 기구학 제어기 \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  식 (6)-(7)로 설계된 단일의 QP 기반 제어기는 안전성 보장과 추종 목표 달성을 동시에 달성할 수 있도록 설계되었다. 하지만 로봇 매니퓰레이터 제어 문제에서는 장애물 위치 혹은 현재 로봇의 형상(configuration)에 따라 안전성 보장과 추종 목표 달성에 대한 양립이 불가능한 상황이 지속될 수 있다. 이때 식 (7)의 QP의 완화변수가 상대적으로 큰 값을 가지게 된 채로 장시간 유지가 된다면, 로봇 말단점과 목표점 간의 (가중된) 거리에 해당하는  [CTRL] 가 충분히 감소하지 못한 채로 원하지 않는 평형상태에 도달할 수 있다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nV _{3} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  위의 문제점을 해소하기 위해, 본 연구에서는 로봇 기저에서 가까운 링크 끝점부터 로봇 말단점까지 순서대로 제어하는, QP 기반 순차적 기구학 제어(sequential kinematics control) 방법론을 새롭게 제안한다. 이를 위해 먼저 로봇 말단점의 목표 위치  [CTRL] 와 목표 자세  [CTRL] 를 이용해 역기구학 문제 \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006p _{d}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\tpsi  _{d}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "   [CTRL]     [CTRL]  \n를 만족하는 목표 형상  [CTRL] 를 구한다. 일반적으로 역기구학의 해는 유일하지 않기 때문에 위의 목표 형상  [CTRL]  역시 다수 후보가 존재할 수 있는데, 이들 중  [CTRL] 을 만족하면서  [CTRL] 가 가장 작은  [CTRL] 를 선정한다. 선정한  [CTRL] 를 이용하여  [CTRL] 번째 링크 끝점인  [CTRL] 의 목표점에 해당하는  [CTRL] 를 \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0019p _{3} (q ^{*} )=p _{d} ,̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u001epsi  _{3} (q ^{*} )= psi  _{d}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006q ^{*}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006q ^{*}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0017h _{r} (q ^{*} ) GEQ  0̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000$LEFT ∥ wrap(q ^{*} -q _{0} ) RIGHT ∥̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006q ^{*}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006q ^{*}̠\u0000\u0000\u0000W\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\np _{i} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\np _{i}^{*}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "   [CTRL] ,  [CTRL] \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016p _{i}^{*} =p _{i} (q)̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0005i=1,2̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "로 선정한다. 이제  [CTRL] 번째 링크 끝점  [CTRL] 에 대해 직교공간에서 정의되는 리아프노프 함수 후보  [CTRL] 를 아래와 같이 정의한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0001i̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006p _{i}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006V _{i}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "   [CTRL]  [CTRL]       (8)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000EV _{i} (q)=w _{v} LEFT ∥ p _{i} -p _{i}^{AST } RIGHT ∥ ^{2} ,~~i=1,2,̠\u0000\u0000\u0000M\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "식 (8)의  [CTRL] 를 활용하면, 식 (7)의 QP를 각각의  [CTRL] 에 대하여 다음과 같이 일반화할 수 있다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006V _{i}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0007i=1,2,3̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " [CTRL]                  (9)\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000Ō(u _{i}^{AST } , delta  _{i}^{AST } ) & =arg~min _{u, delta } LEFT { {1} over {2} u ^{TOP } Wu+ {1} over {2} w _{delta } delta  ^{2} RIGHT }#\r\ns.t.~~ & NABLA  _{q} V _{i}^{TOP } u LEQ  -c _{i} V _{i} + delta  ,#\r\n~~~~~ & NABLA  _{q} h _{r}^{TOP } u GEQ  - gamma  _{r} h _{r} ,#\r\n& u _{j,min} LEQ  u _{j} LEQ  u _{j,max} ,````j=1,2,3̠\u0000\u0000\u0000\u0018\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "이후 설명을 위해 식 (9)의 QP를 풀어서 얻은  [CTRL] 를  [CTRL] 라고 하자. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nu _{i}^{*}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000bQP _{i} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  지금부터는 본 논문에서 제안하는 QP 기반 순차적 기구학 제어기의 구동방식을 설명한다. 1단계에서는 제어 입력을  [CTRL] 로 선정함으로써 1번째 링크 끝점  [CTRL] 을  [CTRL] 로 추종시키는 제어를 수행한다. (이 과정에서  [CTRL] 가 증가할 수 있음에 유의하자.) 만약  [CTRL] 가 임계값보다 작아서 링크 끝점의 추종이 성공하였거나, 시스템이  [CTRL] 의 추종을 달성하지 못한 채로 국소한 평형점에 도달해버렸다고 판단되면, 1단계를 종료하고 2단계로 넘어간다. 2단계에서는 제어 입력을  [CTRL] 로 바꾸고 위와 유사한 방식으로 제어한 후 3단계로 넘어간다. 최종단계인 3단계에서는 제어 입력을 기존의 식 (6)과 동일한  [CTRL] 로 선정하여 로봇 말단점에 대한 제어를 수행한다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\ru=QP _{1} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006p _{1}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000bp _{1}^{*&}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006V _{3}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\"LEFT ∥ p _{1} -p _{1}^{*&} RIGHT ∥̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006p _{1}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\ru=QP _{2} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\ru=QP _{3} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  모의실험 결과를 소개하기에 앞서, 위의 순차적 제어 방식의 장점에 대해 정성적으로 고찰한다. 본 논문에서 다루는 로봇 매니퓰레이터는 자유도가 3이기 때문에, 로봇 말단점의 위치와 방향을 모두 제어한 이후에는 여유 자유도가 없다. 하지만 위와 같이 중간 단계에서 링크 끝점의 위치만을 추종하는 작업을 수행하게 되면, 위치 추종만으로는 2자유도만 활용하게 되어 여유 자유도를 허용하게 된다. 중간 과정에서 확보한 여유 자유도를 통해 로봇 말단점의 위치를 이동시킬 수 있는데, 이를 통해 최종 단계에서 로봇 말단점의 추종 작업을 수행하면 기존 방식 대비 유리해질 여지가 생긴다. \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  2.5 모의실험 결과\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  제안하는 순차적 기구학 제어기의 효용을 검증하기 위한 python 기반 모의실험을 수행하였다. 이를 위해  [CTRL] ,  [CTRL] 인 3축 로봇 매니퓰레이터를 구현하고, 작업공간 상에 2개의 원형 장애물이 존재한다고 가정하였다. 로봇의 초기 형상은  [CTRL] 로 고정하였다. 한편 로봇 말단점 목표  [CTRL] 와 방향  [CTRL] 는 각각  [CTRL] 와  [CTRL]  범위 내에서 랜덤하게 선정하였고, 장애물의 중심  [CTRL] 과 반경  [CTRL]  역시  [CTRL] 와  [CTRL]  범위 내에서 랜덤하게 생성하였다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nl _{i} =1m̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0007i=1,2,3̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000fq_{0}=(0,`0,`0)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\np _{3}^{*}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\rpsi  _{3}^{*}̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000e[0.6,`2.7]`rmm̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\t[-pi,`pi]̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006c _{j}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0006r _{j}̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000+[-2.2,`2.2]` rm m` TIMES  [-2.2,`2.2]` rm m̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u000f[0.2,`0.35]`rmm̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  위의 방식대로 총 300개의 시나리오를 랜덤하게 선정하고, 이에 대해 2가지 종류의 안전 보장 제어기를 구동하여 목표 달성 성공 여부를 확인하였다. 1번째 제어기는 식 (6)-(7)와 같이 단일의 QP로 구현된 기구학 제어기(이하 직접 제어)이고, 2번째 제어기는 2.4절에서 최종적으로 제안한 순차적 기구학 제어기(이하 순차 제어)이다. 모의실험을 300번 수행하여 위의 두 제어기의 성능을 비교한 결과는 <표1>로 정리하였다. 실험결과를 통해 본 논문에서 제안한 순차적 제어 방식이 단일 QP를 이용한 제어 방식에 비해 약 12% 이상의 목표 달성 성공률 향상을 보여주어, 성능에 대한 유의미한 개선이 있었음을 정량적으로 확인할 수 있었다. (이때 목표 달성 성공 여부는, 위치 오차 0.1 m 이하, wrap으로 환산한 방향 오차 0.1 rad 이하, 장벽함수의 최소값 −0.01 m 이상인 조건을 모두 만족할 때로 정하였다.) 목표 달성이 실패한 경우는 크게 3가지로 분류할 수 있는데, 이 중 가장 큰 비중을 차지하는 것은  [CTRL] 가  [CTRL] 에 충분히 근접하지 않은 상황에서 제한시간인  [CTRL] 를 초과하는 경우였다. 이외에도 안전성 관련 제약조건과 추종제어 관련 제약조건이 동시에 달성되기 어려운 등의 이유로 QP가 실행 불가능(infeasible)해지는 경우도 발생하였다. \n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0015(p _{3} , psi  _{3} )̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u001d(p _{3}^{*} , psi  _{3}^{*} )̠\u0000\u0000\u0000K\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0007T`=35`s̠\u0000\u0000\u0000T\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "<표 1> 모의실험 300번 수행 결과 [CTRL] \n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "항목\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "직접 제어\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "순차 제어\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "추종 목표 달성 성공 횟수\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "216\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "253\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "추종 목표 달성 성공률 (%)\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "72.00\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "84.33\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "실패 경우 1 : 시간 초과\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "65\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "36\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "실패 경우 2 : QP 실행 불가능\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "17\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "10\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "실패 경우 3 : 안전 위반\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "2\n"
+  },
+  {
+    "tag": 67,
+    "level": 3,
+    "text": "1\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": " <그림 1>은 직접 제어는 목표 달성에 실패하였고 순차 제어만 성공한 모의실험을 도식화한다. 로봇의 초기 형상과 장애물이 (a)와 같이 주어진 상황에서, 직접 제어를 통해 로봇 말단점을 처음부터 제어하게 되면 (e)와 같이 장애물로 인해 원하지 않는 평형상태에 도달하게 된다. 반면 순차제어를 통해 (b)와 (c)에서처럼 로봇 링크 끝점을 순차적으로 제어하는 과정에서 로봇 말단점이 보다 제어가 용이한 위치와 자세를 가지게 되어, (d)와 같이 제어가 성공하게 된다. 순차 제어의 경우 중간 단계에서  [CTRL] 가 커지는 시점이 발생하지만, 최종적으로는  [CTRL] 가 0으로 수렴하게 됨을 확인할 수 있다.\n"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\u0016V _{3} (q)=V _{EE} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 88,
+    "level": 2,
+    "equation_raw": "\u0000\u0000\nV _{3} (q)̠\u0000\u0000\u0000G\u0000\u0013Equation Version 60\u0007HYhwpEQ"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "  [CTRL]     <그림 1> 순차적 기구학 제어기만 목표 달성에 성공한 시나리오 도식화 \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "3. 결    론\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "본 논문에서는 3축 로봇 매니퓰레이터에 대하여 로봇 말단점부터 제어하는 대신, 기저에 가까운 링크 끝점부터 순차적으로 제어하는 QP 기반의 순차적 기구학 제어기를 새롭게 제시하였다. 이를 통해 장애물 및 링크 간 충돌을 방지하는 동시에 로봇 말단점의 추종 제어 성공률을 기존 방식 대비 약 12% 가량 개선할 수 있었다. 이후 연구에서는 본 논문의 핵심 개념들을 3차원 상의 다자유도 로봇 매니퓰레이터로 확장하여 적용하고자 한다. \n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "[참 고 문 헌]\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "[1] A. D. Ames, X. Xu, J. W. Grizzle, and P. Tabuada, “Control Barrier Function Based Quadratic Programs for Safety Critical Systems,” IEEE Transactions on Automatic Control, vol. 62, no. 8, pp. 3861–3876, 2017.\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "[2] X. Tan and D. V. Dimarogonas, “On the Undesired Equilibria Induced by Control Barrier Function Based Quadratic Programs,” Automatica, vol. 159, 111359, 2024.\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "[3] B. Siciliano, L. Sciavicco, L. Villani, and G. Oriolo, Robotics: Modelling, Planning and Control, Springer, 2009.\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "[감 사 의 글]\n"
+  },
+  {
+    "tag": 67,
+    "level": 1,
+    "text": "이 연구는 정부(과학기술정보통신부)의 재원으로 한국연구재단의 지원(RS-2026-25498106, 50%)과 산업통상자원부의 재원으로 한국산업기술기획평가원의 지원을 받아 수행된 연구임(No. 00416831, 다양한 조건의 커스터마이징이 가능한 프레임리스 모터 기반 저기어비 일체형 스마트 구동기 개발, 50%)\n"
+  }
+]

@@ -18,7 +18,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA, FIG = ROOT / "evidence", ROOT / "Fig"
-BLUE, GREEN, RED, GRAY = "#205493", "#28735e", "#a84439", "#77818b"
+BLUE, GREEN, RED, GRAY = "#205493", "#28735e", "#FF0000", "#77818b"
 FONT_SIZE = 22  # One source size for all visible labels; scaled with the vector figure.
 plt.rcParams.update({
     "axes.titlesize": FONT_SIZE, "axes.labelsize": FONT_SIZE,
@@ -202,7 +202,7 @@ audit["time_cost"] = {
     "shared_success_scenes": len(shared),
     "direct_mean_seconds": times[0], "all_link_sequential_mean_seconds": times[1],
     "all_link_over_direct_ratio": times[1] / times[0],
-    "emphasis": "44.48 s label in red and bold; unchanged archived mean",
+    "emphasis": "44.48 s label in primary red (#FF0000) and bold; unchanged archived mean",
 }
 
 # Oracle is the post-hoc existence of a successful pair among all 10 pairs.

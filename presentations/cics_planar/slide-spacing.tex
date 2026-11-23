@@ -1,0 +1,23 @@
+% 본문 간격 설정. 상단 진행 표시와 하단 참고문헌, 발표 노트에는 적용하지 않음.
+% 자동 줄바꿈: 10pt 글자 / 13.2pt 기준선 간격.
+% 같은 설명 묶음: 1mm 추가; 다른 묶음: 3mm 추가; 그림-설명: 2mm 추가.
+\newlength{\SlideBodyHeight}
+\setlength{\SlideBodyHeight}{57.5mm}
+\newlength{\SlideDetailGap}
+\setlength{\SlideDetailGap}{1mm}
+\newlength{\SlideGroupGap}
+\setlength{\SlideGroupGap}{3mm}
+\newlength{\SlideFigureGap}
+\setlength{\SlideFigureGap}{2mm}
+\newlength{\SlideMathRowGap}
+\setlength{\SlideMathRowGap}{1.5mm}
+\newcommand{\SlideTableStretch}{1.25}
+\newcommand{\detailgap}{\par\vspace{\SlideDetailGap}}
+\newcommand{\groupgap}{\par\vspace{\SlideGroupGap}}
+\newcommand{\figuregap}{\par\vspace{\SlideFigureGap}}
+\newenvironment{slidebody}{%
+  \begin{minipage}[t][\SlideBodyHeight][c]{\linewidth}%
+  \setstretch{1}\fontsize{10}{13.2}\selectfont
+  \setlength{\parskip}{0pt}%
+  \renewcommand{\arraystretch}{\SlideTableStretch}%
+}{\par\end{minipage}}

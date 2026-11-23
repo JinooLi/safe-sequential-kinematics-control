@@ -1,0 +1,32 @@
+{
+  "checked_at": "2026-11-11T17:27:34.902831+09:00",
+  "scope": "13쪽 task Jacobian과 CLF gradient 관계",
+  "mathematical_distinction": {
+    "task_jacobian": "J_i = partial x_i / partial q",
+    "clf_gradient": "nabla_q V_i = J_i^T nabla_{x_i} V_i",
+    "table_ranks": [
+      1,
+      2,
+      3
+    ],
+    "table_rank_object": "J_i, not the scalar CLF Jacobian nabla_q V_i^T"
+  },
+  "independent_review": "Task Jacobian과 CLF gradient의 구분 및 모든 단계에 대한 연쇄법칙 관계 확인",
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      13
+    ],
+    "changed_presenter_pages": [
+      25,
+      26
+    ],
+    "note_seconds": 40,
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "visual_review_complete": true,
+    "other_notes_user_edits_figures_and_data_preserved": true
+  }
+}

@@ -35,7 +35,7 @@
     "direct_mean_seconds": 24.23642424242421,
     "all_link_sequential_mean_seconds": 44.48193939394044,
     "all_link_over_direct_ratio": 1.835334245225739,
-    "emphasis": "44.48 s label in red and bold; unchanged archived mean"
+    "emphasis": "44.48 s label in primary red (#FF0000) and bold; unchanged archived mean"
   },
   "oracle": {
     "split": "validation",

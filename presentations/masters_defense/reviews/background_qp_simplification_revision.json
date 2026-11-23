@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    6
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "background_qp": "Three rows: quadratic input/slack cost, relaxed CLF constraint, hard CBF constraint.",
+  "notation": "c_V retained from page 4; rho > 0 defined as slack penalty weight.",
+  "explicit_input_bounds_preserved_in_pages": [
+    13,
+    14,
+    15,
+    52
+  ],
+  "other_main_tex_content_unchanged": true,
+  "korean_notes_and_docs_synchronized": true,
+  "semantic_review": {
+    "agent": "literature_positioning_review",
+    "required_changes": []
+  },
+  "visual_review": {
+    "no_overlap_or_clipping": true,
+    "clf_blue_cbf_green": true
+  },
+  "new_simulations_or_training": false
+}

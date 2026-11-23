@@ -1,0 +1,468 @@
+{
+  "description": "Test 1,000 episodes의 10-pair 평균과 Learned 선택 비교",
+  "split": "test",
+  "controller_horizon_seconds": 120,
+  "no_new_simulation": true,
+  "no_new_rollouts": true,
+  "no_new_training": true,
+  "no_random_pair_draws": true,
+  "input_sources": [
+    {
+      "snapshot": "evidence/pair_outcomes.csv",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/pair_outcomes.csv",
+      "sha256": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4"
+    },
+    {
+      "snapshot": "evidence/selector_choices.csv",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/selector_choices.csv",
+      "sha256": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d"
+    },
+    {
+      "snapshot": "evidence/recomputed_summary.json",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/recomputed_summary.json",
+      "sha256": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b"
+    },
+    {
+      "snapshot": "evidence/test_baselines_comparison.csv",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_comparison.csv",
+      "sha256": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869"
+    },
+    {
+      "snapshot": "evidence/test_baselines_analysis.json",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_analysis.json",
+      "sha256": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3"
+    },
+    {
+      "snapshot": "evidence/test_baselines_paired_comparisons.json",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/test_baselines_paired_comparisons.json",
+      "sha256": "8c9671cc19ef081bde2e63c80de164388cd334022f77ba7c437b49476a6d470d"
+    }
+  ],
+  "raw_sources": [
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/dataset.npz",
+      "sha256": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6"
+    },
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/results.csv",
+      "sha256": "471faeaadbb1ce8845fc490a15a2eda10e4245675e753dffbcfeb508e62c8b66"
+    },
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/split.csv",
+      "sha256": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283"
+    },
+    {
+      "path": "outputs/panda_link_selection/softmax_time/softmax-time-21423-20261023T093500Z/heldout_choices.csv",
+      "sha256": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/comparison.csv",
+      "sha256": "a897423a60db8ed5f14ac455de7ba0b66c06a2b57ea2f385da63722001282869"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/analysis.json",
+      "sha256": "2331c5d51db601334bfb374cfabf954724c72e7ed4ee37f1c70b78059c95b0a3"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/run/complete.json",
+      "sha256": "c54ef9dd24f57c0db195c4663ea13c2ff4b50e018d25c1d63f71edde2f751989"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/split.csv",
+      "sha256": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/comparison_inputs/selector_choices.csv",
+      "sha256": "2bd9b00d15aa15860d23b17fb8b4c485b277bb610cf82c3f5628367471588e0d"
+    },
+    {
+      "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/outputs/panda_link_selection/test_baselines/test-1000-20261102T101359Z-r1/comparison_inputs/pair_outcomes.csv",
+      "sha256": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4"
+    }
+  ],
+  "provenance": {
+    "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/provenance.json",
+    "sha256": "bb84e24a7241108ce0539eecbb88498269ea4718ff349fbbc5c16846e4c2b65d"
+  },
+  "analysis_script": {
+    "path": "scripts/analyze_pair_mean_results.py",
+    "sha256": "d0ec651fa9d137af5fc314c1631aac74861c37a636abdba9c6a5ebd75f0bc0c0"
+  },
+  "population": {
+    "episodes": 1000,
+    "candidate_pairs": 10,
+    "episode_pair_outcomes": 10000,
+    "action_pairs": [
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "numerical_errors_included_as_unsuccessful": 26,
+    "learned_family": "baseline",
+    "learned_seed": 11
+  },
+  "definitions": {
+    "pair_mean": "m_i=(1/10) sum_k y_ik; 평균 성공률은 (1/N) sum_i m_i.",
+    "learned": "l_i=y_i,khat(i), 미리 선택된 family=baseline, seed=11.",
+    "difference": "Delta=(1/N) sum_i(l_i-m_i). Learned 재학습/재선택 없음.",
+    "baseline_label": "Two-link average",
+    "not_a_single_fixed_pair": true,
+    "not_a_randomized_trial": "10개 실제 기록의 정확한 평균이며 무작위 pair를 다시 추출하지 않음."
+  },
+  "bootstrap": {
+    "draws": 10000,
+    "seed": 20261023,
+    "confidence_level": 0.95,
+    "quantiles": [
+      0.025,
+      0.975
+    ],
+    "method": "paired episode percentile bootstrap",
+    "resampling_unit": "episode (all ten pair outcomes and selected outcome kept together)",
+    "episodes_per_draw": 1000,
+    "episode_order": "case_id ascending; original NPZ Test order와 동일",
+    "numpy_rng": "default_rng",
+    "numpy_quantile_method": "linear",
+    "conditions": "하나의 이미 학습된 seed=11 모델에 조건부이며 학습 seed 변동은 포함하지 않음."
+  },
+  "success": {
+    "direct_success_rate_percent": 45.5,
+    "all_links_success_rate_percent": 55.2,
+    "pair_mean_success_rate_percent": 55.2,
+    "learned_success_rate_percent": 60.9,
+    "pair_successes": 5520,
+    "pair_outcome_denominator": 10000,
+    "learned_successes": 609,
+    "learned_episode_denominator": 1000,
+    "learned_vs_pair_mean": {
+      "reference_success_rate_percent": 55.2,
+      "candidate_success_rate_percent": 60.9,
+      "difference_pp": 5.7,
+      "bootstrap_95_ci_pp": [
+        3.74,
+        7.650249999999996
+      ]
+    },
+    "all_links_vs_pair_mean": {
+      "reference_success_rate_percent": 55.2,
+      "candidate_success_rate_percent": 55.2,
+      "difference_pp": -2.6645352591003756e-16,
+      "bootstrap_95_ci_pp": [
+        -2.1499999999999995,
+        2.2199999999999993
+      ]
+    },
+    "learned_vs_all_links": {
+      "reference_success_rate_percent": 55.2,
+      "candidate_success_rate_percent": 60.9,
+      "difference_pp": 5.7,
+      "bootstrap_95_ci_pp": [
+        2.7,
+        8.6
+      ]
+    }
+  },
+  "learned_vs_pair_mean_outcomes": {
+    "episode_pair_record_counts": {
+      "both_success": 4792,
+      "pair_mean_only": 728,
+      "learned_only": 1298,
+      "both_failure": 3182
+    },
+    "record_denominator": 10000,
+    "expected_counts_per_1000_episodes": {
+      "both_success": 479.2,
+      "pair_mean_only": 72.8,
+      "learned_only": 129.8,
+      "both_failure": 318.2
+    },
+    "percentages": {
+      "both_success": 47.92,
+      "pair_mean_only": 7.28,
+      "learned_only": 12.98,
+      "both_failure": 31.819999999999997
+    },
+    "not_actual_episode_counts": true,
+    "interpretation": "각 episode의 모든 pair를 평균한 기대 분할이다. 예: 129.8은 실제 129.8개 episode가 아니라 Learned-only 기록 1,298개/10이며 four-cell 비교는 %로 제시하는 것이 적절함."
+  },
+  "episode_gain_distribution": {
+    "definition": "d_i=l_i-m_i; 각 episode를 한 번 세는 실제 정수 episode 분포.",
+    "bins_tenths": [
+      -9,
+      -8,
+      -7,
+      -6,
+      -5,
+      -4,
+      -3,
+      -2,
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "episode_counts": [
+      5,
+      7,
+      16,
+      19,
+      22,
+      28,
+      26,
+      31,
+      39,
+      465,
+      70,
+      53,
+      51,
+      53,
+      27,
+      31,
+      30,
+      17,
+      10
+    ],
+    "negative_episodes": 193,
+    "zero_episodes": 465,
+    "positive_episodes": 342,
+    "episodes": 1000,
+    "mean_difference": 0.056999999999999995,
+    "mean_difference_percentage_points": 5.699999999999999,
+    "interpretation": "양수는 Learned가 성공하고 일부 다른 pair는 실패한 episode. 음수는 Learned가 실패했으나 다른 일부 pair가 성공한 episode. 0은 모든 candidate가 성공하거나 모두 실패한 episode."
+  },
+  "paired_time": {
+    "learned_vs_pair_mean": {
+      "records": 10000,
+      "both_success_records": 4792,
+      "unique_common_success_episodes": 609,
+      "reference_only_success_records": 728,
+      "candidate_only_success_records": 1298,
+      "both_failure_records": 3182,
+      "reference_common_mean_seconds": 36.04655676126916,
+      "candidate_common_mean_seconds": 36.20300918197035,
+      "mean_paired_difference_seconds": 0.15645242070119722,
+      "relative_reduction_percent": -0.43402875269711316
+    },
+    "pair_mean_vs_all_links": {
+      "records": 10000,
+      "both_success_records": 4413,
+      "unique_common_success_episodes": 539,
+      "reference_only_success_records": 1107,
+      "candidate_only_success_records": 1107,
+      "both_failure_records": 3373,
+      "reference_common_mean_seconds": 47.466915930207506,
+      "candidate_common_mean_seconds": 35.45785633356026,
+      "mean_paired_difference_seconds": -12.009059596647251,
+      "relative_reduction_percent": 25.299852247204445
+    },
+    "learned_vs_all_links": {
+      "records": 1000,
+      "both_success_records": 467,
+      "unique_common_success_episodes": 467,
+      "reference_only_success_records": 85,
+      "candidate_only_success_records": 142,
+      "both_failure_records": 306,
+      "reference_common_mean_seconds": 47.97263383297777,
+      "candidate_common_mean_seconds": 36.61922912205608,
+      "mean_paired_difference_seconds": -11.353404710921692,
+      "relative_reduction_percent": 23.666419380786696
+    },
+    "interpretation": {
+      "prior": "각 episode와 그 안의 각 pair에 동일 가중치를 둔 뒤 공동성공에 조건부.",
+      "learned_vs_pair_mean": "Learned와 해당 candidate가 모두 성공한 episode–pair 기록의 pair 완료시간 및 Learned 완료시간 평균. 동일 Learned 시간이 성공 candidate 개수만큼 반복됨.",
+      "matches_slide_26_estimand": true,
+      "pair_weights_after_conditioning": "각 pair 공동성공 수에 비례; pair별 조건부 평균의 단순 산술평균과는 다름.",
+      "not_independent_episode_pair_records": true,
+      "not_unconditional_runtime": "실패 기록 제외. 모든 시도의 무조건부 runtime 비교가 아님.",
+      "no_learned_speed_advantage_over_pair_mean": true
+    }
+  },
+  "example_episode": {
+    "case_id": "seed2026120069_0014",
+    "successful_pair_count": 1,
+    "candidate_pair_count": 10,
+    "successful_pairs": [
+      [
+        5,
+        6
+      ]
+    ],
+    "pair_mean_success_rate_percent": 10.0,
+    "learned_selected_pair": [
+      5,
+      6
+    ],
+    "learned_success": true,
+    "learned_completion_time_seconds": 23.41999999999959,
+    "fixed_3_5_success": false,
+    "interpretation": "10개 pair 중 (5,6) 하나만 성공한 episode. 평균의 단일 궤적은 없으며, 시각화한 (3,5) 실패 궤적은 9개 실패 candidate 중 한 예시이다."
+  },
+  "historical_fixed_3_5_benchmark": {
+    "pair": [
+      3,
+      5
+    ],
+    "success_rate_percent": 58.699999999999996,
+    "learned_vs_fixed": {
+      "reference_success_rate_percent": 58.699999999999996,
+      "candidate_success_rate_percent": 60.9,
+      "difference_pp": 2.1999999999999997,
+      "bootstrap_95_ci_pp": [
+        -0.3,
+        4.7
+      ]
+    },
+    "paired_time": {
+      "records": 1000,
+      "both_success_records": 514,
+      "unique_common_success_episodes": 514,
+      "reference_only_success_records": 73,
+      "candidate_only_success_records": 95,
+      "both_failure_records": 318,
+      "reference_common_mean_seconds": 36.11696498054517,
+      "candidate_common_mean_seconds": 36.21326848249071,
+      "mean_paired_difference_seconds": 0.09630350194554431,
+      "relative_reduction_percent": -0.26664339597033404
+    },
+    "role": "Train-best fixed (3,5)는 더 강한 단일 fixed 기준으로 기존 기록 보존. 평균 대비 개선을 이 fixed pair 대비 유의한 개선으로 확대 해석하지 않음.",
+    "existing_statistics_and_ci_reproduced": true
+  },
+  "per_pair": [
+    {
+      "pair": [
+        2,
+        3
+      ],
+      "successes": 539,
+      "success_rate_percent": 53.900000000000006
+    },
+    {
+      "pair": [
+        2,
+        4
+      ],
+      "successes": 546,
+      "success_rate_percent": 54.6
+    },
+    {
+      "pair": [
+        2,
+        5
+      ],
+      "successes": 578,
+      "success_rate_percent": 57.8
+    },
+    {
+      "pair": [
+        2,
+        6
+      ],
+      "successes": 528,
+      "success_rate_percent": 52.800000000000004
+    },
+    {
+      "pair": [
+        3,
+        4
+      ],
+      "successes": 535,
+      "success_rate_percent": 53.5
+    },
+    {
+      "pair": [
+        3,
+        5
+      ],
+      "successes": 587,
+      "success_rate_percent": 58.699999999999996
+    },
+    {
+      "pair": [
+        3,
+        6
+      ],
+      "successes": 560,
+      "success_rate_percent": 56.00000000000001
+    },
+    {
+      "pair": [
+        4,
+        5
+      ],
+      "successes": 564,
+      "success_rate_percent": 56.39999999999999
+    },
+    {
+      "pair": [
+        4,
+        6
+      ],
+      "successes": 553,
+      "success_rate_percent": 55.300000000000004
+    },
+    {
+      "pair": [
+        5,
+        6
+      ],
+      "successes": 530,
+      "success_rate_percent": 53.0
+    }
+  ],
+  "verification": {
+    "snapshot_and_original_sha256_match": true,
+    "raw_npz_csv_split_selector_and_test_baseline_sha256_match": true,
+    "test_episode_ids_match_across_all_sources": true,
+    "each_episode_has_each_pair_exactly_once": true,
+    "raw_npz_and_csv_outcomes_checked": 10000,
+    "selected_pair_outcomes_and_successful_times_checked": 1000,
+    "independent_csv_success_and_time_aggregation_matches": true,
+    "original_pair_counts_mean_and_numerical_errors_reproduced": true,
+    "all_links_learner_and_fixed_learner_counts_times_and_ci_reproduced": true,
+    "source_files_unchanged": true
+  }
+}

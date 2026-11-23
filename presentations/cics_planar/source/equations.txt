@@ -1,0 +1,265 @@
+001: {}^{1}
+
+002: {}^{1,*}
+
+003: {}^{2}
+
+004: {}^{2}
+
+005: {}^{2}
+
+006: {}^{1}
+
+007: {}^{2}
+
+008: {}^{*}
+
+009: {}^{1}
+
+010: {}^{1}
+
+011: {}^{2}
+
+012: {}^{2}
+
+013: {}^{2}
+
+014: {}^{1}
+
+015: {}^{2}
+
+016: q ~IN~ VecR^{3}
+
+017: u ~ IN ~ VecR^3 
+
+018: dotq~ = u
+
+019: i
+
+020: l _{i}
+
+021: i
+
+022: p _{i} ∊ VecR  ^{2}
+
+023: psi  _{i} ∊ VecR  ^{1}
+
+024: p _{i} (q) & = sum _{j=1} ^{i} LITER  _{j} LEFT [ pile{cos` psi  _{j}#sin` psi  _{j}} RIGHT ] ,```` psi  _{i} (q) & = sum _{j=1} ^{i} q _{j}
+
+025: p _{0} =0
+
+026: psi  _{0} =0
+
+027: p _{d} ∊ VecR  ^{2}
+
+028: psi  _{d} ∊ VecR  ^{1}
+
+029: T
+
+030: q(t)
+
+031: G= LEFT { q: LEFT ∥ p _{3} (q)-p _{d} RIGHT ∥ LEQ  epsilon  _{p} ,~ LEFT |  wrap( psi  _{3} (q)- psi  _{d} ) RIGHT | LEQ  epsilon  _{psi } RIGHT }
+
+032: epsilon_p
+
+033: epsilon_{psi}
+
+034: wrap(cdot)  
+
+035: (- pi  , pi  ]
+
+036: q _{i,min}  LEQ q _{i}  LEQ  q _{i,max}
+
+037: VecR  ^{2}
+
+038: i
+
+039: i
+
+040: [p _{i-1} ,p _{i} ]
+
+041: rho 
+
+042: j
+
+043: c _{j}
+
+044: r _{j}
+
+045: m_o
+
+046: h _{ij}^{obs} (q)=dist LEFT ( c _{j} ,[p _{i-1} ,p _{i} ] RIGHT ) - rho  -r _{j} -m _{o}
+
+047:  dist(c,[a,b])
+
+048: VecR  ^{2}
+
+049: a
+
+050: b
+
+051: c
+
+052: [a,b]
+
+053: c
+
+054: l _{1} =l _{2} =l _{3}
+
+055: m _{epsilon }
+
+056: h _{1}^{link} (q):=dist(p _{3} ,[p _{0} ,p _{1} ])- rho  -m _{epsilon }
+
+057: h _{2}^{link} (q):=dist(p _{0} ,[p _{2} ,p _{3} ])- rho  -m _{epsilon }
+
+058: h _{r} (q)
+
+059: q _{i,min}  LEQ q _{i}  LEQ  q _{i,max}
+
+060: q _{i} -q _{i,min} GEQ  0
+
+061: q _{i,max} -q _{i} GEQ  0
+
+062: h _{r} (q)
+
+063: h _{r}
+
+064: {dot{h}} _{r} = LEFT ( NABLA  _{q} h _{r} RIGHT ) ^{TOP } {dot{q}} = LEFT ( NABLA  _{q} h _{r} RIGHT ) ^{TOP } u GEQ  - gamma  _{r}  h _{r}
+
+065: h _{r} (t) GEQ  e ^{- gamma  _{r} t} h _{r} (0)
+
+066: h _{r} (t)>0
+
+067: q(t)∊G
+
+068: FORALL  t GEQ  0
+
+069: V _{3} (q)=w _{v} LEFT ∥ p _{3} -p _{d} RIGHT ∥ ^{2} +w _{psi } [1-cos( psi  _{3} - psi  _{d} )]
+
+070: w _{v} > 0
+
+071: w_psi > 0
+
+072: {dot{V}} _{3} (q)= LEFT ( NABLA  _{q} V _{3} RIGHT ) ^{TOP } {dot{q}} = LEFT ( NABLA  _{q} V _{3} RIGHT ) ^{TOP } u LEQ  -c _{3} V _{3}
+
+073: V _{3}
+
+074: u=QP _{3} (q)
+
+075: QP _{3} (q)
+
+076: u ^{*}
+
+077: (u ^{AST } , delta  ^{AST } ) & =arg~min _{u, delta } LEFT { {1} over {2} u ^{TOP } Wu+ {1} over {2} w _{delta } delta  ^{2} RIGHT }#
+s.t.~~ & NABLA  _{q} V _{3}^{TOP } u LEQ  -c _{3} V _{3} + delta  ,#
+~~~~~ & NABLA  _{q} h _{r}^{TOP } u GEQ  - gamma  _{r} h _{r} ,#
+& u _{j,min} LEQ  u _{j} LEQ  u _{j,max} ,`````j=1,2,3
+
+078: W∊ VecR  ^{3 TIMES  3}
+
+079: delta
+
+080: delta 
+
+081: V _{3}
+
+082: V _{3} (q)
+
+083: p _{d}
+
+084: psi  _{d}
+
+085: p _{3} (q ^{*} )=p _{d} ,
+
+086: psi  _{3} (q ^{*} )= psi  _{d}
+
+087: q ^{*}
+
+088: q ^{*}
+
+089: h _{r} (q ^{*} ) GEQ  0
+
+090: LEFT ∥ wrap(q ^{*} -q _{0} ) RIGHT ∥
+
+091: q ^{*}
+
+092: q ^{*}
+
+093: i
+
+094: p _{i} (q)
+
+095: p _{i}^{*}
+
+096: p _{i}^{*} =p _{i} (q)
+
+097: i=1,2
+
+098: i
+
+099: p _{i}
+
+100: V _{i}
+
+101: V _{i} (q)=w _{v} LEFT ∥ p _{i} -p _{i}^{AST } RIGHT ∥ ^{2} ,~~i=1,2,
+
+102: V _{i}
+
+103: i=1,2,3
+
+104: (u _{i}^{AST } , delta  _{i}^{AST } ) & =arg~min _{u, delta } LEFT { {1} over {2} u ^{TOP } Wu+ {1} over {2} w _{delta } delta  ^{2} RIGHT }#
+s.t.~~ & NABLA  _{q} V _{i}^{TOP } u LEQ  -c _{i} V _{i} + delta  ,#
+~~~~~ & NABLA  _{q} h _{r}^{TOP } u GEQ  - gamma  _{r} h _{r} ,#
+& u _{j,min} LEQ  u _{j} LEQ  u _{j,max} ,````j=1,2,3
+
+105: u _{i}^{*}
+
+106: QP _{i} (q)
+
+107: u=QP _{1} (q)
+
+108: p _{1}
+
+109: p _{1}^{*&}
+
+110: V _{3}
+
+111: LEFT ∥ p _{1} -p _{1}^{*&} RIGHT ∥
+
+112: p _{1}
+
+113: u=QP _{2} (q)
+
+114: u=QP _{3} (q)
+
+115: l _{i} =1m
+
+116: i=1,2,3
+
+117: q_{0}=(0,`0,`0)
+
+118: p _{3}^{*}
+
+119: psi  _{3}^{*}
+
+120: [0.6,`2.7]`rmm
+
+121: [-pi,`pi]
+
+122: c _{j}
+
+123: r _{j}
+
+124: [-2.2,`2.2]` rm m` TIMES  [-2.2,`2.2]` rm m
+
+125: [0.2,`0.35]`rmm
+
+126: (p _{3} , psi  _{3} )
+
+127: (p _{3}^{*} , psi  _{3}^{*} )
+
+128: T`=35`s
+
+129: V _{3} (q)=V _{EE} (q)
+
+130: V _{3} (q)

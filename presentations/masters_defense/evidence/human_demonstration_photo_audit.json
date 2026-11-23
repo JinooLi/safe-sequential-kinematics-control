@@ -1,0 +1,18 @@
+{
+  "source_attachment": "/home/jinoo/.codex/attachments/e789c46b-c192-474d-946a-28684bafc940/codex-clipboard-d69007e4-dedb-4575-b735-b7956ec73101.png",
+  "source_sha256": "193ca481d13ed788615a20d8e9ccf0ddcc8fb41a6ad9850b44f24a68438fa0e0",
+  "display_file": "Fig/human_demonstration_lukic2014.png",
+  "display_sha256": "193ca481d13ed788615a20d8e9ccf0ddcc8fb41a6ad9850b44f24a68438fa0e0",
+  "image_pixels": [
+    650,
+    247
+  ],
+  "copied_without_modification": true,
+  "bibliography_key": "lukic2014coordination",
+  "reference_number_at_revision": 7,
+  "attribution_basis": "User identified the supplied image as reference 7; existing BibTeX entry is Lukic et al. (2014).",
+  "purpose": "Human demonstration motivating the design intuition; separate from the conceptual IK illustration and robot experiments.",
+  "caption": "Human demonstration: Lukic et al. [7]",
+  "new_empirical_result": false,
+  "image_editing": false
+}

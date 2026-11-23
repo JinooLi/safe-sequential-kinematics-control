@@ -1,0 +1,38 @@
+{
+  "checked_at": "2026-11-11T13:19:29.979232+09:00",
+  "scope": "CICS planar 발표자료 한국어화",
+  "language_policy": [
+    "제목·본문·진행 표시·그래프 설명 및 축·부록을 자연스러운 한국어로 표현",
+    "CLF, CBF, QP, IK, Direct, Sequential, end-effector, pose, task, subtask, Jacobian 등 전문용어 유지",
+    "원고의 국문 제목과 저자 표기 사용; 인용 문헌 원제 및 원고 발췌 그림 보존"
+  ],
+  "independent_reviews": [
+    "슬라이드 번역 및 용어 통일",
+    "그림 번역과 원자료 대조",
+    "한국어 표현 및 연구 내용 일치 여부 검토"
+  ],
+  "semantic_refinements": [
+    "위치 task는 링크 끝점 위치로 명시",
+    "Jacobian rank와 null-space 차원 구분 및 적용 조건 명시",
+    "유효 IK의 안전 제약 전체 포함",
+    "공간 로봇팔을 3차원 다자유도 로봇팔로 명확화"
+  ],
+  "user_changes_preserved": [
+    "상단 진행 표시 영역 높이 2.5mm",
+    "사용자가 수정한 발표 대본 문장"
+  ],
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "main_slides": 18,
+    "appendix_pages": 9,
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "compilation_warnings": 0,
+    "overfull_boxes": 0,
+    "out_of_page_text": 0,
+    "all_audience_pages_visually_reviewed": true,
+    "source_and_experimental_data_hashes_unchanged": true,
+    "masters_deck_unchanged": true
+  }
+}

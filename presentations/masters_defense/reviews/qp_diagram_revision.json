@@ -1,0 +1,45 @@
+{
+  "request": "QP 입력 제한 명시 및 29·30쪽 겹침·화살표 수정",
+  "qp": {
+    "source": "masters_tethis/sections/Method/Kinematic_Control.tex eq:basic-qp",
+    "pages": [
+      6,
+      13,
+      14,
+      15
+    ],
+    "constraints": [
+      "joint-limit CBF bounds with alpha_j",
+      "velocity bounds v_min,j and v_max,j"
+    ],
+    "font_size_unchanged": true
+  },
+  "diagram": {
+    "pages": [
+      29,
+      30
+    ],
+    "shared_top_anchored_rows": true,
+    "fixed_input_box_height_mm": 10,
+    "takeaway_clearance_mm": 3.4,
+    "orthogonal_bypass_and_execution_arrows": true,
+    "independent_agent_visual_review": "passed"
+  },
+  "checks": {
+    "audience_pages": 57,
+    "presenter_pages": 93,
+    "audience_presenter_slide_text_matches": 57,
+    "notes": 36,
+    "speech_seconds": 1140,
+    "visual_review_pages": [
+      6,
+      13,
+      14,
+      15,
+      29,
+      30
+    ],
+    "visual_clipping_or_overlap_found": false,
+    "experiment_figures_unchanged": 82
+  }
+}

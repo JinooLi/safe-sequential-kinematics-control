@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-11-11T16:41:18.517707+09:00",
+  "scope": "5쪽 설명 상자 배경색 제거",
+  "changes": "fcolorbox의 Soft 배경 두 곳을 white로 변경; 테두리·배치·내용 유지",
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "all_pdf_text_unchanged": true,
+    "build_warnings": 0,
+    "visual_review_complete": true
+  }
+}

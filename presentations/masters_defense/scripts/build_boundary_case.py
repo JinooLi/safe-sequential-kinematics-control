@@ -94,7 +94,7 @@ scene.set_title("Direct endpoint (close-up)", fontsize=FONT_SIZE, pad=12)
 
 for row, y, color, title, ylabel in [
     (0, h, red, "Safety-boundary approach", r"$h_{\min}$ (m)"),
-    (1, ep, blue, "Residual goal error", r"$\|e_p\|$ (m)")]:
+    (1, ep, blue, "Residual goal error", r"$\|e_{\mathrm{p}}\|$ (m)")]:
     ax = fig.add_subplot(grid[row, 1])
     ax.axvspan(15, 35, color="#dfe7f0", alpha=.55, lw=0)
     ax.plot(t, y, color=color, lw=2.3)
@@ -134,6 +134,8 @@ audit = {
     "active_barrier_column_zero_based": 2, "active_barrier_label": "obs1_link3",
     "final_position_error_m": float(ep[-1]), "final_yaw_error_rad": float(eyaw[-1]),
     "final_clf": float(v[-1]), "final_clf_slack": float(tr["clf_slack"][-1]),
+    "clf_audit_values": "Original archived CLF/slack scale, not plotted; retained for raw-data verification.",
+    "plotted_error_symbol": "||e_{mathrm{p}}||",
     "max_reconstructed_clf_error": float(abs(v-tr["clf"]).max()),
     "geometry": "Recorded q, 1 m links and 0.05 m physical link radius; spatial close-up omits distant second obstacle. No exact RDF contour drawn.",
     "plotting": "Every stored sample; no smoothing, new simulation, or QP re-solve. Shaded interval 15–35 s.",

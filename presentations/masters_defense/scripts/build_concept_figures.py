@@ -5,6 +5,7 @@ simulation; identifying episode/time values remain in the audit, not figures.
 """
 
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import os
@@ -21,6 +22,11 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA, FIG = ROOT / "evidence", ROOT / "Fig"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--only", action="append", metavar="FIGURE",
+                    help="Regenerate only this figure stem; repeat for multiple figures.")
+requested_figures = set(parser.parse_args().only or [])
+generated_figures = []
 FONT_SIZE = 24  # One source size for all visible labels; scaled with the vector figure.
 plt.rcParams.update({
     "axes.titlesize": FONT_SIZE, "axes.labelsize": FONT_SIZE,
@@ -36,6 +42,10 @@ plt.rcParams.update({
 
 
 def save(fig, name):
+    if requested_figures and name not in requested_figures:
+        plt.close(fig)
+        return
+    generated_figures.append(name)
     fig.savefig(FIG / f"{name}.pdf", bbox_inches="tight", pad_inches=.08)
     subprocess.run([
         "pdftoppm", "-r", "150", "-singlefile", "-png",
@@ -168,22 +178,22 @@ audit["recorded_geometry"] = {
     "obstacle_halo": "Nominal 0.08 m geometric margin; not exact RDF contours",
 }
 
-# Surface families reproduce the existing planar CLF science. Positive
-# weights set the illustrative shape only; no numerical height is labelled.
-w_v, w_psi = 1.0, .5
+# Surfaces follow the current thesis CLF definition, including the 1/2 factor.
+# The relative orientation weight matches the archived-function mapping.
+w_o = .5
 for index, suffix, color in [(1, "1", linkcolors[0]), (2, "2", linkcolors[1]), (3, "ee", linkcolors[2])]:
     fig = plt.figure(figsize=(3.9, 3.4))
     ax = fig.add_subplot(111, projection="3d")
     if index < 3:
         error = np.linspace(-1, 1, 51)
         x, y = np.meshgrid(error, error)
-        z = w_v * (x * x + y * y)
-        xlabel = rf"$e_{{p,{index},x}}$"
-        ylabel = rf"$e_{{p,{index},y}}$"
+        z = .5 * (x * x + y * y)
+        xlabel = rf"$e_{{\mathrm{{p}},{index},x}}$"
+        ylabel = rf"$e_{{\mathrm{{p}},{index},y}}$"
     else:
         x, y = np.meshgrid(np.linspace(0, 1, 51), np.linspace(-np.pi, np.pi, 65))
-        z = w_v * (x * x + w_psi * (1 - np.cos(y)))
-        xlabel, ylabel = r"$\|e_{p,\mathrm{ee}}\|$", r"$e_\psi$"
+        z = .5 * x * x + .5 * w_o * (1 - np.cos(y))
+        xlabel, ylabel = r"$\|p_{\mathrm{e}}-p_{\mathrm{d}}\|$", r"$\psi_{\mathrm{e}}-\psi_{\mathrm{d}}$"
     assert np.all(z >= 0) and np.isclose(z.min(), 0)
     cmap = LinearSegmentedColormap.from_list(f"clf_{suffix}", ["#f7fafb", color])
     ax.plot_surface(x, y, z, cmap=cmap, alpha=.92, linewidth=.25,
@@ -197,9 +207,9 @@ for index, suffix, color in [(1, "1", linkcolors[0]), (2, "2", linkcolors[1]), (
     save(fig, f"concept_clf_{suffix}")
 
 audit["clf_shapes"] = {
-    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p,ee||^2+w_psi(1-cos(e_psi))), w_V,w_psi>0",
+    "symbolic_formula": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d)), w_o>0",
     "coordinates": "Intermediate tasks: planar position-error coordinates; EE: position-error norm and yaw error",
-    "illustrative_weights": {"w_V": w_v, "w_psi": w_psi},
+    "illustrative_weights": {"w_o": w_o},
     "archived_trajectory_weights": {"w_V": 10, "w_psi": .5},
     "numeric_ticks": False,
     "titles": False,
@@ -260,5 +270,6 @@ audit["figure_files"] = [
     "concept_clf_1", "concept_clf_2", "concept_clf_ee",
     "concept_panda_scene",
 ]
+assert requested_figures <= set(generated_figures), f"Unknown figure stems: {requested_figures - set(generated_figures)}"
 (DATA / "concept_figure_audit.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n")
 print(json.dumps(audit, ensure_ascii=False, indent=2))

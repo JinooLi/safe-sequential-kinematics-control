@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-11-11T16:36:22.364694+09:00",
+  "scope": [
+    "5쪽 CLF 정의와 QP 설명 시각적 분리",
+    "6쪽 그림 범례 하단 이동"
+  ],
+  "changes": {
+    "slide5": "동일 폭의 옅은 배경 박스 두 개; 10pt 글자 크기와 제약식 라벨 유지; 박스 밖에 Direct 정의 배치",
+    "slide6": "그림 내부 범례 bbox_to_anchor=(0.5,-0.10), 실제 목표와 범례 별표 간 간격 확보"
+  },
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_review_complete": true,
+    "notes_original_data_and_unrelated_figures_unchanged": true
+  }
+}

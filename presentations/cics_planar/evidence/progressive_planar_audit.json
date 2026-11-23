@@ -1,0 +1,326 @@
+{
+  "source_sha256": {
+    "case030_report.json": "6f65885bad9a0f50852a15c323b4f2f7a381cfc6ff6dc0dab8c722377231e312",
+    "case_030_direct.npz": "aca92824f9e7b2bc663ae5b7b97c8c47c7005284566ad2a0af3a807293bb6864",
+    "case_030_sequential.npz": "7ed56270dd543dcb36ad8d4c2083445b422f26ea3e06538b5bd380baf592aff8"
+  },
+  "case_id": 30,
+  "stages": [
+    {
+      "name": "01_initial",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          3.0,
+          0.0
+        ]
+      ],
+      "obstacles_visible": false,
+      "ee_target_pose_visible": false,
+      "selected_ik_and_intermediate_targets_visible": false,
+      "active_target": null,
+      "sample_index": null,
+      "time_s": 0.0,
+      "selection": "Identical initial state; accumulating information",
+      "figure_files": [
+        "Fig/progressive_planar_01_initial.pdf",
+        "Fig/progressive_planar_01_initial.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "02_scene",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          3.0,
+          0.0
+        ]
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "selected_ik_and_intermediate_targets_visible": false,
+      "active_target": null,
+      "sample_index": null,
+      "time_s": 0.0,
+      "selection": "Identical initial state; accumulating information",
+      "figure_files": [
+        "Fig/progressive_planar_02_scene.pdf",
+        "Fig/progressive_planar_02_scene.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "03_ik",
+      "robot_q": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          3.0,
+          0.0
+        ]
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "selected_ik_and_intermediate_targets_visible": true,
+      "active_target": null,
+      "sample_index": null,
+      "time_s": 0.0,
+      "selection": "Identical initial state; accumulating information",
+      "figure_files": [
+        "Fig/progressive_planar_03_ik.pdf",
+        "Fig/progressive_planar_03_ik.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "04_link1",
+      "robot_q": [
+        -0.3561267914306889,
+        0.6823342871314113,
+        6.564966529781367e-08
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.937254231811736,
+          -0.348646676380247
+        ],
+        [
+          1.8845187034750928,
+          -0.028193839406782994
+        ],
+        [
+          2.831783154100826,
+          0.2922590597542758
+        ]
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "selected_ik_and_intermediate_targets_visible": true,
+      "active_target": 1,
+      "sample_index": 1064,
+      "time_s": 2.1279999999999872,
+      "selection": "goal-reached stage transition state",
+      "figure_files": [
+        "Fig/progressive_planar_04_link1.pdf",
+        "Fig/progressive_planar_04_link1.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "05_link2",
+      "robot_q": [
+        -2.047431811534577,
+        1.607417818521949,
+        0.8102738976664047
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          -0.45879225955922803,
+          -0.8885435625609686
+        ],
+        [
+          0.44595344339584503,
+          -1.314495687786716
+        ],
+        [
+          1.3781867719797365,
+          -0.9526379518221545
+        ]
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "selected_ik_and_intermediate_targets_visible": true,
+      "active_target": 2,
+      "sample_index": 3437,
+      "time_s": 6.873999999999465,
+      "selection": "goal-reached stage transition state",
+      "figure_files": [
+        "Fig/progressive_planar_05_link2.pdf",
+        "Fig/progressive_planar_05_link2.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "name": "06_ee",
+      "robot_q": [
+        -1.9821514285209827,
+        1.4979861649855728,
+        -2.0362222895740705
+      ],
+      "robot_points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          -0.39985175363085895,
+          -0.9165798247388641
+        ],
+        [
+          0.48521204833612036,
+          -1.3820495514104874
+        ],
+        [
+          -0.3279656117604433,
+          -1.9640650951203418
+        ]
+      ],
+      "obstacles_visible": true,
+      "ee_target_pose_visible": true,
+      "selected_ik_and_intermediate_targets_visible": true,
+      "active_target": 3,
+      "sample_index": 9113,
+      "time_s": 18.226000000000777,
+      "selection": "first successful final EE sample",
+      "figure_files": [
+        "Fig/progressive_planar_06_ee.pdf",
+        "Fig/progressive_planar_06_ee.png"
+      ],
+      "axes_position": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "selected_ik_q": [
+    -0.556348614215052,
+    -1.3151238261849376,
+    -0.7489026010385773
+  ],
+  "selected_ik_points": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      0.8491890243775927,
+      -0.5280890084792831
+    ],
+    [
+      0.5530229693132401,
+      -1.4832254740315198
+    ],
+    [
+      -0.31419055991504485,
+      -1.98116191046033
+    ]
+  ],
+  "selected_ik_ee_yaw_residual_rad": 4.440892098500626e-16,
+  "max_selected_ik_target_fk_residual_m": 0.0,
+  "common_axis_bounds": {
+    "lower": [
+      -0.7083382128066824,
+      -2.29116191046033
+    ],
+    "upper": [
+      3.16,
+      1.7744334308291259
+    ]
+  },
+  "common_pdf_size_inches": [
+    4.567110561373034,
+    4.8
+  ],
+  "identical_geometry_transform": true,
+  "all_geometry_inside_axes": true,
+  "first_three_states_are_identical": true,
+  "active_target_emphasis": "Active target is an enlarged saturated link-color star; no target circle or disk; small colored outline marks actual controlled endpoint",
+  "goal_configuration_is_not_path": true,
+  "ee_goal_marker_size_points": {
+    "inactive": 24,
+    "active": 28
+  },
+  "intermediate_goal_marker_size_points": {
+    "inactive": 12,
+    "active": 21
+  },
+  "last_state_is_not_forced_to_selected_ik": true,
+  "obstacle_halo": "Nominal 0.08 m geometric margin, not an exact RDF contour",
+  "link_geometry_radius_m": 0.05,
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern; PNG rendered from PDF; no in-figure text",
+  "numeric_axes_or_time_labels": false,
+  "new_simulation_or_training": false
+}

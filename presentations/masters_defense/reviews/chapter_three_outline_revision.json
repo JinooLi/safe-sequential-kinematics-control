@@ -1,0 +1,37 @@
+{
+  "revision": "chapter_three_outline_revision",
+  "request": "Show the Chapter 3 contents on page 10 to communicate the full methodology scope",
+  "changed_main_frames": [
+    10
+  ],
+  "chapter": "3",
+  "sections": [
+    "3.1",
+    "3.2",
+    "3.3",
+    "3.4",
+    "3.5"
+  ],
+  "source_evidence": "evidence/chapter_three_outline_audit.json",
+  "display_aliases": {
+    "3.4": "Spatial Manipulator in place of the thesis heading Panda Manipulator",
+    "3.5": "Two Link Subtasks in place of the thesis heading Two Intermediate Links"
+  },
+  "notes_changed": [
+    "thesis-outline"
+  ],
+  "notes_seconds": 15,
+  "speech_seconds": 1140,
+  "main_slides": 36,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "validation": {
+    "artifact_verifier": "passed",
+    "page_10_visual_review": "All five headings readable, section numbers aligned on the same baseline, no overlaps",
+    "other_frames_unchanged": true,
+    "other_35_notes_unchanged": true,
+    "independent_scope_review": "pair_mean_scope_review confirmed all five Chapter 3 sections and scope"
+  },
+  "raw_experiment_data_changed": false,
+  "thesis_source_changed": false
+}

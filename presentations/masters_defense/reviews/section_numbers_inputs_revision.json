@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    7,
+    22,
+    25,
+    29,
+    30,
+    40,
+    42
+  ],
+  "numbered_subtitles": 50,
+  "unnumbered_bibliography_subtitles": 1,
+  "cover_thank_you_appendix_contents_without_subtitles": true,
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "ambiguous_z_r_removed": true,
+  "p25_takeaway": "Longer completion time for All-link Sequential",
+  "input_description": {
+    "q_0": "Initial joint configuration",
+    "q_star": "Selected, validated IK solution",
+    "p_d_R_d": "Target end-effector position and orientation"
+  },
+  "user_p26_takeaway_and_block_title_preserved": true,
+  "scope_ko": "25쪽 takeaway, 논문 번호를 포함한 부제, 29·30쪽 신경망 입력 설명",
+  "number_source": "evidence/thesis_section_numbers.json",
+  "data_and_result_values_unchanged": true,
+  "independent_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      22,
+      25,
+      29,
+      30
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "input_meaning_matches_thesis_and_code": true
+  }
+}

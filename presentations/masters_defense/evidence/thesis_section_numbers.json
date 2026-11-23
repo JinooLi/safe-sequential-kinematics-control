@@ -1,0 +1,2470 @@
+{
+  "thesis_root": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis",
+  "mapping_input": {
+    "path": "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/masters_defense/evidence/chapter_mapping.json",
+    "sha256": "3acdcec82f7ad78c85f70aee7567b99b98a7dbba34bfc4317aa2c2a61486a549",
+    "mapping_count": 51,
+    "state": "Before adding display_subtitle and thesis_number fields",
+    "updated_sha256": "908fbd108cd5ec5c4d37207aac8c26a5d723be168ba3157623ca2c275f05c0c2"
+  },
+  "numbering_evidence": {
+    "main_section_number_definition": {
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
+      "line": 97,
+      "text": "\\renewcommand{\\thesection}{\\thechapter.\\arabic{section}}"
+    },
+    "class_secnumdepth": {
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/uosthesis.cls",
+      "line": 553,
+      "value": 4
+    },
+    "main_body_inclusion": {
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
+      "line": 266
+    },
+    "algorithm": "Recursively expand numbered chapter/section/subsection commands in current sections/body.tex and input files in document order; reset lower-level counters; compare the entire body heading sequence with main.toc and body.aux."
+  },
+  "generated_files_checked": {
+    "toc": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+    "body_aux": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+    "numbered_body_heading_count": 45,
+    "all_heading_names_levels_numbers_and_order_match_current_source": true,
+    "latest_source_file": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/System_Notation.tex",
+    "latest_source_mtime_utc": "2026-11-09T04:01:01.285828+00:00",
+    "toc_newer_than_all_checked_sources": false,
+    "numbering_rechecked_after_source_edits": true,
+    "freshness_note": "During terminology revision, externally updated thesis sources and regenerated TOC/AUX were rechecked. All 45 heading names, levels, numbers and order remain unchanged; source locations and generated page references refreshed. Thesis not modified by this task."
+  },
+  "unavailable_output_directory_candidates": [
+    "/home/jinoo/latex-ws/LaTeX-env/out/ws/masters_tethis",
+    "/home/jinoo/latex-ws/out/ws/masters_tethis",
+    "/home/jinoo/latex-ws/LaTeX-env/ws/out/ws/masters_tethis",
+    "/home/jinoo/prj/safe-inv-clbf-robot-arm/out/ws/masters_tethis"
+  ],
+  "sources": [
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+      "sha256": "12f542b589b879bc2c952455a5f2724ea0d11521f0854b0bdcbd4ffd295f9424",
+      "mtime_utc": "2026-11-09T04:00:38.509263+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+      "sha256": "68607c3babff21cf8d017af9273e915274574320c3967d09e1baae39700c7f8c",
+      "mtime_utc": "2026-11-09T04:00:38.415765+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
+      "sha256": "469232eee8dc87e62f4ba32913798614ef42df4c067a0184115fdeafa8e67431",
+      "mtime_utc": "2026-10-16T08:42:15+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/mythesis.sty",
+      "sha256": "855bc12700909e01d97fb9fc5a915c6a87b0b7b4786088476c82ce1a27637aca",
+      "mtime_utc": "2025-12-16T05:05:03+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Conclusion.tex",
+      "sha256": "f9621436278ae1b384a6fd501c81014b4df7e2058021a5b135c76ebfae4c1410",
+      "mtime_utc": "2026-10-30T07:41:06.886853+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Introduction/Research_Background.tex",
+      "sha256": "29bf52e16a51ded380a5f2947e8e4c47fd78f9b50140ab4da384d6b3b2ee0481",
+      "mtime_utc": "2026-10-30T07:41:06.887175+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Introduction/Research_Objectives.tex",
+      "sha256": "fe9fc318532f784f23a5425dfdbddce77b068cb795d987886382004288369402",
+      "mtime_utc": "2026-10-30T07:41:06.887259+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Intro.tex",
+      "sha256": "b24531b5bfafaa3e5393ef44819931623057786420444b064354f5f8e0148291",
+      "mtime_utc": "2026-11-09T03:58:49.592490+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Kinematic_Control.tex",
+      "sha256": "5f297789bc2560a83579dc9168744589d902d50b0891c276c87b42086639965f",
+      "mtime_utc": "2026-11-09T03:58:55.055317+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "sha256": "3a534dcacf17b90d5d7246ed2bdc6c740437dc8ed37994156dfb43f6c2cc7bb4",
+      "mtime_utc": "2026-11-09T03:59:03.506458+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Overview.tex",
+      "sha256": "eed9c95b05b3947c7b91ab459df8ce673c4d43c728186e459f36ee5e3800572f",
+      "mtime_utc": "2026-11-09T03:59:10.544987+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Execution.tex",
+      "sha256": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5",
+      "mtime_utc": "2026-11-09T03:59:19.521828+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Frames.tex",
+      "sha256": "5e1f7769d1671ab530d3610b82a526e971d4bd97e62633a41922cc526dd66693",
+      "mtime_utc": "2026-11-09T03:59:25.994358+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Overview.tex",
+      "sha256": "7bb49790c33607de3736245673f98cc0b5438c9d88983fadd0fe9adec2683ffc",
+      "mtime_utc": "2026-11-09T03:59:35.119057+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "sha256": "4ccf70e1b82a8996c1ebc0d5aff7fe53303be9792b8751fc443b9609334fd1f6",
+      "mtime_utc": "2026-11-09T03:59:42.040238+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Problem_Formulation.tex",
+      "sha256": "98e383b9dc8203937c9b99ca3bc3f53f2ca11cf341843c049addad53c2f9f529",
+      "mtime_utc": "2026-11-09T03:59:49.219216+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/RDF_CBF.tex",
+      "sha256": "b86fe78114e25ba9ed742708851d291b645469fb25fe2c79b9dd772351cee33f",
+      "mtime_utc": "2026-11-09T03:59:56.237101+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Safe_IK.tex",
+      "sha256": "b5b0665f003196bbe13cb8314b63a4de48ae206fcd3b65052d9ecc7694f22dc7",
+      "mtime_utc": "2026-11-09T04:00:02.203965+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+      "sha256": "a545455bb77067236f76f4826560150d9dcad9a0a91881ccc7939895dedc9697",
+      "mtime_utc": "2026-11-09T04:00:09.169616+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/CBF.tex",
+      "sha256": "17104b0c2dfab22bea802f3bf701ced39b5004b7216a04ddd51f8442f290a844",
+      "mtime_utc": "2026-11-09T04:00:19.636041+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/CLF.tex",
+      "sha256": "f29ff8a684b4402aa499e05991a13a5e0113555cd512976a553357234e127f8c",
+      "mtime_utc": "2026-11-09T04:00:33.914015+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/CLF_CBF_QP.tex",
+      "sha256": "d0cd68c458ee22e2ac42fc50b0b30369c44f33e06808e97f40029c4b2fd180c5",
+      "mtime_utc": "2026-11-09T04:00:28.270714+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/Deadlock.tex",
+      "sha256": "4223fa3ac4246d2a929f8949df152925e32550d333707722f021e70be5625f18",
+      "mtime_utc": "2026-11-09T04:00:38.839969+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/Kinematics.tex",
+      "sha256": "de47cfecbb008384e2cdd16623aa4658bb3b5db7e2765904b52536562b458cba",
+      "mtime_utc": "2026-11-09T04:00:45.274623+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/Neural_Networks.tex",
+      "sha256": "d11b7ab647e4f4aa88175ee9d2d1f7342933ee2928eae038b084dd5cd19a092e",
+      "mtime_utc": "2026-11-09T04:00:51.996105+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/RDF.tex",
+      "sha256": "444a4e60eadaa057d07579604effa6d440b59dc9dc83b0f9459e0b7032ca3821",
+      "mtime_utc": "2026-11-09T04:00:56.915823+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/System_Notation.tex",
+      "sha256": "ab3c606bf85021280cf23f94ada6e9fabb7bd396e92760aef83d4f60d572dcda",
+      "mtime_utc": "2026-11-09T04:01:01.285828+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Evaluation.tex",
+      "sha256": "875e6cd97837eb985ba41dea225faa60bc6d2e98bf68802eef860266d2215542",
+      "mtime_utc": "2026-10-30T07:41:06.894353+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "sha256": "0f6442be70bdd5a84b2fb05f75a2670da1df30fbd6742a7233dd3c39083a530f",
+      "mtime_utc": "2026-11-03T04:30:37.511170+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+      "sha256": "4c4a9eed377f1167754dac10bc2f3034d869785c000ded7e82a8e66bff3cfb5a",
+      "mtime_utc": "2026-10-30T07:41:06.895889+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "sha256": "97277baa3cdf1ca11a6acc9fbfd6cf026b27cf052c4b4326f3ea05c027bf425f",
+      "mtime_utc": "2026-11-02T09:55:39.462815+00:00"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/uosthesis.cls",
+      "sha256": "99bf0b07a09ba83e54c35ae8fd38eab46e92ce722ecc91c8e45d080af3aaa9ea",
+      "mtime_utc": "2026-10-15T06:48:31+00:00"
+    }
+  ],
+  "heading_to_number": {
+    "Introduction": "1",
+    "Research Background": "1.1",
+    "Research Objectives": "1.2",
+    "Preliminaries": "2",
+    "Control Lyapunov Function": "2.1",
+    "Control Barrier Function": "2.2",
+    "CLF-CBF QP": "2.3",
+    "Local Minima and Deadlock in CLF-CBF QP": "2.3.1",
+    "Neural Networks": "2.4",
+    "Robot Kinematics and Inverse Kinematics": "2.5",
+    "3-DOF Planar Kinematics and Analytic IK": "2.5.1",
+    "Spatial Pose Tasks and Null-Space Control": "2.5.2",
+    "Robot Distance Fields": "2.6",
+    "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning": "3",
+    "Problem Formulation": "3.1",
+    "Sequential Kinematic Control Framework": "3.2",
+    "Intermediate Targets and Sequential Tasks": "3.2.1",
+    "CLF-CBF QP-Based Kinematic Control": "3.2.2",
+    "Application to the 3-DOF Planar Manipulator": "3.3",
+    "IK Candidate Validation and Selection": "3.3.1",
+    "Intermediate Position Tasks and Final Pose Task": "3.3.2",
+    "Collision and Joint-Limit Barriers": "3.3.3",
+    "Stage-Transition Rule": "3.3.4",
+    "Extension to the 7-DOF Panda Manipulator": "3.4",
+    "Multi-Start IK with a Safety-Aware Null-Space Update": "3.4.1",
+    "All-Link Sequence and Spatial Pose Tasks": "3.4.2",
+    "RDF-Based Construction of CBF": "3.4.3",
+    "Control Execution and Termination": "3.4.4",
+    "Learning-Based Selection of Two Intermediate Links": "3.5",
+    "Two-Link Reduction and Selection Objective": "3.5.1",
+    "Learning Context and Outcome Labels": "3.5.2",
+    "Network Architecture": "3.5.3",
+    "Training Objective and Sequence Selection": "3.5.4",
+    "Simulation Results": "4",
+    "System 1: 3-DOF Planar Model": "4.1",
+    "Experimental Conditions": "4.1.1",
+    "Paired Outcomes and an Illustrative Trajectory": "4.1.2",
+    "System 2: 7-DOF Franka Emika Panda Model": "4.2",
+    "Common Evaluation Protocol": "4.2.1",
+    "Effect of All-Link Sequential Control": "4.2.2",
+    "Two-Link Reduction: Completion Time and Success": "4.2.3",
+    "Learning Dataset and Training Conditions": "4.2.4",
+    "Recovery Through Learned Link Selection": "4.2.5",
+    "Interpretation and Limitations": "4.2.6",
+    "Conclusion": "5"
+  },
+  "all_numbered_body_headings": [
+    {
+      "heading": "Introduction",
+      "toc_heading": "Introduction",
+      "number": "1",
+      "heading_level": "chapter",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 3,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 4,
+        "number": "1",
+        "page": "1",
+        "anchor": "chapter.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 5
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Research Background",
+      "toc_heading": "Research Background",
+      "number": "1.1",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 4,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 5,
+        "number": "1.1",
+        "page": "1",
+        "anchor": "section.1.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 9
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Research Objectives",
+      "toc_heading": "Research Objectives",
+      "number": "1.2",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 6,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 6,
+        "number": "1.2",
+        "page": "3",
+        "anchor": "section.1.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 11
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Preliminaries",
+      "toc_heading": "Preliminaries",
+      "number": "2",
+      "heading_level": "chapter",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 9,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 7,
+        "number": "2",
+        "page": "5",
+        "anchor": "chapter.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 13
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Control Lyapunov Function",
+      "toc_heading": "Control Lyapunov Function",
+      "number": "2.1",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 8,
+        "number": "2.1",
+        "page": "5",
+        "anchor": "section.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 17
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Control Barrier Function",
+      "toc_heading": "Control Barrier Function",
+      "number": "2.2",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 13,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 9,
+        "number": "2.2",
+        "page": "7",
+        "anchor": "section.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 26
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "CLF-CBF QP",
+      "toc_heading": "CLF-CBF QP",
+      "number": "2.3",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 15,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 10,
+        "number": "2.3",
+        "page": "9",
+        "anchor": "section.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 38
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "toc_heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "number": "2.3.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 17,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 11,
+        "number": "2.3.1",
+        "page": "11",
+        "anchor": "subsection.2.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 42
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Neural Networks",
+      "toc_heading": "Neural Networks",
+      "number": "2.4",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 19,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 12,
+        "number": "2.4",
+        "page": "11",
+        "anchor": "section.2.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 43
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Robot Kinematics and Inverse Kinematics",
+      "toc_heading": "Robot Kinematics and Inverse Kinematics",
+      "number": "2.5",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 21,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 13,
+        "number": "2.5",
+        "page": "14",
+        "anchor": "section.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 52
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "3-DOF Planar Kinematics and Analytic IK",
+      "toc_heading": "3-DOF Planar Kinematics and Analytic IK",
+      "number": "2.5.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/Kinematics.tex",
+      "source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 14,
+        "number": "2.5.1",
+        "page": "14",
+        "anchor": "subsection.2.5.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 53
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Spatial Pose Tasks and Null-Space Control",
+      "toc_heading": "Spatial Pose Tasks and Null-Space Control",
+      "number": "2.5.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/Kinematics.tex",
+      "source_line": 45,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 15,
+        "number": "2.5.2",
+        "page": "16",
+        "anchor": "subsection.2.5.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 59
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Robot Distance Fields",
+      "toc_heading": "Robot Distance Fields",
+      "number": "2.6",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 23,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 16,
+        "number": "2.6",
+        "page": "17",
+        "anchor": "section.2.6"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 64
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
+      "toc_heading": "A Sequential Approach to Collision-Free Kinematic Control",
+      "number": "3",
+      "heading_level": "chapter",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 26,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 17,
+        "number": "3",
+        "page": "21",
+        "anchor": "chapter.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 72
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Problem Formulation",
+      "toc_heading": "Problem Formulation",
+      "number": "3.1",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 28,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 18,
+        "number": "3.1",
+        "page": "21",
+        "anchor": "section.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 76
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Sequential Kinematic Control Framework",
+      "toc_heading": "Sequential Kinematic Control Framework",
+      "number": "3.2",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 30,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 19,
+        "number": "3.2",
+        "page": "24",
+        "anchor": "section.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 82
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Intermediate Targets and Sequential Tasks",
+      "toc_heading": "Intermediate Targets and Sequential Tasks",
+      "number": "3.2.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 20,
+        "number": "3.2.1",
+        "page": "26",
+        "anchor": "subsection.3.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 86
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "CLF-CBF QP-Based Kinematic Control",
+      "toc_heading": "CLF-CBF QP-Based Kinematic Control",
+      "number": "3.2.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 34,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 21,
+        "number": "3.2.2",
+        "page": "27",
+        "anchor": "subsection.3.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 90
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Application to the 3-DOF Planar Manipulator",
+      "toc_heading": "Application to the 3-DOF Planar Manipulator",
+      "number": "3.3",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 36,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 22,
+        "number": "3.3",
+        "page": "28",
+        "anchor": "section.3.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 92
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "IK Candidate Validation and Selection",
+      "toc_heading": "IK Candidate Validation and Selection",
+      "number": "3.3.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 23,
+        "number": "3.3.1",
+        "page": "28",
+        "anchor": "subsection.3.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 94
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Intermediate Position Tasks and Final Pose Task",
+      "toc_heading": "Intermediate Position Tasks and Final Pose Task",
+      "number": "3.3.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "source_line": 22,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 24,
+        "number": "3.3.2",
+        "page": "29",
+        "anchor": "subsection.3.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 96
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Collision and Joint-Limit Barriers",
+      "toc_heading": "Collision and Joint-Limit Barriers",
+      "number": "3.3.3",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 25,
+        "number": "3.3.3",
+        "page": "30",
+        "anchor": "subsection.3.3.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 98
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Stage-Transition Rule",
+      "toc_heading": "Stage-Transition Rule",
+      "number": "3.3.4",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "source_line": 116,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 26,
+        "number": "3.3.4",
+        "page": "32",
+        "anchor": "subsection.3.3.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 99
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Extension to the 7-DOF Panda Manipulator",
+      "toc_heading": "Extension to the 7-DOF Panda Manipulator",
+      "number": "3.4",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 38,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 27,
+        "number": "3.4",
+        "page": "32",
+        "anchor": "section.3.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 101
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "toc_heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "number": "3.4.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 40,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 28,
+        "number": "3.4.1",
+        "page": "33",
+        "anchor": "subsection.3.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 105
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "All-Link Sequence and Spatial Pose Tasks",
+      "toc_heading": "All-Link Sequence and Spatial Pose Tasks",
+      "number": "3.4.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 42,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 29,
+        "number": "3.4.2",
+        "page": "39",
+        "anchor": "subsection.3.4.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 119
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "RDF-Based Construction of CBF",
+      "toc_heading": "RDF-Based Construction of CBF",
+      "number": "3.4.3",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 44,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 30,
+        "number": "3.4.3",
+        "page": "40",
+        "anchor": "subsection.3.4.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 123
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Control Execution and Termination",
+      "toc_heading": "Control Execution and Termination",
+      "number": "3.4.4",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 46,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 31,
+        "number": "3.4.4",
+        "page": "46",
+        "anchor": "subsection.3.4.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 130
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Learning-Based Selection of Two Intermediate Links",
+      "toc_heading": "Learning-Based Selection of Two Intermediate Links",
+      "number": "3.5",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 48,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 32,
+        "number": "3.5",
+        "page": "47",
+        "anchor": "section.3.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 133
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Two-Link Reduction and Selection Objective",
+      "toc_heading": "Two-Link Reduction and Selection Objective",
+      "number": "3.5.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "source_line": 5,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 33,
+        "number": "3.5.1",
+        "page": "48",
+        "anchor": "subsection.3.5.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 135
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Learning Context and Outcome Labels",
+      "toc_heading": "Learning Context and Outcome Labels",
+      "number": "3.5.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "source_line": 18,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 34,
+        "number": "3.5.2",
+        "page": "49",
+        "anchor": "subsection.3.5.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 137
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Network Architecture",
+      "toc_heading": "Network Architecture",
+      "number": "3.5.3",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 35,
+        "number": "3.5.3",
+        "page": "50",
+        "anchor": "subsection.3.5.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 138
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Training Objective and Sequence Selection",
+      "toc_heading": "Training Objective and Sequence Selection",
+      "number": "3.5.4",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "source_line": 52,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 36,
+        "number": "3.5.4",
+        "page": "53",
+        "anchor": "subsection.3.5.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 141
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Simulation Results",
+      "toc_heading": "Simulation Results",
+      "number": "4",
+      "heading_level": "chapter",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 51,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 37,
+        "number": "4",
+        "page": "55",
+        "anchor": "chapter.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 145
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "System 1: 3-DOF Planar Model",
+      "toc_heading": "System 1: 3-DOF Planar Model",
+      "number": "4.1",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 53,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 38,
+        "number": "4.1",
+        "page": "56",
+        "anchor": "section.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 149
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Experimental Conditions",
+      "toc_heading": "Experimental Conditions",
+      "number": "4.1.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+      "source_line": 2,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 39,
+        "number": "4.1.1",
+        "page": "56",
+        "anchor": "subsection.4.1.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 150
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Paired Outcomes and an Illustrative Trajectory",
+      "toc_heading": "Paired Outcomes and an Illustrative Trajectory",
+      "number": "4.1.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+      "source_line": 9,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 40,
+        "number": "4.1.2",
+        "page": "56",
+        "anchor": "subsection.4.1.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 151
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "System 2: 7-DOF Franka Emika Panda Model",
+      "toc_heading": "System 2: 7-DOF Franka Emika Panda Model",
+      "number": "4.2",
+      "heading_level": "section",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 55,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 41,
+        "number": "4.2",
+        "page": "58",
+        "anchor": "section.4.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 156
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Common Evaluation Protocol",
+      "toc_heading": "Common Evaluation Protocol",
+      "number": "4.2.1",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 2,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 42,
+        "number": "4.2.1",
+        "page": "58",
+        "anchor": "subsection.4.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 157
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Effect of All-Link Sequential Control",
+      "toc_heading": "Effect of All-Link Sequential Control",
+      "number": "4.2.2",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 43,
+        "number": "4.2.2",
+        "page": "60",
+        "anchor": "subsection.4.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 160
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Two-Link Reduction: Completion Time and Success",
+      "toc_heading": "Two-Link Reduction: Completion Time and Success",
+      "number": "4.2.3",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 33,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 44,
+        "number": "4.2.3",
+        "page": "61",
+        "anchor": "subsection.4.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 164
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Learning Dataset and Training Conditions",
+      "toc_heading": "Learning Dataset and Training Conditions",
+      "number": "4.2.4",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 64,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 45,
+        "number": "4.2.4",
+        "page": "63",
+        "anchor": "subsection.4.2.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 168
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Recovery Through Learned Link Selection",
+      "toc_heading": "Recovery Through Learned Link Selection",
+      "number": "4.2.5",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 46,
+        "number": "4.2.5",
+        "page": "64",
+        "anchor": "subsection.4.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 169
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Interpretation and Limitations",
+      "toc_heading": "Interpretation and Limitations",
+      "number": "4.2.6",
+      "heading_level": "subsection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "source_line": 104,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 47,
+        "number": "4.2.6",
+        "page": "65",
+        "anchor": "subsection.4.2.6"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 172
+      },
+      "source_and_generated_number_match": true
+    },
+    {
+      "heading": "Conclusion",
+      "toc_heading": "Conclusion",
+      "number": "5",
+      "heading_level": "chapter",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "source_line": 58,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 48,
+        "number": "5",
+        "page": "68",
+        "anchor": "chapter.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 176
+      },
+      "source_and_generated_number_match": true
+    }
+  ],
+  "mapping": [
+    {
+      "slide": "motivation-goal",
+      "subtitle": "Research Background",
+      "thesis_heading": "Research Background",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "1.1",
+      "recommended_subtitle": "1.1 Research Background",
+      "numbered": true,
+      "heading_source_line": 4,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 5,
+        "number": "1.1",
+        "page": "1",
+        "anchor": "section.1.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 9
+      }
+    },
+    {
+      "slide": "motivation",
+      "subtitle": "Research Background",
+      "thesis_heading": "Research Background",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "1.1",
+      "recommended_subtitle": "1.1 Research Background",
+      "numbered": true,
+      "heading_source_line": 4,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 5,
+        "number": "1.1",
+        "page": "1",
+        "anchor": "section.1.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 9
+      }
+    },
+    {
+      "slide": "background-clf",
+      "subtitle": "Control Lyapunov Function",
+      "thesis_heading": "Control Lyapunov Function",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "2.1",
+      "recommended_subtitle": "2.1 Control Lyapunov Function",
+      "numbered": true,
+      "heading_source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 8,
+        "number": "2.1",
+        "page": "5",
+        "anchor": "section.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 17
+      }
+    },
+    {
+      "slide": "background-cbf",
+      "subtitle": "Control Barrier Function",
+      "thesis_heading": "Control Barrier Function",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "2.2",
+      "recommended_subtitle": "2.2 Control Barrier Function",
+      "numbered": true,
+      "heading_source_line": 13,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 9,
+        "number": "2.2",
+        "page": "7",
+        "anchor": "section.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 26
+      }
+    },
+    {
+      "slide": "background-qp",
+      "subtitle": "CLF-CBF QP",
+      "thesis_heading": "CLF-CBF QP",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "2.3",
+      "recommended_subtitle": "2.3 CLF-CBF QP",
+      "numbered": true,
+      "heading_source_line": 15,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 10,
+        "number": "2.3",
+        "page": "9",
+        "anchor": "section.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 38
+      }
+    },
+    {
+      "slide": "literature",
+      "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
+      "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "recommended_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP",
+      "numbered": true,
+      "heading_source_line": 17,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 11,
+        "number": "2.3.1",
+        "page": "11",
+        "anchor": "subsection.2.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 42
+      }
+    },
+    {
+      "slide": "planar-direct",
+      "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
+      "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "recommended_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP",
+      "numbered": true,
+      "heading_source_line": 17,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 11,
+        "number": "2.3.1",
+        "page": "11",
+        "anchor": "subsection.2.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 42
+      }
+    },
+    {
+      "slide": "human-inspiration",
+      "subtitle": "Research Objectives",
+      "thesis_heading": "Research Objectives",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "1.2",
+      "recommended_subtitle": "1.2 Research Objectives",
+      "numbered": true,
+      "heading_source_line": 6,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 6,
+        "number": "1.2",
+        "page": "3",
+        "anchor": "section.1.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 11
+      }
+    },
+    {
+      "slide": "thesis-outline",
+      "subtitle": "A Sequential Approach to Collision-Free Kinematic Control",
+      "thesis_heading": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "chapter",
+      "thesis_number": "3",
+      "recommended_subtitle": "3 A Sequential Approach to Collision-Free Kinematic Control",
+      "numbered": true,
+      "heading_source_line": 26,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 17,
+        "number": "3",
+        "page": "21",
+        "anchor": "chapter.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 72
+      }
+    },
+    {
+      "slide": "planar-scene",
+      "subtitle": "Decomposition of Regulation Task",
+      "thesis_heading": "Intermediate Targets and Sequential Tasks",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.1",
+      "recommended_subtitle": "3.2.1 Decomposition of Regulation Task",
+      "numbered": true,
+      "heading_source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 20,
+        "number": "3.2.1",
+        "page": "26",
+        "anchor": "subsection.3.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 86
+      }
+    },
+    {
+      "slide": "planar-setup",
+      "subtitle": "Decomposition of Regulation Task",
+      "thesis_heading": "Intermediate Targets and Sequential Tasks",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.1",
+      "recommended_subtitle": "3.2.1 Decomposition of Regulation Task",
+      "numbered": true,
+      "heading_source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 20,
+        "number": "3.2.1",
+        "page": "26",
+        "anchor": "subsection.3.2.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 86
+      }
+    },
+    {
+      "slide": "planar-sequential",
+      "subtitle": "CLF-CBF QP-Based Kinematic Control",
+      "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "recommended_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control",
+      "numbered": true,
+      "heading_source_line": 34,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 21,
+        "number": "3.2.2",
+        "page": "27",
+        "anchor": "subsection.3.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 90
+      }
+    },
+    {
+      "slide": "planar-link2",
+      "subtitle": "CLF-CBF QP-Based Kinematic Control",
+      "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "recommended_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control",
+      "numbered": true,
+      "heading_source_line": 34,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 21,
+        "number": "3.2.2",
+        "page": "27",
+        "anchor": "subsection.3.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 90
+      }
+    },
+    {
+      "slide": "planar-ee",
+      "subtitle": "CLF-CBF QP-Based Kinematic Control",
+      "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "recommended_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control",
+      "numbered": true,
+      "heading_source_line": 34,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 21,
+        "number": "3.2.2",
+        "page": "27",
+        "anchor": "subsection.3.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 90
+      }
+    },
+    {
+      "slide": "planar-clf",
+      "subtitle": "Intermediate Position Tasks and Final Pose Task",
+      "thesis_heading": "Intermediate Position Tasks and Final Pose Task",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.3.2",
+      "recommended_subtitle": "3.3.2 Intermediate Position Tasks and Final Pose Task",
+      "numbered": true,
+      "heading_source_line": 22,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 24,
+        "number": "3.3.2",
+        "page": "29",
+        "anchor": "subsection.3.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 96
+      }
+    },
+    {
+      "slide": "algorithm-overview",
+      "subtitle": "Sequential Kinematic Control Framework",
+      "thesis_heading": "Sequential Kinematic Control Framework",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "recommended_subtitle": "3.2 Sequential Kinematic Control Framework",
+      "numbered": true,
+      "heading_source_line": 30,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 19,
+        "number": "3.2",
+        "page": "24",
+        "anchor": "section.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 82
+      }
+    },
+    {
+      "slide": "planar-results",
+      "subtitle": "System 1: 3-DOF Planar Model",
+      "thesis_heading": "System 1: 3-DOF Planar Model",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "4.1",
+      "recommended_subtitle": "4.1 System 1: 3-DOF Planar Model",
+      "numbered": true,
+      "heading_source_line": 53,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 38,
+        "number": "4.1",
+        "page": "56",
+        "anchor": "section.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 149
+      }
+    },
+    {
+      "slide": "planar-why",
+      "subtitle": "Paired Outcomes and an Illustrative Trajectory",
+      "thesis_heading": "Paired Outcomes and an Illustrative Trajectory",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.1.2",
+      "recommended_subtitle": "4.1.2 Paired Outcomes and an Illustrative Trajectory",
+      "numbered": true,
+      "heading_source_line": 9,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 40,
+        "number": "4.1.2",
+        "page": "56",
+        "anchor": "subsection.4.1.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 151
+      }
+    },
+    {
+      "slide": "panda-extension",
+      "subtitle": "Extension to the 7-DOF Spatial Manipulator",
+      "thesis_heading": "Extension to the 7-DOF Panda Manipulator",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "3.4",
+      "recommended_subtitle": "3.4 Extension to the 7-DOF Spatial Manipulator",
+      "numbered": true,
+      "heading_source_line": 38,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 27,
+        "number": "3.4",
+        "page": "32",
+        "anchor": "section.3.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 101
+      }
+    },
+    {
+      "slide": "panda-rdf",
+      "subtitle": "RDF-Based Construction of CBF",
+      "thesis_heading": "RDF-Based Construction of CBF",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.4.3",
+      "recommended_subtitle": "3.4.3 RDF-Based Construction of CBF",
+      "numbered": true,
+      "heading_source_line": 44,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 30,
+        "number": "3.4.3",
+        "page": "40",
+        "anchor": "subsection.3.4.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 123
+      }
+    },
+    {
+      "slide": "panda-ik",
+      "subtitle": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "thesis_heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.4.1",
+      "recommended_subtitle": "3.4.1 Multi-Start IK with a Safety-Aware Null-Space Update",
+      "numbered": true,
+      "heading_source_line": 40,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 28,
+        "number": "3.4.1",
+        "page": "33",
+        "anchor": "subsection.3.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 105
+      }
+    },
+    {
+      "slide": "panda-clf",
+      "subtitle": "All-Link Sequence and Spatial Pose Tasks",
+      "thesis_heading": "All-Link Sequence and Spatial Pose Tasks",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.4.2",
+      "recommended_subtitle": "3.4.2 All-Link Sequence and Spatial Pose Tasks",
+      "numbered": true,
+      "heading_source_line": 42,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 29,
+        "number": "3.4.2",
+        "page": "39",
+        "anchor": "subsection.3.4.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 119
+      }
+    },
+    {
+      "slide": "all-links",
+      "subtitle": "Effect of All-Link Sequential Control",
+      "thesis_heading": "Effect of All-Link Sequential Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.2",
+      "recommended_subtitle": "4.2.2 Effect of All-Link Sequential Control",
+      "numbered": true,
+      "heading_source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 43,
+        "number": "4.2.2",
+        "page": "60",
+        "anchor": "subsection.4.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 160
+      }
+    },
+    {
+      "slide": "time-cost",
+      "subtitle": "Effect of All-Link Sequential Control",
+      "thesis_heading": "Effect of All-Link Sequential Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.2",
+      "recommended_subtitle": "4.2.2 Effect of All-Link Sequential Control",
+      "numbered": true,
+      "heading_source_line": 11,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 43,
+        "number": "4.2.2",
+        "page": "60",
+        "anchor": "subsection.4.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 160
+      }
+    },
+    {
+      "slide": "two-links",
+      "subtitle": "Two-Link Reduction: Completion Time and Success",
+      "thesis_heading": "Two-Link Reduction: Completion Time and Success",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "recommended_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success",
+      "numbered": true,
+      "heading_source_line": 33,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 44,
+        "number": "4.2.3",
+        "page": "61",
+        "anchor": "subsection.4.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 164
+      }
+    },
+    {
+      "slide": "oracle",
+      "subtitle": "Two-Link Reduction: Completion Time and Success",
+      "thesis_heading": "Two-Link Reduction: Completion Time and Success",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "recommended_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success",
+      "numbered": true,
+      "heading_source_line": 33,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 44,
+        "number": "4.2.3",
+        "page": "61",
+        "anchor": "subsection.4.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 164
+      }
+    },
+    {
+      "slide": "selector-training",
+      "subtitle": "Training Objective and Sequence Selection",
+      "thesis_heading": "Training Objective and Sequence Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.5.4",
+      "recommended_subtitle": "3.5.4 Training Objective and Sequence Selection",
+      "numbered": true,
+      "heading_source_line": 52,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 36,
+        "number": "3.5.4",
+        "page": "53",
+        "anchor": "subsection.3.5.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 141
+      }
+    },
+    {
+      "slide": "selector-features",
+      "subtitle": "Network Architecture",
+      "thesis_heading": "Network Architecture",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.5.3",
+      "recommended_subtitle": "3.5.3 Network Architecture",
+      "numbered": true,
+      "heading_source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 35,
+        "number": "3.5.3",
+        "page": "50",
+        "anchor": "subsection.3.5.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 138
+      }
+    },
+    {
+      "slide": "selector-model",
+      "subtitle": "Network Architecture",
+      "thesis_heading": "Network Architecture",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.5.3",
+      "recommended_subtitle": "3.5.3 Network Architecture",
+      "numbered": true,
+      "heading_source_line": 32,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 35,
+        "number": "3.5.3",
+        "page": "50",
+        "anchor": "subsection.3.5.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 138
+      }
+    },
+    {
+      "slide": "test-success",
+      "subtitle": "Recovery Through Learned Link Selection",
+      "thesis_heading": "Recovery Through Learned Link Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "recommended_subtitle": "4.2.5 Recovery Through Learned Link Selection",
+      "numbered": true,
+      "heading_source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 46,
+        "number": "4.2.5",
+        "page": "64",
+        "anchor": "subsection.4.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 169
+      }
+    },
+    {
+      "slide": "test-time",
+      "subtitle": "Two-Link Reduction: Completion Time and Success",
+      "thesis_heading": "Two-Link Reduction: Completion Time and Success",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "recommended_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success",
+      "numbered": true,
+      "heading_source_line": 33,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 44,
+        "number": "4.2.3",
+        "page": "61",
+        "anchor": "subsection.4.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 164
+      }
+    },
+    {
+      "slide": "learning-why",
+      "subtitle": "Recovery Through Learned Link Selection",
+      "thesis_heading": "Recovery Through Learned Link Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "recommended_subtitle": "4.2.5 Recovery Through Learned Link Selection",
+      "numbered": true,
+      "heading_source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 46,
+        "number": "4.2.5",
+        "page": "64",
+        "anchor": "subsection.4.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 169
+      }
+    },
+    {
+      "slide": "conclusion",
+      "subtitle": "Conclusion",
+      "thesis_heading": "Conclusion",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "chapter",
+      "thesis_number": "5",
+      "recommended_subtitle": "5 Conclusion",
+      "numbered": true,
+      "heading_source_line": 58,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 48,
+        "number": "5",
+        "page": "68",
+        "anchor": "chapter.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 176
+      }
+    },
+    {
+      "slide": "future-work",
+      "subtitle": "Interpretation and Limitations",
+      "thesis_heading": "Interpretation and Limitations",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.6",
+      "recommended_subtitle": "4.2.6 Interpretation and Limitations",
+      "numbered": true,
+      "heading_source_line": 104,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 47,
+        "number": "4.2.6",
+        "page": "65",
+        "anchor": "subsection.4.2.6"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 172
+      }
+    },
+    {
+      "slide": "A1",
+      "subtitle": "System 1: 3-DOF Planar Model",
+      "thesis_heading": "System 1: 3-DOF Planar Model",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "4.1",
+      "recommended_subtitle": "4.1 System 1: 3-DOF Planar Model",
+      "numbered": true,
+      "heading_source_line": 53,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 38,
+        "number": "4.1",
+        "page": "56",
+        "anchor": "section.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 149
+      }
+    },
+    {
+      "slide": "A2",
+      "subtitle": "Two-Link Reduction: Completion Time and Success",
+      "thesis_heading": "Two-Link Reduction: Completion Time and Success",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "recommended_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success",
+      "numbered": true,
+      "heading_source_line": 33,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 44,
+        "number": "4.2.3",
+        "page": "61",
+        "anchor": "subsection.4.2.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 164
+      }
+    },
+    {
+      "slide": "A3",
+      "subtitle": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "thesis_heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.4.1",
+      "recommended_subtitle": "3.4.1 Multi-Start IK with a Safety-Aware Null-Space Update",
+      "numbered": true,
+      "heading_source_line": 40,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 28,
+        "number": "3.4.1",
+        "page": "33",
+        "anchor": "subsection.3.4.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 105
+      }
+    },
+    {
+      "slide": "A4",
+      "subtitle": "RDF-Based Construction of CBF",
+      "thesis_heading": "RDF-Based Construction of CBF",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.4.3",
+      "recommended_subtitle": "3.4.3 RDF-Based Construction of CBF",
+      "numbered": true,
+      "heading_source_line": 44,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 30,
+        "number": "3.4.3",
+        "page": "40",
+        "anchor": "subsection.3.4.3"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 123
+      }
+    },
+    {
+      "slide": "A5",
+      "subtitle": "Stage-Transition Rule",
+      "thesis_heading": "Stage-Transition Rule",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.3.4",
+      "recommended_subtitle": "3.3.4 Stage-Transition Rule",
+      "numbered": true,
+      "heading_source_line": 116,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 26,
+        "number": "3.3.4",
+        "page": "32",
+        "anchor": "subsection.3.3.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 99
+      }
+    },
+    {
+      "slide": "A6",
+      "subtitle": "Recovery Through Learned Link Selection",
+      "thesis_heading": "Recovery Through Learned Link Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "recommended_subtitle": "4.2.5 Recovery Through Learned Link Selection",
+      "numbered": true,
+      "heading_source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 46,
+        "number": "4.2.5",
+        "page": "64",
+        "anchor": "subsection.4.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 169
+      }
+    },
+    {
+      "slide": "A7",
+      "subtitle": "Bibliography",
+      "thesis_heading": "Bibliography",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
+      "heading_level": "bibliography",
+      "thesis_number": null,
+      "recommended_subtitle": "Bibliography",
+      "numbered": false,
+      "evidence": {
+        "main_bibliography_command_line": 292,
+        "class_unnumbered_chapter_line": 634,
+        "toc_line": 49,
+        "toc_numberline_absent": true
+      }
+    },
+    {
+      "slide": "A8",
+      "subtitle": "Training Objective and Sequence Selection",
+      "thesis_heading": "Training Objective and Sequence Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.5.4",
+      "recommended_subtitle": "3.5.4 Training Objective and Sequence Selection",
+      "numbered": true,
+      "heading_source_line": 52,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 36,
+        "number": "3.5.4",
+        "page": "53",
+        "anchor": "subsection.3.5.4"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 141
+      }
+    },
+    {
+      "slide": "A9",
+      "subtitle": "Sequential Kinematic Control Framework",
+      "thesis_heading": "Sequential Kinematic Control Framework",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "recommended_subtitle": "3.2 Sequential Kinematic Control Framework",
+      "numbered": true,
+      "heading_source_line": 30,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 19,
+        "number": "3.2",
+        "page": "24",
+        "anchor": "section.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 82
+      }
+    },
+    {
+      "slide": "A10",
+      "subtitle": "Paired Outcomes and an Illustrative Trajectory",
+      "thesis_heading": "Paired Outcomes and an Illustrative Trajectory",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.1.2",
+      "recommended_subtitle": "4.1.2 Paired Outcomes and an Illustrative Trajectory",
+      "numbered": true,
+      "heading_source_line": 9,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 40,
+        "number": "4.1.2",
+        "page": "56",
+        "anchor": "subsection.4.1.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 151
+      }
+    },
+    {
+      "slide": "A11",
+      "subtitle": "Problem Formulation",
+      "thesis_heading": "Problem Formulation",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "3.1",
+      "recommended_subtitle": "3.1 Problem Formulation",
+      "numbered": true,
+      "heading_source_line": 28,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 18,
+        "number": "3.1",
+        "page": "21",
+        "anchor": "section.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 76
+      }
+    },
+    {
+      "slide": "A12",
+      "subtitle": "CLF-CBF QP-Based Kinematic Control",
+      "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "recommended_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control",
+      "numbered": true,
+      "heading_source_line": 34,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 21,
+        "number": "3.2.2",
+        "page": "27",
+        "anchor": "subsection.3.2.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 90
+      }
+    },
+    {
+      "slide": "A13",
+      "subtitle": "Sequential Kinematic Control Framework",
+      "thesis_heading": "Sequential Kinematic Control Framework",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "recommended_subtitle": "3.2 Sequential Kinematic Control Framework",
+      "numbered": true,
+      "heading_source_line": 30,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 19,
+        "number": "3.2",
+        "page": "24",
+        "anchor": "section.3.2"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 82
+      }
+    },
+    {
+      "slide": "A14",
+      "subtitle": "Interpretation and Limitations",
+      "thesis_heading": "Interpretation and Limitations",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.6",
+      "recommended_subtitle": "4.2.6 Interpretation and Limitations",
+      "numbered": true,
+      "heading_source_line": 104,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 47,
+        "number": "4.2.6",
+        "page": "65",
+        "anchor": "subsection.4.2.6"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 172
+      }
+    },
+    {
+      "slide": "A15",
+      "subtitle": "Recovery Through Learned Link Selection",
+      "thesis_heading": "Recovery Through Learned Link Selection",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "recommended_subtitle": "4.2.5 Recovery Through Learned Link Selection",
+      "numbered": true,
+      "heading_source_line": 73,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 46,
+        "number": "4.2.5",
+        "page": "64",
+        "anchor": "subsection.4.2.5"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 169
+      }
+    },
+    {
+      "slide": "A16",
+      "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
+      "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "recommended_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP",
+      "numbered": true,
+      "heading_source_line": 17,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 11,
+        "number": "2.3.1",
+        "page": "11",
+        "anchor": "subsection.2.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 42
+      }
+    },
+    {
+      "slide": "A17",
+      "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
+      "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
+      "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "recommended_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP",
+      "numbered": true,
+      "heading_source_line": 17,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 11,
+        "number": "2.3.1",
+        "page": "11",
+        "anchor": "subsection.2.3.1"
+      },
+      "aux_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "line": 42
+      }
+    }
+  ],
+  "exceptions": [
+    {
+      "slide": "title",
+      "reason": "No framesubtitle exists. Keep the defense title-page subtitle; it is not a thesis section heading.",
+      "recommended_action": "Do not add a thesis section number."
+    },
+    {
+      "slide": "questions",
+      "reason": "Thank-you slide has no framesubtitle and no thesis section counterpart.",
+      "recommended_action": "Keep without section number."
+    },
+    {
+      "slide": "appendix-contents",
+      "reason": "Presentation navigation page has no framesubtitle; presentation appendix labels A1--A17 are not thesis appendix section numbers.",
+      "recommended_action": "Keep without section number."
+    },
+    {
+      "slide": "A7",
+      "reason": "Bibliography is a chapter* in the thesis class; generated TOC has no numberline.",
+      "recommended_action": "Keep Bibliography unnumbered; do not invent chapter 6 or an A-number."
+    }
+  ],
+  "notes": [
+    "Numbers identify the thesis location, not the slide number or the presentation section count.",
+    "Preserve the existing Spatial Manipulator wording alias while using the source Panda section number 3.4.",
+    "Presentation appendix slides retain the chapter/section location of their existing mapped thesis heading; A1--A17 frame labels do not determine those numbers.",
+    "A5 covers planar and spatial transition rules but its existing heading Stage-Transition Rule is exactly thesis 3.3.4. Spatial execution is additionally described in 3.4.4; this audit preserves the requested existing-heading mapping.",
+    "This audit verifies heading numbering and source freshness; it does not alter any slide or the thesis."
+  ],
+  "source_revision_history": [
+    {
+      "checked_at_utc": "2026-11-08T16:49:48.199017+00:00",
+      "reason": "Refresh source evidence after Planar capsule collision-model review; preserve prior hashes.",
+      "changed_sources": [
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+          "before_sha256": "5e6c9fe641de55385e78f78088c60dd356b3c5f91557c31751b71e6a8b5c2adc",
+          "after_sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38",
+          "before_mtime_utc": "2026-11-08T09:01:29.366022+00:00",
+          "after_mtime_utc": "2026-11-08T16:29:25.652658+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+          "before_sha256": "6591ba1f21514303ec3a64f60f592209702348654bddea9ff00b848850713a5c",
+          "after_sha256": "1ffa1087fb14bfa5c8e3709af48271d7049237daf16ca85557099ff8d1950852",
+          "before_mtime_utc": "2026-11-08T09:02:02.830657+00:00",
+          "after_mtime_utc": "2026-11-08T16:29:25.653462+00:00"
+        }
+      ],
+      "previous_generated_files_checked": {
+        "toc": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "body_aux": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "numbered_body_heading_count": 45,
+        "all_heading_names_levels_numbers_and_order_match_current_source": true,
+        "latest_source_file": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/System_Notation.tex",
+        "latest_source_mtime_utc": "2026-11-08T09:03:22.493874+00:00",
+        "toc_newer_than_all_checked_sources": true
+      },
+      "numbered_body_headings_rechecked": 45,
+      "heading_names_levels_numbers_order_unchanged": true,
+      "all_50_numbered_slide_subtitles_unchanged": true,
+      "bibliography_remains_unnumbered": true,
+      "source_heading_lines_rechecked": true,
+      "no_thesis_files_modified": true,
+      "unchanged_hash_metadata_refresh": [
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+          "sha256_unchanged": "f4f2e05df3f4e9b7b5efdc775d07576f82876ffab939d3ea636685f066e8cc07",
+          "before_mtime_utc": "2026-11-08T09:03:26.362485+00:00",
+          "after_mtime_utc": "2026-11-08T16:29:27.613643+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+          "sha256_unchanged": "96b8311f824c6a0d34b836313ab02dd1dfd50060b17495ba61ed25cf542d252b",
+          "before_mtime_utc": "2026-11-08T09:03:26.291412+00:00",
+          "after_mtime_utc": "2026-11-08T16:29:27.535157+00:00"
+        }
+      ]
+    },
+    {
+      "checked_at_utc": "2026-11-09T04:04:18.248168+00:00",
+      "reason": "Recheck external thesis updates during subtask terminology revision",
+      "changed_sources": [
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+          "before_sha256": "f4f2e05df3f4e9b7b5efdc775d07576f82876ffab939d3ea636685f066e8cc07",
+          "after_sha256": "12f542b589b879bc2c952455a5f2724ea0d11521f0854b0bdcbd4ffd295f9424",
+          "before_mtime_utc": "2026-11-08T16:29:27.613643+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:38.509263+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+          "before_sha256": "96b8311f824c6a0d34b836313ab02dd1dfd50060b17495ba61ed25cf542d252b",
+          "after_sha256": "68607c3babff21cf8d017af9273e915274574320c3967d09e1baae39700c7f8c",
+          "before_mtime_utc": "2026-11-08T16:29:27.535157+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:38.415765+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Kinematic_Control.tex",
+          "before_sha256": "05dcea10372f074dee345c961ab935f3e765ab1dfd649befb2a5071d8d514b2b",
+          "after_sha256": "5f297789bc2560a83579dc9168744589d902d50b0891c276c87b42086639965f",
+          "before_mtime_utc": "2026-11-08T09:00:33.913150+00:00",
+          "after_mtime_utc": "2026-11-09T03:58:55.055317+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
+          "before_sha256": "9e5abe73a0b4e0c8b6406d8e291b480fcdda55ea3cbbc8d7751b756982dbf4ef",
+          "after_sha256": "3a534dcacf17b90d5d7246ed2bdc6c740437dc8ed37994156dfb43f6c2cc7bb4",
+          "before_mtime_utc": "2026-11-08T09:00:45.079156+00:00",
+          "after_mtime_utc": "2026-11-09T03:59:03.506458+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Frames.tex",
+          "before_sha256": "0bd9fae19c20f10e90b9f466600fafbf6c78ed01c22fb90608fbfe1752870435",
+          "after_sha256": "5e1f7769d1671ab530d3610b82a526e971d4bd97e62633a41922cc526dd66693",
+          "before_mtime_utc": "2026-11-08T09:01:11.682297+00:00",
+          "after_mtime_utc": "2026-11-09T03:59:25.994358+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Overview.tex",
+          "before_sha256": "b59477456faad9d21440fa77af56ccfe67f541f8f6879e54e7814d12429db07b",
+          "after_sha256": "7bb49790c33607de3736245673f98cc0b5438c9d88983fadd0fe9adec2683ffc",
+          "before_mtime_utc": "2026-11-08T09:01:20.198933+00:00",
+          "after_mtime_utc": "2026-11-09T03:59:35.119057+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+          "before_sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38",
+          "after_sha256": "4ccf70e1b82a8996c1ebc0d5aff7fe53303be9792b8751fc443b9609334fd1f6",
+          "before_mtime_utc": "2026-11-08T16:29:25.652658+00:00",
+          "after_mtime_utc": "2026-11-09T03:59:42.040238+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Safe_IK.tex",
+          "before_sha256": "4102dd4542800859401f3567e9b716e2aa77df1577e40defe6f223917527ddf8",
+          "after_sha256": "b5b0665f003196bbe13cb8314b63a4de48ae206fcd3b65052d9ecc7694f22dc7",
+          "before_mtime_utc": "2026-11-08T09:01:54.752196+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:02.203965+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+          "before_sha256": "1ffa1087fb14bfa5c8e3709af48271d7049237daf16ca85557099ff8d1950852",
+          "after_sha256": "a545455bb77067236f76f4826560150d9dcad9a0a91881ccc7939895dedc9697",
+          "before_mtime_utc": "2026-11-08T16:29:25.653462+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:09.169616+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/CBF.tex",
+          "before_sha256": "9bb18f78e4cdddcc2af5ed4101511b40bf2f7b91fca80392baf141c5932f03dd",
+          "after_sha256": "17104b0c2dfab22bea802f3bf701ced39b5004b7216a04ddd51f8442f290a844",
+          "before_mtime_utc": "2026-11-08T09:02:14.656999+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:19.636041+00:00"
+        },
+        {
+          "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Preliminaries/CLF.tex",
+          "before_sha256": "4eca76c5c141d0fa2149798350b5f6ce4f14b08d4015d33fb087efc29ad55562",
+          "after_sha256": "f29ff8a684b4402aa499e05991a13a5e0113555cd512976a553357234e127f8c",
+          "before_mtime_utc": "2026-11-08T09:02:29.064191+00:00",
+          "after_mtime_utc": "2026-11-09T04:00:33.914015+00:00"
+        }
+      ],
+      "previous_generated_files_checked": {
+        "toc": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "body_aux": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/sections/body.aux",
+        "numbered_body_heading_count": 45,
+        "all_heading_names_levels_numbers_and_order_match_current_source": true,
+        "latest_source_file": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+        "latest_source_mtime_utc": "2026-11-08T16:29:25.653462+00:00",
+        "toc_newer_than_all_checked_sources": true,
+        "numbering_rechecked_after_source_edits": true,
+        "freshness_note": "The generated TOC/AUX timestamps are newer than the latest checked source edits, and their content hashes are unchanged. Re-expanding all 45 numbered body headings from current sources confirms identical heading names, levels, order and numbers; source locations and timestamps in this audit are current. This review did not run thesis compilation."
+      },
+      "numbered_body_headings_rechecked": 45,
+      "heading_names_levels_numbers_order_unchanged": true,
+      "no_thesis_files_modified": true
+    }
+  ],
+  "presentation_heading_aliases": {
+    "Decomposition of Regulation Task": {
+      "number": "3.2.1",
+      "current_thesis_heading": "Intermediate Targets and Sequential Tasks",
+      "authority": "User-requested rename, 2026-11-09",
+      "thesis_source_modified": false
+    },
+    "A Sequential Approach to Collision-Free Kinematic Control": {
+      "number": "3",
+      "current_thesis_heading": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
+      "authority": "Existing thesis chapter TOC short title",
+      "thesis_source_modified": false
+    },
+    "Learning-Based Selection of Two Link Subtasks": {
+      "number": "3.5",
+      "current_thesis_heading": "Learning-Based Selection of Two Intermediate Links",
+      "authority": "User-requested subtask terminology, 2026-11-09",
+      "thesis_source_modified": false
+    }
+  }
+}

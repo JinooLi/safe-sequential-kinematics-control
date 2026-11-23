@@ -1,0 +1,27 @@
+% Read slide footnotes from the same .bib used by the full bibliography.
+\usepackage{usebib}
+\newbibfield{shortauthor}
+\newbibfield{shortvenue}
+\bibinput{references}
+\makeatletter
+% Collect each reference once per labeled frame; retain the BibTeX numbers.
+% Every frame using \slidecite must have its own unique label.
+\newcommand{\slide@collectreference}[1]{%
+  \ifinlistcs{#1}{slide@references@\beamer@againname}{}{%
+    \listcsgadd{slide@references@\beamer@againname}{#1}}}
+\newcommand{\slidecite}[1]{%
+  \forcsvlist{\slide@collectreference}{#1}\cite{#1}}
+\newcommand{\slide@reference}[1]{%
+  \noindent\hangindent=4mm\hangafter=1
+  \cite{#1}\enspace
+  \usebibentry{#1}{shortauthor},
+  \usebibentry{#1}{title}.
+  \textit{\usebibentry{#1}{shortvenue}}, \usebibentry{#1}{year}.\par}
+\newcommand{\SlideReferenceFootnotes}{%
+  \ifdefined\beamer@againname
+    \ifcsdef{slide@references@\beamer@againname}{%
+      {\color{black!45}\hrule height.2pt}\vskip1mm
+      \forlistcsloop{\slide@reference}{slide@references@\beamer@againname}%
+    }{}%
+  \fi}
+\makeatother

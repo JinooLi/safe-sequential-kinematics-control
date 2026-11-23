@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-11-11T11:30:24.184554+09:00",
+  "changes": {
+    "slide_5": "Introduce V(q) and positive decay rate c without a link subscript.",
+    "slides_9_10": "Introduce link-position CLFs V_1(q), V_2(q).",
+    "slide_11": "Identify V_3(q) with V(q) and c_3 with c.",
+    "korean_script": "Explain indexing on slide 9 and the original pose CLF identity on slide 11.",
+    "preserved_user_edits": "Actual-directory script wording for slides 1–4 retained in source notes."
+  },
+  "validation": {
+    "build": "make all passed; no LaTeX warnings/errors or overfull boxes",
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "visual_review": "Rendered slides 5, 9, 10, 11 and presenter note page 22 inspected.",
+    "text_boundaries": "All audience and presenter PDF text within page bounds.",
+    "source_and_figures": "Hashes unchanged."
+  }
+}

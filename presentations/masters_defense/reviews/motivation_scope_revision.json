@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    2
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "title": "Why Safe Goal Reaching Matters",
+  "example_label": "Example: A mobile robotic chemist",
+  "message": "Safe reaching enables reliable task execution",
+  "scope": "General need for safe robot-arm goal reaching; autonomous laboratory is one example.",
+  "semantic_review": {
+    "agent": "literature_positioning_review",
+    "required_changes": []
+  },
+  "visual_review": {
+    "no_overlap_or_clipping": true
+  },
+  "new_simulations_or_training": false
+}

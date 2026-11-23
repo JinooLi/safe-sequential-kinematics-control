@@ -16,11 +16,11 @@
     "planar-sequential",
     "planar-link2",
     "panda-rdf",
-    "panda-ik"
+    "panda-ik",
+    "literature"
   ],
   "retained_main_takeaways": [
     "motivation",
-    "literature",
     "planar-why",
     "time-cost",
     "two-links",
@@ -40,7 +40,8 @@
     "background-clf",
     "background-cbf",
     "background-qp",
-    "literature"
+    "literature",
+    "planar-direct"
   ],
   "sources": [
     "sections/Preliminaries/CLF.tex",

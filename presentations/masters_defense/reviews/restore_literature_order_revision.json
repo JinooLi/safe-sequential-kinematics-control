@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-09",
+  "new_order": {
+    "7": "Related Work: Challenges in Goal Reaching",
+    "8": "A Naive Trial: Direct End-Effector Tracking"
+  },
+  "labeled_frame_contents_unchanged": true,
+  "changed_pdf_pages": [
+    7,
+    8
+  ],
+  "background_progress_span": [
+    4,
+    8
+  ],
+  "korean_notes_transitions_updated": true,
+  "independent_docs_review": "pair_mean_scope_review: all other 34 notes unchanged; note durations preserved",
+  "notes": 36,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "artifact_verification_passed": true,
+  "visual_review": "Rendered pages 7 and 8: titles, content, chapter subtitles and current progress dots correct; no overlap or clipping",
+  "raw_data_unchanged": true
+}

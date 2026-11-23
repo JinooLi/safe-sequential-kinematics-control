@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-09",
+  "scope_ko": "2쪽 사진 출처 크기, 17쪽 capsule 모델과 다이어그램 정렬",
+  "pages": [
+    2,
+    17
+  ],
+  "photo_credit_font_pt": 7,
+  "diagram": {
+    "text_width_mm": 24,
+    "inner_sep_mm": 1,
+    "minimum_height_mm": 15,
+    "between_nodes_mm": 4,
+    "edges": "east to west at common vertical center"
+  },
+  "planar_collision_label": "Capsule distances",
+  "spatial_collision_label": "Capsule + RDF distances",
+  "thesis_source_recheck": [
+    {
+      "path": "sections/Method/Sequential_Frames.tex",
+      "previous_sha256": "6591ba1f21514303ec3a64f60f592209702348654bddea9ff00b848850713a5c",
+      "current_sha256": "1ffa1087fb14bfa5c8e3709af48271d7049237daf16ca85557099ff8d1950852",
+      "reviewed_definitions": [
+        "IK-derived intermediate targets",
+        "Ordered sequence and final task index"
+      ]
+    },
+    {
+      "path": "sections/Method/Planar_Control.tex",
+      "previous_sha256": "5e6c9fe641de55385e78f78088c60dd356b3c5f91557c31751b71e6a8b5c2adc",
+      "current_sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38",
+      "reviewed_definitions": [
+        "Planar capsule link geometry",
+        "CLF coefficients and orientation weight unchanged",
+        "User end-effector notation V_ee retained"
+      ]
+    }
+  ],
+  "preserved_user_edits": [
+    "CLF explanation order on page 4",
+    "V_ee notation on page 16",
+    "Robot Distance Field title on page 21",
+    "a,b pair notation on page 26",
+    "normal-weight data counts on page 28",
+    "Robot & goal labels on pages 29 and 30",
+    "feedback.md revisions"
+  ],
+  "compilation_fix": "Escaped two user-entered ampersands; displayed wording unchanged",
+  "independent_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      2,
+      17,
+      21,
+      29,
+      30
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "uniform_boxes_gaps_and_centered_arrows": true,
+    "source_credit_legible": true
+  }
+}

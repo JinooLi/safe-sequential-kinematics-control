@@ -8,9 +8,8 @@
     "Direct",
     "Sequential",
     "All-link Sequential",
-    "Preset pair (3,5)",
+    "Train-best fixed pair (3,5)",
     "Learned selection",
-    "Uniform selection",
     "IK configuration",
     "self-collision",
     "null-space",
@@ -19,11 +18,17 @@
     "CLF constraint",
     "subtask transition",
     "CBF candidate",
-    "Binary Cross Entropy"
+    "Binary Cross Entropy",
+    "10-pair mean",
+    "Example pair (3,5)",
+    "link subtask",
+    "subtask target",
+    "final EE subtask",
+    "subgoal"
   ],
   "first_definitions": {
-    "Direct": "end-effector (EE) tracking without intermediate tasks",
-    "Sequential": "intermediate link tasks followed by EE tracking"
+    "Direct": "end-effector (EE) regulation only",
+    "Sequential": "\\textbf{Sequential:} $\\subtask{1}\\to\\subtask{2}\\to\\subtask{3}$"
   },
   "semantic_distinctions": [
     "Use task for a controller objective; distinguish it from the physical manipulation operation",
@@ -31,17 +36,27 @@
     "Direct does not mean a straight Cartesian path",
     "Use episode for dataset cases; preserve historical source identifiers and filenames",
     "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
-    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
+    "The common control framework changes model-specific IK, task-error/CLF, and geometric CBF components",
     "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded",
-    "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
-    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
-    "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded",
-    "Preset pair (3,5) is selected by highest training success and held unchanged on Validation/Test",
-    "Spatial Manipulator is the presentation label for the Franka Emika model; archived paths and source identifiers remain unchanged",
-    "The shared algorithm changes model-specific IK, task-error/CLF, and geometric CBF components",
-    "Goncalves basic circulation theory assumes even configuration dimension; its separate odd-dimensional extension is not excluded"
+    "Train-best fixed pair (3,5) is selected by highest training success and held unchanged on Validation/Test",
+    "Full task sequence mathcal S includes the final EE task; candidate pair S_k contains only two link subtasks from Omega",
+    "Spatial mathcal S_all denotes seven link subtasks followed by a final EE subtask",
+    "Generic CLF background uses c_V; the updated method uses link-specific c_i",
+    "Planar plotted CLFs use the current thesis normalization on archived trajectories; this is not a new controller experiment",
+    "Abstract learning context uses R_d; its numerical encoder input uses a six-dimensional representation",
+    "10-pair mean is the expected outcome of uniform candidate-pair choice; paired time comparisons condition the uniform episode-pair distribution on joint success with the comparison method",
+    "Main results compare Learned selection against the 10-pair mean; the Train-best fixed pair is a separate stronger reference in Appendix A14.",
+    "Example pair (3,5) denotes one stored trajectory in the single-episode illustration, never an average trajectory.",
+    "Uncertainty for the 10-pair mean uses paired resampling of complete episodes, not independent resampling of episode-pair records.",
+    "A subtask is a regulation objective; a subtask target is its desired position or pose. Link subtasks precede the final EE subtask.",
+    "Use subgoals for the human-reaching literature; these are not the robot controller's formal link subtasks.",
+    "3.2.1 uses the user-requested display title Decomposition of Regulation Task; the thesis source title is recorded separately until renamed.",
+    "The literal 3.3.2 thesis heading Intermediate Position Tasks and Final Pose Task remains as a chapter reference.",
+    "Common obstacle encoder means the same parameterized encoder is applied to every obstacle.",
+    "Identical CLF form refers to the mathematical structure, not identical functions, parameter values or evaluated CLF values.",
+    "Success in both means both compared methods succeed; preserve the distinction between episodes and episode-pair outcomes."
   ],
   "numeric_scene_unit": "episodes",
-  "presentation_title": "Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing",
-  "presentation_title_source": "feedback.md 1번: 발표 제목의 Learned Link Selection을 Supervised Learning-based Subtask Sequencing으로 변경"
+  "presentation_title": "Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Task Sequencing",
+  "presentation_title_source": "현재 사용자 편집 main.tex의 발표 제목 보존: Task Sequencing (2026-11-09 확인)"
 }

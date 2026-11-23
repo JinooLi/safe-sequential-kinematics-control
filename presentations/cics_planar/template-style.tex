@@ -1,0 +1,110 @@
+% Original CDSL@UoS preamble, with class/note mode in main.tex.
+% This is a basic template for H. Shim
+% Aug. 19, 2008
+% Modified by G. Park
+% Sept. 20, 2023
+
+% 제출해야할 때 handout 옵션 추가 발표할 때는 제거. 발표할 때 \pause 효과를 사용 할 수 있게 됨
+
+
+  
+\def\mynote{aa}   % Comment if mynote wants to appear
+
+\mode<presentation>
+{
+  \usetheme{boxes}
+  \usefonttheme[onlymath]{serif}
+  \setbeamercovered{transparent}
+}
+
+\setbeamertemplate{navigation symbols}{}
+% removes the navigation symbols
+\setbeamertemplate{footline}[frame number]
+%\setbeamertemplate{footline}[text line]{%
+%color setting more or less matching U of A colors
+%\setbeamercolor*{palette secondary}{use=structure,fg=white,bg=structure.fg!55!black}
+%\setbeamercolor*{palette tertiary}{use=structure,fg=white,bg=red!50!black}
+
+\usepackage{kotex}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{comment}
+\usepackage{mathtools}
+\usepackage{setspace}
+
+\colorlet{Darkred}{red!50!black}
+\colorlet{Darkgreen}{green!50!black}
+\colorlet{Darkblue}{blue!70!black}
+\newcommand{\colb}{\color{Darkblue}}
+\newcommand{\colgr}{\color{gray}}
+\newcommand{\colg}{\color{Darkgreen}}
+\newcommand{\colr}{\color{Darkred}}
+
+% Define Environment:
+\newtheorem{thm}{\bf Theorem}
+\newtheorem{prop}{\bf Proposition}
+\newtheorem{lem}{\bf Lemma}
+\newtheorem{assmpt}{\bf Assumption}
+\newtheorem{defn}{\bf Definition}
+\newtheorem{exmp}{\bf Example}
+\newtheorem{cor}{\bf Corollary}
+\newtheorem{condi}{\bf Condition}
+%=== Non-italic Theorem Environment by Vin
+\newtheorem{rem1}{\bf Remark}
+\newenvironment{rem}{\begin{rem1}\normalfont}{\end{rem1}}
+%=== New Example Environment by Vin
+\newcounter{Examp}
+\newenvironment{exam}{\stepcounter{Examp} \medskip \noindent {\bf Example \arabic{Examp}.}}{ \medskip }
+
+%=== New Example Environment by Vin
+\newcounter{exer}
+\newenvironment{exer}{\stepcounter{exer} \medskip \noindent {\bf Exercise \arabic{exer}.}}{ \medskip }
+
+
+% Define Some Notation:
+
+\newcommand{\nn}{{\mathfrak{n}}}
+
+\newcommand{\R}{\ensuremath{{\mathbb R}}}
+\newcommand{\Z}{\ensuremath{{\mathbb Z}}}
+\newcommand{\N}{\ensuremath{{\mathbb N}}}
+
+\newcommand{\AAA}{{\mathcal A}}
+\newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}}
+\newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}}
+\newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}}
+\newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}}
+\newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}}
+\newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}}
+\newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}}
+\newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}}
+\newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}}
+\newcommand{\YY}{{\mathcal Y}}
+\newcommand{\cN}{\ensuremath{\mathcal{N}}}
+
+\newcommand{\KL}{{\mathcal{KL}}}
+\newcommand{\sat}{\ensuremath{{\rm sat}}}
+
+\newcommand{\triend}{\hfill \ensuremath{\lhd}}
+\DeclareMathOperator{\rank}{rank}
+
+\newcommand{\cvector}[1]{\left(\!\!\!\begin{array}{c} #1 \end{array}\!\!\!\right)}
+\newcommand{\setdef}[2]{\left\{\ #1\ \left|\ #2\ \right.\right\}}
+
+\setbeamertemplate{itemize subitem}[circle]
+
+\setstretch{1.1}
+
+\setbeamersize{text margin left=0.5cm}  % <- like this
+\setbeamersize{text margin right=0.5cm} % <- like this
+
+

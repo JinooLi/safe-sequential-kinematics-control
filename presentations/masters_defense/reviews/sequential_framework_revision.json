@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-09",
+  "scope_ko": "17쪽 공통 제어 흐름 재구성과20쪽모델비교이동",
+  "pages": [
+    17,
+    20
+  ],
+  "main_title": "Overall Sequential Control Framework",
+  "initialization_once": [
+    "Validated IK q*",
+    "Link targets and task sequence",
+    "Stage index s=1"
+  ],
+  "control_branches": {
+    "continue": "Apply valid input, update q, repeat QP for unchanged stage",
+    "advance": "Increment stage and recompute QP at unchanged q",
+    "stop": "Success or model-specific termination condition"
+  },
+  "transition_check_before_input_application": true,
+  "qp_failure_does_not_require_applying_input": true,
+  "planar_spatial_policy_differences_retained_in_notes_and_A5": true,
+  "comparison_table_moved_from": 17,
+  "comparison_table_moved_to": 20,
+  "mujoco_figure_retained": true,
+  "main_slides_unchanged": 36,
+  "speech_seconds_unchanged": 1140,
+  "source_figure_and_result_data_unchanged": true,
+  "semantic_review": {
+    "agent": "literature_positioning_review",
+    "required_changes": []
+  },
+  "thesis_sources": [
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Overview.tex",
+      "sha256": "eed9c95b05b3947c7b91ab459df8ce673c4d43c728186e459f36ee5e3800572f"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Sequential_Frames.tex",
+      "sha256": "1ffa1087fb14bfa5c8e3709af48271d7049237daf16ca85557099ff8d1950852"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
+      "sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38"
+    },
+    {
+      "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Panda_Execution.tex",
+      "sha256": "9577db00ff64d2e6823c43f0f02603c9f048d2935dd118e1c008a7bc4e38ccb5"
+    }
+  ],
+  "visual_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      17,
+      20
+    ],
+    "required_changes": [],
+    "no_overlap_or_clipping": true,
+    "uniform_branch_boxes_and_unambiguous_arrows": true,
+    "comparison_and_mujoco_figure_legible": true,
+    "notes_match_execution_branches": true
+  }
+}

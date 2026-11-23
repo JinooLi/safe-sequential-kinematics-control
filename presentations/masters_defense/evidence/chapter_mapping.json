@@ -3,7 +3,10 @@
   "subtitle_level": "section or subsection",
   "terminology_aliases": {
     "Extension to the 7-DOF Spatial Manipulator": "Extension to the 7-DOF Panda Manipulator",
-    "System 2: 7-DOF Spatial Manipulator": "System 2: 7-DOF Franka Emika Panda Model"
+    "System 2: 7-DOF Spatial Manipulator": "System 2: 7-DOF Franka Emika Panda Model",
+    "Decomposition of Regulation Task": "Intermediate Targets and Sequential Tasks",
+    "A Sequential Approach to Collision-Free Kinematic Control": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
+    "Learning-Based Selection of Two Link Subtasks": "Learning-Based Selection of Two Intermediate Links"
   },
   "fallback_headings": {
     "conclusion": "Conclusion: thesis chapter has no section heading"
@@ -14,362 +17,467 @@
       "subtitle": "Research Background",
       "thesis_heading": "Research Background",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "1.1",
+      "display_subtitle": "1.1 Research Background"
     },
     {
       "slide": "motivation",
       "subtitle": "Research Background",
       "thesis_heading": "Research Background",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "1.1",
+      "display_subtitle": "1.1 Research Background"
     },
     {
       "slide": "background-clf",
       "subtitle": "Control Lyapunov Function",
       "thesis_heading": "Control Lyapunov Function",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "2.1",
+      "display_subtitle": "2.1 Control Lyapunov Function"
     },
     {
       "slide": "background-cbf",
       "subtitle": "Control Barrier Function",
       "thesis_heading": "Control Barrier Function",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "2.2",
+      "display_subtitle": "2.2 Control Barrier Function"
     },
     {
       "slide": "background-qp",
       "subtitle": "CLF-CBF QP",
       "thesis_heading": "CLF-CBF QP",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "2.3",
+      "display_subtitle": "2.3 CLF-CBF QP"
     },
     {
       "slide": "literature",
       "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
       "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "display_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP"
     },
     {
       "slide": "planar-direct",
       "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
       "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "display_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP"
     },
     {
       "slide": "human-inspiration",
       "subtitle": "Research Objectives",
       "thesis_heading": "Research Objectives",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "1.2",
+      "display_subtitle": "1.2 Research Objectives"
     },
     {
       "slide": "thesis-outline",
-      "subtitle": "Research Objectives",
-      "thesis_heading": "Research Objectives",
+      "subtitle": "A Sequential Approach to Collision-Free Kinematic Control",
+      "thesis_heading": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "chapter",
+      "thesis_number": "3",
+      "display_subtitle": "3 A Sequential Approach to Collision-Free Kinematic Control"
     },
     {
       "slide": "planar-scene",
-      "subtitle": "Intermediate Targets and Sequential Tasks",
+      "subtitle": "Decomposition of Regulation Task",
       "thesis_heading": "Intermediate Targets and Sequential Tasks",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.1",
+      "display_subtitle": "3.2.1 Decomposition of Regulation Task",
+      "display_name_source": "User-requested section rename (2026-11-09); thesis source heading pending rename"
     },
     {
       "slide": "planar-setup",
-      "subtitle": "Intermediate Targets and Sequential Tasks",
+      "subtitle": "Decomposition of Regulation Task",
       "thesis_heading": "Intermediate Targets and Sequential Tasks",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.1",
+      "display_subtitle": "3.2.1 Decomposition of Regulation Task",
+      "display_name_source": "User-requested section rename (2026-11-09); thesis source heading pending rename"
     },
     {
       "slide": "planar-sequential",
       "subtitle": "CLF-CBF QP-Based Kinematic Control",
       "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "display_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control"
     },
     {
       "slide": "planar-link2",
       "subtitle": "CLF-CBF QP-Based Kinematic Control",
       "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "display_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control"
     },
     {
       "slide": "planar-ee",
       "subtitle": "CLF-CBF QP-Based Kinematic Control",
       "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "display_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control"
     },
     {
       "slide": "planar-clf",
       "subtitle": "Intermediate Position Tasks and Final Pose Task",
       "thesis_heading": "Intermediate Position Tasks and Final Pose Task",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.3.2",
+      "display_subtitle": "3.3.2 Intermediate Position Tasks and Final Pose Task"
     },
     {
       "slide": "algorithm-overview",
       "subtitle": "Sequential Kinematic Control Framework",
       "thesis_heading": "Sequential Kinematic Control Framework",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "display_subtitle": "3.2 Sequential Kinematic Control Framework"
     },
     {
       "slide": "planar-results",
       "subtitle": "System 1: 3-DOF Planar Model",
       "thesis_heading": "System 1: 3-DOF Planar Model",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "4.1",
+      "display_subtitle": "4.1 System 1: 3-DOF Planar Model"
     },
     {
       "slide": "planar-why",
       "subtitle": "Paired Outcomes and an Illustrative Trajectory",
       "thesis_heading": "Paired Outcomes and an Illustrative Trajectory",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.1.2",
+      "display_subtitle": "4.1.2 Paired Outcomes and an Illustrative Trajectory"
     },
     {
       "slide": "panda-extension",
       "subtitle": "Extension to the 7-DOF Spatial Manipulator",
       "thesis_heading": "Extension to the 7-DOF Panda Manipulator",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "3.4",
+      "display_subtitle": "3.4 Extension to the 7-DOF Spatial Manipulator"
     },
     {
       "slide": "panda-rdf",
       "subtitle": "RDF-Based Construction of CBF",
       "thesis_heading": "RDF-Based Construction of CBF",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.4.3",
+      "display_subtitle": "3.4.3 RDF-Based Construction of CBF"
     },
     {
       "slide": "panda-ik",
       "subtitle": "Multi-Start IK with a Safety-Aware Null-Space Update",
       "thesis_heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.4.1",
+      "display_subtitle": "3.4.1 Multi-Start IK with a Safety-Aware Null-Space Update"
     },
     {
       "slide": "panda-clf",
       "subtitle": "All-Link Sequence and Spatial Pose Tasks",
       "thesis_heading": "All-Link Sequence and Spatial Pose Tasks",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.4.2",
+      "display_subtitle": "3.4.2 All-Link Sequence and Spatial Pose Tasks"
     },
     {
       "slide": "all-links",
       "subtitle": "Effect of All-Link Sequential Control",
       "thesis_heading": "Effect of All-Link Sequential Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.2",
+      "display_subtitle": "4.2.2 Effect of All-Link Sequential Control"
     },
     {
       "slide": "time-cost",
       "subtitle": "Effect of All-Link Sequential Control",
       "thesis_heading": "Effect of All-Link Sequential Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.2",
+      "display_subtitle": "4.2.2 Effect of All-Link Sequential Control"
     },
     {
       "slide": "two-links",
       "subtitle": "Two-Link Reduction: Completion Time and Success",
       "thesis_heading": "Two-Link Reduction: Completion Time and Success",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "display_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success"
     },
     {
       "slide": "oracle",
       "subtitle": "Two-Link Reduction: Completion Time and Success",
       "thesis_heading": "Two-Link Reduction: Completion Time and Success",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "display_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success"
     },
     {
       "slide": "selector-training",
       "subtitle": "Training Objective and Sequence Selection",
       "thesis_heading": "Training Objective and Sequence Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.5.4",
+      "display_subtitle": "3.5.4 Training Objective and Sequence Selection"
     },
     {
       "slide": "selector-features",
       "subtitle": "Network Architecture",
       "thesis_heading": "Network Architecture",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.5.3",
+      "display_subtitle": "3.5.3 Network Architecture"
     },
     {
       "slide": "selector-model",
       "subtitle": "Network Architecture",
       "thesis_heading": "Network Architecture",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.5.3",
+      "display_subtitle": "3.5.3 Network Architecture"
     },
     {
       "slide": "test-success",
       "subtitle": "Recovery Through Learned Link Selection",
       "thesis_heading": "Recovery Through Learned Link Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "display_subtitle": "4.2.5 Recovery Through Learned Link Selection"
     },
     {
       "slide": "test-time",
       "subtitle": "Two-Link Reduction: Completion Time and Success",
       "thesis_heading": "Two-Link Reduction: Completion Time and Success",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "display_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success"
     },
     {
       "slide": "learning-why",
       "subtitle": "Recovery Through Learned Link Selection",
       "thesis_heading": "Recovery Through Learned Link Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "display_subtitle": "4.2.5 Recovery Through Learned Link Selection"
     },
     {
       "slide": "conclusion",
       "subtitle": "Conclusion",
       "thesis_heading": "Conclusion",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "chapter"
+      "heading_level": "chapter",
+      "thesis_number": "5",
+      "display_subtitle": "5 Conclusion"
     },
     {
       "slide": "future-work",
       "subtitle": "Interpretation and Limitations",
       "thesis_heading": "Interpretation and Limitations",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.6",
+      "display_subtitle": "4.2.6 Interpretation and Limitations"
     },
     {
       "slide": "A1",
       "subtitle": "System 1: 3-DOF Planar Model",
       "thesis_heading": "System 1: 3-DOF Planar Model",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "4.1",
+      "display_subtitle": "4.1 System 1: 3-DOF Planar Model"
     },
     {
       "slide": "A2",
       "subtitle": "Two-Link Reduction: Completion Time and Success",
       "thesis_heading": "Two-Link Reduction: Completion Time and Success",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.3",
+      "display_subtitle": "4.2.3 Two-Link Reduction: Completion Time and Success"
     },
     {
       "slide": "A3",
       "subtitle": "Multi-Start IK with a Safety-Aware Null-Space Update",
       "thesis_heading": "Multi-Start IK with a Safety-Aware Null-Space Update",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.4.1",
+      "display_subtitle": "3.4.1 Multi-Start IK with a Safety-Aware Null-Space Update"
     },
     {
       "slide": "A4",
       "subtitle": "RDF-Based Construction of CBF",
       "thesis_heading": "RDF-Based Construction of CBF",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.4.3",
+      "display_subtitle": "3.4.3 RDF-Based Construction of CBF"
     },
     {
       "slide": "A5",
       "subtitle": "Stage-Transition Rule",
       "thesis_heading": "Stage-Transition Rule",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Planar_Control.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.3.4",
+      "display_subtitle": "3.3.4 Stage-Transition Rule"
     },
     {
       "slide": "A6",
       "subtitle": "Recovery Through Learned Link Selection",
       "thesis_heading": "Recovery Through Learned Link Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "display_subtitle": "4.2.5 Recovery Through Learned Link Selection"
     },
     {
       "slide": "A7",
       "subtitle": "Bibliography",
       "thesis_heading": "Bibliography",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/main.tex",
-      "heading_level": "bibliography"
+      "heading_level": "bibliography",
+      "thesis_number": null,
+      "display_subtitle": "Bibliography"
     },
     {
       "slide": "A8",
       "subtitle": "Training Objective and Sequence Selection",
       "thesis_heading": "Training Objective and Sequence Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Method/Link_Selection.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.5.4",
+      "display_subtitle": "3.5.4 Training Objective and Sequence Selection"
     },
     {
       "slide": "A9",
       "subtitle": "Sequential Kinematic Control Framework",
       "thesis_heading": "Sequential Kinematic Control Framework",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "display_subtitle": "3.2 Sequential Kinematic Control Framework"
     },
     {
       "slide": "A10",
       "subtitle": "Paired Outcomes and an Illustrative Trajectory",
       "thesis_heading": "Paired Outcomes and an Illustrative Trajectory",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Planar.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.1.2",
+      "display_subtitle": "4.1.2 Paired Outcomes and an Illustrative Trajectory"
     },
     {
       "slide": "A11",
       "subtitle": "Problem Formulation",
       "thesis_heading": "Problem Formulation",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "3.1",
+      "display_subtitle": "3.1 Problem Formulation"
     },
     {
       "slide": "A12",
       "subtitle": "CLF-CBF QP-Based Kinematic Control",
       "thesis_heading": "CLF-CBF QP-Based Kinematic Control",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "3.2.2",
+      "display_subtitle": "3.2.2 CLF-CBF QP-Based Kinematic Control"
     },
     {
       "slide": "A13",
       "subtitle": "Sequential Kinematic Control Framework",
       "thesis_heading": "Sequential Kinematic Control Framework",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "section"
+      "heading_level": "section",
+      "thesis_number": "3.2",
+      "display_subtitle": "3.2 Sequential Kinematic Control Framework"
     },
     {
       "slide": "A14",
       "subtitle": "Interpretation and Limitations",
       "thesis_heading": "Interpretation and Limitations",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.6",
+      "display_subtitle": "4.2.6 Interpretation and Limitations"
     },
     {
       "slide": "A15",
       "subtitle": "Recovery Through Learned Link Selection",
       "thesis_heading": "Recovery Through Learned Link Selection",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/Results/Panda.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "4.2.5",
+      "display_subtitle": "4.2.5 Recovery Through Learned Link Selection"
     },
     {
       "slide": "A16",
       "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
       "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "display_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP"
     },
     {
       "slide": "A17",
       "subtitle": "Local Minima and Deadlock in CLF-CBF QP",
       "thesis_heading": "Local Minima and Deadlock in CLF-CBF QP",
       "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
-      "heading_level": "subsection"
+      "heading_level": "subsection",
+      "thesis_number": "2.3.1",
+      "display_subtitle": "2.3.1 Local Minima and Deadlock in CLF-CBF QP"
     }
   ],
   "excluded_frames": [
     "title",
     "questions",
     "appendix-contents"
-  ]
+  ],
+  "numbering_source": "evidence/thesis_section_numbers.json"
 }

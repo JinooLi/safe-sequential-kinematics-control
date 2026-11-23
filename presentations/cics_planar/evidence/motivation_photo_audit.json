@@ -1,0 +1,33 @@
+{
+  "slide": 2,
+  "topic": "A mobile robotic chemist, University of Liverpool",
+  "source_page": "https://www.liverpool.ac.uk/cooper-group/news/stories/title,1215738,en.php",
+  "source_page_date": "2020-07-08",
+  "retrieved": "2026-11-08",
+  "citation_key": "burger2020chemist",
+  "paper_doi": "10.1038/s41586-020-2442-2",
+  "displayed_credit": "Photos: University of Liverpool",
+  "credit_note": "Institutional source credited; individual photographer and open license not specified on the source page.",
+  "use": "Research motivation example; not an experiment from this thesis.",
+  "assets": [
+    {
+      "file": "Fig/motivation_liverpool_lab.jpg",
+      "image_url": "https://www.liverpool.ac.uk/media/livacuk/coopergroup-new/images/IMG_4459_web.jpg",
+      "caption": "Laboratory workspace",
+      "sha256": "a9b72c805d31c0c9c5ffa126f96e761168626407740016dbd05000b82444a562",
+      "original_bytes_preserved": true
+    },
+    {
+      "file": "Fig/motivation_liverpool_handling.jpg",
+      "image_url": "https://www.liverpool.ac.uk/media/livacuk/coopergroup-new/images/robot%2Cscientist.jpg",
+      "caption": "Sample handling",
+      "sha256": "1f1ab8f5eb020b2cbb552bab38487cf734f3c07258d4d17159cc414c33648026",
+      "original_bytes_preserved": true
+    }
+  ],
+  "next_slide": {
+    "page": 3,
+    "asset": "Fig/motivation_safety.png",
+    "kind": "Static MuJoCo illustration; not the photographed laboratory."
+  }
+}

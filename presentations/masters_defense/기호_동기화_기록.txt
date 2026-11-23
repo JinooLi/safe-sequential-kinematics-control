@@ -1,0 +1,35 @@
+현재 논문과 발표자료의 기호 동기화 — 2026-11-08
+
+기준: /home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis 의 현재 Method 본문.
+논문 파일 자체는 수정하지 않음. 영어 Beamer와 한국어 발표자 노트·대본·Q&A를 함께 동기화.
+
+동기화 항목
+1. 목표 실행 시간 T → T_d. 최종 목표 허용치 varepsilon_p/varepsilon_R → delta_p/delta_o.
+2. 방법 QP의 활성 CLF V_i, 감소율 c_i, 입력 가중행렬 W_{rm u}, joint-limit gain alpha_j 및 velocity bounds v_min,j/v_max,j를 현재 논문과 일치. 배경의 일반 c_V는 유지.
+3. 전체 순서 mathcal S = (i1,...,iL,iL+1)에 최종 EE 포함. Planar는 mathcal S = (1,2,3), V3 = V_e.
+4. Planar CLF는 V_i = 1/2 ||p_i-p_i*||² 및 V_e = 1/2 ||p_e-p_d||² + w_o/2 [1-cos(psi_e-psi_d)]로 변경.
+5. Spatial의 epsilon_i는 상대 unit quaternion의 vector part로 유지. 최종 목표 e_o = epsilon_ee의 관계 명시. Spatial w_R는 현재 논문 표기 유지.
+6. 후보 pair 집합은 Omega. 후보 S_k 및 선택 S_hat_k(z)는 유지. 후보 pair 뒤에 최종 EE task를 추가한다는 실행 의미 보존.
+7. 추상 학습 문맥 z = (q0,q*,p_d,R_d,mathcal O)로 변경. 실제 23차원 network 입력은 R_d 첫 두 열의 6차원 encoding 사용을 한국어 Q&A에 명시.
+8. 학습 목적함수에 N_tr 및 lambda_sel을 사용하고 lambda_sel = 3을 별도로 표시.
+
+Planar 그림과 실험 결과의 구분
+보관 실험의 가중치는 w_V = 10, w_psi = 0.5. 현재 논문 함수에 w_o = 0.5를 사용하면 같은 configuration에서 V_new = V_archive / 20.
+따라서 함수 개형과 시간 그래프를 현재 정의로 맞추고, 기록된 configuration과 time에 새 함수를 평가. 원시 궤적·목표 도달 시각·성공 label·성공률·paired 통계는 변경하지 않음.
+새 정의로 QP를 다시 풀거나 제어를 새로 실행한 결과가 아님. CLF scale을 바꾸면서 slack penalty를 고정하면 일반적으로 같은 최적 입력이 보장되지 않음.
+A16의 원래 저장된 slack은 원시 QP 값으로 별도 보존하며 새 함수의 값과 동일하다고 주장하지 않음.
+
+논문 내부에서 별도로 검토할 혼재 항목
+1. sections/notation.tex: 기호표에 V_s, c_V, w_V, w_psi, S, 후보집합 mathcal S, 목표 varepsilon_p/varepsilon_R, T 등의 구표기 잔존. 현재 Method 정의를 우선.
+2. Method/Planar_Control.tex: 새 V_e 다음 도함수의 p_d*와 w_psi 및 yaw 계수가 현재 정의와 불일치. 이 식은 발표에 그대로 복사하지 않음.
+3. Method/Panda_Frames.tex: mathcal S_all=(1,...,7)은 중간 frame 7개이며 뒤에 EE 1개가 추가됨. 일반 mathcal S의 EE 포함 정의와 범위가 다름. 발표에서 범위를 구분하고 총 8-task를 유지.
+4. Method/Kinematic_Control.tex: 상단 확정 QP 뒤 파란 수정 중 문단에 c_V/gamma_J 및 예전 입력 제한 설명 잔존. 상단 QP 우선. 배경 이론 c_V는 의도적으로 유지.
+5. Method/Safe_IK.tex와 Panda_Execution.tex: IK acceptance, 중간 task 전환, 최종 성공 평가의 tolerance는 다른 역할. 같은 기호나 수치로 일괄 통합하지 않음.
+6. Method/Link_Selection.tex: 추상 R_d와 실제 6D orientation encoding을 구분. 입력 23차원과 기존 학습 모델은 변경하지 않음.
+
+구조 유지
+본문 36장, Appendix 21페이지, 청중용 57페이지, 발표자용 93페이지.
+목표 발화 1140초와 전환 60초. 슬라이드는 영어, 대본과 작업 기록은 한국어.
+검증 통과: 청중용 57페이지, 발표자용 93페이지, 36개 노트와 1140초 일치. 글자 넘침·폰트·언어·출처 해시 검사 통과.
+Planar 함수 재평가 최대 오차 2.67e-15, 원본 데이터 해시 불변 확인.
+검증 결과: evidence/verification.json. 정의별 원문 해시와 상세 대응: reviews/notation_sync_revision.json.

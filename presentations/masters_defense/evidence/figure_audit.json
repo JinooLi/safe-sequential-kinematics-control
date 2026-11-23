@@ -117,9 +117,13 @@
     "appendix_comparison_retained": "paired_time_test"
   },
   "planar_clf_time": {
-    "function": "V1,V2=10||e_p||^2; Vee=10||e_p||^2+5(1-cos(e_yaw))",
+    "function": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d)); w_o=0.5",
     "active_samples_verified": 17500,
     "max_active_error": 4.263256414560601e-14,
+    "max_normalized_active_error": 1.7763568394002505e-15,
+    "max_normalization_error": 1.7763568394002505e-15,
+    "archive_to_current_scale": 0.05,
+    "orientation_weight": 0.5,
     "time_range_seconds": [
       0,
       20
@@ -128,17 +132,16 @@
     "inactive_functions": "Re-evaluated on the same stored trajectory, not separate simulated runs."
   },
   "planar_clf_shapes": {
-    "coordinates": "task error coordinates; Vee plotted versus position-error norm and yaw error",
-    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p||^2+w_psi(1-cos(e_psi)))",
+    "coordinates": "task error coordinates; V_e plotted versus ||p_e-p_d|| and psi_e-psi_d",
+    "symbolic_formula": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d))",
     "illustrative_weights": {
-      "w_V": 1.0,
-      "w_psi": 0.5
+      "w_o": 0.5
     },
     "archived_weights": {
       "w_V": 10,
       "w_psi": 0.5
     },
-    "display": "qualitative shapes; vertical magnitude unlabelled; no changes to archived trajectory values"
+    "display": "current thesis function shapes; vertical magnitude unlabelled; unchanged archived trajectories"
   },
   "case30": {
     "case_id": 30,
@@ -160,6 +163,11 @@
     "raw_samples_per_method": 17500,
     "max_active_clf_error": 2.842170943040401e-14,
     "max_direct_clf_error": 5.684341886080802e-14,
+    "max_normalized_active_clf_error": 1.3322676295501878e-15,
+    "max_normalized_direct_clf_error": 2.6645352591003757e-15,
+    "max_normalization_error": 1.7763568394002505e-15,
+    "archive_to_current_scale": 0.05,
+    "current_orientation_weight": 0.5,
     "actual_weights": {
       "w_V": 10.0,
       "w_psi": 0.5

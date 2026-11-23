@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-11",
+  "scope": "16번 슬라이드 발표 대본",
+  "rationale": "subtask 실행 → 이전 CLF 해제 → 팔 configuration 변화 → 동일 최종 CLF로 목표 도달",
+  "timing": {
+    "slide_16_seconds": 40,
+    "speech_seconds": 560,
+    "buffer_seconds": 40
+  },
+  "preserved": [
+    "청중용 main.tex 및 main.pdf",
+    "사용자가 발표대본.txt에서 삭제한 15쪽 첫 문장"
+  ],
+  "checks": [
+    "18개 슬라이드별 대본·시간표 일치",
+    "리허설 PDF 45쪽, 컴파일 오류·overfull 없음",
+    "16번 노트 페이지의 시각 확인",
+    "사례에 한정한 설명; 평형점 탈출·전역 수렴 증명 주장 없음"
+  ]
+}

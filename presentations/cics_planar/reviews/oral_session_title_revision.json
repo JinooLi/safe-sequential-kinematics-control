@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-11-12T00:04:38.816024+09:00",
+  "scope": "첨부 CICS Oral Session 표지 양식 적용",
+  "reference_image": "/home/jinoo/.codex/attachments/be5bf1af-c92f-49c2-b7b1-0aa74142bda1/codex-clipboard-a4264b27-bf98-4cd6-8655-5bc1a9d775bd.png",
+  "reference_sha256": "d914acd1e829889e7d059f5fe518087ff14d1392ae7e684f782563640afa993f",
+  "session": "[CICS’26 Oral Session 9 : 로봇 시스템 및 제어 (1)]",
+  "event": "CICS’26 정보 및 제어 학술대회, 경주 한화리조트, 2026. 11. 12.",
+  "presenter_emphasis": "이진우 굵게",
+  "preserved": [
+    "발표 제목",
+    "기존 저자 순서 및 소속",
+    "CDSL·서울시립대학교·KITECH 로고"
+  ],
+  "layout_y_mm_from_top": {
+    "session": 12.5,
+    "title": 24,
+    "authors": 41,
+    "affiliations": 51,
+    "event": 59,
+    "logos": 76
+  },
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      1
+    ],
+    "changed_presenter_content_pages": [
+      1,
+      2
+    ],
+    "note_build_date_updated": "2026-11-12",
+    "build_warnings": 0,
+    "visual_review_complete": true,
+    "other_content_and_notes_unchanged": true
+  }
+}

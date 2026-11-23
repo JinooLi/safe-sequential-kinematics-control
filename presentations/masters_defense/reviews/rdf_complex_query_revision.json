@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-09",
+  "pages": [
+    21
+  ],
+  "scope_ko": "복잡한 2차원 두 물체의 query와 target distance field 개념도, 오른쪽 수식 열 이동",
+  "figure": "Fig/rdf_complex_query_field.pdf",
+  "figure_source": "scripts/build_rdf_complex_query_figure.py",
+  "source_query_points": 11,
+  "field_b_only": true,
+  "no_query_motion_arrow": true,
+  "not_actual_panda_rdf": true,
+  "right_column_left_edge_fraction": {
+    "before": 0.49,
+    "after": 0.54
+  },
+  "right_heading": "Evaluate b's RDF",
+  "heading_to_formula_gap_mm": 1.5,
+  "between_steps_gap_mm": 4,
+  "notes_seconds": 55,
+  "speech_seconds": 1140,
+  "new_simulation": false,
+  "new_training": false,
+  "independent_review": {
+    "agent": "page25_color_check",
+    "pages": [
+      21
+    ],
+    "required_changes": [],
+    "checked": [
+      "query and target field ownership",
+      "evaluation leader not motion arrow",
+      "source vs target coordinate convention",
+      "2D schematic caption",
+      "no overlap or clipping",
+      "right column equation visibility"
+    ]
+  },
+  "other_audience_pages_text_unchanged": true
+}

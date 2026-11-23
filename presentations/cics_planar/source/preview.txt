@@ -1,0 +1,13 @@
+<3축 평면 로봇 매니퓰레이터의 QP 기반 순차적 기구학 제어>
+<>
+<이진우, 박경훈, 김형종, 이승준, 최성현 서울시립대학교, 한국생산기술연구원 (교신저자 : )>
+<>
+<QP-based Sequential Kinematics Control of 3-DOF Planar Robot Manipulator >
+<>
+<Jinwoo Lee, Gyunghoon Park, Hyungjong Kim, Seung-Joon Lee, Sunghyun Choi University of Seoul, Korea Institute of Industrial Technology>
+<>
+Abstract - 본 논문은 3자유도 평면 로봇 매니퓰레이터가 장애물 및 링크 간의 충돌 없이 로봇 말단점의 추종제어 목표를 달성하도록 하는 QP(quadratic programming, 이차계획법) 기반 순차적 기구학 제어 방법을 제안한다. 작업공간 상에 장애물이 존재하는 상황에서 로봇 말단점부터 제어하는 경우, 여유 자유도 부족 등으로 인해 목표점에 도달하지 못하고 평형상태에 도달하는 등의 실패 경우가 다수 발생한다. 이를 해결하기 위해 본 논문에서는 로봇 말단점을 제어하기 전에 기저에서 가까운 순서대로 로봇 링크 끝점들의 위치 제어를 우선적으로 수행함으로써, 로봇 말단점이 제어가 용이한 위치로 이동하도록 유도한다. 모의실험을 통해 순차적 제어가 추종 목표 성공률을 향상시킬 수 있음을 확인한다. 
+
+1. 서   론
+
+장애물이 존재하는 환경에서 로봇 매니퓰레이터(robot manipulator)는 목표를 추종하는 동시에 이동 과정의 충돌을 방지해야 한다. Ames 등은 제어 리아푸노프 함수(control Lyapunov function, CLF)와 제어 장벽 함수(control barrier function, CBF)를 결합한 QP(quadratic programming, 이차계획법)로 안전 제약과 추종 요구를 조정하였다[1]. Tan과 Dimarogonas는 이방법론에서 안전 제약을 만족하면서도 목표에 도달하지 못하는

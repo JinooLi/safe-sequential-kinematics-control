@@ -1,0 +1,48 @@
+{
+  "checked_at": "2026-11-11T12:14:19.891457+09:00",
+  "request": "상단 진행 표시 및 인용 논문의 하단 각주",
+  "changes": [
+    "기존 섹션별 점 표시와 페이지 번호를 headline으로 이동",
+    "BibTeX 인용 번호와 동일한 번호로 저자·전체 제목·학술지·연도 표시",
+    "usebib으로 references.bib에서 각주 정보 직접 읽기; full bibliography 유지",
+    "본문 10pt 유지; 출처 각주 6.5pt; 본문 높이·그림 높이·간격 조정",
+    "한국어 대본과 560초 발화 시간 유지"
+  ],
+  "validation": {
+    "underfull_layout_notices": {
+      "main": 0,
+      "presenter": 0
+    },
+    "reference_footer_pages": {
+      "2": [
+        "Burger"
+      ],
+      "3": [
+        "Siciliano"
+      ],
+      "4": [
+        "Ames"
+      ],
+      "5": [
+        "Ames"
+      ],
+      "6": [
+        "Tan"
+      ],
+      "7": [
+        "Mansard",
+        "Basso"
+      ]
+    },
+    "navigation": "Main slides 2–18: section names and dots above titles.",
+    "page_counts": {
+      "main": 27,
+      "presenter": 45
+    },
+    "speaker_script": "Unchanged",
+    "bounding_boxes": "All 72 audience/presenter pages within page boundaries."
+  },
+  "visual_review": "본문 2–18쪽 및 부록 19–27쪽 렌더 확인; 2,5,6,7쪽은 1200px 렌더로 각주와 본문 간격 확인",
+  "reviewer": "서브 에이전트가 frame별 인용 수집, 중복 방지, 번호 연결 및 BibTeX 유지 확인",
+  "sources_and_experiments": "원고 및 Fig 파일 해시 불변"
+}

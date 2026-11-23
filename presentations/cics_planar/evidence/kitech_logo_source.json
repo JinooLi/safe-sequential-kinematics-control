@@ -1,0 +1,21 @@
+{
+  "retrieved_at": "2026-11-11T23:58:51.638873+09:00",
+  "institution": "한국생산기술연구원 (KITECH)",
+  "official_ci_page": "https://www.kitech.re.kr/introduce/ci",
+  "asset_url": "https://www.kitech.re.kr/images/sub/signature_h.svg",
+  "original_file": "Fig/kitech_signature_horizontal.svg",
+  "original_sha256": "920a70eda672b322172a8d857dd2e287598cb57b3b557b0ff86a197502ebf61b",
+  "presentation_file": "Fig/kitech_signature_horizontal.pdf",
+  "presentation_sha256": "ac37a0f956b99dee8247da057489aa479ba1c58812d44217ff856afc98ad8e9c",
+  "conversion": "Official SVG rendered with librsvg and Cairo to vector PDF; original paths, colors and aspect ratio preserved; no raster images",
+  "svg_viewbox": [
+    0,
+    0,
+    296,
+    84
+  ],
+  "pdf_size_pt": [
+    222,
+    63
+  ]
+}

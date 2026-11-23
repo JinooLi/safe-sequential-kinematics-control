@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-09",
+  "request": "Use Decomposition of Regulation Task for 3.2.1 and subtask terminology in the defense",
+  "terms": {
+    "controller_objective": "link subtask",
+    "desired_position_or_pose": "subtask target",
+    "final_objective": "final EE subtask",
+    "human_reaching_literature": "subgoal"
+  },
+  "section_3_2_1": {
+    "display": "Decomposition of Regulation Task",
+    "current_thesis_source": "Intermediate Targets and Sequential Tasks",
+    "user_requested_display_alias": true
+  },
+  "literal_heading_preserved": "3.3.2 Intermediate Position Tasks and Final Pose Task",
+  "changed_pdf_pages": [
+    7,
+    9,
+    11,
+    12,
+    17,
+    19,
+    23,
+    24,
+    25,
+    26,
+    30,
+    32,
+    34,
+    39,
+    42,
+    49,
+    52,
+    53,
+    57
+  ],
+  "title_preserved": "Task Sequencing",
+  "visual_review": {
+    "agent": "pair_mean_figures",
+    "pages": [
+      12,
+      17,
+      24,
+      42,
+      53
+    ],
+    "required_changes_remaining": [],
+    "root_pages": [
+      9,
+      23,
+      26,
+      30,
+      39
+    ],
+    "root_correction": "Shortened page 30 title to prevent a second title line and footer overlap"
+  },
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "notes": 36,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "thesis_source_recheck": [
+    {
+      "path": "sections/Method/Kinematic_Control.tex",
+      "previous_sha256": "05dcea10372f074dee345c961ab935f3e765ab1dfd649befb2a5071d8d514b2b",
+      "current_sha256": "5f297789bc2560a83579dc9168744589d902d50b0891c276c87b42086639965f"
+    },
+    {
+      "path": "sections/Method/Sequential_Frames.tex",
+      "previous_sha256": "1ffa1087fb14bfa5c8e3709af48271d7049237daf16ca85557099ff8d1950852",
+      "current_sha256": "a545455bb77067236f76f4826560150d9dcad9a0a91881ccc7939895dedc9697"
+    },
+    {
+      "path": "sections/Method/Planar_Control.tex",
+      "previous_sha256": "26b4f07fc04262266b7227af89ca8412f036e6d26181010243b30be8f12dba38",
+      "current_sha256": "4ccf70e1b82a8996c1ebc0d5aff7fe53303be9792b8751fc443b9609334fd1f6"
+    },
+    {
+      "path": "sections/Method/Panda_Frames.tex",
+      "previous_sha256": "0bd9fae19c20f10e90b9f466600fafbf6c78ed01c22fb90608fbfe1752870435",
+      "current_sha256": "5e1f7769d1671ab530d3610b82a526e971d4bd97e62633a41922cc526dd66693"
+    },
+    {
+      "path": "sections/Method/Link_Selection.tex",
+      "previous_sha256": "9e5abe73a0b4e0c8b6406d8e291b480fcdda55ea3cbbc8d7751b756982dbf4ef",
+      "current_sha256": "3a534dcacf17b90d5d7246ed2bdc6c740437dc8ed37994156dfb43f6c2cc7bb4"
+    },
+    {
+      "path": "sections/Method/Safe_IK.tex",
+      "previous_sha256": "4102dd4542800859401f3567e9b716e2aa77df1577e40defe6f223917527ddf8",
+      "current_sha256": "b5b0665f003196bbe13cb8314b63a4de48ae206fcd3b65052d9ecc7694f22dc7"
+    }
+  ],
+  "thesis_recheck": {
+    "reviewer": "pair_mean_statistics",
+    "commit": "d1648a8f60c6de70bf04aed30c83a5e2572e27d0",
+    "result": "Displayed QP, input limits, planar/spatial CLFs, IK null-space identities, sequence, features and learning losses still agree with active thesis definitions.",
+    "source_change": "External thesis update during presentation revision; no thesis files edited by this task.",
+    "A9_provenance": "Latest Method invariance proposition is commented out. A9 retained as a conditional supplementary derivation from active CBF preliminaries (AC trajectories, a.e. inequalities and set intersections) plus active QP joint-limit inequalities, not as a currently stated Method proposition.",
+    "A11_provenance": "Safe-set intersection follows active CBF preliminaries and QP bounds.",
+    "existing_nontranscribed_inconsistency": "Planar derivative still contains p_d* and w_psi mismatch; this derivative is not displayed.",
+    "normalized_diff_review": "Compared commit d1648a8 against its parent. The active QP is byte-identical; Link_Selection/Panda_Frames differ only in color wrappers, Safe_IK in color/spacing, Planar adds consistent J_p,ee naming. Active CBF comparison/inequality definitions unchanged. New Method prose and commented-out invariance proposition reviewed separately."
+  },
+  "artifact_verification_passed": true,
+  "raw_outcomes_unchanged": true,
+  "new_simulations_or_training": false
+}

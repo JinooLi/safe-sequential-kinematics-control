@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-09",
+  "main_result_reference": "10-pair mean",
+  "changed_pdf_pages": [
+    31,
+    33,
+    34,
+    37,
+    39,
+    43,
+    54,
+    55
+  ],
+  "single_episode_label": "Example pair (3,5)",
+  "success": {
+    "reference_success_rate_percent": 55.2,
+    "candidate_success_rate_percent": 60.9,
+    "difference_pp": 5.7,
+    "bootstrap_95_ci_pp": [
+      3.74,
+      7.650249999999996
+    ]
+  },
+  "paired_time": {
+    "records": 10000,
+    "both_success_records": 4792,
+    "unique_common_success_episodes": 609,
+    "reference_only_success_records": 728,
+    "candidate_only_success_records": 1298,
+    "both_failure_records": 3182,
+    "reference_common_mean_seconds": 36.04655676126916,
+    "candidate_common_mean_seconds": 36.20300918197035,
+    "mean_paired_difference_seconds": 0.15645242070119722,
+    "relative_reduction_percent": -0.43402875269711316
+  },
+  "bootstrap": {
+    "draws": 10000,
+    "seed": 20261023,
+    "confidence_level": 0.95,
+    "quantiles": [
+      0.025,
+      0.975
+    ],
+    "method": "paired episode percentile bootstrap",
+    "resampling_unit": "episode (all ten pair outcomes and selected outcome kept together)",
+    "episodes_per_draw": 1000,
+    "episode_order": "case_id ascending; original NPZ Test order와 동일",
+    "numpy_rng": "default_rng",
+    "numpy_quantile_method": "linear",
+    "conditions": "하나의 이미 학습된 seed=11 모델에 조건부이며 학습 seed 변동은 포함하지 않음."
+  },
+  "fixed_reference_retained": "Appendix A14: Train-best fixed pair (3,5)",
+  "fixed_reference_gain_pp": 2.2,
+  "fixed_reference_ci_pp": [
+    -0.3,
+    4.7
+  ],
+  "independent_statistics_review": "pair_mean_scope_review reproduced success, CI, paired times and unique successful example pair",
+  "visual_review": {
+    "agent": "pair_mean_figures",
+    "pages": [
+      31,
+      33,
+      34,
+      43,
+      54,
+      55
+    ],
+    "first_pass_changes": [
+      "A6 table-to-caption gap",
+      "A14 block spacing"
+    ],
+    "final_build_overflows": []
+  },
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "notes": 36,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "artifact_verification_passed": true,
+  "raw_source_outcomes_unchanged": true,
+  "new_simulations_or_training": false,
+  "frozen_rollout_geometry": "Recovery illustration rerendered from saved initial/final q; physics steps 0"
+}

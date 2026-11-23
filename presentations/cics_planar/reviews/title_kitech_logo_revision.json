@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-11-11T23:58:51.638873+09:00",
+  "scope": "첫 페이지 KITECH 로고 추가",
+  "official_source": "https://www.kitech.re.kr/introduce/ci",
+  "layout": {
+    "order": [
+      "CDSL",
+      "University of Seoul",
+      "KITECH"
+    ],
+    "height_mm": 9,
+    "gap_mm": 4,
+    "vertical_alignment": "center"
+  },
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "all_pdf_text_unchanged": true,
+    "build_warnings": 0,
+    "visual_review_complete": true,
+    "existing_figures_and_notes_unchanged": true
+  }
+}

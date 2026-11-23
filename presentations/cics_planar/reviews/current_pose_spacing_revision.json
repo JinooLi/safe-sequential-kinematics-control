@@ -1,0 +1,34 @@
+{
+  "checked_at": "2026-11-11T14:44:09.823559+09:00",
+  "scope": "3쪽 현재 pose 기호 및 5쪽 문장 간격",
+  "slide3": {
+    "current_pose": "p_3를 현재 끝점에 연결; psi_3와 평행 화살표로 현재 end-effector 방향 표시",
+    "colors": "현재 검정색, 목표 녹색",
+    "effective_font_pt": 10,
+    "original_geometry_preserved": true
+  },
+  "slide5": {
+    "label_to_equation_extra_gap_mm": 3,
+    "qp_internal_extra_row_gap_mm": 0.5,
+    "visible_heading_math_clearance_pt_approx": 5.7,
+    "formulas_and_wording_unchanged": true
+  },
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "visual_reviewed_pages": [
+      3,
+      5
+    ],
+    "changed_note_labels": [
+      "problem"
+    ],
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "experimental_data_and_unrelated_figures_unchanged": true
+  },
+  "labeled_figure_sha256": "73541b84a32ec4ad5afa5169db99cdb4aa52d272093593eb50accde124b7915b",
+  "concurrent_user_edit_preserved": "13쪽 frame 끝의 공백 변경을 확인해 보존"
+}

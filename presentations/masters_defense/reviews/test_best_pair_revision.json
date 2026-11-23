@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-09",
+  "changed_main_pdf_pages": [
+    31
+  ],
+  "best_single_pair": {
+    "definition": "Highest aggregate Test success among ten fixed candidate pairs; one same pair across all episodes",
+    "pair": [
+      3,
+      5
+    ],
+    "pair_index": 5,
+    "successes": 587,
+    "episodes": 1000,
+    "success_rate_percent": 58.699999999999996,
+    "all_pair_success_counts": [
+      539,
+      546,
+      578,
+      528,
+      535,
+      587,
+      560,
+      564,
+      553,
+      530
+    ],
+    "unique_maximum": true,
+    "selected_after_evaluation": true,
+    "episode_wise_oracle": false
+  },
+  "comparison_rates_percent": [
+    45.5,
+    55.2,
+    55.2,
+    58.699999999999996,
+    60.9
+  ],
+  "main_comparison_unchanged": {
+    "reference": "10-pair mean",
+    "difference_pp": 5.7,
+    "bootstrap_95_ci_pp": [
+      3.74,
+      7.65
+    ]
+  },
+  "stronger_pair_inference_retained": "A14: +2.20 pp; 95% CI [-0.30,4.70] pp; no established superiority",
+  "independent_statistics_review": "pair_mean_statistics independently verified all ten Test counts, frozen hashes and unique maximum",
+  "visual_review": "Page 31 rendered at 1600px and visually checked; five bars readable without overlap or cropping",
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "notes": 36,
+  "speech_seconds": 1140,
+  "buffer_seconds": 60,
+  "artifact_verification_passed": true,
+  "raw_source_outcomes_unchanged": true,
+  "new_simulations_or_training": false
+}

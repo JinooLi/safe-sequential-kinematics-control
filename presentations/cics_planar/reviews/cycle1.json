@@ -1,0 +1,30 @@
+{
+  "reviewer": "cics_planar_scope",
+  "scope": "HWP 수식·실험 및 10분 발표 흐름",
+  "findings_and_changes": [
+    {
+      "finding": "최신 학위논문과 제출 원고의 CLF scaling 차이",
+      "change": "원래 저장 CLF와 정확히 대응하는 w_v=10,w_psi=5로 그림 재생성"
+    },
+    {
+      "finding": "Task 자유도를 QP 가용 방향과 혼동할 가능성",
+      "change": "Task-Jacobian nullity로 표기, 일반 configuration 및 안전 제약 전 조건 명시"
+    },
+    {
+      "finding": "사례30을 순수 평형점으로 단정할 가능성",
+      "change": "목표 미도달로 표현하고 Tan은 이론 배경으로 분리, 대본/Q&A에서 infeasible 분류 명시"
+    },
+    {
+      "finding": "Collision barrier와 joint-limit barrier 집계 혼동",
+      "change": "Minimum collision barrier로 수정"
+    },
+    {
+      "finding": "IK 선별 조건 누락",
+      "change": "300 episodes with valid IK와 검증된 candidate 집합 명시"
+    },
+    {
+      "finding": "수식과 결과 페이지의 세로 분량 과다",
+      "change": "개형그림 높이 감소, 전체 failure 표 부록 이동"
+    }
+  ]
+}

@@ -2,85 +2,130 @@
 보충 자료는 목차 1개와 A1–A17의 17개 frame으로 구성하며, A7 참고문헌은 4쪽에 걸쳐 수록. 발표자용 PDF 총 93쪽.
 언어 원칙: 청중용 Beamer 슬라이드는 영어, 발표 대본·구성안·질의응답 메모는 한국어. 방법명과 주요 기술 용어는 영어 표기 유지.
 
-발표 제목: Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Subtask Sequencing
-방법명: Direct / Sequential / All-link Sequential / Preset pair (3,5) / Learned selection / Uniform selection.
-데이터셋의 개별 사례는 episode, 제어 목표는 task, 관절 벡터는 IK configuration, 위치와 방향은 pose로 구분. 기존 데이터 식별자는 변경하지 않음.
+발표 제목: Collision-Aware Sequential Kinematic Control of Robot Manipulators Using Control Barrier Functions and Supervised Learning-based Task Sequencing
+방법명: Direct / Sequential / All-link Sequential / 10-pair mean / Learned selection. A14의 추가 참고 비교: Train-best fixed pair (3,5).
+데이터셋의 개별 사례는 episode, 원래 제어 목표는 main regulation task, 이를 분해한 실행 목표는 subtask로 구분. 마지막도 final EE subtask에 포함. Subtask target은 해당 subtask의 목표 위치·pose이며 task 자체와 구분. 관절 벡터는 IK configuration, 위치와 방향은 pose로 표기. 기존 데이터 식별자는 변경하지 않음.
 
-20분 발표 흐름: 연구 동기 → 배경(CLF, CBF, QP, 관련 연구) → planar → Spatial Manipulator → 소요 시간 → 두 link 선택 → oracle → 학습 → 결과 → 해석.
-하단 점은 본문을 6개 구간으로 나누어 표시. 완료한 슬라이드는 채운 점, 현재 슬라이드는 강조한 점, 남은 슬라이드는 빈 점으로 표현. 표지는 제외하며 보충 자료는 별도 탐색 표시 사용. 논문 section 부제는 이러한 발표 구간과 별개.
+20분 발표 흐름: 연구 동기 → 배경(CLF, CBF, QP, 관련 연구, Direct 실패 사례) → 인간의 장애물 회피 연구에서 얻은 설계 직관과 planar 제안 방법 → Spatial Manipulator → 소요 시간 → 두 link 선택 → oracle → 학습 → 결과 → 해석.
+하단 점은 본문을 6개 구간으로 나누어 표시하며 Background는 4–8쪽, Planar는 9–19쪽. 완료한 슬라이드는 채운 점, 현재 슬라이드는 강조한 점, 남은 슬라이드는 빈 점으로 표현. 표지는 제외하며 보충 자료는 별도 탐색 표시 사용. 논문 section 부제는 이러한 발표 구간과 별개.
 핵심 메시지는 필요한 슬라이드 상단에 검은색으로 배치. 정의와 전환 조건은 관련 그림이나 수식 옆에 배치하며, 시각적 설명의 매 단계마다 요약을 반복하지 않음.
 이 메모는 슬라이드에서 생략한 출처, 가정, 상세 해석을 보관하기 위한 자료. 이전 메모는 reviews/qanda_before_story.txt에 보관.
 
 2–3쪽 / 연구 동기: 안전한 목표 도달
 로봇팔 작업에는 주변 물체, 설비, 자기 충돌을 피하면서 원하는 위치와 방향에 도달하는 동작이 필요.
-2쪽은 작업 목표, 3쪽은 같은 시점에서 주변 물체와 설비를 추가한 모습. 두 그림 모두 MuJoCo 작업 공간의 정적 예시이며, 제어 성공·실패의 증거나 새 rollout 결과가 아님.
-생성 파일: scripts/render_motivation.py; Fig/motivation_task.png, Fig/motivation_safety.png. 검증 기록: evidence/motivation_visual_audit.json.
+2쪽 제목은 Why Safe Goal Reaching Matters. 로봇팔 작업 전반의 요구를 먼저 설명하고, 사진에는 Example을 붙여 자율실험실을 한 가지 응용 사례로 제시. Liverpool 대학의 실제 mobile robotic chemist 사진 두 장 사용. 왼쪽은 실험실 작업 공간, 오른쪽은 로봇팔이 시료를 다루는 모습. Burger et al. (2020)의 자율실험실 사례를 구체적으로 보여주는 외부 자료이며 본 연구의 실험 사진이나 제어 성능 결과가 아님.
+사진 출처: University of Liverpool, Cooper Group, 「Experiment too big? Hire a mobile robot scientist」, 2020-07-08. https://www.liverpool.ac.uk/cooper-group/news/stories/title,1215738,en.php
+왼쪽 원본: https://www.liverpool.ac.uk/media/livacuk/coopergroup-new/images/IMG_4459_web.jpg → Fig/motivation_liverpool_lab.jpg
+오른쪽 원본: https://www.liverpool.ac.uk/media/livacuk/coopergroup-new/images/robot%2Cscientist.jpg → Fig/motivation_liverpool_handling.jpg
+화면 출처 표기: Photos: University of Liverpool. 공식 페이지에서 개별 사진가와 별도 이미지 이용허락 조건은 확인되지 않아 특정 사진가나 CC 라이선스를 부여하지 않음.
+3쪽은 전체 link의 충돌 회피와 목표 도달을 설명하기 위해 별도로 구성한 MuJoCo 작업 공간의 정적 예시. 우측은 Goal reaching과 Collision avoidance의 두 요구로 정리하여, 다음 CLF와 CBF 배경 설명에 연결. 2쪽 사진의 실험실을 재현한 것이 아니며, 제어 성공·실패의 증거나 새 rollout 결과도 아님.
+정적 예시 생성 파일: scripts/render_motivation.py; Fig/motivation_safety.png. 검증 기록: evidence/motivation_visual_audit.json. 이전 2쪽의 Fig/motivation_task.png는 보관하되 현재 발표에서는 사용하지 않음.
 정량 결과와 구체적인 실패 사례는 후반부에서 설명. Episode 180은 A16(56쪽)에 수록.
 선배 발표자료에서는 이미지 중심의 연구 동기(2쪽), 고정된 배치에서의 단계별 전개(4–8쪽), 함수와 상태의 대응(17–19쪽)을 참고. 선배 자료의 과학적 그림과 주장은 본 연구의 실험 근거가 아님.
-부제는 논문의 실제 section 또는 subsection 제목 사용. 표지, 마지막 슬라이드, Appendix 목차는 제외. Conclusion에는 하위 section이 없어 chapter 제목을 사용하며 참고문헌은 Bibliography. 기종명은 Spatial Manipulator로 표시하고 원래 제목과 출처는 evidence/chapter_mapping.json에 보존.
+부제는 논문의 chapter·section·subsection 번호와 제목을 기준으로 사용. 10쪽은 3장의 TOC short title을 표시. 표지, 마지막 슬라이드, Appendix 목차는 제외. Conclusion에는 하위 section이 없어 chapter 제목을 사용하며 참고문헌은 Bibliography. 기종명은 Spatial Manipulator로 표시하고 원래 제목과 출처는 evidence/chapter_mapping.json에 보존.
 
 
 feedback.md 반영: 용어와 근거
-Shared workspace는 표준 문맥에서 특히 사람과 로봇이 작업 공간을 함께 사용하는 협업 상황과 관련하여 사용하는 용어. ISO/TS 15066 소개도 shared workspace와 human–robot collaboration을 연결함. 이번 그림은 주변 설비가 있는 공간이며 사람과의 협업 평가를 보여주지 않으므로 Cluttered Workspaces로 변경. 사람-로봇 접촉 안전성을 평가했다는 의미를 부여하지 않음.
-출처: ISO, https://committee.iso.org/news/2016/03/Ref2057.html
+Cluttered Workspaces는 이번 그림에서 주변 물체와 설비가 있는 환경을 나타내는 표현. 사람과 로봇의 협업 평가나 접촉 안전성 시험을 보여주는 자료로 해석하지 않음.
 자율실험실의 실제 예: Burger et al., A mobile robotic chemist, Nature (2020). 실험 장비 사이에서 로봇이 화학 실험을 수행하는 연구를 연구 동기의 사례로 인용하며, 그 논문의 성능을 본 연구의 결과로 사용하지 않음.
 출처: https://www.nature.com/articles/s41586-020-2442-2
-9쪽의 사람 어깨·팔 배치 그림은 사용자의 관찰에서 얻은 설계 직관을 도식화한 것. 모든 사람이 어깨부터 움직인다는 생체역학 법칙이나 검증된 최적 인간 정책을 주장하지 않음.
-10쪽은 논문 목차를 따라 planar 예시 → spatial 확장 → supervised selection → 결과로 연결하는 안내.
-17쪽의 공통 알고리즘은 IK 목표 구성, 활성 CLF-CBF QP, sequential task execution의 구조를 의미. 모델마다 모든 전환·종료 정책이 같다는 뜻은 아님. Planar에서는 boundary stall 또는 QP infeasibility 때 task를 넘길 수 있지만 Spatial Manipulator에서는 해당 조건을 실행 종료로 처리. A5에서 구체적인 차이 설명.
+9쪽은 인간의 장애물 회피 연구에서 보고된 팔 자세와 subgoal을 설계 직관의 근거로 제시. 작은 3패널 사진은 Lukic et al. (2014)의 인간 동작 자료이며, 아래 세 자세 그림은 본 연구에서 만든 개념도로 인간 실험 궤적이 아님. 모든 사람이 어깨부터 움직인다는 생체역학 법칙이나 검증된 최적 인간 정책을 주장하지 않음. 문헌의 관찰과 IK 해에서 link subtask target을 구성하는 본 연구의 설계를 구분하며 상세 출처는 아래 9쪽 항목에 수록.
+10쪽 Chapter 3: Method Overview는 논문 3장의 다섯 section으로 수행한 방법론의 구성을 설명. 전체 논문 목차나 실제 발표 순서의 재현이 아니며 결과 장은 포함하지 않음.
+17쪽 Overall Sequential Control Framework는 실행 전 준비와 제어 주기 반복을 구분. 검증된 IK 해에서 subtask target과 sequence를 한 번 구성하고, 실행 중에는 활성 CLF-CBF QP의 결과와 현재 상태로 전환/종료를 판정. Continue는 유효한 u를 적용하고 q를 갱신한 뒤 같은 subtask의 QP로 복귀. Advance는 s를 증가시키고 입력 적용 없이 같은 q에서 다음 subtask의 QP를 계산. Stop은 실행 종료. QP 실패가 입력 적용을 무조건 거치는 것이 아니며, task 전환 때 IK를 다시 구하거나 로봇 상태를 초기화하는 것도 아님. 모델마다 모든 전환·종료 정책이 같다는 뜻은 아님. Planar에서는 boundary stall 또는 QP infeasibility 때 link subtask를 넘길 수 있지만 Spatial Manipulator에서는 stall, QP infeasibility 및 수치 solver error를 실행 종료로 처리. 일반 solver error와 Planar의 예외 전환을 혼동하지 않으며 A5에서 구체적인 차이 설명.
 21쪽은 원 논문의 RDF 표현을 사용하고, 표면 query 좌표변환, soft-min 집계, physical/error safety margin, 양쪽 link 운동을 반영한 relative gradient를 추가해 CBF candidate를 구성. Clearance barrier라는 별도의 정립된 이론 명칭을 도입하지 않음. CBF라는 이론적 성질은 정칙성·안전 초기조건·제약을 만족하는 실제 입력 등의 가정에 의존.
 24쪽의 화면 표현은 성공의 핵심을 짧게 나타낸 것. Validation All-link는 goal hit 597개 중 안전 조건 실패 7개를 제외한 590개가 성공이며 joint-limit와 numerical-solver 판정도 포함. 출처: evidence/all_links_analysis.json의 120초 분석. 목표 도달만으로 성공을 재정의하지 않음.
-35쪽의 추가 검증: 수정된 QP와 고정된 selector를 사용한 새 episode 평가, RDF query/QP 계산 시간과 온라인 추종 정확도 측정, 실제 로봇의 모델 오차·sensing uncertainty·collision margin 검증.
-
-7쪽 및 A17 / Gonçalves의 차원 가정과 manipulator 관련성
-기본 모델은 q̇ = u, q ∈ R^n. 기본 circulation 구성 T = ΩN에서 Ωᵀ = −Ω, ΩᵀΩ = I를 요구. 가역 skew-symmetric 행렬은 짝수 차원에만 존재하므로 이 기본 구성에는 n이 짝수라는 조건 존재.
-홀수 차원에서는 skew-symmetric Ω가 특이하므로 T가 0이 되는 방향이 존재할 수 있음. Tᵀu ≥ β(D)에서 β(D) > 0인데 T = 0이면 제약이 실행 불가능. 따라서 같은 짝수 차원 정리를 그대로 적용할 수 없음.
-다만 논문의 Section IV-C는 홀수 차원 확장을 별도로 논의하고, 3차원 비행 로봇 5대의 15차원 실험도 제시. ‘짝수 차원 전용이라 7-DOF에는 적용 불가능’이라는 단정은 부정확함.
-논문은 4-DOF planar manipulator 실험도 포함. 본 연구와의 차이는 로봇팔 적용 유무가 아니라, IK에서 중간 link task를 구성하고 선택하는 구조의 사용 여부. 본 task-construction 절차는 3-DOF와 7-DOF에서 사용하며 짝수 차원 조건을 요구하지 않지만, 이것이 모든 task와 장애물에 대한 QP 실행 가능성이나 전역 수렴 보장은 아님.
-출처: https://arxiv.org/html/2307.09901v1 의 기본 모델, circulation 구성, Section IV-C, Section V.
+35쪽 / Future Work: Experiments and Sequencing
+두 향후 연구 방향에 각각 두 하위항목을 표시하며, 대본은 30초 유지.
+Physical-robot experiments: (1) Closed-loop control on the physical robot — 실제 로봇에서 제안 제어기의 폐루프 실행. (2) Success rate, minimum margin, and completion time — 성공률, 최소 margin, 완료 시간 평가. 모두 향후 실험이며 이미 실제 로봇에서 검증한 결과가 아님.
+Neural-network-based sequencing improvements: (1) Relative-geometry features and network architecture — 상대기하 특징과 network 구조 개선. 현재 모델도 q0, q*, 목표 pose, 장애물 위치·반지름을 입력으로 사용하고 cross-attention으로 결합하므로 기하 정보를 새로 처음 도입한다는 의미가 아님. 기존 입력 표현과 구조를 개선할 방향이며 특정 network 종류를 확정하지 않음. (2) Link subtask selection without a fixed count — 현재 두 개로 고정한 link subtask 수를 episode에 따라 정하도록 확장 검토. 어떤 link를 몇 개 실행할지 선택하는 방향이며, 임의 개수의 subtask를 무한히 허용하거나 실행 순서를 자유화한다는 뜻이 아님. 현재 방법은 선택한 link를 link index의 오름차순으로 실행하며, 이 순서 규칙의 변경은 이번 향후 연구 항목에 포함하지 않음.
+논문에서는 두 개의 link subtask를 이번 연구의 고정 설정으로 사용했으며 그 개수가 최적이라고 입증하지 않음을 명시. 개수 선택을 확장해도 final EE subtask와 QP의 충돌·joint-limit 안전 제약을 유지하고, 선택하지 않은 link도 collision model에 포함. 향후 선택 범위·network 구조·학습 방식과 개선 성능은 아직 확정하지 않으며, 현재 성공률·완료 시간 수치는 기존 두-link 모델의 평가 결과로 유지. 근거: 논문 sections/Method/Link_Selection.tex의 Two-Link Reduction and Selection Objective, Network Architecture.
+세부 측정에 관한 Q&A 참고: 실행 전 한 번 수행하는 selector 추론과 매 제어 주기 RDF query·QP 계산 시간을 구분한 온라인 지연·주기 초과, RDF 거리와 기준 mesh 거리의 차이·장애물 pose 추정 오차, 실제 로봇의 명령/측정 joint velocity·최소 여유 거리·목표 pose 오차·완료 시간은 별도로 확인할 측정 항목. 35쪽에서는 성공률·최소 margin·완료 시간으로 평가 방향을 요약하고, 온라인 지연·형상·센싱 등의 상세 목록은 Q&A 참고로 유지하며 세 번째 향후 연구 항목으로 제시하지 않음. 측정 오차를 이용한 collision margin 검토만으로 연속시간 무충돌이 자동 보장되지는 않음. 기록된 한계의 원전 근거는 Conclusion 및 Results/Panda의 Interpretation and Limitations이며 새로운 실험 결과를 추가한 것이 아님.
 
 4–6쪽 / 배경: CLF → CBF → 결합한 QP
 4쪽(40초): 관절 속도 입력 q̇ = u, task 오차 함수 V = 1/2 ||e(q)||², 감소 조건 ∇Vᵀu ≤ −c_V V 설명.
 그릇 모양 그림은 task 오차에 대한 함수의 정성적 개형. V = 0은 task 달성을 의미하며, 여유 자유도로 인해 여러 관절 configuration이 같은 task를 만족할 수 있음.
-5쪽(40초): 여유 거리 h = d − d_safe, 안전 집합 C = {q : h(q) ≥ 0}, CBF 조건 ∇hᵀu ≥ −γh 설명.
+5쪽(40초): 여유 거리 h = d − d_safe, 안전 집합 C = {q : h(q) ≥ 0}, CBF 조건 ∇hᵀu ≥ −γh 설명. 거리 개념도의 초록색은 안전 경계 바깥, 흰색 안쪽은 필요한 거리 여유를 만족하지 않는 영역. 점선 경계 h = 0도 안전 집합에 포함. 그림은 거리 조건의 직관적 표현이며 실제 C는 configuration q의 집합.
 d는 link와 장애물 사이의 표면 거리. 안전 집합 내부에서는 h의 감소도 허용되지만, h = 0에서는 ḣ ≥ 0 필요. 이 조건이 항상 장애물에서 멀어지는 운동을 요구하는 것은 아님.
-6쪽(45초): CLF, CBF, 입력 제한을 제약으로 두고 입력과 slack 비용을 최소화. 매 제어 주기 현재 q에서 다시 계산.
+6쪽(45초): 기본 QP를 목적함수, CLF constraint, CBF constraint의 세 줄로 제시. 동일 입력 u로 목표 도달과 안전을 함께 고려하며, 1/2 ||u||² + rho/2 delta²를 최소화. rho > 0은 slack penalty weight. CLF만 slack으로 완화하고 매 제어 주기 현재 q에서 다시 계산.
+6쪽에서는 구현 세부사항을 생략하고, 13–15쪽과 A12에서 입력 제한을 논문의 Method 식과 같이 두 행으로 명시: −alpha_j(q_j − q_j,min) ≤ u_j ≤ alpha_j(q_j,max − q_j), 그리고 v_min,j ≤ u_j ≤ v_max,j, 모든 j = 1,…,n. 첫 행은 joint-limit CBF로 위치 경계에 가까워질수록 바깥 방향 속도를 제한하며, 둘째 행은 고정된 joint velocity 범위. 두 제한의 교집합을 적용.
 QP는 V 자체를 최소화하는 문제가 아님. Slack δ는 CLF 조건만 완화하며, 양의 δ는 V의 감소를 늦추거나 증가를 허용할 수 있음.
 CBF와 입력 제한에는 slack을 두지 않음. CLF slack이 모든 QP의 실행 가능성을 보장하지는 않음.
 안전 집합의 순방향 불변성은 barrier의 정칙성, 안전한 초기 상태, 실제 적용한 속도의 미분 부등식 만족을 전제로 하는 성질. 근사 형상, 이산 적분, clipping은 A9와 평가 한계에서 별도로 설명.
 출처: 논문 sections/Preliminaries/CLF.tex, CBF.tex, CLF_CBF_QP.tex, sections/Method/Kinematic_Control.tex; Ames et al. (2017).
-Planar 실행 단계에서는 6쪽 QP를 동일한 배치로 반복하고 활성 CLF constraint만 색으로 강조. 목적함수와 안전 제약은 그대로 유지.
+Planar 실행 단계에서는 6쪽의 기본 구조를 구체화한 실제 QP를 제시. 가중행렬, 개별 barrier와 joint/input limits를 표시하며, 13–15쪽 사이에서는 같은 배치로 활성 CLF constraint만 변경.
 
 7쪽 / 관련 연구와 본 연구의 범위 — A7 참고문헌: 44–47쪽
+화면의 비교 기준은 Method / Design focus / How motion is guided. 6쪽에서 설명한 QP의 정체 가능성을 바탕으로 기존 연구가 CLF geometry, nominal input, circulation constraint를 통해 운동을 유도하는 방식을 비교. 추가 구조의 부담이나 잔여 평형점을 우리 방법의 우월성 근거로 사용하지 않음. 하단 연구 질문은 로봇팔의 운동학적 구조를 목표를 향한 진행에 어떻게 활용할 수 있는지이며, 8쪽의 Direct 실패 사례로 문제를 구체화한 뒤 9쪽의 사람 팔 배치 직관으로 연결. IK·link subtask target·task 전환의 구체적인 설명은 그 이후에 제시. 수식과 뒤에서 설명할 제안 방법의 구체적인 차이는 아래 보충설명에 보존.
 Reis et al. (2021): CLF–CBF QP에 점근적으로 안정한 원치 않는 평형점이 존재할 수 있음을 제시. 모든 episode에서 정체가 발생한다는 의미는 아님.
-7쪽 대표식 V(x,R) = V_ref(Rx)는 논문의 Lyapunov shaping을 표시. R ∈ SO(n)은 로봇의 자세가 아니라 기준 CLF를 회전시키는 가상 상태이며, 원문의 Q를 R로 표기. 이 방법은 회전 변수를 최적화하고 추가 barrier 제약을 넣어 안전 경계 부근에서 정체를 유발하는 gradient 정렬을 회피. 회전식 하나만으로 모든 평형점이 제거된다는 의미는 아님. 원문의 비방사형 CLF, convex CBF, 입력 행렬 및 QP 실행 가능성 등 적용 조건 확인 필요. 출처: https://arxiv.org/html/2003.07819 의 Section IV, 식 (6)–(10).
+화면의 설계 초점은 CLF geometry이며, 기준 CLF를 회전시켜 운동을 유도하는 방향을 조정. 가상 동역학과 추가 CBF는 아래 원리 설명에 보존하되 우리 방법보다 느리거나 불리하다는 근거로 사용하지 않음.
+보충설명 식 V(x,R) = V_ref(Rx)는 논문의 Lyapunov shaping을 표시. R ∈ SO(n)은 로봇의 자세가 아니라 기준 CLF를 회전시키는 가상 상태이며, 원문의 Q를 R로 표기. 이 방법은 회전 변수를 최적화하고 추가 barrier 제약을 넣어 안전 경계 부근에서 정체를 유발하는 gradient 정렬을 회피. 회전식 하나만으로 모든 평형점이 제거된다는 의미는 아님. 원문의 비방사형 CLF, convex CBF, 입력 행렬 및 QP 실행 가능성 등 적용 조건 확인 필요. 출처: https://arxiv.org/html/2003.07819v4 의 Section IV, 식 (6)–(10).
 Tan and Dimarogonas, Automatica 2024: 논문의 가정하에서 QP를 재정식화하여 원치 않는 내부 평형점과 한 종류의 경계 평형점을 제거. 모든 경계 평형점의 제거나 보편적인 목표 수렴을 보장하는 결과는 아님. https://arxiv.org/abs/2104.14895
-7쪽 대표식은 min_{u,δ} 1/2 ||u − u_nom||² + p/2 δ², CLF 및 CBF 조건 적용. 원문은 보정 입력 u′ = u − u_nom을 최적화하므로, 슬라이드 식은 실제 입력 u로 다시 쓴 동등한 목적함수. u_nom은 CLF를 감소시키는 nominal controller, p > 0은 slack 가중치. CLF slack은 계속 허용하며 안전 제약은 유지. 출처: https://people.kth.se/~dimos/pdfs/Xiao_Automatica_2024.pdf 의 식 (44)–(46), Theorem 3, Remark 6.
+화면의 설계 초점은 nominal input이며, CLF와 양립하는 nominal controller를 중심으로 QP 목적함수를 구성. 원문의 Remark 6과 Example 5는 경계 정체 가능성을 명시하지만, 우리 방법에도 실패와 정체가 남으므로 이것을 본 연구만 해결한 한계로 제시하지 않음. Nominal controller는 주어진 CLF에서 해석적으로 구성할 수 있으므로 별도의 큰 설계·연산 부담을 요구한다고 비판하지 않음. 출처: https://arxiv.org/html/2104.14895v4 의 Section 4, Remark 4–6, Example 5.
+보충설명 식은 min_{u,δ} 1/2 ||u − u_nom||² + p/2 δ², CLF 및 CBF 조건 적용. 원문은 보정 입력 u′ = u − u_nom을 최적화하므로, 이 식은 실제 입력 u로 다시 쓴 동등한 목적함수. u_nom은 CLF를 감소시키는 nominal controller, p > 0은 slack 가중치. CLF slack은 계속 허용하며 안전 제약은 유지. 출처: https://people.kth.se/~dimos/pdfs/Xiao_Automatica_2024.pdf 의 식 (44)–(46), Theorem 3, Remark 6.
 Goncalves et al., CDC 2023: nominal gradient controller를 사용하는 CBF-QP에 circulation 부등식을 추가하여 장애물 주위를 도는 운동 유도. 본 발표의 완화된 CLF–CBF 정식화와 관련은 있지만 동일한 방법은 아님. 주요 이론에는 시스템과 형상에 관한 가정이 있으며, 임의의 로봇팔 환경에 대한 포괄적인 보장으로 확대해서는 안 됨.
-7쪽 대표식은 T(q)ᵀu ≥ β(D(q)). D는 configuration space에서 장애물과의 거리 척도, T는 D 등고면의 접선 방향. 장애물 가까이에서는 β > 0으로 설정하므로 접선 속도 성분이 양수여야 하며 u = 0은 제약 위반. 멀리에서는 β가 음수가 되어 제약 완화. 이 식은 기존 CBF와 입력 제약에 추가하는 조건이며 독립적인 안전 조건은 아님. β = 0인 영역의 다른 평형점 가능성과 차원·입력 집합에 관한 가정이 있으므로 전역 수렴으로 확대하지 않음. 출처: https://arxiv.org/html/2307.09901v1 의 식 (3), Theorem 3.
-본 연구는 중간 link task의 구성과 선택을 별도의 유도 방식으로 실험 평가. 보편적으로 우월한 제어기나 모든 정체 상태를 제거한다는 증명을 주장하지 않음.
+화면의 설계 초점은 circulation constraint이며, 장애물 근처에서 접선 방향 운동을 유도. 4-DOF planar 실험은 joint vector q, link와 장애물의 거리 F_i(q), joint limit, 목표 configuration q_g를 사용. V(q) = sum_i 0.4 |q_i − q_g,i|^1.5로 주어진 목표를 추종하므로 로봇팔 형상·관절 정보를 활용하지 않았다고 단정할 수 없음. 원문은 수평 초기 자세에서 수직 목표 자세로 이동한다고 서술하며, q_g를 IK로 구했는지는 명시하지 않음. 기본 이론의 짝수 차원 조건, 홀수 차원 확장 및 manipulator 실험은 A17에서 구분하며 7-DOF 적용 불가능으로 단정하지 않음. 출처: https://arxiv.org/html/2307.09901v1 의 Section V-A.
+보충설명 식은 T(q)ᵀu ≥ β(D(q)). D는 configuration space에서 장애물과의 거리 척도, T는 D 등고면의 접선 방향. 장애물 가까이에서는 β > 0으로 설정하므로 접선 속도 성분이 양수여야 하며 u = 0은 제약 위반. 멀리에서는 β가 음수가 되어 제약 완화. 이 식은 기존 CBF와 입력 제약에 추가하는 조건이며 독립적인 안전 조건은 아님. β = 0인 영역의 다른 평형점 가능성과 차원·입력 집합에 관한 가정이 있으므로 전역 수렴으로 확대하지 않음. 출처: https://arxiv.org/html/2307.09901v1 의 식 (3), Theorem 3.
+본 연구의 핵심은 inverse kinematics (IK)로 얻은 q*의 전체 link 배치를 각 link의 subtask target으로 변환하고, 이를 순서 있는 subtask로 구성하는 절차. Planar에서는 p_i* = p_i(q*)로 link-position target을 추출하여 link 1 → link 2 → EE를 실행. IK 사용 자체나 QP 형식 유지를 독자적 기여로 제시하지 않음. Tan도 같은 종류의 CLF·CBF 제약과 QP를 사용하며, 본 연구 역시 정체·실패가 남는 실험적 방법. 각 단계의 QP 형식은 유지되지만 활성 subtask의 CLF가 바뀐다는 점은 구현 설명에 해당. 후반부의 learning은 실행할 link pair를 선택하는 별도 단계.
+위 세 논문의 정체 완화 기법에는 IK 해에서 개별 link의 목표를 추출하여 순서 있는 link subtask로 실행하는 절차가 제시되지 않음. 이는 해당 세 연구와의 비교이며, CLF–CBF QP 분야 전체가 로봇팔 구조·IK를 활용하지 않았다는 주장이나 본 절차의 전 분야 최초성 주장으로 확대하지 않음.
+기존 세 연구와 동일한 실험 조건에서 성공률·시간을 직접 비교한 결과는 제시하지 않음. 본 연구의 실험상 개선은 발표에 표시한 Direct 및 sequencing·selection baseline과의 비교 범위이며, 보편적으로 우월한 제어기나 모든 정체 상태를 제거하는 전역 수렴 보장을 주장하지 않음.
 기존 연구가 정체를 다루지 않았다고 설명하거나, RDF 자체를 본 연구의 기여로 제시하지 않음.
 CLF–CBF QP의 기본 참고문헌인 Ames et al., TAC 2017은 4–6쪽의 배경 설명에 사용. https://arxiv.org/abs/1609.06408
 Li et al., ICRA 2024의 Robot Distance Field는 21쪽 Spatial Manipulator 자기 충돌 모델 설명에 사용. https://arxiv.org/abs/2307.00533
 Siciliano et al. (2009)은 null-space의 기본 참고문헌. 본 연구의 보조항 정의는 Safe_IK.tex에 수록.
 Molnar and Ames (2023)은 매끄러운 CBF 합성 및 soft-min의 근거이며, null-space projector 자체의 근거는 아님.
 OSQP: Stellato et al. (2020). Attention: Vaswani et al. (2017).
-references.bib의 참고문헌 10개를 BibTeX/IEEEtran으로 처리하며, 인용 번호는 A7과 자동 연동.
+references.bib의 참고문헌을 BibTeX/IEEEtran으로 처리하며, 인용 번호는 A7과 자동 연동.
 
-8–19쪽 / Planar의 기존 방법, 제안 방법, 결과와 해석
-8쪽과 11–15쪽은 저장된 episode 30을 사용한 개념 설명이며 수치 축, 시간, episode 번호는 생략. 정량적인 시간 변화는 19쪽, 전체 configuration과 CLF 비교는 A10(50쪽)에 수록.
-Direct는 초기 상태부터 중간 task 없이 Vee만 사용. Cartesian 공간의 직선 경로를 의미하는 명칭은 아님.
-Sequential은 검증된 하나의 IK configuration에서 link 1과 link 2의 위치 목표를 얻은 뒤 link 1 → link 2 → EE 순서로 실행.
+7쪽 및 A17 / Gonçalves의 차원 가정과 manipulator 관련성
+기본 모델은 q̇ = u, q ∈ R^n. 기본 circulation 구성 T = ΩN에서 Ωᵀ = −Ω, ΩᵀΩ = I를 요구. 가역 skew-symmetric 행렬은 짝수 차원에만 존재하므로 이 기본 구성에는 n이 짝수라는 조건 존재.
+홀수 차원에서는 skew-symmetric Ω가 특이하므로 T가 0이 되는 방향이 존재할 수 있음. Tᵀu ≥ β(D)에서 β(D) > 0인데 T = 0이면 제약이 실행 불가능. 따라서 같은 짝수 차원 정리를 그대로 적용할 수 없음.
+다만 논문의 Section IV-C는 홀수 차원 확장을 별도로 논의하고, 3차원 비행 로봇 5대의 15차원 실험도 제시. ‘짝수 차원 전용이라 7-DOF에는 적용 불가능’이라는 단정은 부정확함.
+논문은 4-DOF planar manipulator 실험도 포함. 본 연구와의 차이는 로봇팔 적용 유무가 아니라, IK에서 link subtask를 구성하고 선택하는 구조의 사용 여부. 본 subtask-construction 절차는 3-DOF와 7-DOF에서 사용하며 짝수 차원 조건을 요구하지 않지만, 이것이 모든 task와 장애물에 대한 QP 실행 가능성이나 전역 수렴 보장은 아님.
+출처: https://arxiv.org/html/2307.09901v1 의 기본 모델, circulation 구성, Section IV-C, Section V.
+
+8쪽 / Direct의 정의와 실패 사례
+Direct는 초기 상태부터 EE regulation만 수행하며 V_e만 사용. Cartesian 공간의 직선 경로를 의미하는 명칭은 아님.
+6쪽의 기본 QP에서 안전 제약과 최종 오차 감소가 충돌하면 목표에 도달하지 못할 수 있음을 저장된 실패 사례로 제시. 7쪽에서 검토한 정체 문제를 구체화하고, 9쪽의 인간 연구에서 얻은 팔 자세·subgoal의 설계 직관으로 연결. 제안 방법의 link subtask나 Sequential 실행 절차는 아직 설명하지 않음.
+
+9쪽 / Human-Inspired Intuition: Posture and Subgoals
+사진은 사용자가 제공한 Lukic et al. (2014)의 인간 동작 3패널 이미지. 참고문헌 7번의 BibTeX 항목 lukic2014coordination으로 출처를 연결하며 번호는 BibTeX에서 자동 관리. 외부 문헌의 human demonstration이므로 본 연구의 실험 데이터, 저장된 로봇 rollout, 또는 IK 기반 subtask sequencing의 검증 자료로 사용하지 않음. 사진에서 특정한 어깨 선행·손 후행 순서가 보편적으로 입증되었다고 해석하지 않음.
+Menger et al. (2012), 「How obstructing is an obstacle? The influence of starting posture on obstacle avoidance」. 초기 팔 자세를 달리하면 주변 물체를 피하는 도달 동작이 달라지는 결과를 제시. 손의 목표뿐 아니라 팔의 배치도 장애물 회피에 중요하다는 관점을 뒷받침. 자세를 먼저 바꾸고 손을 나중에 움직이는 실행 순서를 검증한 연구는 아님.
+출처: https://doi.org/10.1016/j.actpsy.2012.06.006
+Lukic, Santos-Victor and Billard (2014), 「Learning robotic eye–arm–hand coordination from human demonstration: a coupled dynamical systems approach」. 인간의 시선·팔·손 동작 측정에서 장애물을 subgoal처럼 이용한다는 해석을 제시하고, 로봇에 장애물 옆 via-point → 최종 목표의 구조를 구현. 장애물 회피를 subgoal을 거치는 동작으로 구성할 수 있다는 근거이며, 개별 link 목표를 순서대로 추종하는 본 연구의 제어 방식을 인간 실험으로 직접 검증한 것은 아님.
+출처: https://doi.org/10.1007/s00422-014-0591-9
+사진 아래의 기존 그림은 Conceptual illustration로 명시하며 Initial posture → During reaching → Goal reached의 개념적 진행을 표시. 어깨 선행·손 후행의 보편적 법칙으로 해석하지 않음. 본 연구의 연결점은 이 두 관점에서 착안해 IK configuration의 link 위치를 subtask target으로 사용하는 설계이며, 인간과 동일한 운동을 재현하거나 최적성을 보장한다는 주장도 아님.
+
+10쪽 / Chapter 3: Method Overview
+3.1 Problem Formulation: EE regulation의 목표와 안전 조건 정의.
+3.2 Sequential Kinematic Control Framework: regulation task의 subtask 분해와 CLF–CBF QP 구성.
+3.3 Application to the 3-DOF Planar Manipulator: planar IK 선택, 위치·pose subtask, collision barrier와 전환 규칙.
+3.4 Extension to the 7-DOF Spatial Manipulator: null-space update를 포함한 IK, all-link sequence와 pose CLF, RDF 기반 CBF, 실행·종료 정책.
+3.5 Learning-Based Selection of Two Link Subtasks: 두 link subtask로의 축소, 입력·outcome label, network, loss와 sequence 선택.
+부제는 실제 build/main.toc의 3장 short title인 3 A Sequential Approach to Collision-Free Kinematic Control 사용. 실제 전체 chapter heading은 A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning이며 메타데이터에 보존.
+3.4의 원전 제목 Extension to the 7-DOF Panda Manipulator는 기존 발표 표기에 맞춰 Spatial Manipulator로 표시. 3.5의 원전 제목 Learning-Based Selection of Two Intermediate Links는 역할을 명확히 하여 Learning-Based Selection of Two Link Subtasks로 표시. 두 경우 모두 장 번호·원전 제목과 표시명 alias를 메타데이터에 함께 보존하고 논문 파일은 수정하지 않음.
+다섯 section에 해당 방법론이 모두 포함되므로 subsection을 추가로 나열하지 않음. 실험 결과는 4장에 해당하며 이 method 목차에 포함하지 않음. 발표에서는 concrete planar 예시와 결과를 연결하여 설명하므로 10쪽의 나열 순서가 실제 모든 슬라이드의 설명 순서와 같다는 의미는 아님. 발화 시간은 15초 유지.
+
+9–19쪽 / Planar의 설계 직관, 제안 방법, 결과와 해석
+8쪽 Direct 실패 사례와 11–15쪽은 저장된 episode 30을 사용한 개념 설명이며 수치 축, 시간, episode 번호는 생략. 정량적인 시간 변화는 19쪽, 전체 configuration과 CLF 비교는 A10(50쪽)에 수록.
+Sequential은 검증된 하나의 IK configuration에서 link 1과 link 2의 subtask target을 얻고, 두 link subtask 뒤 final EE subtask를 실행. Final EE subtask는 원래의 EE regulation task에 해당하며, 모든 subtask 동안 전체 joint velocity와 안전 제약을 계속 사용.
 Planar IK는 두 해를 갖는 해석적 계산. 관절 제한과 충돌 검사를 통과한 해 중 초기 configuration에 가까운 해 선택.
 Episode 30: 초기 0초, 첫 전환 2.128초, 두 번째 전환 6.874초, 최종 목표 최초 도달 18.226초.
 Direct pose도 18.226초의 상태로 표시. 이는 같은 시각의 비교를 위한 값이며 Direct의 실패 판정 시각은 아님.
 35초 전체 평가에서 Direct는 qp_infeasible로 분류되며, 실행 불가능한 QP는 3회. Episode 180의 timeout과 구분 필요.
 회색 점선 link는 선택한 IK configuration, 별은 link 목표. 13–15쪽의 큰 색상 별은 해당 단계의 목표, 작은 색상 테두리는 실제 제어점을 강조. 큰 별은 허용 오차 경계가 아님. 장애물 주변 원형 테두리는 0.08 m의 기하학적 여유 거리를 나타내며, 정확한 RDF 등고선이 아님.
-현재 활성 task에만 CLF 제약 적용. 최종 q가 선택한 IK q*와 같을 필요는 없음.
+현재 활성 subtask에만 CLF 제약 적용. 최종 q가 선택한 IK q*와 같을 필요는 없음.
+
+
+3.2.1의 표시명과 subtask의 의미
+11·12쪽 부제는 사용자가 지정한 Decomposition of Regulation Task를 사용. 실제 논문의 sections/body.tex에는 Intermediate Targets and Sequential Tasks가 남아 있어, 장 번호는 유지하고 표시명 alias와 원래 제목을 메타데이터에 함께 보관. 3.3.2는 실제 장명 Intermediate Position Tasks and Final Pose Task를 그대로 표시. 제목 변경을 위해 논문 파일을 수정하지 않음.
+논문 Sequential_Frames.tex의 정의: 원래 EE regulation task T_{ee}를 L개의 link subtask와 마지막 final EE subtask로 분해하며, 기호는 굵은 ST_{ee,s} 사용. DT가 아님. s는 실행 단계 번호(1부터 L+1), i_s는 link 단계 s에서 선택한 link/frame 번호, L은 최종 EE를 제외한 link subtask 개수. ST_{ee,s}(s=1,...,L)는 선택한 link i_s의 목표 집합 G_{i_s}에 진입하는 제어 문제이며, 그 목표 위치·pose는 q*에서 계산한 subtask target. 마지막 ST_{ee,L+1}=T_{ee}는 원래 EE 목표 pose의 regulation이며 q* 자체의 정확한 추종을 요구하지 않음. 따라서 subtask를 EE 이전 단계만을 가리키는 말로 사용하지 않음. T_{ee}는 task 기호이며 시간 제한 T_d와 구분.
+Planar의 link 1·2 subtask는 위치, final EE subtask는 위치와 yaw 사용. Spatial의 link subtask와 final EE subtask는 위치와 방향 오차를 사용. 각 subtask가 선택한 link 하나를 추종하더라도 모든 joint velocity를 계산하며 모든 충돌 제약은 유지.
+한 subtask가 끝나면 이전 CLF 조건을 해제하므로 이전 link 목표에서 벗어날 수 있으며, 최종 q가 IK 해 q*와 같을 필요 없음. Target을 정하는 것, 그 target에 도달할 subtask를 구성하는 것, 실행 순서를 정하는 task sequencing을 구분.
+인간 연구의 subgoal은 목표를 향한 도달 동작의 via-point/보조 목표에 관한 표현. 본 제어기의 formal link subtask나 IK 기반 분해를 인간 실험이 직접 검증한 것으로 해석하지 않음.
 
 11–12쪽 / 초기 상태, 목표, 장애물, IK의 단계별 구성
-11쪽은 초기 로봇 q0, EE 목표 pose, 장애물을 함께 제시. 12쪽에서 선택한 IK q*와 중간 link 목표 추가.
-두 구성 슬라이드 모두 실선 로봇은 같은 q0 유지. 시점, 좌표, 축척을 고정하여 추가되는 정보만 강조하며, 로봇이 이동하거나 장애물이 새로 나타나는 실행 단계가 아님.
+11쪽은 초기 로봇 q0, 원래 EE regulation task T_{ee}의 목표 pose, 장애물을 함께 제시. 12쪽에서 선택한 IK q*와 link subtask target, ST_{ee,1} → ST_{ee,2} → ST_{ee,3}=T_{ee} 추가. 이 Planar 예시는 L=2와 link 순서 (1,2,3)를 사용하므로 단계 번호와 link 번호가 일치하지만, 이를 일반적인 s=i_s 관계로 해석하지 않음. q*에 포함된 전체 link의 목표 배치 → p_i* = p_i(q*)로 subtask target 추출 → 순차 subtask 실행의 연결을 강조. IK를 구하는 것에 그치지 않고 그 정보를 제어 task로 변환하는 절차가 본 연구의 설명 초점.
+두 구성 슬라이드 모두 실선 로봇은 같은 q0 유지. 11–15쪽 전체에서 약 48 mm의 동일 그림 영역과 화면 위치·시점·좌표·축척을 유지하여 단계 변화가 애니메이션처럼 이어지도록 구성. 11–12쪽은 추가되는 정보만 강조하며, 로봇이 이동하거나 장애물이 새로 나타나는 실행 단계가 아님.
 점선 configuration은 목표 pose와 충돌 검사를 통과한 해. q0에서 q*까지 실행한 경로가 아니며, q* 도달을 보장하지도 않음.
 이전 3개 패널 그림의 출처: scripts/build_planar_setup.py, Fig/planar_setup.pdf/png, evidence/planar_setup_audit.json.
 고정 시점의 6단계 그림 중 초기 단독 그림을 제외한 다섯 단계를 현재 사용: scripts/build_progressive_planar.py; Fig/progressive_planar_01_initial.pdf/png부터 progressive_planar_06_ee.pdf/png까지. 검증 기록: evidence/progressive_planar_audit.json.
@@ -88,24 +133,26 @@ Direct pose도 18.226초의 상태로 표시. 이는 같은 시각의 비교를 
 13–15쪽 / 저장된 Sequential 실행
 저장된 configuration은 같은 IK 해에서 얻은 link 목표를 link 1 → link 2 → EE 순서로 추종한 결과.
 완료한 task를 해제하므로 앞선 link가 이전 목표에서 벗어날 수 있으며, 최종 q도 q*와 다를 수 있음.
-13쪽은 link 1 완료, 14쪽은 link 2 완료, 15쪽은 EE 목표 도달 상태. 각 오른쪽 패널에는 6쪽과 같은 QP를 표시하고 해당 단계의 CLF constraint만 강조.
+13쪽은 ST_{ee,1}의 link 1 완료, 14쪽은 ST_{ee,2}의 link 2 완료, 15쪽은 ST_{ee,3}=T_{ee}의 EE 목표 도달 상태. 각 오른쪽 패널은 subtask 기호를 해당 QP와 연결하고, 6쪽의 기본 구조에 가중행렬과 joint/input limits를 포함한 실제 QP에서 해당 단계의 CLF constraint만 강조.
 13쪽과 14쪽의 저장 시점에는 active_link가 이미 다음 단계로 변경된 상태. 따라서 표시한 CLF는 새로 기록된 task가 아니라 그 전환 직전에 완료한 단계의 CLF.
-정상 전환은 현재 중간 목표의 허용 오차 만족이 조건. Planar에서는 정체 조건(작은 명령 속도와 작은 충돌 barrier) 또는 실행 불가능한 QP에 의한 전환도 허용.
-예외 전환은 중간 목표에 도달하기 전에 발생할 수 있으며, 같은 q에서 새 task의 QP를 다시 계산. QP 실행 불가능에 따른 전환과 일반적인 수치 solver 실패는 구분 필요.
-Spatial Manipulator의 정상 전환에는 위치와 방향 허용 오차를 모두 만족해야 함. Stall과 QP 실행 불가능은 실행 종료 조건. 자세한 내용: A5(42쪽).
+정상 전환은 현재 subtask target의 허용 오차 만족이 조건. Planar의 link subtask에서는 정체 조건(작은 명령 속도와 작은 충돌 barrier) 또는 실행 불가능한 QP에 의한 전환도 허용.
+예외 전환은 subtask target에 도달하기 전에 발생할 수 있으며, 같은 q에서 새 task의 QP를 다시 계산. QP 실행 불가능에 따른 전환과 일반적인 수치 solver 실패는 구분 필요.
+Spatial Manipulator의 정상 전환에는 위치와 방향 허용 오차를 모두 만족해야 함. Stall은 낮은 적용 속도와 불충분한 오차 감소로 판정하며 충돌 경계 근접을 요구하지 않음. Stall과 QP 실행 불가능은 실행 종료 조건. 따라서 A5의 공통 행 이름은 Stall condition이며, Planar의 경계 정체 조건과 구분. 자세한 내용: A5(42쪽).
 입력 구성 15초, IK 목표 10초, 실행 단계는 각 20초, CLF 요약은 15초 배정. 배경 CLF·CBF·QP는 총 125초. 전체 발화 계획은 1,140초이며 추가 여유 시간 60초 확보.
 
 13–16쪽 / 활성 CLF와 공통 QP
-QP1은 V1, QP2는 V2, QPee는 Vee의 감소 조건만 적용. 세 CLF의 동시 감소를 요구하지 않음.
-각 단계에서 목적함수, CBF, 입력 제한은 동일하며, 전환 시 활성 task의 CLF만 교체.
+ST_{ee,1}의 QP1은 V1, ST_{ee,2}의 QP2는 V2, ST_{ee,3}=T_{ee}의 QP3은 V3 = V_e의 감소 조건만 적용. 16쪽 상단의 ST 열은 실행 단계를 표시하며, ST는 제어 task이고 V는 그 task 오차로 구성한 CLF라는 차이를 유지. 세 CLF의 동시 감소를 요구하지 않음.
+각 단계에서 목적함수, CBF, 입력 제한은 동일하며, 전환 시 활성 subtask의 CLF만 교체.
 13–15쪽은 동일 QP에서 활성 CLF constraint를 로봇과 목표의 색상으로 강조. CLF 함수 개형은 16쪽에서 비교하고 일반적인 QP는 6쪽에서 먼저 설명.
-Vi = w_V ||e_p,i||², i = 1, 2. Vee = w_V [||e_p,ee||² + w_psi (1 − cos e_psi)]. 두 가중치는 모두 양수.
-수식의 가중치는 기호로 일반화. 저장된 시간 변화 데이터에는 w_V = 10, w_psi = 0.5 사용.
-함수 그림은 task 오차 좌표에서의 정성적 개형이며, 전체 관절 공간의 함수 지형이나 장애물 형상이 아님. 그림 생성에는 w_V = 1.0, w_psi = 0.5를 사용하고 수치 눈금은 생략.
+현재 논문 정의: V_i = 0.5 ||e_p,i||², i = 1, 2. V_e = 0.5 ||p_e − p_d||² + 0.5 w_o [1 − cos(psi_e − psi_d)], V3 = V_e. w_o > 0은 방향 항의 상대 가중치.
+원래 저장 실험은 V_i,archive = w_V ||e_p,i||²와 V_ee,archive = w_V [||e_p,ee||² + w_psi(1 − cos e_psi)]를 사용하며 w_V = 10, w_psi = 0.5. 원시 궤적과 평가 결과는 변경하지 않음.
+현재 그림은 w_o = 0.5로 두고 저장된 같은 궤적에서 논문의 새 함수를 평가한 값. 이 경우 V_new = V_archive / 20. 제어기를 새 함수로 다시 실행한 결과가 아님.
+CLF scaling을 바꾸면서 slack의 가중치를 고정하면 일반적으로 최적 제어 입력도 달라질 수 있음. 새 함수 값으로의 재평가가 원래 제어기와 동일한 QP 또는 동일 제어 입력을 보장한다는 뜻은 아님.
+함수 그림은 task 오차 좌표에서의 정성적 개형이며, 전체 관절 공간의 함수 지형이나 장애물 형상이 아님. 그림에는 논문의 0.5 계수와 w_o = 0.5를 사용하고 수치 눈금은 생략.
 출처: evidence/concept_figure_audit.json, scripts/build_concept_figures.py.
 
 18쪽 / Planar 평가
-같은 300개 episode 사용. Link 길이는 각각 1, 장애물 2개, q0 = (0,0,0), 평가 시간 T = 35초.
+같은 300개 episode 사용. Link 길이는 각각 1, 장애물 2개, q0 = (0,0,0), 평가 시간 T_d = 35초.
 Direct 성공 216개, Sequential 성공 253개, 공동 성공 206개, Sequential만 성공 47개, Direct만 성공 10개, 모두 실패 37개.
 이 비교에는 충돌 없는 IK 해가 승인된 episode만 포함. 앞선 샘플링 과정에서 IK 거절은 340회 발생.
 성공 조건: 최종 위치 오차 ≤ 0.1 m, 최종 yaw 오차 ≤ 0.1 rad, 전체 궤적의 기록된 최소 barrier ≥ −0.01 m.
@@ -117,55 +164,64 @@ Direct 성공 216개, Sequential 성공 253개, 공동 성공 206개, Sequential
 답변: 근사 모델과 저장된 상태를 대상으로 한 평가 조건을 통과했다는 의미. −0.01 m는 평가 허용 오차이며, 실제 mesh나 연속시간 안전성에 대한 보증이 아님.
 
 19쪽 / CLF 시간 변화와 해석
-V1, V2, Vee를 같은 Sequential 궤적에서 다시 계산. 모든 저장 샘플에 대해 활성 CLF 확인.
-EE CLF는 초기 158.425에서 1.188초에 161.603까지 일시적으로 증가.
-2.128초: V1 = 0.400, V2 = 38.900, Vee = 160.561.
-6.874초: V1 = 18.407, V2 = 0.399, Vee = 49.163. V1 해제 이후 V1의 증가 허용.
-18.226초: Sequential Vee = 0.0298, 같은 시각의 Direct Vee = 60.274.
+V1, V2, V_e를 같은 Sequential 궤적에서 현재 논문 정의로 다시 평가. 모든 저장 샘플에 대해 활성 CLF 확인. 아래 값은 보관된 함수 값의 1/20이며 표시 정밀도에서 반올림.
+EE CLF는 초기 약 7.9213에서 1.188초에 약 8.0802까지 일시적으로 증가.
+2.128초: V1 ≈ 0.0200, V2 ≈ 1.9450, V_e ≈ 8.0281.
+6.874초: V1 ≈ 0.9204, V2 ≈ 0.0200, V_e ≈ 2.4582. V1 해제 이후 V1의 증가 허용.
+18.226초: Sequential V_e ≈ 0.00149, 같은 시각의 Direct V_e ≈ 3.0137.
+전환·도달 시각은 보관 궤적의 시각을 그대로 사용. 새 CLF를 넣은 QP를 다시 실행한 시각으로 해석하지 않음.
 Task 전환은 CBF를 유지하면서 활성 오차와 gradient를 변경. 전역 수렴이나 모든 정체 상태의 제거를 증명하는 결과는 아님.
 그래프의 세로 길이를 줄이고 하단 설명 문장 사이의 간격 확보.
 
 20–23쪽 / Spatial Manipulator 확장
 20쪽은 저장된 episode seed2026120000_0007의 초기 configuration, 구형 장애물 10개, 목표 pose를 MuJoCo로 정적 렌더링한 그림.
+20쪽에 Planar/Spatial 비교표를 배치하고 17쪽은 공통 제어 흐름에 집중. Planar는 3개 joint, link-position subtask와 위치·yaw 기반 final EE subtask를 사용하며, Spatial은 7개 joint와 각 subtask의 위치·relative quaternion 오차를 사용. 두 모델 모두 capsule 기반 거리 모델을 사용하고 Spatial의 복잡한 link self-collision에 RDF를 사용하므로, capsule 사용 여부 자체가 차이는 아님.
+확장 시 다룰 요소는 위치·방향 목표, 복잡한 link 형상의 self-collision 회피, 여유 자유도로 가능한 여러 IK 해 중 충돌 없는 후보 탐색. ‘Relative motion between robot links’는 독립 문제로 제시하지 않고 self-collision 설명에 통합. 상대 운동 자체가 위험하다는 의미가 아니라, 거리의 변화율에 두 link의 운동을 모두 반영해야 한다는 의미이며 21쪽 CBF gradient에서 연결.
 원본 Spatial Manipulator visual mesh 사용. 초록색 점은 목표 위치, RGB 축은 목표 방향. Collision mesh 표시는 숨김.
 물리 적분 0회로 생성하며, 새로운 제어 시뮬레이션이나 학습은 수행하지 않음. 저장된 frame과 렌더링 모델 사이의 최대 잔차는 2.89e-15 m.
 출처: scripts/render_panda_slide.py, evidence/mujoco_render_audit.json, Fig/panda_mujoco.png. 이전 Fig/panda_scene.pdf는 보관하지만 20쪽에서는 사용하지 않음.
 RDF는 Bernstein 다항식에 의한 부호 있는 거리 근사, 유한한 단방향 surface query, 가까운 K = 2개 점의 soft-min 사용.
 Top-K 변경 시 gradient 불연속이 발생할 수 있음. 먼 link 쌍은 sphere gate로 처리. 정확한 최소 mesh 거리를 보장하지 않음.
 IK는 capsule 기반의 여러 초기값 탐색 사용. 주항은 damped inverse, 보조항은 Moore–Penrose 역행렬로 구성한 직교 projector 사용.
-J v_h = 0과 grad Hᵀ v_h ≥ 0은 clipping 전 보조항의 1차 성질이며, 전체 반복 갱신의 안전성을 항상 보장하는 조건은 아님.
+J v_h = 0과 grad Hᵀ v_h = k_h ||N grad H||² ≥ 0은 clipping 전 보조항의 1차 성질. 투영된 gradient가 0이면 변화율도 0이므로 엄격한 증가를 뜻하지 않으며, 주항과 clipping을 포함한 전체 갱신의 증가나 안전성을 보장하지 않음. A3에서도 보조항의 비음수 1차 변화로 설명.
 후보 해는 제어기의 RDF 자기 충돌 및 capsule–장애물 모델로 다시 검사. IK 반복 과정 자체를 로봇 궤적으로 실행하지 않음.
-Spatial Manipulator Vi = 0.5 ||e_p||² + 0.5 w_R ||epsilon||². 상대 quaternion은 Q* Q^-1.
-중간 task와 최종 task에 같은 오차 구성 사용. 가중치와 허용 오차는 별도로 설정할 수 있으며, 관절 공간의 함수 지형과 시간 변화가 같을 필요는 없음.
+Spatial Manipulator V_i = 0.5 ||e_p,i||² + 0.5 w_R ||epsilon_i||². epsilon_i는 상대 unit quaternion Q_i* Q_i^-1의 vector part이며, 단일 현재 자세 quaternion의 vector part가 아님.
+일반 목표 집합의 e_o는 최종 EE의 상대 quaternion vector와 대응하므로 e_o = epsilon_ee로 연결. w_R는 현재 Spatial 본문 표기 그대로 유지하며 Planar의 w_o와 기계적으로 통합하지 않음.
+23쪽에서 link subtask ST_{ee,s}(s=1,...,L)는 i=i_s로 두어 선택한 link의 V_{i_s}에 대응. 최종 ST_{ee,L+1}=T_{ee}는 원래 EE 목표의 V_{ee}를 사용. 같은 위치·방향 오차 구성을 사용하지만 가중치와 허용 오차는 별도로 설정할 수 있으며, 관절 공간의 함수 지형과 시간 변화가 같을 필요는 없음.
 Quaternion 벡터의 norm은 |sin(theta/2)|이며, 회전각 자체가 아님.
 
 21쪽 / RDF 거리장과 surface query의 관계
-그림은 해석적인 capsule 부호 거리장의 개념적 단면. 등고선은 대상 link b의 거리 등위선이며, h = 0인 안전 경계나 학습·근사된 실제 Spatial Manipulator RDF의 렌더링이 아님.
-Surface point는 query를 제공하는 link a에 속함. 각 점의 좌표를 link b의 local frame으로 변환한 뒤 b의 거리장에 대입. 좌표 변환으로 점이 물리적으로 이동하는 것은 아님.
+왼쪽은 서로 다른 복잡한 윤곽을 가진 두 2차원 물체의 개념도. 물체 a의 표면 표본이 query point이며, 배경의 거리장과 등고선은 물체 b에 속함. 강조한 표본은 a의 표면에 그대로 놓여 있고 그 좌표에서 b의 거리 함수를 평가. 점을 b 쪽으로 움직이는 과정이 아님.
+그림 전체는 b의 좌표계로 표현. b 경계에서 거리값은 0, 내부에서 음수, 외부에서 양수. 실제 Panda RDF를 학습하거나 제어 실험을 재실행한 결과가 아니며, 다각형 경계까지의 거리를 계산해 RDF query 원리를 설명하는 도식.
+직접 제작한 도식의 생성 코드: scripts/build_rdf_complex_query_figure.py. 그림: Fig/rdf_complex_query_field.pdf/png. 기하 검증·출처·파일 해시: evidence/rdf_complex_query_figure_audit.json. 제목의 Li et al. 인용은 RDF 방법의 출처이며 새 도식이 원전에서 재사용한 그림이라는 뜻은 아님.
+오른쪽은 본 연구의 self-collision CBF 구성 절차. Query를 제공하는 link a의 표면점 x_{a,k}를 link b의 local frame으로 변환: xi_{ab,k} = R_b^T(x_{a,k} − p_b). 그 위치에서 b의 RDF를 평가하여 d_k = dtilde_b(xi_{ab,k}) 계산. 좌표 변환으로 점이 물리적으로 이동하는 것은 아님. 왼쪽 등고선을 본 연구의 h = 0 안전 경계와 동일시하지 않음.
+세 번째 단계는 D_ab = softmin_k d_k, h_ab = D_ab − m_phys − m_err. Link a뿐 아니라 기준 link b도 움직이므로 gradient에는 query점의 운동, b의 병진, b의 회전을 모두 포함. A4의 gradient 식은 고정된 query 집합에서 적용하며 가중치는 pi_k = exp(−beta d_k) / Σ_j exp(−beta d_j). 한쪽을 고정 장애물로 취급하면 거리 변화율과 CBF 제약이 달라질 수 있음. 이 상대 운동 반영은 3차원에서만 발생하는 새로운 현상이 아니라 self-collision 계산의 요구 사항.
 실행 시 사용하는 거리장에는 radial extension 포함. 가까운 query 선택과 두 link의 운동학이 미분 계산에 반영. Spatial Manipulator에서는 top-K = 2이며, 유한한 단방향 query가 정확한 mesh 거리 계산과 같지는 않음.
 Query 거리에서 물리적인 여유 거리와 근사 오차 여유를 반영하여 barrier 구성. Soft-min의 보정은 이미 그 값에 포함되어 있으므로 두 번 빼지 않음. 근사 오차 여유를 전역적으로 인증된 형상 오차 상한으로 해석해서는 안 됨.
 이 barrier의 gradient와 CBF 조건이 앞서 설명한 QP의 안전 제약으로 연결됨.
+이전 capsule 개념도와 Li et al. Fig. 1(a)의 로봇 SDF 그림은 출처 추적·재현용으로 보존하며 현재 21쪽에는 표시하지 않음. 원전 이미지 출처: https://arxiv.org/html/2307.00533v3/fig/robot_sdf_compressed.png. 해당 파일의 동일성 기록은 evidence/rdf_original_figure_audit.json에 보존. IK 탐색과 외부 장애물에 사용하는 capsule 모델은 실제 구현의 별도 역할로 유지.
 
 24–27쪽 / All-link Sequential, 소요 시간, 두 link, oracle
-All-link Sequential은 지정된 frame 1–7의 중간 pose task 7개를 수행한 뒤 EE를 추종하며, 총 8개 task로 구성. 관절 하나씩 독립적으로 IK 각도에 맞추는 방법이 아님.
-두 link 제어는 2 ≤ i < j ≤ 6을 만족하는 10개 pair 중 하나를 선택한 뒤 i → j → EE를 수행하며, 총 3개 task로 구성.
+All-link Sequential은 L=7로 지정된 frame 1–7의 link-pose subtask ST_{ee,1}부터 ST_{ee,7}을 수행한 뒤 ST_{ee,8}=T_{ee}를 실행하며, 총 8개 subtask로 구성. 마지막 첨자 8은 8번째 link가 아니라 실행 단계 번호. 관절 하나씩 독립적으로 IK 각도에 맞추는 방법이 아님.
+두 link 제어는 2 ≤ a < b ≤ 6을 만족하는 10개 pair 중 하나를 선택하며 L=2. ST_{ee,1}은 link a(i_1=a), ST_{ee,2}는 link b(i_2=b), ST_{ee,3}=T_{ee}는 원래 EE goal을 추종하는 총 3개 subtask. 예를 들어 pair (3,5)에서도 첫 단계는 ST_{ee,1}이며 ST_{ee,3}이 아님.
+논문 일반 정의의 mathcal S = (i1,...,iL,iL+1)는 최종 EE index까지 포함하며 Planar에서는 (1,2,3). Spatial의 보관 구현과 해당 논문 절에서 mathcal S_all = (1,...,7)은 EE 이전의 link frame 7개를 가리키며 그 뒤 final EE subtask가 추가됨. 발표의 실행 흐름은 이 포함 범위가 다른 link-index 열을 한 정의로 통합하지 않고 ST_{ee,1} → … → ST_{ee,L+1}=T_{ee}로 표시. 논문 파일이나 보관 구현의 sequence 정의는 수정하지 않음.
+학습 후보 집합 Omega의 원소 S_k는 두 link subtask의 frame index pair이며 기존 기호를 유지. 선택한 pair로 ST_{ee,1}과 ST_{ee,2}를 구성하고 마지막 ST_{ee,3}=T_{ee}를 수행. 후보 index k, 실행 단계 s, link index i_s를 구분하며 S_k 자체를 ST 기호로 바꾸지 않음.
 모든 단계에서 u는 R^7의 벡터. 선택하지 않은 link의 충돌 제약도 계속 유지.
-Validation 성공률: Direct 45.60%, All-link Sequential 59.00%, Preset pair (3,5) 57.60%, Learned selection 61.30%.
+Validation 성공률: Direct 45.60%, All-link Sequential 59.00%, 10-pair mean 54.73%, Learned selection 61.30%.
 Direct → All-link Sequential: +13.40%p, paired 95% 신뢰구간 [9.60, 17.20]%p.
 Timeout 448 → 254개, stall 86 → 144개. 성공률 증가가 모든 정체 분류의 감소를 의미하지는 않음.
-25쪽: 공동 성공 330개에서 24.24 → 44.48초.
-26쪽: All-link Sequential과 Preset pair (3,5)의 공동 성공 468개에서 47.13 → 36.45초, 22.67% 감소.
-27쪽: Validation에서 가장 높은 단일 pair (2,5)는 58.10%, Preset pair (3,5)는 57.60%, oracle은 82.00%. Preset pair (3,5)는 Train의 평균 성공률이 가장 높은 pair로 선택하고 Validation과 Test에서 변경 없이 사용.
+25쪽: 공동 성공 330개에서 24.24 → 44.48초. Takeaway는 ‘Longer completion time for All-link Sequential’로 이 페이지의 관측 결과를 요약. link subtask 수 축소는 다음 26쪽에서 소개.
+26쪽: 특정 pair 선정 없이 열 개의 2-link 후보를 균등하게 선택하는 경우의 평균. Validation 1,000 episode × 10 pair = 10,000 결과 중 성공 5,473개로 54.73%. All-link 59.00% 대비 −4.27%p.
+시간 비교는 All-link와 해당 2-link 후보가 모두 성공한 4,545개 episode–pair 결과를 같은 가중치로 집계: All-link 46.98710231초 → 2-link 35.04889329초, 25.407417% 감소(화면 46.99 → 35.05초, −25.41%). 577개의 서로 다른 episode에서 여러 pair가 포함되므로 4,545개의 독립 episode나 독립 실험으로 해석하지 않음.
+성공률은 모든 pair의 동일 가중 평균. 완료시간은 사전 균등 pair 선택을 공동 성공으로 조건화한 평균이므로 각 pair의 기여는 공동 성공 결과 수에 비례. Pair별 공동 성공 시간 평균 열 개를 다시 같은 가중치로 평균하는 macro mean과는 다른 집계. 시간 결과는 공동 성공 집합에 대한 비교이며 실패까지 포함한 전체 episode의 완료시간 이점으로 확대하지 않음.
+재집계 코드·검증: scripts/analyze_two_link_average.py, evidence/two_link_average_audit.json. 저장된 결과만 재집계하며 새 rollout이나 학습은 없음.
+27쪽: 10-pair 평균 54.73%, Validation에서 사후 확인한 최고 단일 pair (2,5)는 58.10%, oracle은 82.00%. Best single pair는 평가 이후 확인한 통계이며, 사전에 선택한 baseline으로 간주하지 않음. 26쪽 평균 대비 episode별 pair 선택 가능성으로 연결.
+28쪽은 (3,5)를 별도 강조하지 않고, 복수 성공 후보가 가능한 이진 label 벡터로 제시.
+31쪽과 결론에서는 앞서 정의한 10-pair mean을 계속 비교 기준으로 사용. 한 episode의 열 개 pair 결과를 평균한 뒤 1,000개 episode에 대해 평균하며, 한 후보를 균등하게 선택할 때의 경험적 기대 성공률과 같음. 실제 무작위 선택을 다시 실행한 성능이나 여러 학습 seed의 평균을 뜻하지 않음. 31쪽 그래프에는 Test에서 관측된 최고 단일 pair (3,5)도 표시. 고정 pair 대비 차이의 신뢰구간은 A14의 추가 참고 결과로 구분.
 Oracle은 10개 결과를 모두 확인한 뒤 하나라도 성공한 후보가 있는 episode를 집계한 값. 실행 전에 사용할 수 있는 정책이 아님.
-Test oracle은 80.20%. Uniform selection의 기대 성공률은 Validation 54.73%, Test 55.20%. 중간 단계 2개가 최적이라는 주장은 하지 않음.
-질문: 왜 (3,5)를 고정 pair로 선택했는가? Appendix에서는 (2,5)가 더 높지 않은가?
-답변: 10개 후보 중 Train의 평균 성공률이 가장 높은 (3,5)를 선택한 뒤 Validation과 Test에서 고정. Appendix A2의 막대는 Validation 결과이며, 여기서는 (2,5)가 58.10%, (3,5)가 57.60%. Test에서는 (3,5)가 58.70%로 가장 높음. 모든 데이터에서 항상 최선이라는 의미가 아님.
-신경망 학습은 없지만 고정 pair 선정 자체에는 Train의 성공 label 사용. 구현: labels[split["train"]].mean(axis=0).argmax().
-Train의 (3,5)는 12,178/21,423 = 56.85%. 동일한 dataset SHA와 frozen split SHA를 사용하는 보관 평가에서 확인.
-출처: src/safe_ik/application/train_link_selection.py, outputs/panda_link_selection/fk_pair_query/fk-pair-query-21423-20261023T020010Z/training/evaluation.json 및 manifest.json, evidence/pair_outcomes.csv.
-주의: Train에는 historical/corrected QP label이 혼합되어 있으므로 데이터셋 간 성공률 차이의 원인을 표본 변동만으로 단정하지 않음.
-질문: 왜 중간 link를 정확히 2개 사용하는가?
-답변: 중간 task 7개의 부담을 줄이면서 중간 목표의 유도 효과를 유지하기 위한 고정 길이 설정. 총 3개 task에서 episode에 따른 pair 선택을 비교한 실험이며, 중간 link 1개 또는 3개 이상과 비교하여 최적 길이를 입증한 것은 아님.
+Test oracle은 80.20%. 10-pair mean은 Validation 54.73%, Test 55.20%. link subtask 2개가 최적이라는 주장은 하지 않음.
+질문: 왜 link subtask를 정확히 2개 사용하는가?
+답변: link subtask 7개의 부담을 줄이면서 subtask target의 유도 효과를 유지하기 위한 고정 길이 설정. 총 3개 subtask에서 episode에 따른 pair 선택을 비교한 실험이며, link subtask 1개 또는 3개 이상과 비교하여 최적 길이를 입증한 것은 아님.
 질문: 왜 link 2–6에서 고르고 오름차순으로 실행하는가?
 답변: Pair 선택의 효과를 비교하기 위해 내부 frame 5개의 모든 pair와 오름차순 실행을 고정. Link 1과 7의 제외나 역순 실행의 제외가 기하학적으로 필수 또는 최적임을 입증한 것은 아님.
 따라서 oracle은 10개 후보, 고정 순서와 IK, 제어기, 평가 시간을 전제로 하는 상한. 모든 link 개수, 순서, 경로에 대한 전역 상한이 아님.
@@ -173,16 +229,18 @@ Train의 (3,5)는 12,178/21,423 = 56.85%. 동일한 dataset SHA와 frozen split 
 
 28–30쪽 / 학습: label, score, 선택, 실행
 28쪽(selector-training): episode마다 10개 실행 결과를 갖는 multilabel target과 Binary Cross Entropy (BCE) loss 및 selection loss 설명.
-29쪽(selector-features): 로봇·장애물 입력, encoder, cross-attention으로 pair별 성공 score 예측.
-30쪽(selector-model): 같은 도식 위치를 유지하면서 선택한 sequence S_{k̂(z)}, QP, 전체 관절 속도 u를 추가. k̂(z) = argmax_k p̂_k(z;θ), 후보 S_k의 표기를 논문에 맞춤.
+29쪽(selector-features): Start, IK, and goal inputs와 장애물 입력, encoder, cross-attention으로 pair별 성공 score 예측. 첫 상자의 q0는 초기 관절 configuration, q*는 검증된 IK configuration, p_d와 R_d는 목표 end-effector 위치와 방향. 이전 z_r는 논문에 정의되지 않은 발표용 입력 묶음 기호이므로 제거.
+30쪽(selector-model): 같은 도식 위치를 유지하면서 선택한 sequence S_{k̂(z)}, Subtask targets and sequence, QP, 전체 관절 속도 u를 연결. 하단 상자는 선택된 pair로 subtask 목표와 실행 순서를 구성한다는 뜻이며, 앞에서 정의한 ST 실행열은 반복 표시하지 않음. k̂(z) = argmax_k p̂_k(z;θ), 후보 S_k의 표기를 논문에 맞춤. 선택한 pair의 link 번호는 각 ST의 target을 정하며 ST의 첨자를 link 번호로 바꾸지 않음.
 모델은 실행 전에 pair를 선택하며, QP는 매 제어 주기 속도를 계산. 두 구조 설명 슬라이드는 각각 25초와 30초 배정.
-로봇 입력은 23차원, 장애물별 입력은 4차원. 학습 파라미터는 24,234개. 공유 encoder와 cross-attention으로 장애물 집합 처리.
+Robot/goal encoder는 이 입력을 64차원 feature로 변환하고, 별도 projection으로 32차원 attention query를 생성. 첫 상자의 원시 입력, encoder feature, attention query는 서로 다른 단계. 슬라이드는 차원 숫자를 늘리지 않고 이를 화살표로 구분.
+논문의 추상 문맥은 z = (q0,q*,p_d,R_d,mathcal O). 실제 로봇 입력은 R_d의 첫 두 열을 이어 붙인 6차원 표현을 사용하므로 7 + 7 + 3 + 6 = 23차원. 회전행렬 전체 9개 성분을 펼쳐 26차원으로 바꾼 것이 아님.
+장애물별 입력은 4차원. 학습 파라미터는 24,234개. Common obstacle encoder와 cross-attention으로 장애물 집합 처리. 모든 장애물에 동일한 encoder 파라미터를 적용하며, 장애물마다 별도 학습 파라미터를 두는 구조로 바꾼 것이 아님.
 각 sigmoid 출력은 pair 성공 score. 모델은 task를 선택하고, 공통 QP가 속도를 계산.
 Label 예시 seed2026120000_0007에서는 (2,3)과 (2,6)이 성공하고 나머지는 모두 실패. Multilabel target의 예시이며, 모델이 올바르게 예측한 사례라는 의미는 아님.
 Train 21,423개, Validation 1,000개, Test 1,000개 episode. 모든 후보가 실패한 episode도 포함.
 초기화 5회 중 Validation을 사용하여 기준 seed 11 선택. Test에서 가장 좋은 seed로 교체하지 않음. 자세한 내용: A8(48쪽).
 질문: Cross-attention 자체가 성능 향상의 원인인가?
-답변: 장애물 순서에 영향을 받지 않는 처리와 로봇 상태에 따른 정보를 결합하기 위한 구조적 선택. Preset pair 및 Uniform과의 비교만으로 attention의 우월성이나 학습된 기하학적 추론을 인과적으로 입증할 수 없음. 더 단순한 모델과의 ablation은 별도 검증 과제.
+답변: 장애물 순서에 영향을 받지 않는 처리와 로봇 상태에 따른 정보를 결합하기 위한 구조적 선택. 10-pair mean 및 Train-best fixed pair와의 비교만으로 attention의 우월성이나 학습된 기하학적 추론을 인과적으로 입증할 수 없음. 더 단순한 모델과의 ablation은 별도 검증 과제.
 
 28쪽 / Binary Cross Entropy (BCE) loss와 selection loss의 의미
 한 episode의 후보 pair 번호를 k = 1,…,10, 성공 label을 y_k ∈ {0,1}, 모델의 logit을 a_k로 표기.
@@ -197,49 +255,69 @@ Selection loss에는 같은 logit을 softmax로 정규화한 ω_k = exp(a_k) / �
 성공 후보들의 softmax mass 합을 키우는 항. 여러 성공 후보 중 하나를 임의의 유일한 정답으로 지정하는 loss가 아님.
 모든 pair가 실패하면 selection loss만 0이며, BCE는 계속 실패 label을 학습. 모든 pair가 성공한 경우에도 성공 후보의 mass 합이 1이므로 selection loss는 0.
 최종 목적함수는 모든 학습 episode에 대한 평균:
-  L = (1/N) Σ_n [ℓ_BCE,n + 3 ℓ_sel,n].
-BCE는 먼저 10개 pair에 대해 평균하고, 두 loss 모두 실패 episode를 포함한 전체 N개 episode에 대해 평균. Selection loss의 분모를 성공 후보가 있는 episode 수로 바꾸지 않음.
+  mathcal L(theta) = (1/N_tr) Σ_{n=1}^{N_tr} [ℓ_BCE,n + lambda_sel ℓ_sel,n], lambda_sel = 3.
+N_tr는 학습 episode 수이며 평가 episode 수 N과 구분. BCE는 먼저 10개 pair에 대해 평균하고, 두 loss 모두 실패 episode를 포함한 전체 N_tr개 episode에 대해 평균. Selection loss의 분모를 성공 후보가 있는 episode 수로 바꾸지 않음.
 구현은 수치 안정성을 위해 BCEWithLogits와 logsumexp 사용. 추론에서는 가장 높은 성공 score의 pair를 선택하며, softmax에서 확률적으로 샘플링하지 않음. Sigmoid, logit, softmax의 argmax는 동일.
+현재 loss는 BCE와 성공 후보에 모이는 softmax mass를 키우는 selection loss의 합이며, 완료 시간을 직접 최적화하는 항은 없음. 성공 label에는 제한 시간 조건이 이미 포함되므로 현재 방법이 시간을 전혀 고려하지 않는다고 설명하지 않음. 이는 현재 모델에 대한 설명이며 35쪽의 향후 연구 항목으로 시간 목적함수를 제안하는 것은 아님.
 출처: src/safe_ik/application/train_link_selection.py의 successful_mass_loss, loss_components; 논문 sections/Method/Link_Selection.tex.
 
 31–34쪽 / 결과와 해석
-Test 1,000개 episode: Direct 성공 455개, All-link Sequential 552개, Preset pair (3,5) 587개, Learned selection 609개.
-Learned selection − Preset pair (3,5): +2.20%p, paired bootstrap 95% 신뢰구간 [−0.30, 4.70]%p.
-Episode별 두 방법의 결과를 짝지어 복원 추출 10,000회 수행. Seed는 20261023. 평균 차이 분포의 2.5번째 및 97.5번째 백분위수 사용. 이 백분위수 신뢰구간에는 정규분포 가정을 사용하지 않음.
-구간에 0이 포함되므로 개선 여부에는 불확실성이 남음. 95% 신뢰수준은 우리 방법이 실험의 95%에서 이긴다는 뜻이 아님.
-32쪽 본문: All-link Sequential/Learned selection 공동 성공 467개에서 47.97/36.62초. 같은 단계 수인 Preset pair (3,5)/Learned selection의 공동 성공 514개 비교는 A6에 보존하며 36.12/36.21초.
-이 두 비교는 서로 다른 episode 집합 사용. 시간은 시뮬레이션상의 운동 시간이며 IK, QP, 추론 계산 시간은 제외.
-33쪽은 q0, EE 목표 pose, 장애물, 선택한 IK를 공유하는 Test episode B = seed2026120069_0014 사용.
-세 패널은 공통 초기 상태, 120초에 종료한 Preset pair (3,5), 23.42초에 종료한 Learned selection (5,6)을 표시.
-Preset pair (3,5): link3_pose에서 timeout, 단계 전환 0회. 최종 EE 위치 오차 0.628901 m, quaternion 벡터 오차 0.361783.
+Test 1,000개 episode: Direct 성공 455개(45.50%), All-link Sequential 552개(55.20%), Learned selection 609개(60.90%). 10-pair mean은 전체 10,000개 episode–pair 결과 중 성공 5,520개의 비율인 55.20%. All-link와 수치가 같지만 다른 방법이며 성공 집계의 대상도 episode와 episode–pair 결과로 다름.
+31쪽의 Best single pair (3,5)는 Test에서 각 후보의 전체 성공률을 비교했을 때 유일하게 가장 높은 pair로 587/1,000 = 58.70%. 모든 episode에 같은 pair를 쓰는 결과이며 episode별 성공 후보를 사후 선택하는 oracle 80.20%와 다름. Train에서 미리 선정한 pair도 (3,5)이지만, 여기서의 Best는 Test 관측값에 대한 설명이며 Validation 최고 pair는 (2,5).
+Learned selection − 10-pair mean: +5.70%p, episode 단위 paired bootstrap 95% 신뢰구간 [3.74, 7.65]%p.
+Episode i에서 후보 k의 성공 label을 y_ik, Learned 선택의 성공 여부를 l_i라 두면 m_i = (1/10) Σ_k y_ik, d_i = l_i − m_i. 전체 성공률 차이는 (1/1,000) Σ_i d_i × 100%p. 후보 평균은 실행 가능한 단일 rollout이나 이진 성공 label이 아님.
+Episode 1,000개를 복원 추출하며 각 episode의 열 개 후보 결과와 Learned 결과를 함께 유지. 복원 추출 10,000회, seed 20261023. 평균 차이 분포의 2.5번째 및 97.5번째 백분위수 사용. 정규분포 가정을 사용하지 않음. 한 episode의 열 개 결과가 상관되므로 10,000개의 독립 표본으로 bootstrap하지 않음.
+이 구간은 후보 평균 대비 양의 차이를 나타내며 가장 좋은 고정 pair 대비 우월성을 뜻하지 않음. 95% 신뢰수준은 우리 방법이 실험의 95%에서 이긴다는 뜻이 아님. 개발 중 Test를 확인한 이력도 bootstrap으로 해소되지 않음.
+32쪽 본문: All-link Sequential/Learned selection 공동 성공 467개에서 47.97/36.62초. link subtask 축소의 시간 이점을 유지한 결과이며 학습 자체의 추가 속도 향상을 입증하지 않음.
+A6 제목은 Paired Test Comparisons. 표의 Success in both는 비교하는 두 방법이 모두 성공한 집합을 뜻하며, All-link 비교의 467 episodes와 후보 평균 비교의 4,792 episode–pairs는 서로 다른 집계 단위. Paired는 동일 episode의 결과를 짝짓는다는 뜻이며 모든 pair 결과가 독립이라는 의미가 아님.
+A6의 같은 단계 수 비교: 후보 pair와 Learned가 모두 성공한 4,792개 episode–pair 결과(609개 서로 다른 episode)에서 후보 평균 36.04655676초, Learned 36.20300918초(화면 36.05/36.20초). Learned 시간을 각 episode의 성공 후보 수만큼 반복한 공동 성공 조건부 평균. 실패를 제외하며, 10개 pair별 조건부 평균을 동일 가중치로 다시 평균하는 방식과도 다름. 학습에 따른 추가 속도 향상은 관찰되지 않음.
+두 시간 비교의 집합과 가중치는 다름. 시간은 시뮬레이션상의 운동 시간이며 IK, QP, 추론 계산 시간은 제외. 4,792개 결과를 독립 episode 수로 부르지 않음.
+33쪽 제목: Why Selection Matters: Only One Pair Succeeds. q0, EE 목표 pose, 장애물, 선택한 IK가 동일한 Test episode B = seed2026120069_0014 사용.
+이 episode는 열 개 후보 중 (5,6) 하나만 성공하므로 10-pair mean은 10%. 모델도 (5,6)을 선택. 이 10%는 단일 episode에서의 후보 평균이며 전체 Test 성공률 55.20%와 구분.
+세 패널은 공통 초기 상태, 실패 예시 Example pair (3,5)의 120초 종료 상태, Learned selection (5,6)의 23.42초 종료 상태를 표시. 평균 baseline 자체에는 단일 configuration이나 경로가 없으므로 (3,5) 그림을 평균의 rollout로 해석하지 않음.
+Example pair (3,5): link3_pose에서 timeout, 단계 전환 0회. 최종 EE 위치 오차 0.628901 m, quaternion 벡터 오차 0.361783.
 선택한 (5,6): 16.94초에 link5 → link6, 18.34초에 link6 → EE, 23.42초에 목표 도달. 최종 위치 오차 0.00998245 m, quaternion 벡터 오차 0.00346425.
 최종 configuration의 시각은 서로 다름. 정적 MuJoCo 렌더링에는 저장된 final_q 사용. 중간 경로를 복원하거나 새 제어 실행으로 생성한 결과가 아님.
 FK로 다시 계산한 최종 위치·방향 오차는 저장된 값과 절대 오차 1e-12 이내에서 일치. 출처: Fig/recovery_comparison.pdf/png, evidence/recovery_scene.json, evidence/recovery_comparison_audit.json.
-Preset pair의 timeout을 장애물에 의한 stall로 재분류하지 않음. 중간 궤적이 없으므로 기하학적 원인을 확정할 수 없음.
+Example pair의 timeout을 장애물에 의한 stall로 재분류하지 않음. 중간 궤적이 없으므로 기하학적 원인을 확정할 수 없음.
 추가 질의응답 사례: episode A = seed2026120009_0017은 유일한 성공 pair (2,5)를 모델이 올바르게 선택한 사례이며 완료 시간 65.72초. Episode B의 유일한 성공 pair는 (5,6). 이전 label 그림 Fig/story_selection_examples.pdf는 보관하지만 본문에서는 사용하지 않음.
-선택한 회복 사례는 전체 결과의 대표 표본이 아니며, attention 내부의 인과 메커니즘을 입증하는 근거도 아님.
-전체 Test 결과: Learned만 성공 95개, Preset pair만 성공 73개, 공동 성공 514개, 모두 실패 318개. 순증가는 22개.
-모델이 (3,5) 이외의 pair를 선택한 episode는 753개. 10개 pair가 모두 성공한 경우 267개, 모두 실패한 경우 198개, pair에 따라 결과가 달라지는 경우 535개.
+선택한 사례는 전체 결과의 대표 표본이 아니며, attention 내부의 인과 메커니즘을 입증하는 근거도 아님.
+Test에서 10개 pair가 모두 성공한 경우 267개, 모두 실패한 경우 198개, pair에 따라 결과가 달라지는 경우 535개. 모델이 (3,5) 이외의 pair를 선택한 episode는 753개이며 이 숫자를 평균 대비 성능 차이로 사용하지 않음.
 
-평가 한계 / A14, 54쪽
+보고된 결과의 해석 / A14, 54쪽
+추가 참고 비교인 Train-best fixed pair (3,5)의 Test 성공률은 58.70%, Learned selection은 60.90%. 차이 +2.20%p의 paired bootstrap 95% CI [−0.30, 4.70]%p는 0을 포함하므로 이 고정 pair보다 성공률이 높다는 결론은 확립되지 않음. 본문에서의 10-pair mean 대비 개선과 별개로 제시. 평균보다 좋은 결과를 최적 고정 pair보다 우월한 결과로 확대하지 않음.
+이 고정 pair 비교의 공동 성공은 514개, Learned만 성공 95개, 고정 pair만 성공 73개, 모두 실패 318개. 이는 추가 참고 기준에만 적용되며 본문의 평균 기준 통계와 섞지 않음. 같은 514개에서 평균 시간 36.12/36.21초도 기존 고정 pair 비교의 별도 기록.
+질문: 왜 (3,5)를 고정 pair로 선택했는가? Appendix에서는 (2,5)가 더 높지 않은가?
+답변: A14의 추가 참고 비교인 Train-best fixed pair (3,5)는 10개 후보 중 Train의 평균 성공률이 가장 높은 pair를 선택한 뒤 Validation과 Test에서 고정. Appendix A2는 Validation 후보별 결과이며, (2,5)가 58.10%, (3,5)가 57.60%. Test에서는 (3,5)가 58.70%로 가장 높음. 모든 데이터에서 항상 최선이라는 의미가 아님.
+신경망 학습은 없지만 고정 pair 선정 자체에는 Train의 성공 label 사용. 구현: labels[split["train"]].mean(axis=0).argmax().
+Train의 (3,5)는 12,178/21,423 = 56.85%. 동일한 dataset SHA와 frozen split SHA를 사용하는 보관 평가에서 확인.
+출처: src/safe_ik/application/train_link_selection.py, outputs/panda_link_selection/fk_pair_query/fk-pair-query-21423-20261023T020010Z/training/evaluation.json 및 manifest.json, evidence/pair_outcomes.csv.
+주의: Train에는 historical/corrected QP label이 혼합되어 있으므로 데이터셋 간 성공률 차이의 원인을 표본 변동만으로 단정하지 않음.
+A14의 기록된 한계는 세 가지: 개발 중 Test partition 확인, 근사 형상과 저장 상태에서의 충돌 검사, 보관 controller의 QP residual 위반. 35쪽은 실제 로봇 실험과 뉴럴넷 기반 sequencing 개선의 두 방향으로 연결하며, 이 한계들의 상세 측정 목록을 화면에 나열하지 않음.
 Spatial Manipulator 적분 간격 0.02초. EE 허용 오차는 위치 0.01 m, 상대 quaternion 벡터 0.01. 기록된 최소 barrier 기준은 −0.001 m. 관절 제한 여유는 0 이상.
 성공 조건은 평가 시간 내 저장된 목표 pose 도달, 모든 저장 충돌 barrier ≥ −0.001 m, 관절 제한 여유 ≥ 0, 수치 solver 실패 없음의 동시 만족. 저장 상태(iteration_states) 사이의 보간 검사는 수행하지 않음.
-모든 방법은 Validation과 Test 각각에서 같은 1,000개의 IK 승인 episode 사용. Direct도 같은 episode 집합을 사용하지만 중간 IK task는 실행하지 않음.
+모든 방법은 Validation과 Test 각각에서 같은 1,000개의 IK 승인 episode 사용. Direct도 같은 episode 집합을 사용하지만 IK로 구성한 link subtask는 실행하지 않음.
 검증된 IK가 없는 episode는 생성 로그에 남지만 학습에서는 제외. IK가 승인되었으나 성공 pair가 없는 episode는 포함.
 출처: 보관된 test-baseline evaluate_test.py의 preflight/validate_trace; 논문 Results/Panda.tex, Method/Link_Selection.tex.
 수치 실패도 분모에 포함. 저장 데이터에는 residual 위반이 있는 일부 QP 명령의 수용과 관절 위치 clipping 사례가 포함됨.
 안전 판정은 근사 형상과 저장 상태의 허용 오차를 사용하며, 연속시간 안전성 보증이 아님.
 질문: CBF를 사용했는데 저장된 결과에서 안전 조건 실패가 발생하는 이유는 무엇인가?
-답변: A9의 불변성 결과는 정칙 barrier, 안전한 초기 상태, CBF 미분 부등식을 만족하는 적용 속도를 가정. 근사 형상, 이산 적분, QP residual, clipping이 이 가정을 자동으로 만족하지는 않음. 평가 허용 오차도 RDF 근사 오차나 실제 충돌 여유 거리의 상한을 제공하지 않음.
+답변: A9의 불변성 결과는 충돌·관절 제한의 C^1 barrier, 안전한 초기 상태, 절대연속인 q와 거의 모든 시각에서 CBF 미분 부등식을 만족하는 실제 적용 속도를 가정. 유한한 task 전환에서 q와 안전 barrier를 유지. 근사 형상, 이산 적분, QP residual, clipping이 이 가정을 자동으로 만족하지는 않음. 평가 허용 오차도 RDF 근사 오차나 실제 충돌 여유 거리의 상한을 제공하지 않음.
 목표에 도달해도 안전 기준에 실패하면 성공에서 제외. Test Direct는 목표 도달 464개 − 안전 실패 9개 = 성공 455개. All-link Sequential은 564개 − 12개 = 552개.
-수정된 QP로 같은 episode를 재평가하기 전에는 이 관측을 수정된 QP의 결과로 해석하지 않음.
-Test는 개발 중에 확인한 데이터이므로 새롭고 독립적인 평가가 아님. 모델을 고정하고 수정된 QP를 사용하여 새로운 episode에서 재평가 필요.
-Learned selection 평가는 저장된 폐루프 실행 결과를 조회하는 방식. 온라인 실행과 실제 로봇 검증은 추가로 필요.
+이 관측은 보관된 controller의 결과이며 수정된 QP의 실행 결과를 뜻하지 않음.
+Test는 개발 중에 확인한 데이터이므로 새롭고 독립적인 평가가 아님.
+Learned selection 평가는 저장된 폐루프 실행 결과를 조회하는 방식. 이 결과만으로 온라인 지연·제어 주기 초과, 형상·센싱 오차, 실제 로봇 추종과 여유 거리까지 검증한 것은 아님. 관련 세부 측정 사항은 Q&A 참고로 보존하며, 35쪽은 실제 로봇 실험과 뉴럴넷 기반 sequencing 개선의 두 방향 및 각각의 하위항목으로 구체화.
+
+A15 / 55쪽: Episode-Wise Gain over the Pair Mean
+Episode별 d_i = l_i − (1/10) Σ_k y_ik의 분포와 평균을 제시. 후보가 모두 성공하거나 모두 실패하면 d_i = 0. 후보별 결과가 다를 때 모델이 성공 후보를 고르면 양수, 실패 후보를 고르면 음수. 일부 episode에서 손실이 있어도 전체 평균은 +0.057, 성공률 단위로 +5.70%p.
+히스토그램의 빈도는 각 d_i를 갖는 실제 episode 수이나, 후보 평균과의 차이 자체는 −1부터 1 사이의 값. 소수의 평균 성공·손실 기여를 정수 episode 수로 표현하지 않음. 기존 고정 pair 대비 회복 95개/손실 73개를 평균 대비 비교에 재사용하지 않음.
+95% CI [3.74, 7.65]%p는 위의 episode 단위 bootstrap 결과. 여러 후보의 상관관계를 유지하며 10,000개 pair 결과를 독립 시행으로 다루지 않음.
 
 56쪽 / A16: 실제 정체 사례 episode 180
 Direct timeout, 실행 불가능한 QP 0회. 35초 평가에서 마지막 저장 시각은 34.998초.
 15–35초 구간의 최대 관절 속도 norm은 4.86e-8 rad/s. 기록된 최소 barrier의 구간 내 최댓값은 8.42e-8 m.
-최종 위치 오차 0.817775 m, yaw 오차 1.139606 rad, V = 9.597803, CLF slack = 9.597803.
+최종 위치 오차 0.817775 m, yaw 오차 1.139606 rad. 현재 논문 함수의 V_e ≈ 0.479890이며 보관된 함수 값 V_archive = 9.597803을 20으로 나눈 값.
+원래 QP의 저장된 CLF slack은 9.597803. 이 slack을 새 QP의 slack으로 바꾸거나 V_e ≈ 0.479890과 동일하다고 해석하지 않음.
 활성 barrier는 장애물 1–link 3이며, 0부터 세는 barrier 열 번호는 2. 자기 충돌이나 관절 제한 경계와 구분.
 확대 그림에서는 먼 장애물 2를 제외. 점선 곡선은 실제 EE 경로, 화살표는 실제 yaw와 목표 yaw 표시.
 관측된 정체 사례이며, 모든 실패의 원인이나 평형점의 안정성을 증명하는 결과는 아님.
@@ -254,15 +332,15 @@ A3: Spatial Manipulator IK의 soft-min 여유 거리 항 — 40쪽
 A4: RDF barrier와 두 link의 상대 운동 미분 — 41쪽
 A5: Planar와 Spatial Manipulator의 전환 규칙 — 42쪽
 A6: Test의 paired 비교 — 43쪽
-A7: 참고문헌: IEEEtran BibTeX, 출처 10개 — 44–47쪽
+A7: 참고문헌: IEEEtran BibTeX, 출처 12개 — 44–47쪽
 A8: 학습 loss와 모델 선택 — 48쪽
 A9: Task 전환과 안전 집합의 불변성 — 49쪽
 A10: Planar episode 30의 configuration과 전체 CLF 비교 — 50쪽
 A11: 문제 정의와 목표 조건 — 51쪽
-A12: 전체 CLF–CBF QP — 52쪽
+A12: 공통 CLF–CBF QP — 52쪽
 A13: 전체 제어 구조 — 53쪽
-A14: 해석과 추가 검증 — 54쪽
-A15: Test에서의 회복 및 손실 사례 — 55쪽
+A14: 보고된 결과의 해석 — 54쪽
+A15: Episode별 Learned 성공 여부와 10-pair mean의 차이 — 55쪽
 A16: 실제 Direct episode 180의 안전 경계 부근 정체 — 56쪽
 A17: 관련 연구의 플랜트와 차원 가정 — 57쪽
 
@@ -276,3 +354,32 @@ A17: 관련 연구의 플랜트와 차원 가정 — 57쪽
 
 36쪽 / 마무리
 제목과 section 부제 없이 큰 “Thank you”만 표시. 추가 발화 시간 없이 질의응답으로 전환.
+
+현재 논문과 발표의 기호 대응 — 2026-11-08
+목표 pose: (p_d,R_d), 요구 실행 시간: T_d, 최종 위치·방향 허용 오차: delta_p, delta_o.
+Spatial 목표 orientation error e_o는 relative unit quaternion vector epsilon_ee. Planar의 최종 orientation error는 wrap(psi_e − psi_d)이며 단위는 rad. Quaternion vector norm과 yaw 허용 오차의 수치 단위를 섞지 않음.
+QP slack delta와 목표 허용 오차 delta_p, delta_o는 서로 다른 기호. IK 검증·link subtask 전환·최종 성공 평가의 tolerance도 역할이 다르므로 같은 수치로 일괄 치환하지 않음.
+방법 QP의 현재 활성 CLF는 V_i, 감소율은 c_i. Link subtask ST_{ee,s}에서는 i=i_s로 두고, 마지막 ST_{ee,L+1}=T_{ee}에서는 최종 EE의 V_{ee}를 사용. A12도 이 구분을 명시하며 s를 link 번호로 대입하지 않음. 입력 가중행렬은 W_u(u는 upright 표기), joint-limit CBF gain은 alpha_j. Joint-limit bounds는 −alpha_j(q_j − q_j,min) ≤ u_j ≤ alpha_j(q_j,max − q_j), velocity bounds는 v_min,j ≤ u_j ≤ v_max,j. 13–15쪽의 실제 QP에 두 입력 제한을 명시하고 6쪽은 기본 CLF–CBF 결합 구조만 표시. A12 Common CLF–CBF QP는 논문의 공통 기본식을 표시하며 구현별 세부 제약과 구분. 배경 이론의 일반 CLF 감소율 c_V는 그대로 유지.
+전체 문제 정의 A11의 안전 집합은 모든 충돌 barrier가 비음수인 영역과 q_min ≤ q ≤ q_max인 관절 허용 영역의 교집합. 충돌 여유만 만족하고 joint limit를 위반하는 상태를 안전 집합에 포함하지 않음.
+그림과 결과의 기준: 저장된 궤적·시간·성공 label·성공률 불변. Planar 함수 값은 현재 정의로 다시 평가하며, 원래 제어 QP를 새 정의로 재실행한 결과는 아님.
+논문 내부의 이전 기호가 남은 기호표·설명문·도함수는 현재 Method의 명시적 정의보다 우선하지 않음. 혼재 항목은 기호_동기화_기록.txt에 분리 기록하며 논문 파일 자체는 수정하지 않음.
+
+페이지 번호 표시 — 2026-11-09
+본문과 Appendix의 현재/전체 페이지 번호는 7 pt로 축소. 진행 section 이름과 점, 슬라이드 본문·수식은 기존 크기 유지. 그림 출처와 페이지 수 표기에는 작은 글씨 사용 허용.
+
+부제목 번호 — 2026-11-09
+본문·보충 슬라이드의 부제목에 논문의 해당 장·절 번호를 함께 표기. 원전 Bibliography는 번호 없음. 번호는 발표 순번이나 진행 section의 순번이 아닌 논문 위치이며, evidence/thesis_section_numbers.json에서 소스·TOC·AUX 대조 근거 확인.
+
+17쪽 / 실행 전 준비와 제어 주기 반복
+Safe IK와 subtask target·sequence 구성은 실행 전에 한 번 수행하며 준비 상자는 ST_{ee,1} → … → ST_{ee,L+1}과 초기 단계 s=1을 표시. 현재 ST_{ee,s}의 QP를 푼 뒤 전환/종료를 판정. 유지 분기에서만 유효한 u를 적용하고 q를 갱신한 뒤 같은 subtask의 QP로 복귀. 전환 분기에서는 입력 적용 없이 s를 증가시키고 같은 q에서 다음 subtask의 QP를 다시 계산. 최종 목표 도달 또는 종료 조건은 Stop으로 연결. A13에도 이 판정·분기 도식을 동일하게 사용. 이 공통 도식이 모든 모델에 같은 예외 정책을 적용하거나, 실행 불가능한 QP의 출력을 그대로 적용한다는 뜻은 아님. 세부 예외 처리는 앞의 13–15쪽 설명 및 A5 참조.
+
+20쪽 / 모델 확장과 충돌 모델 비교
+Planar의 링크도 논문에서 capsule-shaped로 정의. 표의 Capsule distances는 중심 선분까지의 거리에서 링크 반지름을 차감하는 모델을 뜻함. Spatial은 IK 탐색에 capsule을 사용하고, online 제어에서는 외부 장애물에 capsule, self-collision에 RDF를 사용. 두 모델의 차이를 capsule 사용 여부로 설명하지 않음. 근거: sections/Method/Planar_Control.tex의 Collision and Joint-Limit Barriers, Panda_Overview.tex, RDF_CBF.tex.
+17쪽과 20쪽의 발화는 각각 25초로 유지. 모델 비교는 Spatial을 처음 소개하는 20쪽에 배치하고 기존 MuJoCo 그림 보존. 2쪽 사진 출처는 7 pt로 표시하며 사진·본문·캡션은 기존 크기 유지.
+
+공통 구조와 동일 조건의 표현
+16쪽 Unchanged QP objective, CBFs, and input limits는 subtask 전환 시 목적함수·CBF 함수·입력 제한의 구조를 유지한다는 뜻. q가 바뀌어도 제약의 수치나 최적 입력이 그대로라는 의미가 아님.
+23쪽 Identical CLF form은 link subtask와 final EE subtask에 위치·quaternion 오차를 조합하는 동일한 식의 형태를 사용한다는 뜻. 각 subtask의 target·오차·함수 값·joint-space 지형이나 시간 변화는 다를 수 있음.
+31쪽 identical success criteria는 방법마다 같은 성공 판정 기준을 적용한다는 뜻이며, 성공 episode 집합 자체가 같다는 뜻은 아님.
+33쪽 Common initial state and each method’s final configuration은 공통 초기 조건과 각 rollout의 서로 다른 최종 configuration을 구분. 실패 예시 (3,5)의 종료 시각 120초와 Learned (5,6)의 종료 시각 23.42초를 그대로 유지.
+A12와 Appendix 목차의 Common CLF–CBF QP는 논문의 공통 기본 정식화이며, 모든 subtask에서 동일한 수치 해가 나오는 QP라는 뜻은 아님.

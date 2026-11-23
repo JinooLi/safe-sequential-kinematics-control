@@ -164,11 +164,11 @@ def main():
         green = (roi[:, :, 1] > roi[:, :, 0] + 20) & (roi[:, :, 1] > roi[:, :, 2] + 10)
         marker_checks.append(int(green.sum()))
         assert marker_checks[-1] > 0, 'Projected target does not overlap the rendered green goal'
-    titles = ['Initial configuration', 'Preset pair (3,5)', 'Learned selection (5,6)']
+    titles = ['Initial configuration', 'Example pair (3,5)', 'Learned selection (5,6)']
     captions = ['$t=0$ s', '$t=120$ s: goal not reached', '$t=23.42$ s: goal reached']
     fig, axes = plt.subplots(1, 3, figsize=(12, 4.5))
     for ax, rgb, title, caption, color, pixel in zip(axes, pixels, titles, captions,
-                                             ['#243447', '#a84439', '#28735e'], projections):
+                                             ['#243447', '#FF0000', '#008000'], projections):
         ax.imshow(rgb)
         ax.axis('off')
         # Native vector annotation, anchored to the projected world goal.

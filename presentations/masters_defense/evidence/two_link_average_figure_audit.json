@@ -1,0 +1,104 @@
+{
+  "split": "validation",
+  "episodes": 1000,
+  "pairs_per_episode": 10,
+  "episode_pair_records": 10000,
+  "candidate_pair_successes": [
+    533,
+    539,
+    581,
+    530,
+    511,
+    576,
+    548,
+    557,
+    558,
+    540
+  ],
+  "candidate_pair_order": [
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      4
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      2,
+      6
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      3,
+      5
+    ],
+    [
+      3,
+      6
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      4,
+      6
+    ],
+    [
+      5,
+      6
+    ]
+  ],
+  "candidate_average": {
+    "successes": 5473,
+    "denominator": 10000,
+    "success_rate_percent": 54.730000000000004,
+    "definition": "Equal mean of all ten candidate-pair success rates on the same 1000 episodes"
+  },
+  "best_single_pair": {
+    "pair_index": 2,
+    "pair": [
+      2,
+      5
+    ],
+    "successes": 581,
+    "success_rate_percent": 58.099999999999994,
+    "post_hoc_on_this_validation_set": true
+  },
+  "oracle": {
+    "successes": 820,
+    "success_rate_percent": 82.0,
+    "definition": "At least one of the ten pairs succeeds in an episode",
+    "post_hoc_upper_bound_not_a_learned_selector": true
+  },
+  "display_labels": [
+    "10-pair mean",
+    "Best single pair\n(2,5)",
+    "Oracle\n(post-hoc upper bound)"
+  ],
+  "font_rendering": "pdfLaTeX + ko.TeX + Latin Modern Sans; PNG rasterized from PDF",
+  "font_size_pt": 22,
+  "figure_size_inches": [
+    8.5,
+    3
+  ],
+  "no_new_simulation": true,
+  "no_new_training": true,
+  "source_sha256": {
+    "scripts/build_two_link_average_figure.py": "05c3fe232d58f96c4e57e7346075d0af7835afb714ed6b4c8051f219d64d6b5d",
+    "evidence/pair_outcomes.csv": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4",
+    "evidence/recomputed_summary.json": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b"
+  },
+  "output_sha256": {
+    "story_oracle_average.pdf": "217da50b5c82b389f855a5bea396eaf5f99b8135a1a3dcdb4d6d1422e9af0d3b",
+    "story_oracle_average.png": "6614ff3f03df1c82d254894432510bb42f01b23ca9515023034d40c06590efe7"
+  }
+}

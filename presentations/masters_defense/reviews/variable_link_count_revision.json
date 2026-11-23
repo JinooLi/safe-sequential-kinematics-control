@@ -1,0 +1,31 @@
+{
+  "revision": "variable_link_count_revision",
+  "request": "Replace the second sequencing-improvement subitem with selection without a fixed number of link subtasks",
+  "changed_main_frames": [
+    35
+  ],
+  "new_subitem": "Link subtask selection without a fixed count",
+  "meaning": "Select which links and how many link subtasks for each episode, extending the current fixed two-link setting",
+  "source_basis": [
+    "sections/Method/Link_Selection.tex: two-frame sequence length is fixed and not established as optimal",
+    "sections/Results/Panda.tex: varying the number of intermediate frames is further work"
+  ],
+  "notes_changed": [
+    "future-work"
+  ],
+  "future_work_seconds": 30,
+  "speech_seconds": 1140,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "validation": {
+    "artifact_verifier": "passed",
+    "page_35_visual_review": "New subitem fits on one line at the existing font size; no overlaps",
+    "other_slide_source_text_unchanged": true,
+    "other_35_notes_unchanged": true,
+    "user_minimum_margin_edit_preserved": true,
+    "independent_document_review": "pair_mean_scope_review"
+  },
+  "new_results_claimed": false,
+  "raw_experiment_data_changed": false,
+  "thesis_source_changed": false
+}

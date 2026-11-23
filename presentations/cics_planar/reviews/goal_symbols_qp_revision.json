@@ -1,0 +1,50 @@
+{
+  "checked_at": "2026-11-11T14:17:25.505864+09:00",
+  "scope": "3–5쪽 목표 pose 기호, 거리 표기 및 QP 설명 위치",
+  "slide3": {
+    "figure": "Fig/progressive_planar_02_scene_labeled.pdf",
+    "symbols": [
+      "p_d: 목표 위치의 별 옆",
+      "psi_d: 목표 방향 화살표 옆, 짧은 주석선"
+    ],
+    "font": "pdfLaTeX/Latin Modern, 50.74mm 슬라이드 표시 폭에서 10pt",
+    "original_geometry_and_media_box_preserved": true
+  },
+  "slide4": "거리 화살표의 d를 d(q)로 변경",
+  "slide5": "이차계획법(QP) 설명과 인용을 QP 수식 바로 위로 이동; 목적함수와 제약식 보존",
+  "preserved_user_edits": [
+    "12쪽 QP 계산·안전 제약 문구",
+    "13쪽 task Jacobian 조건 문구와 강조",
+    "원본 TeX 서식 조정"
+  ],
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "requested_changed_pages": [
+      3,
+      4,
+      5
+    ],
+    "user_edited_pages_rebuilt": [
+      12,
+      13
+    ],
+    "changed_note_labels": [
+      "problem",
+      "safety"
+    ],
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_reviewed_pages": [
+      3,
+      4,
+      5,
+      12,
+      13
+    ],
+    "original_figures_data_references_spacing_navigation_unchanged": true
+  },
+  "new_figure_sha256": "ca605307386ccdcd49488e481ac8374bc3811b21d5130d1bed4642723117b876"
+}

@@ -1,0 +1,430 @@
+{
+  "description": "All ten two-link candidates on the archived Validation episodes",
+  "split": "validation",
+  "controller_horizon_seconds": 120,
+  "no_new_simulation": true,
+  "no_new_rollouts": true,
+  "no_new_training": true,
+  "no_random_pair_draws": true,
+  "input_sources": [
+    {
+      "snapshot": "evidence/pair_outcomes.csv",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/pair_outcomes.csv",
+      "sha256": "3fe580326d9f67f27eb6465fb3ded54ba48585e761066966dd182424a5f124c4",
+      "snapshot_matches_original": true,
+      "matches_source_manifest": true
+    },
+    {
+      "snapshot": "evidence/all_links_comparison.csv",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/all_links_comparison.csv",
+      "sha256": "1ad7870f370b280132861a4ae25b831796d4ad442fbc1ac57d110c72b0a50c1c",
+      "snapshot_matches_original": true,
+      "matches_source_manifest": true
+    },
+    {
+      "snapshot": "evidence/all_links_analysis.json",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/all_links_analysis.json",
+      "sha256": "9e89f34b825ebb8f1c6bd230f0e0ce37d22a61d333d6b8318afae788fe7e1358",
+      "snapshot_matches_original": true,
+      "matches_source_manifest": true
+    },
+    {
+      "snapshot": "evidence/recomputed_summary.json",
+      "original": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/recomputed_summary.json",
+      "sha256": "d4dbd210030812dac1bc897fac1c1bc5d18b71a32d75f60a7dbaad649fb7198b",
+      "snapshot_matches_original": true,
+      "matches_source_manifest": true
+    }
+  ],
+  "raw_sources": [
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/dataset.npz",
+      "sha256": "b5b4196c42ec09a212335257d36d8207c4ad2b5e8b92e72f6f83668127b612f6",
+      "matches_archived_provenance": true
+    },
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/dataset/results.csv",
+      "sha256": "471faeaadbb1ce8845fc490a15a2eda10e4245675e753dffbcfeb508e62c8b66",
+      "matches_archived_provenance": true
+    },
+    {
+      "path": "outputs/panda_link_selection/fresh_evaluation/evaluation-2000-20261020T003931Z/split.csv",
+      "sha256": "69829d542b5cef30d8dfceca28a90476685ae6cf9bdbcefcdeb1690dd4eb2283",
+      "matches_archived_provenance": true
+    },
+    {
+      "path": "docs/experiments/results/panda_all_links_validation_1000_20261023/comparison.csv",
+      "sha256": "1ad7870f370b280132861a4ae25b831796d4ad442fbc1ac57d110c72b0a50c1c",
+      "matches_archived_provenance": true
+    },
+    {
+      "path": "docs/experiments/results/panda_all_links_validation_1000_20261023/analysis.json",
+      "sha256": "9e89f34b825ebb8f1c6bd230f0e0ce37d22a61d333d6b8318afae788fe7e1358",
+      "matches_archived_provenance": true
+    }
+  ],
+  "provenance": {
+    "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/draft-evidence/recent-panda/provenance.json",
+    "sha256": "bb84e24a7241108ce0539eecbb88498269ea4718ff349fbbc5c16846e4c2b65d"
+  },
+  "analysis_script": {
+    "path": "scripts/analyze_two_link_average.py",
+    "sha256": "0e85168a5431deeeab56abe89647c92d05d031153ca56d144fdca5a99335e433"
+  },
+  "population": {
+    "episodes": 1000,
+    "candidate_pairs": 10,
+    "episode_pair_outcomes": 10000,
+    "action_pairs": [
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "numerical_errors_included_as_unsuccessful": 40
+  },
+  "success": {
+    "all_links_successes": 590,
+    "all_links_episode_denominator": 1000,
+    "all_links_success_rate_percent": 59.0,
+    "two_link_successes": 5473,
+    "two_link_episode_pair_denominator": 10000,
+    "two_link_success_rate_percent": 54.73,
+    "two_link_minus_all_links_percentage_points": -4.269999999999996,
+    "estimand": "Mean success over uniformly weighted episodes and all ten pairs; the empirical expected success of choosing one candidate uniformly per episode."
+  },
+  "pooled_common_success": {
+    "both_success_records": 4545,
+    "unique_common_success_episodes": 577,
+    "reference_only_success_records": 1355,
+    "candidate_only_success_records": 928,
+    "both_failure_records": 3172,
+    "all_links_mean_seconds": 46.98710231023227,
+    "two_link_mean_seconds": 35.048893289329264,
+    "mean_paired_difference_seconds": -11.938209020903003,
+    "relative_reduction_percent": 25.407417001544374
+  },
+  "pooled_time_interpretation": {
+    "prior": "Each of the 1000 episodes and each of its ten candidate pairs has equal weight before conditioning on joint success.",
+    "conditioning": "Retain episode--pair records where both All-link Sequential and that two-link candidate succeed within 120 seconds.",
+    "means": "E[T_all | S_all=1,S_pair=1] and E[T_pair | S_all=1,S_pair=1] under the uniform episode--pair prior.",
+    "pair_weights_after_conditioning": "Proportional to each pair's common-success count, rather than equal across the ten pairs.",
+    "episode_weights_after_conditioning": "Proportional to the number of a given episode's two-link candidates that jointly succeed with All-link; the same All-link completion time is repeated for each such pair.",
+    "not_independent_episodes": true,
+    "uncertainty_if_added": "Resample/cluster by episode, not by episode--pair record.",
+    "not_an_unconditional_runtime_claim": "Failures are excluded from paired completion-time means. The time reduction does not imply a shorter mean runtime over all attempts or a higher success rate.",
+    "common_episode_multiplicity_histogram": {
+      "1": 14,
+      "2": 13,
+      "3": 13,
+      "4": 44,
+      "5": 30,
+      "6": 38,
+      "7": 64,
+      "8": 36,
+      "9": 74,
+      "10": 251
+    }
+  },
+  "per_pair": [
+    {
+      "pair_index": 0,
+      "pair": [
+        2,
+        3
+      ],
+      "episodes": 1000,
+      "successes": 533,
+      "success_rate_percent": 53.3,
+      "paired_common_success": {
+        "both_success_records": 453,
+        "unique_common_success_episodes": 453,
+        "reference_only_success_records": 137,
+        "candidate_only_success_records": 80,
+        "both_failure_records": 330,
+        "all_links_mean_seconds": 47.83633554084011,
+        "two_link_mean_seconds": 35.86671081677751,
+        "mean_paired_difference_seconds": -11.969624724062603,
+        "relative_reduction_percent": 25.02203521388793
+      },
+      "pooled_common_time_weight": 0.09966996699669967
+    },
+    {
+      "pair_index": 1,
+      "pair": [
+        2,
+        4
+      ],
+      "episodes": 1000,
+      "successes": 539,
+      "success_rate_percent": 53.9,
+      "paired_common_success": {
+        "both_success_records": 462,
+        "unique_common_success_episodes": 462,
+        "reference_only_success_records": 128,
+        "candidate_only_success_records": 77,
+        "both_failure_records": 333,
+        "all_links_mean_seconds": 47.7420779220792,
+        "two_link_mean_seconds": 35.774978354978785,
+        "mean_paired_difference_seconds": -11.96709956710041,
+        "relative_reduction_percent": 25.06614728129797
+      },
+      "pooled_common_time_weight": 0.10165016501650165
+    },
+    {
+      "pair_index": 2,
+      "pair": [
+        2,
+        5
+      ],
+      "episodes": 1000,
+      "successes": 581,
+      "success_rate_percent": 58.1,
+      "paired_common_success": {
+        "both_success_records": 496,
+        "unique_common_success_episodes": 496,
+        "reference_only_success_records": 94,
+        "candidate_only_success_records": 85,
+        "both_failure_records": 325,
+        "all_links_mean_seconds": 47.920564516130334,
+        "two_link_mean_seconds": 35.772177419355216,
+        "mean_paired_difference_seconds": -12.148387096775116,
+        "relative_reduction_percent": 25.351093459439323
+      },
+      "pooled_common_time_weight": 0.10913091309130914
+    },
+    {
+      "pair_index": 3,
+      "pair": [
+        2,
+        6
+      ],
+      "episodes": 1000,
+      "successes": 530,
+      "success_rate_percent": 53.0,
+      "paired_common_success": {
+        "both_success_records": 460,
+        "unique_common_success_episodes": 460,
+        "reference_only_success_records": 130,
+        "candidate_only_success_records": 70,
+        "both_failure_records": 340,
+        "all_links_mean_seconds": 46.77026086956644,
+        "two_link_mean_seconds": 34.124913043478514,
+        "mean_paired_difference_seconds": -12.645347826087926,
+        "relative_reduction_percent": 27.037154788068108
+      },
+      "pooled_common_time_weight": 0.10121012101210121
+    },
+    {
+      "pair_index": 4,
+      "pair": [
+        3,
+        4
+      ],
+      "episodes": 1000,
+      "successes": 511,
+      "success_rate_percent": 51.1,
+      "paired_common_success": {
+        "both_success_records": 412,
+        "unique_common_success_episodes": 412,
+        "reference_only_success_records": 178,
+        "candidate_only_success_records": 99,
+        "both_failure_records": 311,
+        "all_links_mean_seconds": 45.82567961165161,
+        "two_link_mean_seconds": 33.76762135922356,
+        "mean_paired_difference_seconds": -12.058058252428042,
+        "relative_reduction_percent": 26.312884728854456
+      },
+      "pooled_common_time_weight": 0.09064906490649065
+    },
+    {
+      "pair_index": 5,
+      "pair": [
+        3,
+        5
+      ],
+      "episodes": 1000,
+      "successes": 576,
+      "success_rate_percent": 57.6,
+      "paired_common_success": {
+        "both_success_records": 468,
+        "unique_common_success_episodes": 468,
+        "reference_only_success_records": 122,
+        "candidate_only_success_records": 108,
+        "both_failure_records": 302,
+        "all_links_mean_seconds": 47.13106837606967,
+        "two_link_mean_seconds": 36.446452991453334,
+        "mean_paired_difference_seconds": -10.68461538461634,
+        "relative_reduction_percent": 22.67000463337967
+      },
+      "pooled_common_time_weight": 0.10297029702970296
+    },
+    {
+      "pair_index": 6,
+      "pair": [
+        3,
+        6
+      ],
+      "episodes": 1000,
+      "successes": 548,
+      "success_rate_percent": 54.8,
+      "paired_common_success": {
+        "both_success_records": 450,
+        "unique_common_success_episodes": 450,
+        "reference_only_success_records": 140,
+        "candidate_only_success_records": 98,
+        "both_failure_records": 312,
+        "all_links_mean_seconds": 46.59840000000123,
+        "two_link_mean_seconds": 34.90920000000031,
+        "mean_paired_difference_seconds": -11.689200000000914,
+        "relative_reduction_percent": 25.08498145859216
+      },
+      "pooled_common_time_weight": 0.09900990099009901
+    },
+    {
+      "pair_index": 7,
+      "pair": [
+        4,
+        5
+      ],
+      "episodes": 1000,
+      "successes": 557,
+      "success_rate_percent": 55.7,
+      "paired_common_success": {
+        "both_success_records": 454,
+        "unique_common_success_episodes": 454,
+        "reference_only_success_records": 136,
+        "candidate_only_success_records": 103,
+        "both_failure_records": 307,
+        "all_links_mean_seconds": 46.525418502203884,
+        "two_link_mean_seconds": 34.69189427312805,
+        "mean_paired_difference_seconds": -11.833524229075831,
+        "relative_reduction_percent": 25.4345358086683
+      },
+      "pooled_common_time_weight": 0.09988998899889989
+    },
+    {
+      "pair_index": 8,
+      "pair": [
+        4,
+        6
+      ],
+      "episodes": 1000,
+      "successes": 558,
+      "success_rate_percent": 55.8,
+      "paired_common_success": {
+        "both_success_records": 459,
+        "unique_common_success_episodes": 459,
+        "reference_only_success_records": 131,
+        "candidate_only_success_records": 99,
+        "both_failure_records": 311,
+        "all_links_mean_seconds": 46.89625272331279,
+        "two_link_mean_seconds": 34.950196078431624,
+        "mean_paired_difference_seconds": -11.946056644881164,
+        "relative_reduction_percent": 25.473371434094595
+      },
+      "pooled_common_time_weight": 0.100990099009901
+    },
+    {
+      "pair_index": 9,
+      "pair": [
+        5,
+        6
+      ],
+      "episodes": 1000,
+      "successes": 540,
+      "success_rate_percent": 54.0,
+      "paired_common_success": {
+        "both_success_records": 431,
+        "unique_common_success_episodes": 431,
+        "reference_only_success_records": 159,
+        "candidate_only_success_records": 109,
+        "both_failure_records": 301,
+        "all_links_mean_seconds": 46.3852436194908,
+        "two_link_mean_seconds": 33.89907192575436,
+        "mean_paired_difference_seconds": -12.486171693736434,
+        "relative_reduction_percent": 26.91841352858568
+      },
+      "pooled_common_time_weight": 0.09482948294829482
+    }
+  ],
+  "equal_pair_macro_common_success": {
+    "all_links_mean_seconds": 46.963130168134605,
+    "two_link_mean_seconds": 35.020321626258124,
+    "mean_paired_difference_seconds": -11.94280854187648,
+    "relative_reduction_of_macro_means_percent": 25.430180013809878,
+    "mean_of_per_pair_relative_reductions_percent": 25.43706223348682,
+    "definition": "Give each pair equal weight AFTER computing its own conditional common-success means. This differs from conditioning the uniform pair policy on common success and is not the selected slide estimand."
+  },
+  "existing_fixed_3_5_reproduction": {
+    "pair_index": 5,
+    "successes": 576,
+    "success_rate_percent": 57.6,
+    "paired_common_success": {
+      "both_success_records": 468,
+      "unique_common_success_episodes": 468,
+      "reference_only_success_records": 122,
+      "candidate_only_success_records": 108,
+      "both_failure_records": 302,
+      "all_links_mean_seconds": 47.13106837606967,
+      "two_link_mean_seconds": 36.446452991453334,
+      "mean_paired_difference_seconds": -10.68461538461634,
+      "relative_reduction_percent": 22.67000463337967
+    },
+    "all_existing_counts_and_means_match": true
+  },
+  "recommended_slide_labels": {
+    "method": "Two-link average (all 10 pairs)",
+    "success": "59.00% vs. 54.73%",
+    "time": "Paired mean time: 46.99 s to 35.05 s (25.41% lower)",
+    "time_sample": "4,545 common-success episode--pair outcomes (577 episodes)"
+  },
+  "verification": {
+    "all_snapshot_and_original_sha256_checked": true,
+    "all_raw_npz_csv_split_hashes_match_archived_provenance": true,
+    "validation_episode_ids_match_all_links_and_original_split": true,
+    "each_episode_has_each_candidate_exactly_once": true,
+    "validation_outcomes_checked_against_raw_npz_and_csv": 10000,
+    "successful_completion_times_checked_against_raw_csv": 5473,
+    "existing_uniform_mean_reproduced": true,
+    "existing_per_pair_success_counts_reproduced": true,
+    "existing_fixed_3_5_counts_and_paired_means_reproduced": true,
+    "all_links_120_second_source_used_not_150_second_results": true
+  }
+}

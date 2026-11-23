@@ -15,7 +15,7 @@
     {
       "page": 2,
       "label": "motivation-goal",
-      "title": "Safe Goal Reaching for Autonomous Workstations",
+      "title": "Why Safe Goal Reaching Matters",
       "seconds": 25,
       "user_outline": "1. Motivation",
       "progress_part": "Motivation",
@@ -42,7 +42,7 @@
     {
       "page": 5,
       "label": "background-cbf",
-      "title": "Background (2/3): CBF for Safety",
+      "title": "CBF for Safety",
       "seconds": 40,
       "user_outline": "2. Background: CLF–CBF QP",
       "progress_part": "Background",
@@ -71,14 +71,14 @@
       "label": "planar-direct",
       "title": "A Naive Trial: Direct End-Effector Tracking",
       "seconds": 30,
-      "user_outline": "3-1. Planar baseline",
-      "progress_part": "Planar",
+      "user_outline": "2. Background: Direct tracking and stagnation",
+      "progress_part": "Background",
       "thesis_section": "Local Minima and Deadlock in CLF-CBF QP"
     },
     {
       "page": 9,
       "label": "human-inspiration",
-      "title": "Human-Inspired Intuition: Reposition Before Reaching",
+      "title": "Human-Inspired Intuition: Posture and Subgoals",
       "seconds": 20,
       "user_outline": "제안 방법의 설계 직관",
       "progress_part": "Planar",
@@ -87,11 +87,11 @@
     {
       "page": 10,
       "label": "thesis-outline",
-      "title": "Thesis Roadmap: From Problem to Method",
+      "title": "Chapter 3: Method Overview",
       "seconds": 15,
-      "user_outline": "논문 목차와 발표 경로",
+      "user_outline": "논문 Chapter 3의 3.1–3.5 목차로 제안 방법론의 전체 범위 제시",
       "progress_part": "Planar",
-      "thesis_section": "Research Objectives"
+      "thesis_section": "A Sequential Approach to Collision-Free Kinematic Control"
     },
     {
       "page": 11,
@@ -100,16 +100,16 @@
       "seconds": 15,
       "user_outline": "3-2. Planar method: inputs and IK targets",
       "progress_part": "Planar",
-      "thesis_section": "Intermediate Targets and Sequential Tasks"
+      "thesis_section": "Decomposition of Regulation Task"
     },
     {
       "page": 12,
       "label": "planar-setup",
-      "title": "Proposed Method: IK-Derived Intermediate Link Targets",
+      "title": "Proposed Method: IK-Derived Link Subtasks",
       "seconds": 10,
       "user_outline": "3-2. Planar method: inputs and IK targets",
       "progress_part": "Planar",
-      "thesis_section": "Intermediate Targets and Sequential Tasks"
+      "thesis_section": "Decomposition of Regulation Task"
     },
     {
       "page": 13,
@@ -150,7 +150,7 @@
     {
       "page": 17,
       "label": "algorithm-overview",
-      "title": "One Sequential Algorithm, Model-Specific Functions",
+      "title": "Overall Sequential Control Framework",
       "seconds": 25,
       "user_outline": "공통 Sequential 알고리즘",
       "progress_part": "Planar",
@@ -168,7 +168,7 @@
     {
       "page": 19,
       "label": "planar-why",
-      "title": "Resolving Deadlock through Task Transition",
+      "title": "Resolving Deadlock through Subtask Transition",
       "seconds": 45,
       "user_outline": "3-4. Planar mechanism",
       "progress_part": "Planar",
@@ -231,7 +231,7 @@
     {
       "page": 26,
       "label": "two-links",
-      "title": "Reduction to Two Intermediate Link Tasks",
+      "title": "Reduction to Two Link Subtasks",
       "seconds": 50,
       "user_outline": "6. Two-link selection",
       "progress_part": "Spatial",
@@ -267,7 +267,7 @@
     {
       "page": 30,
       "label": "selector-model",
-      "title": "Learned Selection (2/2): From Selected Tasks to the QP",
+      "title": "Learned Selection (2/2): From Subtasks to QP",
       "seconds": 30,
       "user_outline": "8. Learning",
       "progress_part": "Learning",
@@ -294,7 +294,7 @@
     {
       "page": 33,
       "label": "learning-why",
-      "title": "An Episode Recovered by Learned Selection",
+      "title": "Why Selection Matters: Only One Pair Succeeds",
       "seconds": 45,
       "user_outline": "10. Why selection helps",
       "progress_part": "Results",
@@ -312,9 +312,9 @@
     {
       "page": 35,
       "label": "future-work",
-      "title": "Future Work: From Simulation to Robot Experiments",
+      "title": "Future Work: Experiments and Sequencing",
       "seconds": 30,
-      "user_outline": "추가 검증과 실제 로봇 적용",
+      "user_outline": "실제 로봇의 폐루프 실행·성능 평가와 sequencing 신경망의 상대 기하 표현·구조 및 link subtask 개수를 고정하지 않는 선택으로 확장",
       "progress_part": "Results",
       "thesis_section": "Interpretation and Limitations"
     },
@@ -337,11 +337,11 @@
     {
       "name": "Background",
       "first_page": 4,
-      "last_page": 7
+      "last_page": 8
     },
     {
       "name": "Planar",
-      "first_page": 8,
+      "first_page": 9,
       "last_page": 19
     },
     {

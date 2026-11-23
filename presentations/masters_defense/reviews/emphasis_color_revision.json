@@ -1,0 +1,31 @@
+{
+  "request": "텍스트 색 강조를 더 원색으로 변경",
+  "text_palette": {
+    "red": "FF0000",
+    "blue": "0000FF",
+    "green": "008000",
+    "orange": "E66A00"
+  },
+  "applied_to": [
+    "강조 문구와 숫자",
+    "활성 CLF 수식",
+    "QP 단계 제목",
+    "안전 집합 및 다이어그램 텍스트"
+  ],
+  "structural_and_figure_palette_preserved": true,
+  "checks": {
+    "audience_pages": 57,
+    "presenter_pages": 93,
+    "audience_and_presenter_text_unchanged": true,
+    "figure_files_unchanged": 82,
+    "visual_review_pages": [
+      5,
+      14,
+      28,
+      29,
+      30
+    ],
+    "visual_clipping_or_overlap_found": false,
+    "independent_agent_review": "passed"
+  }
+}

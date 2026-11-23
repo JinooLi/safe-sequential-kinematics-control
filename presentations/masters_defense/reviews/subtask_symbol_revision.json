@@ -1,0 +1,55 @@
+{
+  "revision": "subtask_symbol_revision",
+  "request": "Use the thesis subtask symbols in the presentation",
+  "thesis_root": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis",
+  "thesis_source_sha256": {
+    "sections/Method/Sequential_Frames.tex": "a545455bb77067236f76f4826560150d9dcad9a0a91881ccc7939895dedc9697",
+    "sections/Method/Problem_Formulation.tex": "98e383b9dc8203937c9b99ca3bc3f53f2ca11cf341843c049addad53c2f9f529",
+    "sections/Method/Panda_Frames.tex": "5e1f7769d1671ab530d3610b82a526e971d4bd97e62633a41922cc526dd66693",
+    "sections/Method/Link_Selection.tex": "3a534dcacf17b90d5d7246ed2bdc6c740437dc8ed37994156dfb43f6c2cc7bb4"
+  },
+  "notation": {
+    "original_task": "\\mathbf{T}_{\\mathrm{ee}}",
+    "subtask": "\\mathbf{ST}_{\\mathrm{ee},s}",
+    "s": "execution-stage index",
+    "i_s": "selected link index at stage s",
+    "L": "number of link subtasks before the final EE task",
+    "final_task": "\\mathbf{ST}_{\\mathrm{ee},L+1}=\\mathbf{T}_{\\mathrm{ee}}"
+  },
+  "affected_pdf_pages": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    23,
+    24,
+    26,
+    30,
+    52,
+    53
+  ],
+  "distinctions": {
+    "planar": "s=i_s only for the illustrated (1,2,3) order",
+    "spatial_all_link": "7 DOF, L=7 link subtasks plus ST_ee,8 as final EE; no 8th joint or new V_8",
+    "two_link": "ST_ee,1 uses link a; ST_ee,2 uses link b; ST_ee,3 is original EE task",
+    "candidate_S_k": "retained as candidate link pair, distinct from subtask symbols",
+    "generic_workflow": "uses ST execution stages instead of mixing the generic final-link n convention with the separate spatial EE frame"
+  },
+  "main_slides": 36,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "speech_seconds": 1140,
+  "validation": {
+    "artifact_verifier": "passed",
+    "equations_unchanged": "taskqp gathered equations and A12 align equations byte-identical to baseline",
+    "independent_semantic_review": "pair_mean_statistics: passed",
+    "independent_visual_review": "pair_mean_figures reviewed all 13 affected pages; page 30 connector alignment corrected",
+    "final_visual_check": "page 12 term definition and page 30 horizontal arrows checked after final build",
+    "thesis_source_hashes_match_prior_audit": true
+  },
+  "raw_experiment_data_changed": false,
+  "thesis_source_changed": false
+}

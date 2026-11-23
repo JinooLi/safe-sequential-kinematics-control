@@ -1,0 +1,80 @@
+{
+  "slide_label": "thesis-outline",
+  "pdf_page": 10,
+  "title": "Chapter 3: Method Overview",
+  "subtitle": "3 A Sequential Approach to Collision-Free Kinematic Control",
+  "thesis_full_chapter_heading": "A Sequential Approach to Collision-Free Kinematic Control Based on Control Barrier Functions and Supervised Learning",
+  "source": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/sections/body.tex",
+  "source_sha256": "97277baa3cdf1ca11a6acc9fbfd6cf026b27cf052c4b4326f3ea05c027bf425f",
+  "sections": [
+    {
+      "number": "3.1",
+      "display_title": "Problem Formulation",
+      "thesis_heading": "Problem Formulation",
+      "source_line": 28,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 18,
+        "number": "3.1",
+        "page": "21",
+        "anchor": "section.3.1"
+      }
+    },
+    {
+      "number": "3.2",
+      "display_title": "Sequential Kinematic Control Framework",
+      "thesis_heading": "Sequential Kinematic Control Framework",
+      "source_line": 30,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 19,
+        "number": "3.2",
+        "page": "24",
+        "anchor": "section.3.2"
+      }
+    },
+    {
+      "number": "3.3",
+      "display_title": "Application to the 3-DOF Planar Manipulator",
+      "thesis_heading": "Application to the 3-DOF Planar Manipulator",
+      "source_line": 36,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 22,
+        "number": "3.3",
+        "page": "28",
+        "anchor": "section.3.3"
+      }
+    },
+    {
+      "number": "3.4",
+      "display_title": "Extension to the 7-DOF Spatial Manipulator",
+      "thesis_heading": "Extension to the 7-DOF Panda Manipulator",
+      "source_line": 38,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 27,
+        "number": "3.4",
+        "page": "32",
+        "anchor": "section.3.4"
+      }
+    },
+    {
+      "number": "3.5",
+      "display_title": "Learning-Based Selection of Two Link Subtasks",
+      "thesis_heading": "Learning-Based Selection of Two Intermediate Links",
+      "source_line": 48,
+      "toc_evidence": {
+        "path": "/home/jinoo/latex-ws/LaTeX-env/ws/masters_tethis/build/main.toc",
+        "line": 32,
+        "number": "3.5",
+        "page": "47",
+        "anchor": "section.3.5"
+      }
+    }
+  ],
+  "scope": "Chapter 3 methodology sections, not the full thesis contents or a strict slide-order promise",
+  "subsections_omitted_for_readability": true,
+  "seconds": 15,
+  "thesis_source_modified": false
+}

@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-11-11T13:38:04.094232+09:00",
+  "scope": "CICS 7쪽 선행 연구 비교 및 대본",
+  "title": "선행 연구와 본 연구의 설계 초점",
+  "comparison": {
+    "Mansard & Chaumette (2007)": "Task 활성화·해제: 제약에 대응하도록 task 구성 조정",
+    "Basso & Pettersen (2020)": "Task 우선순위 보존: 상위 task의 성능을 보존하며 다른 task 수행",
+    "본 연구": "Subtask 목표 구성: 목표 역기구학 (IK) 해에서 링크별 위치 목표 생성"
+  },
+  "research_question": "목표 IK의 팔 배치를 활용하여, 목표 도달을 돕는 링크 subtask를 구성할 수 있는가?",
+  "review": "설계 초점 비교이며 최초성·우월성 주장 아님; 독립 검토 의견에 따라 Basso 표현을 상위 task의 성능 보존으로 명시",
+  "verification": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      7
+    ],
+    "changed_note_labels": [
+      "related-work"
+    ],
+    "note_seconds": 35,
+    "total_speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "slide_and_note_visually_reviewed": true,
+    "data_figures_references_navigation_spacing_unchanged": true
+  }
+}

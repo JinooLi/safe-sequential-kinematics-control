@@ -24,11 +24,10 @@
     "obstacle_halo": "Nominal 0.08 m geometric margin; not exact RDF contours"
   },
   "clf_shapes": {
-    "symbolic_formula": "V_i=w_V||e_p,i||^2; Vee=w_V(||e_p,ee||^2+w_psi(1-cos(e_psi))), w_V,w_psi>0",
+    "symbolic_formula": "V_i=0.5||e_p,i||^2; V_e=0.5||p_e-p_d||^2+0.5*w_o*(1-cos(psi_e-psi_d)), w_o>0",
     "coordinates": "Intermediate tasks: planar position-error coordinates; EE: position-error norm and yaw error",
     "illustrative_weights": {
-      "w_V": 1.0,
-      "w_psi": 0.5
+      "w_o": 0.5
     },
     "archived_trajectory_weights": {
       "w_V": 10,

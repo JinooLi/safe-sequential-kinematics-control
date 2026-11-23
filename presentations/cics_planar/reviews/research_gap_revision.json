@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-10",
+  "scope": "CICS planar 발표의 관련 연구·연구 질문·기여 설명 보완",
+  "changes": [
+    "7쪽: task 분해와 strict task priority 연구 두 편을 BibTeX로 인용하고 goal IK 활용의 연구 질문 제시",
+    "8쪽: 하나의 goal IK에서 forward kinematics로 두 link 목표를 추출한다는 구성 규칙 강조",
+    "12–13쪽: 이전 link task 해제 및 Jacobian nullity의 해석 범위 보강",
+    "17쪽: Direct만 성공한 10개 episode와 전역 수렴 미보장 명시",
+    "한국어 대본·Q&A·점 형태 progress 및 페이지별 시간표 동기화",
+    "참고문헌 frame의 label을 별도 hyperlink anchor로 변경하여 자동 분할 후 두 신규 문헌이 누락되는 문제 해결"
+  ],
+  "sources": [
+    {
+      "key": "mansard2007sequencing",
+      "url": "https://gepettoweb.laas.fr/uploads/Publications/2007-mansard-itro.pdf",
+      "basis": "Sec. I–II: subtask 분해·비활성화·재활성화와 계층적 제어 구조"
+    },
+    {
+      "key": "basso2020priority",
+      "url": "https://arxiv.org/abs/2001.07547",
+      "doi": "10.1016/j.ifacol.2020.12.2024",
+      "basis": "Sec. 3.2, Algorithm 1: 상위 task 성능을 보존하는 CLF–CBF QP hierarchy"
+    }
+  ],
+  "claim_limits": [
+    "IK·task 분해·순차 실행 일반론의 최초성 주장 없음",
+    "기존 문헌과 직접 성능 비교 없음",
+    "학습 기반 subtask 선택은 이번 planar 발표 범위 밖"
+  ],
+  "validation": {
+    "checked_at": "2026-11-10T19:45:00.253120+09:00",
+    "audience_pages": 27,
+    "main_slides": 18,
+    "appendix_pages": 9,
+    "presenter_pages": 45,
+    "speaker_notes": 18,
+    "speech_seconds": 555,
+    "buffer_seconds": 45,
+    "compile": "pdfLaTeX + BibTeX + latexmk; no LaTeX warnings, errors, or overfull boxes",
+    "underfull_layout_notices": {
+      "main": 58,
+      "presenter": 58
+    },
+    "visual_review": "관련 연구, IK 목표, 활성 CLF, 작동 원리, 결론, 참고문헌 및 새 한국어 노트 페이지 확인",
+    "pdf_checks": "모든 27쪽의 텍스트 경계 확인; 6개 인용과 참고문헌 표시 확인",
+    "audience_language": "English",
+    "speaker_notes_language": "Korean",
+    "source_pdf_sha256": {
+      "main.pdf": "4ab8096e5fbc04df069b55c78560782356627dc254f152ff7ebdfe451f112bea",
+      "presenter.pdf": "13a1c8b4d0878d442070aa8ed2fb4608a01c1b45e2e04318b3b1cf04160b7e4f"
+    },
+    "manuscript_and_experiment_figures_unchanged": true,
+    "original_masters_unchanged": true
+  }
+}

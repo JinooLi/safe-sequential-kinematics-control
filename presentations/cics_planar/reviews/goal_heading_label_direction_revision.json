@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-11-11T15:57:05.227902+09:00",
+  "scope": "3쪽 목표 방향 psi_d 주석 위치",
+  "figure": {
+    "output": "/home/jinoo/prj/safe-inv-clbf-robot-arm/presentations/cics_planar/Fig/progressive_planar_02_scene_labeled.pdf",
+    "pdf_size_inches": [
+      4.679587712208039,
+      4.8
+    ],
+    "goal_position": [
+      -0.31419055991504535,
+      -1.9811619104603295
+    ],
+    "goal_heading_arrow_tip": [
+      -0.5483382128066824,
+      -2.115604748296108
+    ],
+    "goal_heading_label_position": [
+      -0.6177152951449452,
+      -2.1554396632104127
+    ],
+    "current_end_effector_position": [
+      3.0,
+      0.0
+    ],
+    "current_heading_arrow_direction": [
+      1,
+      0
+    ],
+    "label_font_pt_at_50_74_mm_width": 10,
+    "native_font_pt": 23.42560660033192
+  },
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_review_complete": true,
+    "source_equations_notes_and_original_sequence_figures_unchanged": true,
+    "user_edits_to_korean_script_preserved": true
+  }
+}

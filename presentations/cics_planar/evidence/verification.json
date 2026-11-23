@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-11-12T09:46:26.630325+09:00",
+  "audience_pages": 26,
+  "main_slides": 18,
+  "appendix_pages": 8,
+  "presenter_pages": 44,
+  "speaker_notes": 18,
+  "speech_seconds": 560,
+  "buffer_seconds": 40,
+  "compile": "pdfLaTeX + BibTeX + latexmk; no LaTeX warnings, errors, or overfull boxes",
+  "underfull_layout_notices": {
+    "main": 0,
+    "presenter": 0
+  },
+  "visual_review": "3쪽 명시적 Task 정의 렌더 확인",
+  "pdf_checks": "청중용 26쪽/리허설용 44쪽 유지; 3쪽과 해당 노트 썸네일만 변경; 컴파일 경고 없음",
+  "audience_language": "Korean body; English section navigation, established technical terms, cited publication titles, and labels in the original manuscript figure retained",
+  "speaker_notes_language": "Korean",
+  "source_pdf_sha256": {
+    "main.pdf": "b8f34339ad57d4cfd0a7e3f9ae77d533726b38b05385e810012690423c295cd5",
+    "presenter.pdf": "9da523cf283b09ce7c634f3cf1ef1f2e33d690cdb370696fc1d57fbe895f4f10"
+  },
+  "original_masters_unchanged": true,
+  "latest_change": "3쪽에 Task의 일반 정의를 명시하고 본 연구의 pose 목표와 구분",
+  "latest_visual_review": "3쪽 렌더 확인: Task 정의와 본 연구의 목표가 각각 한 줄에 표시되며 겹침 없음",
+  "manuscript_and_experiment_data_unchanged": true,
+  "figure_localization": "설명, 축 이름 및 범례만 한국어로 변경; 실험 값, 시계열, 로봇 및 장애물 배치 유지"
+}

@@ -1,0 +1,15 @@
+{
+  "reviewer": "cics_figures",
+  "scope": "PDF 4,7–13,15,20–25쪽 독립 시각·내용 검토",
+  "layout": "잘림·겹침·화살표 연결 오류 없음. 단계별 그림 크기 및 좌표계 일관.",
+  "findings_and_changes": [
+    {
+      "finding": "Inactive CLF는 최종까지 커져 있을 수 있어 temporary 표현이 부정확",
+      "change": "Inactive task errors may increase로 수정"
+    },
+    {
+      "finding": "47 gains−10 losses의 net gain 의미",
+      "change": "37 net additional successes로 수정"
+    }
+  ]
+}

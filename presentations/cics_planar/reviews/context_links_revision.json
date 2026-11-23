@@ -1,0 +1,41 @@
+{
+  "checked_at": "2026-11-11T13:44:53.156686+09:00",
+  "scope": "3·6쪽 문구의 맥락 명확화",
+  "slide3": [
+    "독립된 하단 기구학 모델 라벨을 수식 위 제목으로 이동",
+    "상태 q: 관절각, 입력 u: 관절 속도 명시",
+    "모델 인용을 수식 설명에 연결"
+  ],
+  "slide6": [
+    "추상적 마무리 문구를 최종 목표 추종 전 어떤 하위 작업이 도움이 되는지 묻는 질문으로 교체",
+    "하위 작업(subtask)을 처음 등장할 때 설명",
+    "실패 사례에서 다음 페이지의 task 구성·우선순위·목표 생성 비교로 연결"
+  ],
+  "preserved_user_edits": [
+    "3쪽 위치/yaw 구분 쉼표",
+    "3쪽 장애물과 자기충돌 회피 표현",
+    "11쪽 소스 공백"
+  ],
+  "independent_review": "모델·상태·입력 설명을 한 묶음으로 배치하고 subtask 첫 등장 설명 권고 반영",
+  "validation": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "changed_audience_pages": [
+      3,
+      6
+    ],
+    "changed_note_labels": [
+      "problem",
+      "limitation"
+    ],
+    "speech_seconds": 560,
+    "buffer_seconds": 40,
+    "build_warnings": 0,
+    "out_of_page_text": 0,
+    "visual_reviewed_pages": [
+      3,
+      6
+    ],
+    "figures_data_references_spacing_navigation_unchanged": true
+  }
+}

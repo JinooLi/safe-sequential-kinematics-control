@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-09",
+  "pages": [
+    20,
+    21
+  ],
+  "scope_ko": "Self-collision 문제 정의 명확화, 원전 RDF 로봇 그림 교체, 설명과 수식 간격 통일",
+  "slide_20": "Self-collision avoidance for complex link shapes",
+  "slide_21": {
+    "figure": "Li et al., Fig. 1(a)",
+    "asset": "Fig/rdf_robot_sdf_li2024.png",
+    "source_figure_unchanged": true,
+    "right_column_alignment": "left aligned in one table",
+    "heading_to_formula_gap_mm": 1.5,
+    "between_steps_gap_mm": 4,
+    "source_caption_size": "scriptsize",
+    "body_and_formulas_size": "normalsize",
+    "gradient_description": "account for both links' motion"
+  },
+  "figure_source": "https://arxiv.org/html/2307.00533v3",
+  "notes_labels": [
+    "panda-extension",
+    "panda-rdf"
+  ],
+  "notes_seconds": [
+    25,
+    55
+  ],
+  "speech_seconds": 1140,
+  "new_simulation": false,
+  "new_training": false,
+  "independent_review": {
+    "agent": "literature_positioning_review",
+    "pages": [
+      20,
+      21
+    ],
+    "required_changes": [],
+    "checked": [
+      "figure meaning and attribution",
+      "single-column equation alignment",
+      "heading/formula spacing",
+      "no overlap or clipping",
+      "footer separation",
+      "Korean notes consistent"
+    ]
+  },
+  "user_preference_ko": "그림 출처는 작은 글씨 허용; 설명 본문과 수식은 기존 크기 유지",
+  "user_feedback_source_preserved": true
+}

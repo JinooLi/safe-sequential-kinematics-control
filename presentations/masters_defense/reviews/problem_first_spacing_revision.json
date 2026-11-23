@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-09",
+  "visual_pages": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "audience_pages": 57,
+  "presenter_pages": 93,
+  "total_notes": 36,
+  "speech_seconds": 1140,
+  "transition_buffer_seconds": 60,
+  "verification_issues": [],
+  "flow": [
+    "6: CLF-CBF QP",
+    "7: Direct tracking and stagnation",
+    "8: Related work and research question",
+    "9: Human-inspired intuition"
+  ],
+  "progress_sections": {
+    "Background": [
+      4,
+      8
+    ],
+    "Planar": [
+      9,
+      19
+    ]
+  },
+  "page6_layout_y_mm": {
+    "headline": 2,
+    "equations": 21,
+    "symbol_definitions": 40,
+    "slack_explanation": 47,
+    "diagram": 56,
+    "control_step_caption": 65
+  },
+  "user_argmin_notation_preserved": true,
+  "moved_frame_contents_unchanged": true,
+  "semantic_and_visual_review": {
+    "agent": "literature_positioning_review",
+    "required_changes": [],
+    "no_overlap_or_clipping": true
+  },
+  "new_simulations_or_training": false,
+  "artifact_verification_passed": true,
+  "current_user_title_preserved": true
+}

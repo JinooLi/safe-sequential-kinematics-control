@@ -301,8 +301,8 @@
   "renderer": "MuJoCo static forward kinematics with original Panda meshes",
   "mujoco_version": "3.10.0",
   "common_camera": {
-    "azimuth": 45.0,
-    "elevation": -20.0,
+    "azimuth": 45,
+    "elevation": -20,
     "distance": 3.5,
     "lookat": [
       0.05,
@@ -636,8 +636,8 @@
     "recovery_comparison.png"
   ],
   "figure_sha256": {
-    "recovery_comparison.pdf": "2ab141cb67b59eaed2481619e1cfafa987f6ac3003eb7cbe965812853ad50c69",
-    "recovery_comparison.png": "9be4e584e5cb922aecd462a26c49b895c4d3bb2ebefbb0e951f068a456eb86be"
+    "recovery_comparison.pdf": "7b9048d7e3d45159ba6b27414dfc6c3dcd168fb7f4823b44858836dc99f824f3",
+    "recovery_comparison.png": "ed7ed81595f5785357a0e742078a9ad1dd665e8c8b0651f5130133b1468470de"
   },
-  "script_sha256": "af6ca07fef71a5df8726e2df068e0c1d26028f16fe583bcb039105f8dd92d43b"
+  "script_sha256": "430a3f135b5ad8dfe7da61fdd2ccb7c2e80f51952c31b16c34de469677e25bf0"
 }

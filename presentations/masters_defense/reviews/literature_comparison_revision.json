@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-08",
+  "scope": "7쪽 기존 연구 비교와 본 연구의 구조적 장점 명확화",
+  "comparison_columns": [
+    "Method",
+    "Mechanism",
+    "Requirement / limitation"
+  ],
+  "rows": [
+    {
+      "study": "Reis et al. (2021)",
+      "mechanism": "Rotate the CLF",
+      "requirement": "Auxiliary rotation dynamics + extra CBF",
+      "source": "https://arxiv.org/html/2003.07819v4#S4"
+    },
+    {
+      "study": "Tan & Dimarogonas (2024)",
+      "mechanism": "QP around a nominal input",
+      "limitation": "Boundary equilibria may remain",
+      "source": "https://arxiv.org/html/2104.14895v4#S4"
+    },
+    {
+      "study": "Goncalves et al. (2023)",
+      "mechanism": "Enforce circulation near obstacles",
+      "requirement": "Tangent field + extra constraint",
+      "source": "https://arxiv.org/html/2307.09901v1"
+    }
+  ],
+  "ours": "IK-derived link targets; task switching within the same CLF-CBF QP form",
+  "claim_scope_ko": "선행 방법 대비 직접 성공률·속도 우위 및 모든 정체 제거를 주장하지 않음. 같은 QP 형식은 활성 task CLF가 동일하다는 의미가 아님. IK와 task 전환 설계는 필요.",
+  "details_preserved_in": "질의응답_메모.txt",
+  "notes_language": "Korean",
+  "slides_language": "English",
+  "speaker_seconds": 40,
+  "new_simulation": false,
+  "references_backend": "BibTeX",
+  "review": "기존 연구의 추가 구조와 남는 한계를 원문에 근거해 구분; Tan의 nominal 입력에 대해 과도한 계산 부담 주장 제외."
+}

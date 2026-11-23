@@ -1,0 +1,40 @@
+{
+  "checked_at": "2026-11-11T13:29:50.056736+09:00",
+  "request": "상단 섹션 영어 복원 및 본문 줄·문단 간격 통일",
+  "navigation": [
+    "Motivation",
+    "Background",
+    "Method",
+    "Results",
+    "Closing",
+    "Appendix contents"
+  ],
+  "spacing": {
+    "font_pt": 10,
+    "baseline_pt": 13.2,
+    "detail_gap_mm": 1,
+    "group_gap_mm": 3,
+    "figure_gap_mm": 2,
+    "math_row_gap_mm": 1.5,
+    "table_row_stretch": 1.25,
+    "body_height_mm": 57.5,
+    "headline_height_mm": 2.5
+  },
+  "layout_changes": [
+    "본문 내부 가변 여백을 고정 간격으로 교체; 남는 공간은 본문 위아래에 배분",
+    "9–11쪽 단계별 텍스트 위치 일치",
+    "12쪽 CLF 도식의 세로 범위 41→38mm 조정",
+    "부록 목차 메뉴의 균등 배치 유지"
+  ],
+  "verification": {
+    "audience_pages": 27,
+    "presenter_pages": 45,
+    "all_pages_visually_reviewed": true,
+    "independent_spacing_review": true,
+    "warnings": 0,
+    "out_of_page_text": 0,
+    "audience_body_text_and_math_characters_unchanged": true,
+    "notes_data_and_figure_assets_unchanged": true,
+    "stage_qp_vertical_difference_pt": 0.015
+  }
+}

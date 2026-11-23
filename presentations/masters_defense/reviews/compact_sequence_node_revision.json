@@ -1,0 +1,25 @@
+{
+  "revision": "compact_sequence_node_revision",
+  "request": "Replace the explicit ST transitions in the page 30 node with a short text label",
+  "changed_pdf_pages": [
+    30
+  ],
+  "node_label": "Subtask targets and sequence",
+  "font_size_pt": 10,
+  "line_spacing_pt": 10,
+  "node_vertical_padding_mm": 0.4,
+  "node_center_y_mm": -50.75,
+  "notes_changed": [
+    "selector-model"
+  ],
+  "speech_seconds": 1140,
+  "main_pdf_pages": 57,
+  "presenter_pdf_pages": 93,
+  "validation": {
+    "artifact_verifier": "passed",
+    "visual_review": "Compact node matches the neighboring node heights and connectors are horizontal",
+    "all_other_pdf_page_text_unchanged": true,
+    "document_sync": "pair_mean_scope_review updated the note, outline, and Q&A"
+  },
+  "equations_or_results_changed": false
+}

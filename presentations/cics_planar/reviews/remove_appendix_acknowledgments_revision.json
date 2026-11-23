@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-11-12T00:10:14.448158+09:00",
+  "scope": "부록 마지막 감사의 글 삭제",
+  "removed": [
+    "app-ack 프레임",
+    "부록 목차의 A7 링크"
+  ],
+  "preserved": [
+    "본문18쪽 감사합니다 슬라이드",
+    "본문18장 및 대본",
+    "제출 원고 원본의 연구비 지원 문구"
+  ],
+  "validation": {
+    "audience_pages": 26,
+    "main_slides": 18,
+    "appendix_pages": 8,
+    "presenter_pages": 44,
+    "last_page": "A6. 참고문헌 II",
+    "main_slides_and_notes_unchanged": true,
+    "build_warnings": 0,
+    "visual_review_complete": true
+  }
+}
