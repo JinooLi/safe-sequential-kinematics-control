@@ -36,6 +36,7 @@ from safe_ik.learning.link_selection import (
     load_model,
     load_scene_split,
     make_state,
+    model_spec,
     predict_selection,
     sha256,
     split_scenes,
@@ -139,6 +140,139 @@ class LinkSelectionTests(unittest.TestCase):
                 self.assertEqual(result["link_frames"], frames)
                 self.assertIsNone(result["pair_index"])
                 self.assertEqual(len(result["probabilities"]), 16)
+            state, obstacles = torch.randn(3, 23), torch.randn(3, 2, 4)
+            for weight in (0, 1.0, 3.0):
+                with self.subTest(weight=weight):
+                    torch.save(
+                        {
+                            **checkpoint,
+                            "state_dict": model.state_dict(),
+                            **objective_metadata(
+                                {
+                                    "weight_decay": 0.0001,
+                                    "selection_loss_weight": weight,
+                                }
+                            ),
+                        },
+                        path,
+                    )
+                    torch.testing.assert_close(
+                        model(state, obstacles),
+                        load_model(path)(state, obstacles),
+                        rtol=0,
+                        atol=0,
+                    )
+            for weight in (-1, float("nan"), float("inf"), True, None, "1"):
+                with self.subTest(weight=weight):
+                    torch.save(
+                        {
+                            **checkpoint,
+                            "state_dict": model.state_dict(),
+                            "selection_loss_weight": weight,
+                        },
+                        path,
+                    )
+                    with self.assertRaises(ValueError):
+                        load_model(path)
+            for beta in (None, 1.0, 2.0):
+                with self.subTest(negative_bce_weight=beta):
+                    saved = {**checkpoint, "state_dict": model.state_dict()}
+                    if beta is None:
+                        saved.pop("negative_bce_weight", None)
+                    else:
+                        saved["negative_bce_weight"] = beta
+                    torch.save(saved, path)
+                    loaded = load_model(path)
+                    self.assertEqual(
+                        loaded.negative_bce_weight, 1.0 if beta is None else beta
+                    )
+                    torch.testing.assert_close(
+                        model(state, obstacles),
+                        loaded(state, obstacles),
+                        rtol=0,
+                        atol=0,
+                    )
+            for beta in (0, -1, float("nan"), float("inf"), True, None, "2"):
+                with self.subTest(invalid_negative_bce_weight=beta):
+                    torch.save(
+                        {
+                            **checkpoint,
+                            "state_dict": model.state_dict(),
+                            "negative_bce_weight": beta,
+                        },
+                        path,
+                    )
+                    with self.assertRaisesRegex(ValueError, "negative_bce_weight"):
+                        load_model(path)
+            for coefficient in (None, 0, 0.5, 1.0):
+                with self.subTest(bce_loss_weight=coefficient):
+                    saved = {**checkpoint, "state_dict": model.state_dict()}
+                    if coefficient is None:
+                        saved.pop("bce_loss_weight", None)
+                    else:
+                        saved["bce_loss_weight"] = coefficient
+                    torch.save(saved, path)
+                    loaded = load_model(path)
+                    self.assertEqual(
+                        loaded.bce_loss_weight,
+                        1 if coefficient is None else coefficient,
+                    )
+                    torch.testing.assert_close(
+                        model(state, obstacles),
+                        loaded(state, obstacles),
+                        rtol=0,
+                        atol=0,
+                    )
+            for coefficient in (-1, float("nan"), float("inf"), True, None, "1"):
+                with self.subTest(invalid_bce_loss_weight=coefficient):
+                    torch.save(
+                        {
+                            **checkpoint,
+                            "state_dict": model.state_dict(),
+                            "bce_loss_weight": coefficient,
+                        },
+                        path,
+                    )
+                    with self.assertRaisesRegex(ValueError, "bce_loss_weight"):
+                        load_model(path)
+            torch.save(
+                {
+                    **checkpoint,
+                    "state_dict": model.state_dict(),
+                    "bce_loss_weight": 0,
+                    "selection_loss_weight": 0,
+                },
+                path,
+            )
+            with self.assertRaises(ValueError):
+                load_model(path)
+            torch.save(
+                {
+                    **checkpoint,
+                    "model": model_spec(0.2),
+                    "state_dict": model.state_dict(),
+                },
+                path,
+            )
+            loaded = load_model(path)
+            drops = [m for m in loaded.modules() if isinstance(m, torch.nn.Dropout)]
+            self.assertEqual(len(drops), 5)
+            self.assertTrue(all(m.p == 0.2 for m in drops))
+            torch.testing.assert_close(
+                model(state, obstacles), loaded(state, obstacles), rtol=0, atol=0
+            )
+            for dropout in (-0.1, 1.0, float("nan"), float("inf"), True, None, "0.2"):
+                with self.subTest(dropout=dropout):
+                    torch.save(
+                        {
+                            **checkpoint,
+                            "model": {**MODEL_SPEC, "mlp_dropout": dropout},
+                            "state_dict": model.state_dict(),
+                        },
+                        path,
+                    )
+                    with self.assertRaises(ValueError):
+                        load_model(path)
             torch.save(
                 {**checkpoint, "state_dict": model.state_dict(), "output_dim": 10}, path
             )
@@ -352,6 +486,24 @@ class LinkSelectionTests(unittest.TestCase):
         self.assertEqual(model.cross_attention.num_heads, 1)
         state, obstacles = torch.randn(6, 23), torch.randn(6, 4, 4)
         a = model(state, obstacles)
+        torch.manual_seed(11)
+        stronger_dropout = LinkSuccessNet(mlp_dropout=0.2).eval()
+        self.assertEqual(set(model.state_dict()), set(stronger_dropout.state_dict()))
+        for key, value in model.state_dict().items():
+            torch.testing.assert_close(
+                value, stronger_dropout.state_dict()[key], rtol=0, atol=0
+            )
+        torch.testing.assert_close(
+            a, stronger_dropout(state, obstacles), rtol=0, atol=0
+        )
+        stronger_drops = [
+            m for m in stronger_dropout.modules() if isinstance(m, torch.nn.Dropout)
+        ]
+        self.assertEqual(len(stronger_drops), 5)
+        self.assertTrue(all(m.p == 0.2 for m in stronger_drops))
+        self.assertEqual(stronger_dropout.cross_attention.dropout, 0)
+        self.assertEqual(model_spec(), MODEL_SPEC)
+        self.assertEqual(model_spec(0.2), {**MODEL_SPEC, "mlp_dropout": 0.2})
         torch.testing.assert_close(a, model(state, obstacles[:, [2, 0, 3, 1]]))
         features = model.state_encoder(state)
         context = model.obstacle_features(obstacles, state_features=features)
@@ -389,7 +541,7 @@ class LinkSelectionTests(unittest.TestCase):
         )
         self.assertGreater(model.cross_attention.in_proj_weight.grad.abs().sum(), 0)
 
-    def test_fixed_loss_value_and_gradient(self):
+    def test_selection_weight_preserves_loss_value_and_gradient(self):
         logits = torch.randn(4, 16, dtype=torch.float64, requires_grad=True)
         labels = torch.zeros_like(logits)
         labels[1] = 1
@@ -401,19 +553,193 @@ class LinkSelectionTests(unittest.TestCase):
             )
             / 4
         )
-        expected = (
-            torch.nn.functional.binary_cross_entropy_with_logits(logits, labels)
-            + 3 * expected_selection
+        expected_bce = torch.nn.functional.binary_cross_entropy_with_logits(
+            logits, labels
         )
-        total, bce, selection = loss_components(logits, labels)
-        torch.testing.assert_close(total, expected)
-        torch.testing.assert_close(selection, expected_selection)
+        for weight, arguments in (
+            (3, {}),
+            (1, {"selection_loss_weight": 1}),
+            (0, {"selection_loss_weight": 0}),
+        ):
+            with self.subTest(weight=weight):
+                expected = expected_bce + weight * expected_selection
+                total, bce, selection = loss_components(logits, labels, **arguments)
+                torch.testing.assert_close(total, expected)
+                torch.testing.assert_close(bce, expected_bce)
+                torch.testing.assert_close(selection, expected_selection)
+                torch.testing.assert_close(
+                    torch.autograd.grad(total, logits, retain_graph=True)[0],
+                    torch.autograd.grad(expected, logits, retain_graph=True)[0],
+                )
+
+    def test_negative_bce_weight_changes_only_failure_loss_and_gradient(self):
+        logits = torch.tensor(
+            [[-2.0, 0.5, 1.5, -0.25], [0.75, -1.0, 2.0, -1.5]],
+            dtype=torch.float64,
+            requires_grad=True,
+        )
+        labels = torch.tensor([[0, 1, 0, 1], [1, 0, 1, 0]], dtype=torch.float64)
+        per_label = torch.nn.functional.binary_cross_entropy_with_logits(
+            logits, labels, reduction="none"
+        )
+        legacy = per_label.mean() + 3 * successful_mass_loss(logits, labels)
+        default = loss_components(logits, labels)
+        explicit = loss_components(
+            logits, labels, bce_loss_weight=1, negative_bce_weight=1
+        )
+        for implicit_value, explicit_value in zip(default, explicit):
+            torch.testing.assert_close(implicit_value, explicit_value, rtol=0, atol=0)
+        torch.testing.assert_close(default[0], legacy, rtol=0, atol=0)
         torch.testing.assert_close(
-            torch.autograd.grad(total, logits, retain_graph=True)[0],
-            torch.autograd.grad(expected, logits)[0],
+            torch.autograd.grad(default[0], logits, retain_graph=True)[0],
+            torch.autograd.grad(legacy, logits, retain_graph=True)[0],
+            rtol=0,
+            atol=0,
         )
-        with self.assertRaises(TypeError):
-            loss_components(logits, labels, selection_loss_weight=1)
+
+        baseline, baseline_bce, baseline_selection = loss_components(
+            logits, labels, selection_loss_weight=0, negative_bce_weight=1
+        )
+        weighted, raw_bce, selection = loss_components(
+            logits, labels, selection_loss_weight=0, negative_bce_weight=2
+        )
+        torch.testing.assert_close(weighted, (per_label * (2 - labels)).mean())
+        torch.testing.assert_close(raw_bce, baseline_bce, rtol=0, atol=0)
+        torch.testing.assert_close(selection, baseline_selection, rtol=0, atol=0)
+        baseline_gradient = torch.autograd.grad(baseline, logits, retain_graph=True)[0]
+        weighted_gradient = torch.autograd.grad(weighted, logits, retain_graph=True)[0]
+        torch.testing.assert_close(
+            weighted_gradient[labels == 0], 2 * baseline_gradient[labels == 0]
+        )
+        torch.testing.assert_close(
+            weighted_gradient[labels == 1], baseline_gradient[labels == 1]
+        )
+        total, _, _ = loss_components(
+            logits, labels, selection_loss_weight=3, negative_bce_weight=2
+        )
+        torch.testing.assert_close(total, weighted + 3 * selection)
+
+    def test_pure_selection_preserves_mass_loss_and_uniform_rows_have_no_gradient(self):
+        logits = torch.tensor(
+            [[1.0, -2.0, 0.5], [-0.5, 0.0, 2.0], [1.5, -0.5, 0.25]],
+            dtype=torch.float64,
+            requires_grad=True,
+        )
+        labels = torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]],
+            dtype=torch.float64,
+        )
+        expected = successful_mass_loss(logits, labels)
+        total, raw_bce, selection = loss_components(
+            logits, labels, bce_loss_weight=0, selection_loss_weight=1
+        )
+        torch.testing.assert_close(total, expected, rtol=0, atol=0)
+        torch.testing.assert_close(selection, expected, rtol=0, atol=0)
+        torch.testing.assert_close(
+            raw_bce,
+            torch.nn.functional.binary_cross_entropy_with_logits(logits, labels),
+        )
+        gradient = torch.autograd.grad(total, logits, retain_graph=True)[0]
+        torch.testing.assert_close(
+            gradient,
+            torch.autograd.grad(expected, logits, retain_graph=True)[0],
+            rtol=0,
+            atol=0,
+        )
+        torch.testing.assert_close(gradient[:2], torch.zeros_like(gradient[:2]))
+        self.assertGreater(gradient[2, 0], 0)
+        self.assertTrue((gradient[2, 1:] < 0).all())
+        weighted, _, _ = loss_components(
+            logits,
+            labels,
+            bce_loss_weight=0.5,
+            selection_loss_weight=2,
+            negative_bce_weight=2,
+        )
+        per_label = torch.nn.functional.binary_cross_entropy_with_logits(
+            logits, labels, reduction="none"
+        )
+        torch.testing.assert_close(
+            weighted, 0.5 * (per_label * (2 - labels)).mean() + 2 * selection
+        )
+
+    def test_bce_coefficient_requires_finite_nonnegative_and_a_nonzero_objective(self):
+        path = Path(__file__).parents[1] / "configs/training/panda_link_selection.yaml"
+        config = yaml.safe_load(path.read_text())
+        config["training"].pop("bce_loss_weight", None)
+        self.assertEqual(objective_metadata(config["training"])["bce_loss_weight"], 1)
+        logits, labels = torch.zeros(2, 3), torch.ones(2, 3)
+        for coefficient in (0, 0.5, 1, 2.0):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["bce_loss_weight"] = coefficient
+            with self.subTest(coefficient=coefficient):
+                validate_settings(candidate)
+                self.assertEqual(
+                    objective_metadata(candidate["training"])["bce_loss_weight"],
+                    coefficient,
+                )
+        for coefficient in (-1, float("nan"), float("inf"), True, False, None, "1"):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["bce_loss_weight"] = coefficient
+            with self.subTest(coefficient=coefficient):
+                with self.assertRaisesRegex(ValueError, "bce_loss_weight"):
+                    validate_settings(candidate)
+                with self.assertRaisesRegex(ValueError, "bce_loss_weight"):
+                    loss_components(logits, labels, bce_loss_weight=coefficient)
+        candidate = copy.deepcopy(config)
+        candidate["training"].update(bce_loss_weight=0, selection_loss_weight=0)
+        with self.assertRaises(ValueError):
+            validate_settings(candidate)
+        with self.assertRaises(ValueError):
+            loss_components(logits, labels, bce_loss_weight=0, selection_loss_weight=0)
+
+    def test_negative_bce_weight_is_stable_for_extreme_logits(self):
+        logits = torch.tensor([[1000.0, -1000.0, -1000.0, 1000.0]], requires_grad=True)
+        labels = torch.tensor([[0.0, 1.0, 0.0, 1.0]])
+        total, raw_bce, selection = loss_components(
+            logits, labels, selection_loss_weight=0, negative_bce_weight=2
+        )
+        self.assertEqual(float(total.detach()), 750.0)
+        self.assertEqual(float(raw_bce.detach()), 500.0)
+        self.assertTrue(torch.isfinite(selection))
+        total.backward()
+        torch.testing.assert_close(logits.grad, torch.tensor([[0.5, -0.25, 0.0, 0.0]]))
+
+    def test_negative_bce_weight_config_requires_positive_finite_number(self):
+        path = Path(__file__).parents[1] / "configs/training/panda_link_selection.yaml"
+        config = yaml.safe_load(path.read_text())
+        config["training"].pop("negative_bce_weight", None)
+        validate_settings(config)
+        self.assertEqual(
+            objective_metadata(config["training"])["negative_bce_weight"], 1.0
+        )
+        for beta in (0.5, 1, 2.0):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["negative_bce_weight"] = beta
+            with self.subTest(beta=beta):
+                validate_settings(candidate)
+                self.assertEqual(
+                    objective_metadata(candidate["training"])["negative_bce_weight"],
+                    beta,
+                )
+        for beta in (
+            0,
+            -1,
+            float("nan"),
+            float("inf"),
+            -float("inf"),
+            True,
+            False,
+            None,
+            "2",
+        ):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["negative_bce_weight"] = beta
+            with (
+                self.subTest(beta=beta),
+                self.assertRaisesRegex(ValueError, "negative_bce_weight"),
+            ):
+                validate_settings(candidate)
 
     def test_config_and_optimizer_do_not_accept_retired_options(self):
         path = Path(__file__).parents[1] / "configs/training/panda_link_selection.yaml"
@@ -434,8 +760,6 @@ class LinkSelectionTests(unittest.TestCase):
             "parameter_l2_weight": 0,
             "ranking_loss_weight": 0,
             "time_loss_weight": 0,
-            "selection_loss_weight": 1,
-            "bce_loss_weight": 0,
             "selection_metric": "validation_bce",
         }.items():
             candidate = copy.deepcopy(config)
@@ -451,6 +775,46 @@ class LinkSelectionTests(unittest.TestCase):
             candidate = copy.deepcopy(config)
             candidate["training"]["weight_decay"] = value
             with self.subTest(decay=value), self.assertRaises(ValueError):
+                validate_settings(candidate)
+        self.assertEqual(
+            objective_metadata(config["training"])["selection_loss_weight"], 3
+        )
+        for weight in (0, 1, 3.0):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["selection_loss_weight"] = weight
+            with self.subTest(weight=weight):
+                validate_settings(candidate)
+                self.assertEqual(
+                    objective_metadata(candidate["training"])["selection_loss_weight"],
+                    weight,
+                )
+        for weight in (-1, float("nan"), float("inf"), True, None, "1"):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["selection_loss_weight"] = weight
+            with self.subTest(weight=weight), self.assertRaises(ValueError):
+                validate_settings(candidate)
+        for dropout in (0, 0.1, 0.2):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["mlp_dropout"] = dropout
+            with self.subTest(dropout=dropout):
+                validate_settings(candidate)
+        for dropout in (-0.1, 1, float("nan"), float("inf"), True, None, "0.2"):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["mlp_dropout"] = dropout
+            with self.subTest(dropout=dropout):
+                with self.assertRaises(ValueError):
+                    validate_settings(candidate)
+                with self.assertRaises(ValueError):
+                    LinkSuccessNet(mlp_dropout=dropout)
+        for enabled in (False, True):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["early_stopping"] = enabled
+            with self.subTest(early_stopping=enabled):
+                validate_settings(candidate)
+        for enabled in (0, 1, None, "false"):
+            candidate = copy.deepcopy(config)
+            candidate["training"]["early_stopping"] = enabled
+            with self.subTest(early_stopping=enabled), self.assertRaises(ValueError):
                 validate_settings(candidate)
         with self.assertRaises(TypeError):
             LinkSuccessNet(attention_heads=4)
@@ -477,6 +841,7 @@ class LinkSelectionTests(unittest.TestCase):
                 ("optimizer", "adam"),
                 ("weight_decay", -1),
                 ("weight_decay", float("nan")),
+                ("model", {**MODEL_SPEC, "mlp_dropout": 0.2}),
             ):
                 with self.subTest(field=field, value=value):
                     torch.save({**checkpoint, field: value}, path)
@@ -514,6 +879,7 @@ class LinkSelectionTests(unittest.TestCase):
                 ("attention_heads", 4),
                 ("schema_version", 3),
                 ("mlp_dropout_scope", "robot_head_first"),
+                ("mlp_dropout", 0.2),
                 ("prediction_self_attention", True),
                 ("selection_loss_weight", 1),
                 ("optimizer", "adamw"),
@@ -602,6 +968,7 @@ class LinkSelectionTests(unittest.TestCase):
                     "batch_size": 2,
                     "max_epochs": 10,
                     "patience": 2,
+                    "early_stopping": True,
                     "dataset_sha256": "test",
                 },
                 1,
@@ -610,6 +977,78 @@ class LinkSelectionTests(unittest.TestCase):
             )
             self.assertEqual(result["best_epoch"], 3)
             self.assertEqual(result["epochs"], 5)
+            self.assertTrue(result["early_stopping"])
+            self.assertTrue(result["stopped_early"])
+
+    def test_disabled_early_stopping_finishes_epochs_and_preserves_best_and_last(self):
+        class ScheduledNet(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = torch.nn.Parameter(torch.tensor(0.0))
+                self.register_buffer("epoch_marker", torch.tensor(0))
+
+            def forward(self, state, obstacles):
+                if self.training:
+                    return self.weight.expand(len(state), 10)
+                logits = torch.zeros(len(state), 10)
+                logits[:, 0 if int(self.epoch_marker) == 0 else 1] = 5
+                self.epoch_marker.add_(1)
+                return logits
+
+        for option in ({}, {"early_stopping": False}):
+            with (
+                self.subTest(option=option),
+                TemporaryDirectory() as temp,
+                patch(
+                    "safe_ik.application.train_link_selection.LinkSuccessNet",
+                    return_value=ScheduledNet(),
+                ),
+            ):
+                labels = torch.zeros(4, 10)
+                labels[:, 0] = 1
+                output = Path(temp)
+                result = train_seed(
+                    output,
+                    torch.zeros(4, 23),
+                    torch.zeros(4, 1, 4),
+                    labels,
+                    {"train": np.array([0, 1]), "validation": np.array([2, 3])},
+                    np.zeros(14),
+                    np.ones(14),
+                    {
+                        "learning_rate": 0.001,
+                        "weight_decay": 0.0001,
+                        "batch_size": 2,
+                        "max_epochs": 5,
+                        "patience": 1,
+                        "dataset_sha256": "test",
+                        **option,
+                    },
+                    1,
+                    0,
+                    torch.device("cpu"),
+                )
+                self.assertEqual(result["epochs"], 5)
+                self.assertEqual(result["last_epoch"], 5)
+                self.assertEqual(result["best_epoch"], 1)
+                self.assertFalse(result["early_stopping"])
+                self.assertFalse(result["stopped_early"])
+                best = torch.load(output / result["checkpoint"], weights_only=False)
+                last = torch.load(
+                    output / result["last_checkpoint"], weights_only=False
+                )
+                self.assertEqual(int(best["state_dict"]["epoch_marker"]), 1)
+                self.assertEqual(int(last["state_dict"]["epoch_marker"]), 5)
+                self.assertFalse(
+                    torch.equal(
+                        best["state_dict"]["weight"], last["state_dict"]["weight"]
+                    )
+                )
+                self.assertEqual(result["best_validation_selected_successes"], 2)
+                self.assertEqual(result["last_validation_selected_successes"], 0)
+                self.assertGreater(
+                    result["last_validation_bce"], result["best_validation_bce"]
+                )
 
     def test_training_export_roundtrip_preserves_frozen_splits_and_source(self):
         with TemporaryDirectory() as temp:
@@ -706,6 +1145,144 @@ class LinkSelectionTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 run(source, config_path, output, "cpu")
 
+    def test_objective_training_roundtrip_preserves_coefficients_and_bce_diagnostics(
+        self,
+    ):
+        for beta, coefficient, semantics in (
+            (2, 1, "cost_weighted_success_score"),
+            (1, 0, "ordinal_selection_score"),
+        ):
+            with (
+                self.subTest(beta=beta, bce_loss_weight=coefficient),
+                TemporaryDirectory() as temp,
+            ):
+                root = Path(temp)
+                source = root / "data"
+                source.mkdir()
+                dataset = example_dataset(source, actions=LINK_ACTIONS)
+                config = {
+                    "dataset_sha256": sha256(dataset),
+                    "numerical_error_policy": "failure",
+                    "split": dict(seed=9, train=16, validation=4, test=0),
+                    "training": dict(
+                        seeds=[11],
+                        learning_rate=0.001,
+                        weight_decay=0.0001,
+                        negative_bce_weight=beta,
+                        bce_loss_weight=coefficient,
+                        selection_loss_weight=1,
+                        batch_size=8,
+                        max_epochs=2,
+                        patience=2,
+                    ),
+                }
+                config_path = root / "config.yaml"
+                config_path.write_text(yaml.safe_dump(config))
+                output = root / "training"
+                report = run(source, config_path, output, "cpu")
+                trained = report["runs"][0]
+                manifest = json.loads((output / "manifest.json").read_text())
+                for metadata in (report, trained, manifest):
+                    self.assertEqual(metadata["negative_bce_weight"], beta)
+                    self.assertEqual(metadata["bce_loss_weight"], coefficient)
+                    self.assertEqual(metadata["sigmoid_score_semantics"], semantics)
+                for key in ("checkpoint", "last_checkpoint"):
+                    checkpoint = torch.load(output / trained[key], weights_only=True)
+                    self.assertEqual(checkpoint["negative_bce_weight"], beta)
+                    self.assertEqual(checkpoint["bce_loss_weight"], coefficient)
+                    self.assertEqual(
+                        load_model(output / trained[key]).bce_loss_weight, coefficient
+                    )
+                model = load_model(output / trained["checkpoint"])
+                self.assertEqual(model.negative_bce_weight, beta)
+                self.assertEqual(model.bce_loss_weight, coefficient)
+                prediction = predict_selection(
+                    model, [0] * 7, [0] * 7, [0] * 3, [1, 0, 0, 0], []
+                )
+                self.assertEqual(prediction["negative_bce_weight"], beta)
+                self.assertEqual(prediction["bce_loss_weight"], coefficient)
+                self.assertEqual(prediction["sigmoid_score_semantics"], semantics)
+
+                if coefficient == 0:
+                    self.assertEqual(
+                        prediction["reason"], "highest_ordinal_selection_score"
+                    )
+                    self.assertEqual(
+                        prediction["probability_semantics"],
+                        "per_action_ordinal_selection_score",
+                    )
+                data = load_dataset(source)
+                split = load_scene_split(data, config["split"], source)
+                state = torch.from_numpy(
+                    make_state(
+                        data["initial_q"],
+                        data["selected_ik"],
+                        data["target_position"],
+                        data["target_quaternion"],
+                    )
+                )
+                with torch.no_grad():
+                    logits = model(
+                        state, torch.as_tensor(data["obstacles"], dtype=torch.float32)
+                    )
+                    labels = torch.as_tensor(data["labels"], dtype=logits.dtype)
+                    for phase, index in split.items():
+                        per_label = (
+                            torch.nn.functional.binary_cross_entropy_with_logits(
+                                logits[index], labels[index], reduction="none"
+                            )
+                        )
+                        raw_bce = float(per_label.mean())
+                        weighted_bce = float(
+                            (
+                                per_label * (labels[index] + beta * (1 - labels[index]))
+                            ).mean()
+                        )
+                        metrics = trained["metrics"][phase]
+                        self.assertAlmostEqual(metrics["bce_from_logits"], raw_bce)
+                        self.assertAlmostEqual(
+                            metrics["weighted_bce"], weighted_bce, places=6
+                        )
+                        self.assertAlmostEqual(
+                            metrics["total_loss"],
+                            coefficient * weighted_bce + metrics["selection_loss"],
+                            places=6,
+                        )
+                    self.assertAlmostEqual(
+                        trained["best_validation_bce"],
+                        trained["metrics"]["validation"]["bce_from_logits"],
+                    )
+                with (output / "seed-11/history.csv").open() as handle:
+                    history = list(csv.DictReader(handle))
+                best = min(
+                    history,
+                    key=lambda row: (
+                        -int(row["validation_selected_successes"]),
+                        float(row["validation_bce"]),
+                        int(row["epoch"]),
+                    ),
+                )
+                self.assertEqual(trained["best_epoch"], int(best["epoch"]))
+                for row in history:
+                    for phase in ("train", "validation"):
+                        if beta == 1:
+                            self.assertAlmostEqual(
+                                float(row[phase + "_weighted_bce"]),
+                                float(row[phase + "_bce"]),
+                                places=6,
+                            )
+                        else:
+                            self.assertGreater(
+                                float(row[phase + "_weighted_bce"]),
+                                float(row[phase + "_bce"]),
+                            )
+                        self.assertAlmostEqual(
+                            float(row[phase + "_total_loss"]),
+                            coefficient * float(row[phase + "_weighted_bce"])
+                            + float(row[phase + "_selection_loss"]),
+                            places=6,
+                        )
+
     def test_cli_training_without_test_reports_only_train_and_validation(self):
         with TemporaryDirectory() as temp:
             root = Path(temp)
@@ -720,6 +1297,8 @@ class LinkSelectionTests(unittest.TestCase):
                     seeds=[11],
                     learning_rate=0.001,
                     weight_decay=0.0001,
+                    selection_loss_weight=1,
+                    mlp_dropout=0.2,
                     batch_size=8,
                     max_epochs=2,
                     patience=2,
@@ -748,6 +1327,45 @@ class LinkSelectionTests(unittest.TestCase):
                 timeout=60,
             )
             report = json.loads((output / "evaluation.json").read_text())
+            self.assertEqual(report["selection_loss_weight"], 1)
+            self.assertEqual(report["model"], model_spec(0.2))
+            manifest = json.loads((output / "manifest.json").read_text())
+            self.assertEqual(manifest["model"], model_spec(0.2))
+            self.assertEqual(manifest["settings"]["training"]["mlp_dropout"], 0.2)
+            self.assertIn("BCE + 1 *", report["optimization_loss"])
+            trained = report["runs"][0]
+            self.assertEqual(trained["selection_loss_weight"], 1)
+            self.assertEqual(trained["mlp_dropout"], 0.2)
+            checkpoint_path = output / trained["checkpoint"]
+            checkpoint = torch.load(
+                checkpoint_path, map_location="cpu", weights_only=True
+            )
+            self.assertEqual(checkpoint["selection_loss_weight"], 1)
+            self.assertEqual(checkpoint["model"], model_spec(0.2))
+            loaded = load_model(checkpoint_path)
+            self.assertTrue(
+                all(
+                    m.p == 0.2
+                    for m in loaded.modules()
+                    if isinstance(m, torch.nn.Dropout)
+                )
+            )
+            with (checkpoint_path.parent / "history.csv").open() as handle:
+                history = list(csv.DictReader(handle))
+            for row in history:
+                for phase in ("train", "validation"):
+                    self.assertAlmostEqual(
+                        float(row[phase + "_total_loss"]),
+                        float(row[phase + "_bce"])
+                        + float(row[phase + "_selection_loss"]),
+                        places=6,
+                    )
+            for metrics in trained["metrics"].values():
+                self.assertAlmostEqual(
+                    metrics["total_loss"],
+                    metrics["bce_from_logits"] + metrics["selection_loss"],
+                    places=6,
+                )
             self.assertFalse(report["test_evaluation_performed"])
             self.assertEqual(report["evaluation_splits"], ["train", "validation"])
             self.assertEqual(set(report["runs"][0]["metrics"]), {"train", "validation"})
@@ -772,6 +1390,8 @@ class LinkSelectionTests(unittest.TestCase):
                 ]
             )
             text = (output / "report.md").read_text()
+            self.assertIn("BCE + 1 ×", text)
+            self.assertIn("dropout 0.2", text)
             self.assertIn("No test set was requested or evaluated", text)
             self.assertNotIn("Test success", text)
             with (output / "predictions.csv").open() as f:

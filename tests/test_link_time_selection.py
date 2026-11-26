@@ -269,6 +269,23 @@ class LinkTimeSelectionTests(unittest.TestCase):
                 ),
             )
             validate_time_settings(config)
+            for field, value in (
+                ("selection_loss_weight", 1),
+                ("negative_bce_weight", 2),
+                ("bce_loss_weight", 0),
+                ("mlp_dropout", 0.2),
+                ("early_stopping", False),
+            ):
+                with (
+                    self.subTest(field=field),
+                    self.assertRaisesRegex(ValueError, field),
+                ):
+                    validate_time_settings(
+                        {
+                            **config,
+                            "training": {**config["training"], field: value},
+                        }
+                    )
             path = root / "config.yaml"
             path.write_text(yaml.safe_dump(config))
             out = root / "training"

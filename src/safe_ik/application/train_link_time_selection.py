@@ -54,6 +54,24 @@ def validate_time_settings(config):
     if not isinstance(config, dict) or "objective" not in config:
         raise ValueError("softmax time-selection requires an explicit objective")
     validate_settings({k: v for k, v in config.items() if k != "objective"})
+    if "ik_target_features" in config:
+        raise ValueError("ik_target_features is only supported for success training")
+    if "relative_geometry" in config:
+        raise ValueError("relative_geometry is only supported for success training")
+    if "selection_loss_weight" in config["training"]:
+        raise ValueError(
+            "selection_loss_weight is not used by the time-selection objective"
+        )
+    if "mlp_dropout" in config["training"]:
+        raise ValueError("mlp_dropout is fixed at 0.1 for time-selection training")
+    if "early_stopping" in config["training"]:
+        raise ValueError("early_stopping is only configurable for success training")
+    if "negative_bce_weight" in config["training"]:
+        raise ValueError(
+            "negative_bce_weight is only configurable for success training"
+        )
+    if "bce_loss_weight" in config["training"]:
+        raise ValueError("bce_loss_weight is only configurable for success training")
     objective = config["objective"]
     if (
         not isinstance(objective, dict)

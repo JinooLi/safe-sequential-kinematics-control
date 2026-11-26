@@ -23,6 +23,12 @@ from ..domain.link_actions import (
     actions_from_metadata,
     validate_actions,
 )
+from .ik_target_features import (
+    IK_TARGET_FEATURE_DIM,
+    compute_ik_target_features,
+    ik_target_feature_spec,
+    validate_fk_geometry,
+)
 
 MODEL_SPEC = {
     "architecture": "cross_attention",
@@ -39,6 +45,53 @@ MODEL_SPEC = {
 
 def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def validate_selection_loss_weight(value):
+    if type(value) not in (int, float) or not np.isfinite(value) or value < 0:
+        raise ValueError("selection_loss_weight must be a finite nonnegative number")
+    return float(value)
+
+
+def validate_bce_loss_weight(value):
+    if type(value) not in (int, float) or not np.isfinite(value) or value < 0:
+        raise ValueError("bce_loss_weight must be a finite nonnegative number")
+    return float(value)
+
+
+def validate_negative_bce_weight(value):
+    if type(value) not in (int, float) or not np.isfinite(value) or value <= 0:
+        raise ValueError("negative_bce_weight must be a finite positive number")
+    return float(value)
+
+
+def validate_mlp_dropout(value):
+    if type(value) not in (int, float) or not np.isfinite(value) or not 0 <= value < 1:
+        raise ValueError("mlp_dropout must be a finite number in [0, 1)")
+    return float(value)
+
+
+def validate_obstacle_context(value):
+    if not isinstance(value, str) or value not in ("full", "zero"):
+        raise ValueError("obstacle_context must be full or zero")
+    return value
+
+
+def model_spec(mlp_dropout=0.1, *, ik_target_features=False, obstacle_context="full"):
+    if type(ik_target_features) is not bool:
+        raise ValueError("ik_target_features must be boolean")
+    context = validate_obstacle_context(obstacle_context)
+    if ik_target_features and context != "full":
+        raise ValueError("zero obstacle_context requires the original 23D robot input")
+    specification = {**MODEL_SPEC, "mlp_dropout": validate_mlp_dropout(mlp_dropout)}
+    if ik_target_features:
+        specification.update(
+            state_input_dim=23 + IK_TARGET_FEATURE_DIM,
+            ik_target_features=ik_target_feature_spec(),
+        )
+    if context == "zero":
+        specification["obstacle_context"] = context
+    return specification
 
 
 def load_dataset(directory, expected_sha256=None):
@@ -116,8 +169,10 @@ def make_state(
     selected_ik,
     target_position,
     target_quaternion,
+    *,
+    ik_target_pose=None,
 ):
-    """23 inputs: current joints, selected IK, goal position and 6D rotation."""
+    """23 baseline inputs, optionally followed by 45 IK-target pose features."""
     q = np.asarray(initial_q, dtype=np.float64)
     ik = np.asarray(selected_ik, dtype=np.float64)
     position = np.asarray(target_position, dtype=np.float64)
@@ -137,7 +192,16 @@ def make_state(
         raise ValueError("zero quaternion")
     matrix = Rotation.from_quat(quaternion, scalar_first=True).as_matrix()
     rotation6 = np.concatenate((matrix[:, :, 0], matrix[:, :, 1]), axis=1)
-    state = np.concatenate((q, ik, position, rotation6), axis=1).astype(np.float32)
+    components = [q, ik, position, rotation6]
+    if ik_target_pose is not None:
+        ik_target_pose = np.asarray(ik_target_pose, dtype=np.float64)
+        if (
+            ik_target_pose.shape != (n, IK_TARGET_FEATURE_DIM)
+            or not np.isfinite(ik_target_pose).all()
+        ):
+            raise ValueError("IK target pose features must be finite [batch, 45]")
+        components.append(ik_target_pose)
+    state = np.concatenate(components, axis=1).astype(np.float32)
     return state
 
 
@@ -236,8 +300,27 @@ def load_scene_split(data, specification, dataset_directory):
 class LinkSuccessNet(nn.Module):
     """Selected one-head backbone; 16 actions by default, legacy 10 supported."""
 
-    def __init__(self, joint_mean=None, joint_std=None, *, actions=LINK_ACTIONS):
+    def __init__(
+        self,
+        joint_mean=None,
+        joint_std=None,
+        *,
+        actions=LINK_ACTIONS,
+        mlp_dropout=0.1,
+        ik_target_features=False,
+        obstacle_context="full",
+    ):
         super().__init__()
+        mlp_dropout = validate_mlp_dropout(mlp_dropout)
+        if type(ik_target_features) is not bool:
+            raise ValueError("ik_target_features must be boolean")
+        self.obstacle_context = validate_obstacle_context(obstacle_context)
+        if ik_target_features and self.obstacle_context != "full":
+            raise ValueError(
+                "zero obstacle_context requires the original 23D robot input"
+            )
+        self.ik_target_features = ik_target_features
+        self.state_input_dim = 23 + (IK_TARGET_FEATURE_DIM if ik_target_features else 0)
         self.actions = validate_actions(actions)
         mean = np.zeros(14) if joint_mean is None else np.asarray(joint_mean)
         std = np.ones(14) if joint_std is None else np.asarray(joint_std)
@@ -256,7 +339,7 @@ class LinkSuccessNet(nn.Module):
             nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 32), nn.ReLU()
         )
         self.state_encoder = nn.Sequential(
-            nn.Linear(23, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU()
+            nn.Linear(self.state_input_dim, 64), nn.ReLU(), nn.Linear(64, 64), nn.ReLU()
         )
         self.head = nn.Sequential(
             nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, len(self.actions))
@@ -274,7 +357,7 @@ class LinkSuccessNet(nn.Module):
         for mlp in (self.state_encoder, self.obstacle_encoder, self.head):
             for index, layer in enumerate(mlp):
                 if isinstance(layer, nn.ReLU):
-                    mlp[index] = nn.Sequential(layer, nn.Dropout(0.1))
+                    mlp[index] = nn.Sequential(layer, nn.Dropout(mlp_dropout))
 
     def obstacle_features(self, obstacles, mask=None, state_features=None):
         if obstacles.ndim != 3 or obstacles.shape[-1] != 4:
@@ -306,13 +389,21 @@ class LinkSuccessNet(nn.Module):
         return torch.where(has_obstacles, context, torch.zeros_like(context))
 
     def forward(self, state, obstacles, mask=None):
-        if state.ndim != 2 or state.shape[1] != 23 or len(state) != len(obstacles):
-            raise ValueError("state must have shape [batch, 23]")
+        if (
+            state.ndim != 2
+            or state.shape[1] != self.state_input_dim
+            or len(state) != len(obstacles)
+        ):
+            raise ValueError(f"state must have shape [batch, {self.state_input_dim}]")
         normalized = torch.cat(
             ((state[:, :14] - self.joint_mean) / self.joint_std, state[:, 14:]), dim=1
         )
         robot_features = self.state_encoder(normalized)
         context = self.obstacle_features(obstacles, mask, robot_features)
+        if self.obstacle_context == "zero":
+            # Preserve all computation and dropout draws; remove only the
+            # obstacle context supplied to the action head in this ablation.
+            context = context * 0
         return self.head(torch.cat((robot_features, context), dim=1))
 
 
@@ -351,9 +442,31 @@ def predict_selection(
             "probabilities": None,
             "reason": "no_validated_ik",
         }
+    ik_target_pose = None
+    if getattr(model, "ik_target_features", False):
+        model_path = validate_fk_geometry(
+            getattr(model, "fk_geometry", None),
+            model_path=getattr(model, "fk_model_path", None),
+        )
+        ik_target_pose = compute_ik_target_features([selected_ik], model_path)
     state = make_state(
-        [initial_q], [selected_ik], [target_position], [target_quaternion]
+        [initial_q],
+        [selected_ik],
+        [target_position],
+        [target_quaternion],
+        ik_target_pose=ik_target_pose,
     )
+    if getattr(model, "relative_geometry", None) is not None:
+        from .relative_geometry_features import make_relative_state
+
+        state = make_relative_state(
+            [initial_q],
+            [selected_ik],
+            [target_position],
+            [target_quaternion],
+            geometry=model.relative_geometry,
+            model_path=getattr(model, "fk_model_path", None),
+        )
     obs = np.asarray(obstacles, dtype=np.float32)
     if obs.size == 0:
         obs = np.empty((0, 4), dtype=np.float32)
@@ -376,6 +489,10 @@ def predict_selection(
     index = int(probabilities.argmax())
     links = model.actions[index]
     legacy = model.actions == LINK_PAIRS
+    beta = getattr(model, "negative_bce_weight", 1.0)
+    bce_weight = getattr(model, "bce_loss_weight", 1.0)
+    ordinal = not is_softmax and bce_weight == 0
+    cost_weighted = not is_softmax and beta != 1.0
     return {
         "method": "sequential" if links else "direct",
         "action_id": action_id(links),
@@ -384,27 +501,78 @@ def predict_selection(
         "pair_index": index if len(links) == 2 else None,
         "link_frames": [f"link{i}" for i in links],
         "probabilities": probabilities.tolist(),
+        "negative_bce_weight": beta,
+        "bce_loss_weight": bce_weight,
+        "sigmoid_score_semantics": (
+            (
+                "ordinal_selection_score"
+                if ordinal
+                else (
+                    "cost_weighted_success_score"
+                    if cost_weighted
+                    else "success_probability_estimate"
+                )
+            )
+            if not is_softmax
+            else "time_reward_selection_probability"
+        ),
         "reason": (
             "highest_time_reward_selection_probability"
             if is_softmax
-            else "highest_predicted_success"
+            else (
+                "highest_ordinal_selection_score"
+                if ordinal
+                else (
+                    "highest_cost_weighted_success_score"
+                    if cost_weighted
+                    else "highest_predicted_success"
+                )
+            )
         ),
         "probability_semantics": (
             ("link_pair_selection" if legacy else "action_selection")
             if is_softmax
-            else ("per_pair_success" if legacy else "per_action_success")
+            else (
+                "per_action_ordinal_selection_score"
+                if ordinal
+                else (
+                    "per_action_cost_weighted_success_score"
+                    if cost_weighted
+                    else ("per_pair_success" if legacy else "per_action_success")
+                )
+            )
         ),
     }
 
 
-def load_model(checkpoint_path, device="cpu"):
+def load_model(checkpoint_path, device="cpu", *, fk_model_path=None):
     """Load the selected model, retaining schema-11/12 Adam inference support."""
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
     version = checkpoint["schema_version"]
     actions = checkpoint_actions(checkpoint)
     if version in (16, 18):
         return load_time_checkpoint(checkpoint, device)
-    if version in (12, 13, 17):
+    dropout = 0.1
+    if version in (17, 19, 20, 21, 22):
+        recorded_model = checkpoint.get("model")
+        if not isinstance(recorded_model, dict):
+            raise ValueError("invalid checkpoint model specification")
+        dropout = validate_mlp_dropout(recorded_model.get("mlp_dropout"))
+        if version in (20, 21):
+            from .relative_geometry import relative_model_spec
+
+            matches = recorded_model == relative_model_spec(
+                dropout,
+                checkpoint.get("relative_geometry"),
+                query_conditioning=_relative_checkpoint_query_conditioning(checkpoint),
+            )
+        else:
+            matches = recorded_model == model_spec(
+                dropout,
+                ik_target_features=version == 19,
+                obstacle_context=_checkpoint_obstacle_context(checkpoint),
+            )
+    elif version in (12, 13):
         matches = checkpoint.get("model") == MODEL_SPEC
     elif version == 11:
         # Metadata validation only: no implementations of retired variants.
@@ -421,7 +589,7 @@ def load_model(checkpoint_path, device="cpu"):
         )
     else:
         raise ValueError("unsupported checkpoint; only the selected model is supported")
-    if version in (13, 17):
+    if version in (13, 17, 19, 20, 21, 22):
         decay = checkpoint.get("weight_decay")
         optimizer_matches = (
             checkpoint.get("optimizer") == "adamw"
@@ -433,18 +601,58 @@ def load_model(checkpoint_path, device="cpu"):
         optimizer_matches = (
             checkpoint.get("optimizer") == "adam" and "weight_decay" not in checkpoint
         )
+    selection_weight = checkpoint.get("selection_loss_weight")
+    if version in (17, 19, 20, 21, 22):
+        validate_selection_loss_weight(selection_weight)
+    negative_weight = validate_negative_bce_weight(
+        checkpoint.get("negative_bce_weight", 1.0)
+    )
+    bce_weight = validate_bce_loss_weight(checkpoint.get("bce_loss_weight", 1.0))
     if (
         not matches
         or not optimizer_matches
-        or checkpoint.get("bce_loss_weight") != 1.0
-        or checkpoint.get("selection_loss_weight") != 3.0
+        or (version not in (17, 19, 20, 21, 22) and bce_weight != 1.0)
+        or (bce_weight == 0 and selection_weight == 0)
+        or (version not in (17, 19, 20, 21, 22) and selection_weight != 3.0)
         or checkpoint.get("selection_metric") != "validation_selected_success_rate"
         or checkpoint.get("ranking_loss_weight", 0) != 0
         or checkpoint.get("time_loss_weight", 0) != 0
         or "parameter_l2_weight" in checkpoint
     ):
         raise ValueError("checkpoint does not match the selected model and objective")
-    model = LinkSuccessNet(actions=actions)
+    if version in (20, 21):
+        from .relative_geometry import RelativeGeometrySuccessNet
+        from .relative_geometry_features import validate_relative_geometry
+
+        geometry = checkpoint.get("relative_geometry")
+        model_path = validate_relative_geometry(
+            geometry,
+            checkpoint_directory=Path(checkpoint_path).parent,
+            model_path=fk_model_path,
+        )
+        model = RelativeGeometrySuccessNet(
+            actions=actions,
+            mlp_dropout=dropout,
+            geometry=geometry,
+            query_conditioning=_relative_checkpoint_query_conditioning(checkpoint),
+        )
+        model.fk_model_path = model_path
+    else:
+        model = LinkSuccessNet(
+            actions=actions,
+            mlp_dropout=dropout,
+            ik_target_features=version == 19,
+            obstacle_context=_checkpoint_obstacle_context(checkpoint),
+        )
+    if version == 19:
+        model.fk_geometry = checkpoint.get("fk_geometry")
+        model.fk_model_path = validate_fk_geometry(
+            model.fk_geometry,
+            checkpoint_directory=Path(checkpoint_path).parent,
+            model_path=fk_model_path,
+        )
+    model.negative_bce_weight = negative_weight
+    model.bce_loss_weight = bce_weight
     model.load_state_dict(checkpoint["state_dict"])
     # Loading state_dict replaces the normalization buffers; validate them too.
     if (
@@ -456,10 +664,45 @@ def load_model(checkpoint_path, device="cpu"):
     return model.to(device).eval()
 
 
+def _relative_checkpoint_query_conditioning(checkpoint):
+    from .relative_geometry import validate_query_conditioning
+
+    specification = checkpoint.get("model")
+    if not isinstance(specification, dict):
+        raise ValueError("invalid checkpoint model specification")
+    if checkpoint["schema_version"] == 20:
+        if "query_conditioning" in specification:
+            raise ValueError(
+                "schema 20 must retain the legacy local Query specification"
+            )
+        return "local"
+    mode = validate_query_conditioning(specification.get("query_conditioning"))
+    if mode == "local":
+        raise ValueError("schema 21 requires reordered_control or global_query")
+    return mode
+
+
+def _checkpoint_obstacle_context(checkpoint):
+    specification = checkpoint.get("model")
+    if checkpoint.get("schema_version") == 22:
+        if (
+            not isinstance(specification, dict)
+            or specification.get("obstacle_context") != "zero"
+        ):
+            raise ValueError("schema 22 requires obstacle_context zero")
+        return "zero"
+    if isinstance(specification, dict) and "obstacle_context" in specification:
+        raise ValueError("obstacle_context metadata requires schema 22")
+    return "full"
+
+
 def checkpoint_actions(checkpoint):
     """Never reinterpret legacy checkpoint rows as the expanded action catalog."""
     version = checkpoint.get("schema_version")
-    if version in (17, 18):
+    _checkpoint_obstacle_context(checkpoint)
+    if version in (20, 21):
+        _relative_checkpoint_query_conditioning(checkpoint)
+    if version in (17, 18, 19, 20, 21, 22):
         if "action_schema_version" not in checkpoint or "actions" not in checkpoint:
             raise ValueError("new checkpoints require an explicit action catalog")
         actions = actions_from_metadata(checkpoint)

@@ -28,15 +28,33 @@ from safe_ik.domain.link_actions import (
     catalog_metadata,
     validate_actions,
 )
+from safe_ik.learning.ik_target_features import (
+    compute_ik_target_features,
+    make_fk_geometry,
+)
 from safe_ik.learning.link_selection import (
-    MODEL_SPEC,
     LinkSuccessNet,
     joint_statistics,
     load_dataset,
     load_model,
     load_scene_split,
     make_state,
+    model_spec,
     sha256,
+    validate_bce_loss_weight,
+    validate_mlp_dropout,
+    validate_negative_bce_weight,
+    validate_obstacle_context,
+    validate_selection_loss_weight,
+)
+from safe_ik.learning.relative_geometry import (
+    RelativeGeometrySuccessNet,
+    relative_model_spec,
+    validate_query_conditioning,
+)
+from safe_ik.learning.relative_geometry_features import (
+    compute_relative_geometry_features,
+    make_relative_geometry,
 )
 
 SELECTION_METRIC = "validation_selected_success_rate"
@@ -57,17 +75,68 @@ def successful_mass_loss(logits, targets):
     ).mean()
 
 
-def loss_components(logits, targets):
+def weighted_binary_loss(logits, targets, beta, raw_bce):
+    """Binary diagnostic before its objective coefficient, including beta."""
+    if beta == 1.0:
+        return raw_bce
+    elements = F.binary_cross_entropy_with_logits(logits, targets, reduction="none")
+    return (elements * (targets + beta * (1 - targets))).mean()
+
+
+def loss_components(
+    logits,
+    targets,
+    *,
+    selection_loss_weight=3.0,
+    negative_bce_weight=1.0,
+    bce_loss_weight=1.0,
+):
+    """Return optimization loss, raw BCE and the selection diagnostic.
+
+    Beta scales only failure labels. Reduce over all scene/action entries,
+    without dividing by the weight sum, to implement the stated cost exactly.
+    Raw BCE remains comparable across beta values and breaks checkpoint ties.
+    """
+    weight = validate_selection_loss_weight(selection_loss_weight)
+    bce_weight = validate_bce_loss_weight(bce_loss_weight)
+    if bce_weight == 0 and weight == 0:
+        raise ValueError(
+            "bce_loss_weight and selection_loss_weight cannot both be zero"
+        )
+    beta = validate_negative_bce_weight(negative_bce_weight)
     bce = F.binary_cross_entropy_with_logits(logits, targets)
+    weighted_bce = weighted_binary_loss(logits, targets, beta, bce)
     selection = successful_mass_loss(logits, targets)
-    return bce + 3.0 * selection, bce, selection
+    return bce_weight * weighted_bce + weight * selection, bce, selection
 
 
 def objective_metadata(settings):
+    weight = validate_selection_loss_weight(settings.get("selection_loss_weight", 3.0))
+    beta = validate_negative_bce_weight(settings.get("negative_bce_weight", 1.0))
+    bce_weight = validate_bce_loss_weight(settings.get("bce_loss_weight", 1.0))
+    if bce_weight == 0 and weight == 0:
+        raise ValueError(
+            "bce_loss_weight and selection_loss_weight cannot both be zero"
+        )
+    binary_name = "BCE" if beta == 1.0 else f"negative_weighted_BCE(beta={beta:g})"
+    binary_term = (
+        binary_name if bce_weight == 1.0 else f"{bce_weight:g} * {binary_name}"
+    )
     return {
-        "optimization_loss": "BCE + 3 * negative_log_successful_softmax_mass",
-        "bce_loss_weight": 1.0,
-        "selection_loss_weight": 3.0,
+        "optimization_loss": f"{binary_term} + {weight:g} * negative_log_successful_softmax_mass",
+        "bce_loss_weight": bce_weight,
+        "negative_bce_weight": beta,
+        "bce_reduction": "mean_over_all_scene_action_entries; not_weight_normalized",
+        "sigmoid_score_semantics": (
+            "ordinal_selection_score"
+            if bce_weight == 0
+            else (
+                "success_probability_estimate"
+                if beta == 1.0
+                else "cost_weighted_success_score"
+            )
+        ),
+        "selection_loss_weight": weight,
         "selection_loss_reduction": "mean_over_all_scenes; all_failure_rows_zero",
         "optimizer": "adamw",
         "weight_decay": settings["weight_decay"],
@@ -103,6 +172,15 @@ def selection_description():
     return "maximum validation selection success; ties use minimum validation BCE"
 
 
+def stopping_metadata(settings):
+    enabled = settings.get("early_stopping", False)
+    return {
+        "early_stopping": enabled,
+        "max_epochs": settings["max_epochs"],
+        "early_stopping_patience": settings["patience"] if enabled else None,
+    }
+
+
 def validate_training_settings(training, *, internal=False):
     allowed = {
         "seeds",
@@ -111,6 +189,11 @@ def validate_training_settings(training, *, internal=False):
         "batch_size",
         "max_epochs",
         "patience",
+        "early_stopping",
+        "selection_loss_weight",
+        "mlp_dropout",
+        "negative_bce_weight",
+        "bce_loss_weight",
     }
     if internal:
         allowed.add("dataset_sha256")
@@ -119,6 +202,18 @@ def validate_training_settings(training, *, internal=False):
         raise ValueError(
             f"unsupported training settings for the selected model: {sorted(unknown)}"
         )
+    selection_weight = validate_selection_loss_weight(
+        training.get("selection_loss_weight", 3.0)
+    )
+    bce_weight = validate_bce_loss_weight(training.get("bce_loss_weight", 1.0))
+    if bce_weight == 0 and selection_weight == 0:
+        raise ValueError(
+            "bce_loss_weight and selection_loss_weight cannot both be zero"
+        )
+    validate_mlp_dropout(training.get("mlp_dropout", 0.1))
+    validate_negative_bce_weight(training.get("negative_bce_weight", 1.0))
+    if type(training.get("early_stopping", False)) is not bool:
+        raise ValueError("early_stopping must be a boolean")
     if not internal or "seeds" in training:
         seeds = training.get("seeds")
         if (
@@ -140,11 +235,62 @@ def validate_training_settings(training, *, internal=False):
 
 
 def validate_settings(settings):
-    allowed = {"dataset_sha256", "numerical_error_policy", "split", "training"}
-    if not isinstance(settings, dict) or set(settings) != allowed:
+    required = {"dataset_sha256", "numerical_error_policy", "split", "training"}
+    if (
+        not isinstance(settings, dict)
+        or not required <= set(settings)
+        or set(settings)
+        - required
+        - {"ik_target_features", "relative_geometry", "obstacle_context"}
+    ):
         raise ValueError(
-            "config must contain only dataset_sha256, numerical_error_policy, split and training; model and objective are fixed"
+            "config requires dataset_sha256, numerical_error_policy, split and training; optional geometry or obstacle_context is supported"
         )
+    context_mode = validate_obstacle_context(settings.get("obstacle_context", "full"))
+    if context_mode != "full" and (
+        "ik_target_features" in settings or "relative_geometry" in settings
+    ):
+        raise ValueError("zero obstacle context requires the original 23D model")
+    if "ik_target_features" in settings and "relative_geometry" in settings:
+        raise ValueError("select only one geometry model")
+    if "relative_geometry" in settings:
+        geometry = settings["relative_geometry"]
+        if (
+            not isinstance(geometry, dict)
+            or set(geometry) - {"query_conditioning"}
+            != {
+                "model_path",
+                "model_sha256",
+                "capsule_config_path",
+                "capsule_config_sha256",
+            }
+            or any(
+                not isinstance(geometry.get(k), str) or not geometry[k]
+                for k in ("model_path", "capsule_config_path")
+            )
+            or any(
+                not isinstance(geometry.get(k), str)
+                or len(geometry[k]) != 64
+                or any(c not in "0123456789abcdef" for c in geometry[k])
+                for k in ("model_sha256", "capsule_config_sha256")
+            )
+        ):
+            raise ValueError(
+                "relative_geometry requires pinned model and capsule configuration"
+            )
+        validate_query_conditioning(geometry.get("query_conditioning", "local"))
+    if "ik_target_features" in settings:
+        geometry = settings["ik_target_features"]
+        if (
+            not isinstance(geometry, dict)
+            or set(geometry) != {"model_path", "model_sha256"}
+            or not isinstance(geometry["model_path"], str)
+            or not geometry["model_path"]
+            or not isinstance(geometry["model_sha256"], str)
+            or len(geometry["model_sha256"]) != 64
+            or any(c not in "0123456789abcdef" for c in geometry["model_sha256"])
+        ):
+            raise ValueError("ik_target_features requires model_path and model_sha256")
     digest = settings["dataset_sha256"]
     if (
         not isinstance(digest, str)
@@ -310,6 +456,10 @@ def train_seed(
     device,
     *,
     actions=LINK_PAIRS,
+    fk_geometry=None,
+    relative_geometry=None,
+    query_conditioning="local",
+    obstacle_context="full",
 ):
     random.seed(seed)
     np.random.seed(seed)
@@ -319,13 +469,32 @@ def train_seed(
     actions = validate_actions(actions)
     if targets.shape[1] != len(actions):
         raise ValueError("training label/action dimension mismatch")
-    model = LinkSuccessNet(mean, std, actions=actions).to(device)
+    dropout = validate_mlp_dropout(settings.get("mlp_dropout", 0.1))
+    obstacle_context = validate_obstacle_context(obstacle_context)
+    if obstacle_context != "full" and (
+        fk_geometry is not None or relative_geometry is not None
+    ):
+        raise ValueError("zero obstacle context requires the original 23D model")
+    model_options = {"ik_target_features": True} if fk_geometry is not None else {}
+    if obstacle_context != "full":
+        model_options["obstacle_context"] = obstacle_context
+    model = (
+        RelativeGeometrySuccessNet(
+            mean, std, actions=actions, mlp_dropout=dropout,
+            geometry=relative_geometry, query_conditioning=query_conditioning,
+        )
+        if relative_geometry is not None
+        else LinkSuccessNet(
+            mean, std, actions=actions, mlp_dropout=dropout, **model_options
+        )
+    ).to(device)
     optimizer = make_optimizer(model, settings)
     batch_rng = np.random.default_rng(seed)
     destination = output / f"seed-{seed}"
     destination.mkdir()
     metric = SELECTION_METRIC
     objective = objective_metadata(settings)
+    stopping = stopping_metadata(settings)
     best_rank = None
     best_loss, best_successes, best_epoch, best_state, stale = (
         float("inf"),
@@ -339,7 +508,7 @@ def train_seed(
     validation = torch.as_tensor(split["validation"], device=device)
     for epoch in range(1, settings["max_epochs"] + 1):
         model.train()
-        loss_sum = bce_sum = selection_sum = 0.0
+        loss_sum = bce_sum = selection_sum = weighted_bce_sum = 0.0
         permutation = batch_rng.permutation(split["train"])
         for start in range(0, len(permutation), settings["batch_size"]):
             index = torch.as_tensor(
@@ -347,7 +516,13 @@ def train_seed(
             )
             optimizer.zero_grad(set_to_none=True)
             logits = model(state[index], obstacles[index])
-            loss, bce, selection = loss_components(logits, targets[index])
+            loss, bce, selection = loss_components(
+                logits,
+                targets[index],
+                selection_loss_weight=objective["selection_loss_weight"],
+                negative_bce_weight=objective["negative_bce_weight"],
+                bce_loss_weight=objective["bce_loss_weight"],
+            )
             if not torch.isfinite(loss):
                 raise FloatingPointError(
                     f"nonfinite training loss at seed {seed}, epoch {epoch}"
@@ -357,11 +532,21 @@ def train_seed(
             loss_sum += float(loss.detach()) * len(index)
             bce_sum += float(bce.detach()) * len(index)
             selection_sum += float(selection.detach()) * len(index)
+            with torch.no_grad():
+                weighted_bce_sum += float(
+                    weighted_binary_loss(
+                        logits, targets[index], objective["negative_bce_weight"], bce
+                    )
+                ) * len(index)
         model.eval()
         with torch.no_grad():
             logits = model(state[validation], obstacles[validation])
             validation_total, validation_bce, validation_selection = loss_components(
-                logits, targets[validation]
+                logits,
+                targets[validation],
+                selection_loss_weight=objective["selection_loss_weight"],
+                negative_bce_weight=objective["negative_bce_weight"],
+                bce_loss_weight=objective["bce_loss_weight"],
             )
             validation_loss = float(validation_bce)
             choice = logits.sigmoid().argmax(dim=1)
@@ -396,9 +581,18 @@ def train_seed(
             "train_bce": bce_sum / len(permutation),
             "train_selection_loss": selection_sum / len(permutation),
             "train_total_loss": loss_sum / len(permutation),
+            "train_weighted_bce": weighted_bce_sum / len(permutation),
             "validation_bce": validation_loss,
             "validation_selection_loss": float(validation_selection),
             "validation_total_loss": float(validation_total),
+            "validation_weighted_bce": float(
+                weighted_binary_loss(
+                    logits,
+                    targets[validation],
+                    objective["negative_bce_weight"],
+                    validation_bce,
+                )
+            ),
             "validation_selected_successes": validation_successes,
             "validation_selected_success_rate": selection_success,
         }
@@ -414,6 +608,7 @@ def train_seed(
                 "best_validation_selected_successes": best_successes,
                 "selection_metric": metric,
                 **objective,
+                **stopping,
                 "updated_utc": utc_now(),
             },
         )
@@ -422,12 +617,32 @@ def train_seed(
                 f"seed={seed} epoch={epoch} train_bce={row['train_bce']:.5f} val_bce={validation_loss:.5f} val_selection={selection_success:.3f}",
                 flush=True,
             )
-        if stale >= settings["patience"]:
+        if stopping["early_stopping"] and stale >= settings["patience"]:
             break
     write_csv(destination / "history.csv", history)
     checkpoint = {
-        "schema_version": 17,
-        "model": MODEL_SPEC,
+        "schema_version": (
+            (20 if query_conditioning == "local" else 21)
+            if relative_geometry is not None
+            else (
+                19
+                if fk_geometry is not None
+                else (22 if obstacle_context == "zero" else 17)
+            )
+        ),
+        "model": (
+            relative_model_spec(
+                dropout, relative_geometry, query_conditioning=query_conditioning
+            )
+            if relative_geometry is not None
+            else model_spec(dropout, **model_options)
+        ),
+        **({"fk_geometry": fk_geometry} if fk_geometry is not None else {}),
+        **(
+            {"relative_geometry": relative_geometry}
+            if relative_geometry is not None
+            else {}
+        ),
         "state_dict": best_state,
         **catalog_metadata(actions),
         "output_dim": len(actions),
@@ -438,12 +653,44 @@ def train_seed(
         "best_validation_selected_success_rate": best_successes / len(validation),
         "selection_metric": metric,
         **objective,
-        "input_encoding": "q_zscore_7,ik_zscore_7,goal_position_metres_3,rotation_first_two_columns_6",
-        "obstacle_encoding": "world_xyz_radius_metres_raw_shared_mlp_cross_attention",
+        **stopping,
+        "input_encoding": "q_zscore_7,ik_zscore_7,goal_position_metres_3,rotation_first_two_columns_6"
+        + (
+            ",ik_target_link2_to_link6_world_pose_5x9"
+            if fk_geometry is not None
+            else ""
+        ),
+        "obstacle_encoding": (
+            "link_current_target_relative_xyz_radius_capsule_clearances; ordered_actions; IK_independent_direct"
+            if relative_geometry is not None
+            else "world_xyz_radius_metres_raw_shared_mlp_cross_attention"
+        ),
         "numerical_error_policy": "failure",
         "dataset_sha256": settings["dataset_sha256"],
+        "checkpoint_kind": "best",
+        "checkpoint_epoch": best_epoch,
+        "checkpoint_validation_bce": best_loss,
+        "checkpoint_validation_selected_successes": best_successes,
     }
+    if relative_geometry is not None:
+        checkpoint[
+            "input_encoding"
+        ] += ",current_target_link_poses,current_ee_pose,current_target_capsule_endpoints"
     torch.save(checkpoint, destination / "best.pt")
+    last_checkpoint = {
+        **checkpoint,
+        "state_dict": {
+            key: value.detach().cpu().clone()
+            for key, value in model.state_dict().items()
+        },
+        "checkpoint_kind": "last",
+        "checkpoint_epoch": len(history),
+        "checkpoint_validation_bce": history[-1]["validation_bce"],
+        "checkpoint_validation_selected_successes": history[-1][
+            "validation_selected_successes"
+        ],
+    }
+    torch.save(last_checkpoint, destination / "last.pt")
     result = {
         "seed": seed,
         "epochs": len(history),
@@ -455,8 +702,16 @@ def train_seed(
         "minimum_validation_bce": min((row["validation_bce"] for row in history)),
         "selection_metric": metric,
         **objective,
+        **stopping,
+        "stopped_early": len(history) < settings["max_epochs"],
         "checkpoint": str((destination / "best.pt").relative_to(output)),
-        "mlp_dropout": 0.1,
+        "last_checkpoint": str((destination / "last.pt").relative_to(output)),
+        "last_epoch": len(history),
+        "last_validation_bce": history[-1]["validation_bce"],
+        "last_validation_selected_successes": history[-1][
+            "validation_selected_successes"
+        ],
+        "mlp_dropout": dropout,
         "mlp_dropout_scope": "all_hidden",
     }
     write_json(destination / "training.json", result)
@@ -469,18 +724,44 @@ def train_seed(
 
 def write_report(output, report):
     has_test = report["test_evaluation_performed"]
+    relative = (
+        report["model"].get("architecture") == "relative_geometry_cross_attention"
+    )
+    architecture_text = (
+        "Shared 32D link-motion and relative-obstacle encoders; one-head 32D cross-attention per link; ordered action slots and a shared Sequential scorer; separate IK-independent Direct branch. Whole-body current capsule clearances are retained."
+        if relative
+        else f"Robot MLP {report['model'].get('state_input_dim', 23)}→64→64; obstacle MLP 4→32→32; one-head cross-attention (32D); context projection 32→64; concatenated prediction MLP 128→64→{report['output_dim']}."
+    )
+    if report["model"].get("obstacle_context") == "zero":
+        architecture_text += (
+            " Diagnostic ablation: projected obstacle context is multiplied by zero"
+            " before concatenation in training and inference. All modules still run;"
+            " registered parameter count is unchanged but effective capacity is lower."
+        )
     rows = [
         "# Panda selected link-combination model",
         "",
-        f"Robot MLP 23→64→64; obstacle MLP 4→32→32; one-head cross-attention (32D); context projection 32→64; concatenated prediction MLP 128→64→{report['output_dim']}.",
-        f"{report['parameter_count']:,} parameters. ReLU and dropout 0.1 at all five hidden MLP sites; dropout disabled for evaluation.",
-        f"AdamW with weight_decay={report['weight_decay']:g}; BCE + 3 × negative log successful softmax mass, averaged across all scenes. Numerical errors remain failures.",
+        architecture_text,
+        f"{report['parameter_count']:,} parameters. ReLU and dropout {report['model']['mlp_dropout']:g} at all hidden MLP sites; dropout disabled for evaluation.",
+        f"AdamW with weight_decay={report['weight_decay']:g}; {report['optimization_loss'].replace(' * ', ' × ')}. Negative-label BCE weight beta={report['negative_bce_weight']:g}; positive-label weight 1. Numerical errors remain failures.",
+        "Raw BCE is unweighted for checkpoint tie-breaking; weighted_bce is the binary diagnostic before multiplication by bce_loss_weight. Cost-weighted or selection-only sigmoid scores are not calibrated success probabilities.",
         "Only 14 joint-angle inputs are standardized using training statistics; geometry stays in metres.",
         f"Checkpoint selection: {selection_description()}; exact ties retain earlier epoch/lower seed.",
         (
+            f"Early stopping enabled with patience {report['early_stopping_patience']}; maximum {report['max_epochs']} epochs."
+            if report["early_stopping"]
+            else f"Early stopping disabled: every seed trains for {report['max_epochs']} epochs."
+        ),
+        "Each seed saves both best.pt and last.pt. This report's selection metrics use best.pt; final-epoch validation metrics are separate fields in evaluation.json.",
+        (
             "All choices are frozen before test evaluation."
             if has_test
-            else "No test set was requested or evaluated. Validation is used for checkpoint/seed selection; its score is not an independent test estimate."
+            else (
+                "Test evaluation was not performed. Reserved test scenes remain excluded from training, model inference and exported predictions."
+                if report.get("reserved_test_scenes", 0)
+                else "No test set was requested or evaluated."
+            )
+            + " Validation is used for checkpoint/seed selection; its score is not an independent test estimate."
         ),
         f"Selected seed: {report['selected_seed']}; fixed action from training labels: {report['fixed_action_id']}.",
         "",
@@ -542,29 +823,99 @@ def plot_history(output, runs):
     plt.close(fig)
 
 
-def run(dataset_directory, config_path, output, device_name):
+def run(
+    dataset_directory, config_path, output, device_name, *, skip_test_evaluation=False
+):
     started = time.perf_counter()
     settings = yaml.safe_load(Path(config_path).read_text())
     validate_settings(settings)
     metric = SELECTION_METRIC
     objective = objective_metadata(settings["training"])
+    stopping = stopping_metadata(settings["training"])
+    use_fk = "ik_target_features" in settings
+    use_relative = "relative_geometry" in settings
+    obstacle_context = settings.get("obstacle_context", "full")
+    query_conditioning = settings.get("relative_geometry", {}).get(
+        "query_conditioning", "local"
+    )
+    relative_geometry = None
+    relative_model_path = relative_config_path = None
+    if use_relative:
+        spec = settings["relative_geometry"]
+        relative_model_path = (
+            Path(config_path).resolve().parent / spec["model_path"]
+        ).resolve()
+        relative_config_path = (
+            Path(config_path).resolve().parent / spec["capsule_config_path"]
+        ).resolve()
+        if (
+            sha256(relative_model_path) != spec["model_sha256"]
+            or sha256(relative_config_path) != spec["capsule_config_sha256"]
+        ):
+            raise ValueError("relative geometry model/configuration checksum mismatch")
+        relative_geometry = make_relative_geometry(
+            relative_model_path, relative_config_path
+        )
+    dropout = settings["training"].get("mlp_dropout", 0.1)
+    selected_model_spec = (
+        relative_model_spec(
+            dropout, relative_geometry, query_conditioning=query_conditioning
+        )
+        if use_relative
+        else model_spec(
+            dropout, ik_target_features=use_fk, obstacle_context=obstacle_context
+        )
+    )
     data = load_dataset(dataset_directory, settings["dataset_sha256"])
     labels = data["labels"]
     actions = data["actions"]
     specification = settings["split"]
     split = load_scene_split(data, specification, dataset_directory)
-    has_test = "test" in split
+    evaluation_split = {
+        key: indices
+        for key, indices in split.items()
+        if key != "test" or not skip_test_evaluation
+    }
+    evaluation_indices = np.sort(np.concatenate(list(evaluation_split.values())))
+    has_test = "test" in evaluation_split
     split_policy = (
         "frozen_scene_ids"
         if "file" in specification
         else "stratified_successful_action_count"
     )
-    state = make_state(
-        data["initial_q"],
-        data["selected_ik"],
-        data["target_position"],
-        data["target_quaternion"],
+    fk_path = None
+    fk_values = None
+    if use_fk:
+        fk_path = (
+            Path(config_path).resolve().parent
+            / settings["ik_target_features"]["model_path"]
+        ).resolve()
+        if sha256(fk_path) != settings["ik_target_features"]["model_sha256"]:
+            raise ValueError(
+                "IK target FK model hash does not match the configured geometry"
+            )
+        fk_values = compute_ik_target_features(
+            data["selected_ik"][evaluation_indices], fk_path
+        )
+    # Reserved test scenes receive no feature calculation or model forward pass.
+    # Original indices are retained to preserve the frozen split's identity.
+    evaluated_state = make_state(
+        data["initial_q"][evaluation_indices],
+        data["selected_ik"][evaluation_indices],
+        data["target_position"][evaluation_indices],
+        data["target_quaternion"][evaluation_indices],
+        **({"ik_target_pose": fk_values} if use_fk else {}),
     )
+    if use_relative:
+        relative_values = compute_relative_geometry_features(
+            data["initial_q"][evaluation_indices],
+            data["selected_ik"][evaluation_indices],
+            relative_model_path,
+            relative_geometry,
+        )
+        evaluated_state = np.concatenate((evaluated_state, relative_values), axis=1)
+    state = np.zeros((len(labels), evaluated_state.shape[1]), dtype=np.float32)
+    state[evaluation_indices] = evaluated_state
     mean, std = joint_statistics(state, split["train"])
     fixed_pair = int(labels[split["train"]].mean(axis=0).argmax())
     device = torch.device(device_name)
@@ -578,16 +929,55 @@ def run(dataset_directory, config_path, output, device_name):
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     try:
+        geometry_path = None
+        relative_config_snapshot = None
+        if use_relative:
+            geometry_path = output / "relative_geometry" / "panda.xml"
+            geometry_path.parent.mkdir()
+            relative_config_snapshot = geometry_path.parent / "controller.yaml"
+            shutil.copyfile(relative_model_path, geometry_path)
+            shutil.copyfile(relative_config_path, relative_config_snapshot)
+            spec = settings["relative_geometry"]
+            if (
+                sha256(geometry_path) != spec["model_sha256"]
+                or sha256(relative_config_snapshot) != spec["capsule_config_sha256"]
+            ):
+                raise ValueError("relative geometry changed while preparing the run")
+            relative_geometry = make_relative_geometry(
+                geometry_path, relative_config_snapshot
+            )
+            np.savez_compressed(
+                output / "relative_geometry_features.npz",
+                case_id=data["case_id"][evaluation_indices],
+                features=relative_values,
+            )
+        if use_fk:
+            geometry_path = output / "fk_geometry" / "panda.xml"
+            geometry_path.parent.mkdir()
+            shutil.copyfile(fk_path, geometry_path)
+            if sha256(geometry_path) != settings["ik_target_features"]["model_sha256"]:
+                raise ValueError(
+                    "IK target FK geometry changed while preparing the run"
+                )
+            np.savez_compressed(
+                output / "ik_target_features.npz",
+                case_id=data["case_id"][evaluation_indices],
+                features=fk_values,
+            )
         provenance = {
             "created_utc": utc_now(),
             "dataset_directory": str(Path(dataset_directory).resolve()),
             "dataset_sha256": data["dataset_sha256"],
             "dataset_sources": data["dataset_sources"],
             "split_policy": split_policy,
-            "evaluation_splits": list(split),
+            "evaluation_splits": list(evaluation_split),
             "test_evaluation_performed": has_test,
+            **({"reserved_test_scenes": len(split["test"])} if "test" in split else {}),
+            "skip_test_evaluation": skip_test_evaluation,
+            **({"fk_geometry": make_fk_geometry(geometry_path)} if use_fk else {}),
+            **({"relative_geometry": relative_geometry} if use_relative else {}),
             "settings": settings,
-            "model": MODEL_SPEC,
+            "model": selected_model_spec,
             **catalog_metadata(actions),
             "output_dim": len(actions),
             "source_sha256": {
@@ -597,6 +987,29 @@ def run(dataset_directory, config_path, output, device_name):
                 ),
                 "link_actions.py": sha256(
                     Path(__file__).parents[1] / "domain/link_actions.py"
+                ),
+                **(
+                    {
+                        "ik_target_features.py": sha256(
+                            Path(__file__).parents[1] / "learning/ik_target_features.py"
+                        ),
+                        "panda_kinematics.py": sha256(
+                            Path(__file__).parents[1] / "adapters/panda_kinematics.py"
+                        ),
+                    }
+                    if use_fk or use_relative
+                    else {}
+                ),
+                **(
+                    {
+                        name: sha256(Path(__file__).parents[1] / "learning" / name)
+                        for name in (
+                            "relative_geometry.py",
+                            "relative_geometry_features.py",
+                        )
+                    }
+                    if use_relative
+                    else {}
                 ),
             },
             "environment": {
@@ -617,6 +1030,11 @@ def run(dataset_directory, config_path, output, device_name):
                 "goal_position": "raw_metres",
                 "obstacles": "raw_metres",
                 "rotation": "first_two_columns",
+                **(
+                    {"ik_target_link_poses": "raw_metres_and_rotation_columns"}
+                    if use_fk or use_relative
+                    else {}
+                ),
             },
             "numerical_error_labels_reclassified": int((~data["label_valid"]).sum()),
             "numerical_error_scenes": int((~data["label_valid"]).any(axis=1).sum()),
@@ -624,7 +1042,19 @@ def run(dataset_directory, config_path, output, device_name):
             "all_success_scenes": int((labels.sum(axis=1) == len(actions)).sum()),
             "parameter_count": sum(
                 parameter.numel()
-                for parameter in LinkSuccessNet(actions=actions).parameters()
+                for parameter in (
+                    RelativeGeometrySuccessNet(
+                        actions=actions, mlp_dropout=dropout,
+                        geometry=relative_geometry, query_conditioning=query_conditioning,
+                    )
+                    if use_relative
+                    else LinkSuccessNet(
+                        actions=actions,
+                        mlp_dropout=selected_model_spec["mlp_dropout"],
+                        ik_target_features=use_fk,
+                        obstacle_context=obstacle_context,
+                    )
+                ).parameters()
             ),
             "selection_policy": "argmax; ties use lowest index; no IK returns Direct",
             "selection_metric": metric,
@@ -633,10 +1063,13 @@ def run(dataset_directory, config_path, output, device_name):
             + (
                 "; all seeds frozen before test evaluation"
                 if has_test
-                else "; no test set"
+                else "; test evaluation omitted"
             ),
-            "early_stopping_selection": selection_description(),
+            "early_stopping_selection": (
+                selection_description() if stopping["early_stopping"] else None
+            ),
             **objective,
+            **stopping,
         }
         write_json(output / "manifest.json", provenance)
         shutil.copyfile(config_path, output / "training_config.yaml")
@@ -654,9 +1087,9 @@ def run(dataset_directory, config_path, output, device_name):
         write_json(output / "split.json", split_record)
         np.savez_compressed(
             output / "effective_labels.npz",
-            case_id=data["case_id"],
-            labels=labels.astype(np.int8),
-            original_label_valid=data["label_valid"],
+            case_id=data["case_id"][evaluation_indices],
+            labels=labels[evaluation_indices].astype(np.int8),
+            original_label_valid=data["label_valid"][evaluation_indices],
             **catalog_arrays(actions),
         )
         tensors = [
@@ -676,6 +1109,24 @@ def run(dataset_directory, config_path, output, device_name):
                 fixed_pair,
                 device,
                 actions=actions,
+                query_conditioning=query_conditioning,
+                obstacle_context=obstacle_context,
+                fk_geometry=(
+                    make_fk_geometry(
+                        geometry_path, checkpoint_directory=output / f"seed-{seed}"
+                    )
+                    if use_fk
+                    else None
+                ),
+                relative_geometry=(
+                    make_relative_geometry(
+                        geometry_path,
+                        relative_config_snapshot,
+                        checkpoint_directory=output / f"seed-{seed}",
+                    )
+                    if use_relative
+                    else None
+                ),
             )
             for seed in training["seeds"]
         ]
@@ -700,7 +1151,11 @@ def run(dataset_directory, config_path, output, device_name):
         for trained in runs:
             model = load_model(output / trained["checkpoint"], device)
             with torch.no_grad():
-                logits = model(tensors[0], tensors[1])
+                evaluated_logits = model(
+                    tensors[0][evaluation_indices], tensors[1][evaluation_indices]
+                )
+                logits = torch.full_like(tensors[2], torch.nan)
+                logits[evaluation_indices] = evaluated_logits
                 probabilities = logits.sigmoid().cpu().numpy()
                 selection_probabilities = logits.softmax(dim=1).cpu().numpy()
             trained["metrics"] = {
@@ -711,27 +1166,43 @@ def run(dataset_directory, config_path, output, device_name):
                     specification["seed"],
                     actions=actions,
                 )
-                for key, index in split.items()
+                for key, index in evaluation_split.items()
             }
             with torch.no_grad():
-                for key, index in split.items():
+                for key, index in evaluation_split.items():
                     total, bce, selection = loss_components(
-                        logits[index], tensors[2][index]
+                        logits[index],
+                        tensors[2][index],
+                        selection_loss_weight=objective["selection_loss_weight"],
+                        negative_bce_weight=objective["negative_bce_weight"],
+                        bce_loss_weight=objective["bce_loss_weight"],
                     )
                     trained["metrics"][key].update(
                         selection_loss=float(selection),
                         total_loss=float(total),
                         bce_from_logits=float(bce),
+                        weighted_bce=float(
+                            weighted_binary_loss(
+                                logits[index],
+                                tensors[2][index],
+                                objective["negative_bce_weight"],
+                                bce,
+                            )
+                        ),
                     )
             np.savez_compressed(
                 output / f"seed-{trained['seed']}" / "predictions.npz",
-                case_id=data["case_id"],
-                probabilities=probabilities,
-                selection_probabilities=selection_probabilities,
-                chosen_action_index=probabilities.argmax(axis=1),
+                case_id=data["case_id"][evaluation_indices],
+                probabilities=probabilities[evaluation_indices],
+                selection_probabilities=selection_probabilities[evaluation_indices],
+                chosen_action_index=probabilities[evaluation_indices].argmax(axis=1),
                 **catalog_arrays(actions),
                 **(
-                    {"chosen_pair_index": probabilities.argmax(axis=1)}
+                    {
+                        "chosen_pair_index": probabilities[evaluation_indices].argmax(
+                            axis=1
+                        )
+                    }
                     if actions == LINK_PAIRS
                     else {}
                 ),
@@ -739,7 +1210,7 @@ def run(dataset_directory, config_path, output, device_name):
             write_json(
                 output / f"seed-{trained['seed']}" / "metrics.json", trained["metrics"]
             )
-            for key, indices in split.items():
+            for key, indices in evaluation_split.items():
                 for index in indices:
                     choice = int(probabilities[index].argmax())
                     prediction_rows.append(
@@ -768,7 +1239,7 @@ def run(dataset_directory, config_path, output, device_name):
         write_csv(output / "predictions.csv", prediction_rows)
         baselines = {}
         train_rates = labels[split["train"]].mean(axis=0)
-        for key, indices in split.items():
+        for key, indices in evaluation_split.items():
             baselines[key] = prediction_metrics(
                 labels[indices],
                 np.broadcast_to(train_rates, (len(indices), len(actions))),
@@ -787,12 +1258,14 @@ def run(dataset_directory, config_path, output, device_name):
             }
         report = {
             **objective,
-            "model": MODEL_SPEC,
+            **stopping,
+            "model": selected_model_spec,
             **catalog_metadata(actions),
             "output_dim": len(actions),
             "selection_metric": metric,
             "split_policy": split_policy,
-            "evaluation_splits": list(split),
+            "evaluation_splits": list(evaluation_split),
+            **({"reserved_test_scenes": len(split["test"])} if "test" in split else {}),
             "test_evaluation_performed": has_test,
             "parameter_count": provenance["parameter_count"],
             "selected_seed": selected["seed"],
@@ -826,6 +1299,7 @@ def run(dataset_directory, config_path, output, device_name):
                 "runs": len(runs),
                 "selection_metric": metric,
                 **objective,
+                **stopping,
                 "selected_seed": selected["seed"],
                 "test_evaluation_performed": has_test,
                 "finished_utc": utc_now(),
@@ -841,8 +1315,10 @@ def run(dataset_directory, config_path, output, device_name):
             {
                 "runs": len(runs),
                 "scenes": len(labels),
+                "evaluated_scenes": len(evaluation_indices),
                 "selection_metric": metric,
                 **objective,
+                **stopping,
                 "labels": int(labels.size),
                 **catalog_metadata(actions),
                 "numerical_error_policy": "failure",
@@ -878,8 +1354,19 @@ def main():
     parser.add_argument("--config", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument(
+        "--skip-test-evaluation",
+        action="store_true",
+        help="Keep frozen test scenes reserved; do not infer or export their predictions",
+    )
     args = parser.parse_args()
-    run(args.dataset, args.config, args.output, args.device)
+    run(
+        args.dataset,
+        args.config,
+        args.output,
+        args.device,
+        skip_test_evaluation=args.skip_test_evaluation,
+    )
 
 
 if __name__ == "__main__":
