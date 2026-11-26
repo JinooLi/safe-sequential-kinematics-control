@@ -192,9 +192,20 @@ class OSQPSolver:
             }.get(int(result.info.status_val), QPStatus.FAILED)
             # Preserve the existing policy: an inaccurate solution is not accepted.
             x = None
+            dual = None
             if status == QPStatus.SOLVED:
                 x = np.asarray(result.x, dtype=float).copy()
                 self._check_solution(x, dense_A, lower, upper)
+                raw_dual = getattr(result, "y", None)
+                if raw_dual is not None:
+                    raw_dual = np.asarray(raw_dual, dtype=float)
+                    if raw_dual.shape == lower.shape and np.isfinite(raw_dual).all():
+                        # OSQP solved P/scale and q/scale. Undo that objective
+                        # scaling for optional constraint-activity diagnostics.
+                        with np.errstate(over="ignore", invalid="ignore"):
+                            restored = raw_dual * self._objective_scale
+                        if np.isfinite(restored).all():
+                            dual = restored.copy()
             else:
                 self._initialized = False
             return QPSolution(
@@ -203,6 +214,7 @@ class OSQPSolver:
                 perf_counter() - start,
                 str(result.info.status)
                 + ("; absolute constraint refinement" if refined else ""),
+                dual,
             )
         except Exception as error:
             self._initialized = False

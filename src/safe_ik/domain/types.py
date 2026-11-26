@@ -70,6 +70,9 @@ class QPSolution:
     x: np.ndarray | None
     solve_time: float
     message: str = ""
+    # Signed multipliers for lower <= A @ x <= upper, in the original
+    # objective units. A binding lower bound has a negative multiplier.
+    dual: np.ndarray | None = None
 
     def __post_init__(self):
         if self.status == QPStatus.SOLVED and self.x is None:

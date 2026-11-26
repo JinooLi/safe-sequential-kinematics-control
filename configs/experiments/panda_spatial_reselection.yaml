@@ -1,0 +1,10 @@
+# Spatial vote settings for panda_reselect_reached --mode spatial.
+# Strict majority: 26 of 50 votes are required; ties retain the current route.
+spatial_reselection:
+  sample_count: 50
+  # sigma = 0.1 / 3 rad per coordinate in an isotropic 7-D Gaussian.
+  # This is an isodensity radius, not a hard cutoff or a probability-mass radius.
+  three_sigma_radius_rad: 0.1
+  # Simulated seconds; must be an integer multiple of the control timestep.
+  period_seconds: 0.3
+  sampling_seed: 20261126

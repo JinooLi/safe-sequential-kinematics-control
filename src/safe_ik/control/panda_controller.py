@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Callable, Sequence
 
 import numpy as np
 from scipy.linalg import block_diag
@@ -29,14 +30,75 @@ class PandaTrajectoryController:
         safety: SafetyEvaluator,
         candidates: tuple[SafeIKCandidate, ...],
         solver: QPSolver,
+        *,
+        stage_selector: Callable[[np.ndarray], Sequence[str]] | None = None,
+        advance_on_collision_stall: bool = False,
+        collision_stall_solver: QPSolver | None = None,
+        periodic_stage_selector: Callable[[np.ndarray], Sequence[str]] | None = None,
+        periodic_reselection_period: float = 0.1,
+        periodic_reselection_confirmations: int = 5,
+        periodic_reselection_max_switches: int | None = None,
+        periodic_reselection_lock_on_ee: bool = False,
+        initial_stage_sequence: Sequence[str] | None = None,
     ):
         if not candidates and config.trajectory.mode != "direct":
             raise ValueError("at least one safe IK candidate is required")
+        if stage_selector is not None and (
+            config.trajectory.mode != "sequential" or len(candidates) != 1
+        ):
+            raise ValueError(
+                "stage reselection requires sequential mode and one fixed IK"
+            )
+        if advance_on_collision_stall and (
+            config.trajectory.mode != "sequential"
+            or len(candidates) != 1
+            or stage_selector is not None
+        ):
+            raise ValueError(
+                "collision-stall advancement needs a fixed sequence and one IK"
+            )
+        if advance_on_collision_stall and (
+            collision_stall_solver is None or collision_stall_solver is solver
+        ):
+            raise ValueError(
+                "collision-stall advancement needs a separate diagnostic solver"
+            )
+        if periodic_stage_selector is not None and (
+            config.trajectory.mode != "sequential"
+            or len(candidates) != 1
+            or stage_selector is not None
+            or advance_on_collision_stall
+        ):
+            raise ValueError(
+                "periodic reselection requires sequential mode, one fixed IK, "
+                "and no other reselection policy"
+            )
+        if periodic_stage_selector is None and initial_stage_sequence is not None:
+            raise ValueError("initial_stage_sequence requires periodic reselection")
+        if not isinstance(periodic_reselection_lock_on_ee, (bool, np.bool_)):
+            raise ValueError("periodic EE lock must be a boolean")
+        if periodic_reselection_lock_on_ee and periodic_stage_selector is None:
+            raise ValueError("a periodic EE lock requires periodic reselection")
+        if periodic_reselection_max_switches is not None:
+            if periodic_stage_selector is None:
+                raise ValueError(
+                    "a periodic switch limit requires periodic reselection"
+                )
+            if (
+                isinstance(periodic_reselection_max_switches, (bool, np.bool_))
+                or not isinstance(periodic_reselection_max_switches, (int, np.integer))
+                or periodic_reselection_max_switches < 0
+            ):
+                raise ValueError("periodic max switches must be a nonnegative integer")
         self.config = config
         self.kinematics = kinematics
         self.safety = safety
         self.candidates = tuple(candidates)
         self.solver = solver
+        self.advance_on_collision_stall = bool(advance_on_collision_stall)
+        self.collision_stall_solver = collision_stall_solver
+        self._collision_stall_events: list[dict] = []
+        self._control_call_index = -1
         self.candidate_index = 0
         self.candidate_switch_count = 0
         self.stage_frames = (
@@ -44,7 +106,86 @@ class PandaTrajectoryController:
             if config.trajectory.mode == "sequential"
             else ()
         )
-        self.stage_index = 0
+        self.stage_selector = stage_selector
+        self.periodic_stage_selector = periodic_stage_selector
+        self.periodic_reselection_count = 0
+        self.periodic_reselection_lock_on_ee = bool(periodic_reselection_lock_on_ee)
+        self.periodic_ee_locked = False
+        self.periodic_ee_lock_event: dict | None = None
+        self.periodic_reselection_max_switches = (
+            None
+            if periodic_reselection_max_switches is None
+            else int(periodic_reselection_max_switches)
+        )
+        self._periodic_stage_selection_events: list[dict] = []
+        self._periodic_proposal: tuple[str, ...] | None = None
+        self._periodic_streak = 0
+        self.active_sequence = tuple(self.stage_frames)
+        self._sequence_position = 0
+        if periodic_stage_selector is not None:
+            period = float(periodic_reselection_period)
+            dt = float(config.trajectory.integration_period)
+            ticks = period / dt
+            if (
+                not np.isfinite(period)
+                or period <= 0
+                or not np.isfinite(ticks)
+                or ticks < 1
+                or not np.isclose(ticks, round(ticks), rtol=0.0, atol=1e-9)
+            ):
+                raise ValueError(
+                    "periodic reselection period must be a positive integer "
+                    "multiple of the integration period"
+                )
+            if (
+                isinstance(periodic_reselection_confirmations, (bool, np.bool_))
+                or not isinstance(periodic_reselection_confirmations, (int, np.integer))
+                or periodic_reselection_confirmations < 1
+            ):
+                raise ValueError("periodic confirmations must be a positive integer")
+            if len(set(self.stage_frames)) != len(self.stage_frames):
+                raise ValueError("periodic reselection needs a unique frame catalog")
+            if initial_stage_sequence is None:
+                raise ValueError(
+                    "periodic reselection needs an initial selected sequence"
+                )
+            self._periodic_ticks = int(round(ticks))
+            self.periodic_reselection_period = period
+            self.periodic_reselection_confirmations = int(
+                periodic_reselection_confirmations
+            )
+            self.active_sequence = self._validate_periodic_sequence(
+                initial_stage_sequence
+            )
+        self.last_completed_link = 0
+        self._stage_selector_initialized = False
+        self._stage_selection_events: list[dict] = []
+        if stage_selector is not None:
+            try:
+                link_numbers = tuple(
+                    int(frame.removeprefix("link")) if frame.startswith("link") else 0
+                    for frame in self.stage_frames
+                )
+            except ValueError as error:
+                raise ValueError(
+                    "stage reselection needs numbered link frames"
+                ) from error
+            if (
+                any(number <= 0 for number in link_numbers)
+                or tuple(sorted(set(link_numbers))) != link_numbers
+            ):
+                raise ValueError("stage reselection needs unique ascending link frames")
+            self._stage_link_numbers = dict(zip(self.stage_frames, link_numbers))
+        self.stage_index = (
+            self.stage_frames.index(self.active_sequence[0])
+            if periodic_stage_selector is not None and self.active_sequence
+            else len(self.stage_frames) if periodic_stage_selector is not None else 0
+        )
+        self.periodic_initial_direct = (
+            periodic_stage_selector is not None and not self.active_sequence
+        )
+        if self.periodic_initial_direct:
+            self._lock_periodic_ee("initial_direct")
         self.stage_transition_count = 0
         self._stage_transition_events: list[tuple[str, str, str]] = []
         self._candidate_stage_targets = tuple(
@@ -143,6 +284,195 @@ class PandaTrajectoryController:
         self._stage_transition_events.clear()
         return events
 
+    def consume_stage_selection_events(self) -> tuple[dict, ...]:
+        """Return decisions made initially and after intermediate target reaches.
+
+        An empty selected action, or an action containing only completed/earlier
+        links, commits to the final EE stage. That stage never invokes selection.
+        """
+        events = tuple(self._stage_selection_events)
+        self._stage_selection_events.clear()
+        return events
+
+    def consume_collision_stall_events(self) -> tuple[dict, ...]:
+        """Return all diagnostic checks, including checks that did not skip.
+
+        control_call_index identifies the corresponding command-time entry in
+        a rollout. A skipped target is never reported as a reached target.
+        """
+        events = tuple(self._collision_stall_events)
+        self._collision_stall_events.clear()
+        return events
+
+    def consume_periodic_stage_selection_events(self) -> tuple[dict, ...]:
+        """Return scheduled polls before any EE lock, including capped proposals.
+
+        The initial selection is supplied by the caller and is not a poll.
+        ``control_call_index * integration_period`` is simulated time; neither
+        inference wall time nor stage transitions change the polling schedule.
+        """
+        events = tuple(self._periodic_stage_selection_events)
+        self._periodic_stage_selection_events.clear()
+        return events
+
+    def _validate_periodic_sequence(self, frames: Sequence[str]) -> tuple[str, ...]:
+        """Require an ordered catalog subsequence; the empty sequence is Direct."""
+        chosen = tuple(frames)
+        unknown = set(chosen).difference(self.stage_frames)
+        if unknown:
+            raise ValueError(
+                f"periodic selector returned unknown link frames: {sorted(unknown)}"
+            )
+        indices = tuple(self.stage_frames.index(frame) for frame in chosen)
+        if tuple(sorted(set(indices))) != indices:
+            raise ValueError(
+                "periodic selector requires unique frames in catalog order"
+            )
+        return chosen
+
+    def _lock_periodic_ee(self, reason: str) -> None:
+        """Make the first EE entry absorbing without adding synthetic poll events."""
+        if (
+            not self.periodic_reselection_lock_on_ee
+            or self.periodic_ee_locked
+            or self.stage_index != len(self.stage_frames)
+        ):
+            return
+        self.periodic_ee_locked = True
+        self._periodic_proposal = None
+        self._periodic_streak = 0
+        index = max(0, self._control_call_index)
+        self.periodic_ee_lock_event = dict(
+            control_call_index=index,
+            simulated_time=index * self.config.trajectory.integration_period,
+            reason=reason,
+            initial_direct=self.periodic_initial_direct,
+        )
+
+    def _poll_periodic_sequence(self, q) -> None:
+        if (
+            self.periodic_stage_selector is None
+            or self.periodic_ee_locked
+            or self._control_call_index <= 0
+            or self._control_call_index % self._periodic_ticks
+        ):
+            return
+        if self.status(q).success:
+            return
+        previous_stage = self.active_stage_name
+        previous_sequence = self.active_sequence
+        previous_candidate = self._periodic_proposal
+        previous_streak = self._periodic_streak
+        switch_count_before = self.periodic_reselection_count
+        chosen = self._validate_periodic_sequence(
+            self.periodic_stage_selector(np.asarray(q, dtype=float).copy())
+        )
+        if chosen == self.active_sequence:
+            self._periodic_proposal = None
+            self._periodic_streak = 0
+        elif chosen == self._periodic_proposal:
+            self._periodic_streak += 1
+        else:
+            self._periodic_proposal = chosen
+            self._periodic_streak = 1
+        confirmation_streak = self._periodic_streak
+        confirmed = confirmation_streak >= self.periodic_reselection_confirmations
+        limit_exhausted = (
+            self.periodic_reselection_max_switches is not None
+            and switch_count_before >= self.periodic_reselection_max_switches
+        )
+        accepted = confirmed and not limit_exhausted
+        entry_stage = self.active_stage_name
+        if accepted:
+            # Compare whole actions, not the unfinished suffix. Re-entering an
+            # earlier link is intentional; normal reached checks may skip it.
+            self.active_sequence = chosen
+            self._sequence_position = 0
+            self.stage_index = (
+                self.stage_frames.index(chosen[0]) if chosen else len(self.stage_frames)
+            )
+            self.periodic_reselection_count += 1
+            self._periodic_proposal = None
+            self._periodic_streak = 0
+            self._stage_transition_events.append(
+                (previous_stage, self.active_stage_name, "sequence_switch")
+            )
+            entry_stage = self.active_stage_name
+            self._reset_stall_history()
+            self._advance_reached_stages(q)
+            self._lock_periodic_ee("accepted_sequence_ee")
+        self._periodic_stage_selection_events.append(
+            dict(
+                control_call_index=self._control_call_index,
+                simulated_time=(
+                    self._control_call_index * self.config.trajectory.integration_period
+                ),
+                q=np.asarray(q, dtype=float).tolist(),
+                current_sequence_before=list(previous_sequence),
+                current_sequence_after=list(self.active_sequence),
+                proposed_sequence=list(chosen),
+                candidate_before=(
+                    None if previous_candidate is None else list(previous_candidate)
+                ),
+                candidate_after=(
+                    None
+                    if self._periodic_proposal is None
+                    else list(self._periodic_proposal)
+                ),
+                streak_before=previous_streak,
+                streak_after=self._periodic_streak,
+                confirmation_streak=confirmation_streak,
+                accepted=accepted,
+                max_switches=self.periodic_reselection_max_switches,
+                switch_count_before=switch_count_before,
+                switch_count_after=self.periodic_reselection_count,
+                blocked_by_switch_limit=confirmed and limit_exhausted,
+                lock_on_ee=self.periodic_reselection_lock_on_ee,
+                ee_locked_after=self.periodic_ee_locked,
+                previous_stage=previous_stage,
+                entry_stage=entry_stage,
+                next_stage=self.active_stage_name,
+            )
+        )
+
+    def _select_next_stage(self, q, reason: str) -> None:
+        chosen_frames = tuple(self.stage_selector(np.asarray(q, dtype=float).copy()))
+        unknown = set(chosen_frames).difference(self._stage_link_numbers)
+        if unknown:
+            raise ValueError(
+                f"stage selector returned unknown link frames: {sorted(unknown)}"
+            )
+        remaining = sorted(
+            {
+                frame
+                for frame in chosen_frames
+                if self._stage_link_numbers[frame] > self.last_completed_link
+            },
+            key=self._stage_link_numbers.__getitem__,
+        )
+        next_frame = remaining[0] if remaining else None
+        self.stage_index = (
+            self.stage_frames.index(next_frame)
+            if next_frame is not None
+            else len(self.stage_frames)
+        )
+        self._stage_selector_initialized = True
+        self._stage_selection_events.append(
+            {
+                "reason": reason,
+                "q": np.asarray(q, dtype=float).tolist(),
+                "last_completed_link": self.last_completed_link,
+                "chosen_frames": list(chosen_frames),
+                "discarded_frames": [
+                    frame
+                    for frame in chosen_frames
+                    if self._stage_link_numbers[frame] <= self.last_completed_link
+                ],
+                "next_frame": next_frame,
+                "next_stage": self.active_stage_name,
+            }
+        )
+
     def _pose_errors(self, q):
         position, quaternion, jacobian = self.kinematics.pose_and_jacobian(q)
         position_error = position - self.config.target.position
@@ -220,6 +550,8 @@ class PandaTrajectoryController:
         )
 
     def _advance_reached_stages(self, q) -> None:
+        if self.stage_selector is not None and not self._stage_selector_initialized:
+            self._select_next_stage(q, "initial_selection")
         while self.stage_index < len(self.stage_frames):
             position_error, orientation_error = self.stage_error_norms(
                 q, self.stage_index
@@ -231,7 +563,22 @@ class PandaTrajectoryController:
             ):
                 break
             previous_name = self.active_stage_name
-            self.stage_index += 1
+            if self.periodic_stage_selector is not None:
+                self._sequence_position += 1
+                self.stage_index = (
+                    self.stage_frames.index(
+                        self.active_sequence[self._sequence_position]
+                    )
+                    if self._sequence_position < len(self.active_sequence)
+                    else len(self.stage_frames)
+                )
+            elif self.stage_selector is None:
+                self.stage_index += 1
+            else:
+                self.last_completed_link = self._stage_link_numbers[
+                    self.stage_frames[self.stage_index]
+                ]
+                self._select_next_stage(q, "target_reached")
             self.stage_transition_count += 1
             self._stage_transition_events.append(
                 (previous_name, self.active_stage_name, "target_reached")
@@ -353,22 +700,8 @@ class PandaTrajectoryController:
         self.last_status = self.status(q)
         return True
 
-    def get_velocity(self, q) -> np.ndarray:
-        q = np.asarray(q, dtype=float)
-        if self.qp_infeasible_stopped:
-            return np.zeros(self.config.dof)
-        self.last_barrier = self.safety.evaluate(q)
-        self.last_barrier_q = q.copy()
-        self.last_qp_status = "not_run"
-        self.last_qp_solve_time = 0.0
-        self._advance_reached_stages(q)
-        self._record_task_progress(q)
-        self._switch_candidate_if_stalled(q)
-        if self.last_status is not None and (
-            self.last_status.success or self.last_status.candidates_exhausted
-        ):
-            return np.zeros(self.config.dof)
-
+    def _build_qp_problem(self, q) -> QPProblem:
+        """Build the unchanged CLF/hard-CBF problem at the cached safety state."""
         trajectory = self.config.trajectory
         clf_value, clf_gradient, _ = self._active_clf(q)
         barrier = self.last_barrier
@@ -417,7 +750,7 @@ class PandaTrajectoryController:
             lower.append(-trajectory.velocity_limits[joint])
             upper.append(trajectory.velocity_limits[joint])
 
-        problem = QPProblem(
+        return QPProblem(
             block_diag(
                 self.config.qp.joint_velocity_weight * np.eye(self.config.dof),
                 np.array([[trajectory.clf_slack_weight]]),
@@ -427,6 +760,149 @@ class PandaTrajectoryController:
             np.asarray(lower),
             np.asarray(upper),
         )
+
+    def _advance_collision_stalled_stage(self, q) -> bool:
+        """Skip one fixed intermediate target only when a collision CBF binds.
+
+        This associates a stall with an active collision constraint; it does not
+        establish that the constraint alone caused the stall. The diagnostic
+        command is never applied and its solver cannot affect control warm starts.
+        """
+        if (
+            not self.advance_on_collision_stall
+            or self.qp_infeasible_stopped
+            or self.stage_index >= len(self.stage_frames)
+            or not self.status(q).stalled
+        ):
+            return False
+        event = dict(
+            control_call_index=self._control_call_index,
+            q=q.tolist(),
+            previous_stage=self.active_stage_name,
+            next_stage=self.active_stage_name,
+            skipped=False,
+            diagnostic_status="not_run",
+            diagnostic_message="",
+            diagnostic_solve_time=0.0,
+            diagnostic_valid=False,
+            dual_threshold=1e-6,
+            stall_statistics=dict(
+                mean_applied_velocity_norm=float(np.mean(self.applied_velocity_norms)),
+                velocity_samples=len(self.applied_velocity_norms),
+                velocity_threshold=self.config.trajectory.stop_velocity_tolerance,
+                best_error_at_window_start=float(self._progress_best_errors[0]),
+                best_error_at_window_end=float(self._progress_best_errors[-1]),
+                error_improvement=float(
+                    self._progress_best_errors[0] - self._progress_best_errors[-1]
+                ),
+                progress_samples=len(self._progress_best_errors),
+                progress_threshold=self.config.trajectory.stop_progress_tolerance,
+            ),
+            collision_constraints=[],
+            active_collision_labels=[],
+        )
+        self._collision_stall_events.append(event)
+        try:
+            problem = self._build_qp_problem(q)
+            diagnostic = self.collision_stall_solver.solve(problem)
+            event["diagnostic_status"] = diagnostic.status.value
+            event["diagnostic_message"] = diagnostic.message
+            event["diagnostic_solve_time"] = float(diagnostic.solve_time)
+            if diagnostic.status != QPStatus.SOLVED:
+                return False
+            x = np.asarray(diagnostic.x, dtype=float)
+            dual = (
+                None
+                if diagnostic.dual is None
+                else np.asarray(diagnostic.dual, dtype=float)
+            )
+            if x.shape != (self.config.dof + 1,) or not np.isfinite(x).all():
+                event["diagnostic_message"] = "invalid diagnostic primal solution"
+                return False
+            if (
+                dual is None
+                or dual.shape != problem.lower.shape
+                or not np.isfinite(dual).all()
+            ):
+                event["diagnostic_message"] = (
+                    "missing or invalid diagnostic dual solution"
+                )
+                return False
+            event["diagnostic_valid"] = True
+            # Row zero is CLF. Only the following collision-CBF rows may
+            # trigger advancement; joint limits and speed limits never do.
+            for i, (label, h) in enumerate(
+                zip(self.last_barrier.labels, self.last_barrier.values), start=1
+            ):
+                derivative = float(problem.A[i] @ x)
+                gain_h = float(-problem.lower[i])
+                residual = derivative + gain_h
+                tolerance = (
+                    self.config.qp.absolute_tolerance
+                    + self.config.qp.relative_tolerance
+                    * max(abs(derivative), abs(gain_h))
+                )
+                multiplier = float(-dual[i])
+                active = (
+                    abs(residual) <= tolerance and multiplier > event["dual_threshold"]
+                )
+                event["collision_constraints"].append(
+                    dict(
+                        label=label,
+                        kind="self" if label.startswith("self_") else "obstacle",
+                        h=float(h),
+                        directional_derivative=derivative,
+                        gain_times_h=gain_h,
+                        residual=residual,
+                        tolerance=tolerance,
+                        lower_multiplier=multiplier,
+                        active=bool(active),
+                    )
+                )
+                if active:
+                    event["active_collision_labels"].append(label)
+        except Exception as error:
+            event["diagnostic_status"] = "diagnostic_exception"
+            event["diagnostic_message"] = f"{type(error).__name__}: {error}"
+            event["diagnostic_valid"] = False
+            return False
+        if not event["active_collision_labels"]:
+            return False
+        previous_name = self.active_stage_name
+        self.stage_index += 1
+        self.stage_transition_count += 1
+        event["skipped"] = True
+        event["next_stage"] = self.active_stage_name
+        self._stage_transition_events.append(
+            (previous_name, self.active_stage_name, "collision_constrained_stall")
+        )
+        self._reset_stall_history()
+        self._advance_reached_stages(q)
+        self._record_task_progress(q)
+        return True
+
+    def get_velocity(self, q) -> np.ndarray:
+        self._control_call_index += 1
+        q = np.asarray(q, dtype=float)
+        if self.qp_infeasible_stopped:
+            return np.zeros(self.config.dof)
+        self.last_barrier = self.safety.evaluate(q)
+        self.last_barrier_q = q.copy()
+        self.last_qp_status = "not_run"
+        self.last_qp_solve_time = 0.0
+        self._advance_reached_stages(q)
+        # A normal reach wins over a proposal due at this same command state.
+        self._lock_periodic_ee("reached_ee")
+        self._poll_periodic_sequence(q)
+        self._record_task_progress(q)
+        self._advance_collision_stalled_stage(q)
+        self._switch_candidate_if_stalled(q)
+        if self.last_status is not None and (
+            self.last_status.success or self.last_status.candidates_exhausted
+        ):
+            return np.zeros(self.config.dof)
+
+        problem = self._build_qp_problem(q)
         result = self.solver.solve(problem)
         self.last_qp_solve_time = result.solve_time
         self.last_qp_message = result.message
