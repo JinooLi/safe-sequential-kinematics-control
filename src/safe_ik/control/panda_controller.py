@@ -35,6 +35,9 @@ class PandaTrajectoryController:
         advance_on_collision_stall: bool = False,
         collision_stall_solver: QPSolver | None = None,
         periodic_stage_selector: Callable[[np.ndarray], Sequence[str]] | None = None,
+        periodic_stage_switch_guard: Callable[
+            [np.ndarray, tuple[str, ...], tuple[str, ...]], bool
+        ] | None = None,
         periodic_reselection_period: float = 0.1,
         periodic_reselection_confirmations: int = 5,
         periodic_reselection_max_switches: int | None = None,
@@ -75,6 +78,13 @@ class PandaTrajectoryController:
             )
         if periodic_stage_selector is None and initial_stage_sequence is not None:
             raise ValueError("initial_stage_sequence requires periodic reselection")
+        if periodic_stage_switch_guard is not None:
+            if periodic_stage_selector is None:
+                raise ValueError(
+                    "a periodic switch guard requires periodic reselection"
+                )
+            if not callable(periodic_stage_switch_guard):
+                raise ValueError("periodic switch guard must be callable")
         if not isinstance(periodic_reselection_lock_on_ee, (bool, np.bool_)):
             raise ValueError("periodic EE lock must be a boolean")
         if periodic_reselection_lock_on_ee and periodic_stage_selector is None:
@@ -108,6 +118,7 @@ class PandaTrajectoryController:
         )
         self.stage_selector = stage_selector
         self.periodic_stage_selector = periodic_stage_selector
+        self.periodic_stage_switch_guard = periodic_stage_switch_guard
         self.periodic_reselection_count = 0
         self.periodic_reselection_lock_on_ee = bool(periodic_reselection_lock_on_ee)
         self.periodic_ee_locked = False
@@ -305,7 +316,7 @@ class PandaTrajectoryController:
         return events
 
     def consume_periodic_stage_selection_events(self) -> tuple[dict, ...]:
-        """Return scheduled polls before any EE lock, including capped proposals.
+        """Return scheduled polls, including proposals blocked by a cap or guard.
 
         The initial selection is supplied by the caller and is not a poll.
         ``control_call_index * integration_period`` is simulated time; neither
@@ -382,6 +393,19 @@ class PandaTrajectoryController:
             and switch_count_before >= self.periodic_reselection_max_switches
         )
         accepted = confirmed and not limit_exhausted
+        switch_guard_evaluated = False
+        blocked_by_switch_guard = False
+        if accepted and self.periodic_stage_switch_guard is not None:
+            # The selector's current poll is available to the caller's guard.
+            # Rejection keeps the confirmed proposal pending for the next poll.
+            switch_guard_evaluated = True
+            guard_allows_switch = self.periodic_stage_switch_guard(
+                np.asarray(q, dtype=float).copy(), previous_sequence, chosen
+            )
+            if not isinstance(guard_allows_switch, (bool, np.bool_)):
+                raise ValueError("periodic switch guard must return a boolean")
+            blocked_by_switch_guard = not bool(guard_allows_switch)
+            accepted = not blocked_by_switch_guard
         entry_stage = self.active_stage_name
         if accepted:
             # Compare whole actions, not the unfinished suffix. Re-entering an
@@ -427,6 +451,8 @@ class PandaTrajectoryController:
                 switch_count_before=switch_count_before,
                 switch_count_after=self.periodic_reselection_count,
                 blocked_by_switch_limit=confirmed and limit_exhausted,
+                blocked_by_switch_guard=blocked_by_switch_guard,
+                switch_guard_evaluated=switch_guard_evaluated,
                 lock_on_ee=self.periodic_reselection_lock_on_ee,
                 ee_locked_after=self.periodic_ee_locked,
                 previous_stage=previous_stage,

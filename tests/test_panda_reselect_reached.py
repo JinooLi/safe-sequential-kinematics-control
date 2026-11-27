@@ -2,13 +2,14 @@
 
 import copy
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 
 from safe_ik.application.panda_reselect_reached import (
     aggregate,
     build_tasks,
+    make_probability_gain_switch_guard,
     periodic_schedule_steps,
     select_partition_rows,
     select_test_rows,
@@ -16,6 +17,7 @@ from safe_ik.application.panda_reselect_reached import (
     timestamp_periodic_events,
     validate_sequence_lock_on_ee,
     validate_sequence_max_switches,
+    validate_sequence_min_probability_gain,
     ThresholdWeightedSelector,
 )
 from safe_ik.domain.link_actions import LINK_ACTIONS, action_id
@@ -262,9 +264,11 @@ class ReplayStatisticsTests(unittest.TestCase):
         )
         rows = [
             dict(base, periodic_poll_count=1199, periodic_switch_count=3, total_inference_count=1200,
-                 periodic_blocked_switch_proposals=17, periodic_switch_limit_exhausted=True),
+                 periodic_blocked_switch_proposals=17, periodic_switch_limit_exhausted=True,
+                 periodic_switch_guard_evaluations=5, periodic_blocked_by_switch_guard=2),
             dict(base, periodic_poll_count=20, periodic_switch_count=0, total_inference_count=21,
-                 periodic_blocked_switch_proposals=0, periodic_switch_limit_exhausted=False),
+                 periodic_blocked_switch_proposals=0, periodic_switch_limit_exhausted=False,
+                 periodic_switch_guard_evaluations=4, periodic_blocked_by_switch_guard=4),
         ]
         result = aggregate(rows, requested=3)
         self.assertEqual(result["periodic_poll_count"], 1219)
@@ -275,6 +279,9 @@ class ReplayStatisticsTests(unittest.TestCase):
         self.assertEqual(result["periodic_blocked_switch_proposals"], 17)
         self.assertEqual(result["periodic_scenes_with_blocked_switch_proposals"], 1)
         self.assertEqual(result["periodic_scenes_at_switch_limit"], 1)
+        self.assertEqual(result["periodic_switch_guard_evaluations"], 9)
+        self.assertEqual(result["periodic_blocked_by_switch_guard"], 6)
+        self.assertEqual(result["periodic_scenes_blocked_by_switch_guard"], 2)
         self.assertEqual(result["missing_cases"], 1)
 
     def test_collision_gate_checks_and_skips_have_distinct_counts(self):
@@ -449,6 +456,116 @@ class PeriodicEvidenceTests(unittest.TestCase):
         self.assertEqual(len(records), 3)
         self.assertFalse(any(event["accepted"] for event in records))
         self.assertEqual(sum(event["blocked_by_switch_limit"] for event in records), 2)
+
+
+class ProbabilityGainEvidenceTests(unittest.TestCase):
+    def make_evidence(self, threshold=0.05, cap=3):
+        # The first eleven polls have a large gain but cannot switch yet. The
+        # twelfth fails the guard; the next poll can pass without twelve more.
+        commands = 13 * 15 + 1
+        trace = dict(
+            q=np.arange((commands + 1) * 7, dtype=float).reshape(commands + 1, 7) / 10000,
+            time=np.arange(commands + 1) * .02, command_time=np.arange(commands) * .02,
+            stage_frames=np.asarray([f"link{i}" for i in range(2, 7)]),
+            stage_index=np.ones(commands, dtype=int),
+        )
+        initial, proposed = ["link2", "link3"], ["link2", "link4"]
+        calls, events = [], []
+        for poll in range(1, 14):
+            index = poll * 15
+            scores = [.1] * 16
+            scores[0] = .5
+            scores[1] = .5 + (threshold / 2 if poll == 12 else threshold * 2)
+            # The reached link2 is not removed from the current full route.
+            # Its remaining suffix link3 has a different, much lower score.
+            scores[LINK_ACTIONS.index((3,))] = .05
+            calls.append(dict(prediction_with_scores(scores), q=trace["q"][index].copy(), time=float(trace["command_time"][index])))
+            confirmed = poll >= 12
+            evaluated = confirmed and cap > 0
+            accepted = poll == 13 and cap > 0
+            events.append(dict(
+                control_call_index=index, simulated_time=index * .02,
+                q=trace["q"][index].tolist(), current_sequence_before=initial,
+                current_sequence_after=proposed if accepted else initial,
+                proposed_sequence=proposed, accepted=accepted,
+                confirmation_streak=poll, streak_before=poll - 1,
+                candidate_before=proposed if poll > 1 else None,
+                streak_after=0 if accepted else poll,
+                candidate_after=None if accepted else proposed,
+                previous_stage="link3_pose", entry_stage="link2_pose" if accepted else "link3_pose",
+                next_stage="link2_pose" if accepted else "link3_pose",
+                max_switches=cap, switch_count_before=0, switch_count_after=int(accepted),
+                blocked_by_switch_limit=confirmed and cap == 0,
+                switch_guard_evaluated=evaluated,
+                blocked_by_switch_guard=evaluated and poll == 12,
+            ))
+        transitions = [dict(time=float(trace["command_time"][195]), previous="link3_pose", next="link2_pose", reason="sequence_switch")] if cap else []
+        return events, calls, trace, transitions, initial
+
+    def validate(self, evidence, threshold=.05, cap=3):
+        return timestamp_periodic_events(
+            *evidence, period=.3, confirmations=12, integration_period=.02,
+            max_switches=cap, min_probability_gain=threshold,
+        )
+
+    def test_margin_checked_only_when_temporally_ready_and_rejection_keeps_streak(self):
+        for threshold in (.05, .10):
+            with self.subTest(threshold=threshold):
+                records = self.validate(self.make_evidence(threshold), threshold)
+                self.assertFalse(any(event["switch_guard_evaluated"] for event in records[:11]))
+                self.assertTrue(records[11]["blocked_by_switch_guard"])
+                self.assertAlmostEqual(records[11]["switch_probability_gain"], threshold / 2)
+                self.assertEqual(records[11]["streak_after"], 12)
+                self.assertTrue(records[12]["accepted"])
+                self.assertEqual(records[12]["confirmation_streak"], 13)
+                self.assertEqual(records[12]["streak_after"], 0)
+
+    def test_cap_has_priority_over_score_guard(self):
+        records = self.validate(self.make_evidence(cap=0), cap=0)
+        self.assertFalse(any(event["switch_guard_evaluated"] for event in records))
+        self.assertFalse(any(event["blocked_by_switch_guard"] for event in records))
+        self.assertTrue(all(event["switch_probability_gain"] is None for event in records))
+        self.assertEqual(sum(event["blocked_by_switch_limit"] for event in records), 2)
+
+    def test_replay_rejects_fabricated_streak_guard_or_pending_state(self):
+        for poll, key, value in (
+            (0, "confirmation_streak", 12),
+            (0, "switch_guard_evaluated", True),
+            (11, "blocked_by_switch_guard", False),
+            (11, "streak_after", 0),
+            (12, "candidate_before", None),
+        ):
+            evidence = self.make_evidence()
+            evidence[0][poll][key] = value
+            with self.subTest(poll=poll, key=key), self.assertRaisesRegex(ValueError, "evidence"):
+                self.validate(evidence)
+
+    def test_guard_reuses_latest_exact_q_and_full_route_scores_without_inference(self):
+        evidence = self.make_evidence()
+        calls = evidence[1][:12]
+        q = calls[-1]["q"].copy()
+        guard = make_probability_gain_switch_guard(calls, .05)
+        with patch("safe_ik.application.panda_reselect_reached.predict_selection", side_effect=AssertionError("extra inference")):
+            self.assertFalse(guard(q, ["link2", "link3"], ["link2", "link4"]))
+            calls.append(evidence[1][12])
+            self.assertTrue(guard(calls[-1]["q"], ["link2", "link3"], ["link2", "link4"]))
+        with self.assertRaises(AssertionError):
+            guard(q, ["link2", "link3"], ["link2", "link4"])
+        calls[-1]["probabilities"][0:2] = [.5, .75]
+        self.assertTrue(make_probability_gain_switch_guard(calls, .25)(calls[-1]["q"], ["link2", "link3"], ["link2", "link4"]))
+        self.assertIsNone(make_probability_gain_switch_guard(calls, None))
+
+    def test_probability_gain_validation_rejects_nonperiodic_or_nonfinite_values(self):
+        self.assertIsNone(validate_sequence_min_probability_gain(None, "spatial"))
+        self.assertEqual(validate_sequence_min_probability_gain(0), 0.)
+        self.assertEqual(validate_sequence_min_probability_gain(1), 1.)
+        for value, mode in (
+            (.05, "spatial"), (.1, "static"), (-.01, "periodic"), (1.01, "periodic"),
+            (float("nan"), "periodic"), (float("inf"), "periodic"),
+            (True, "periodic"), ("0.05", "periodic"),
+        ):
+            with self.subTest(value=value, mode=mode), self.assertRaises(ValueError):
+                validate_sequence_min_probability_gain(value, mode)
 
 
 class PeriodicEELockEvidenceTests(unittest.TestCase):

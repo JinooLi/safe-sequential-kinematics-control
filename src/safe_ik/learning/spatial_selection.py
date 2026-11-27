@@ -26,10 +26,13 @@ class SpatialSelectionConfig:
     three_sigma_radius_rad: float = 0.1
     period_seconds: float = 0.3
     sampling_seed: int = 20261126
+    temporal_confirmations: int = 1
 
     def __post_init__(self):
         if type(self.sample_count) is not int or self.sample_count <= 0:
             raise ValueError("sample_count must be a positive integer")
+        if type(self.temporal_confirmations) is not int or self.temporal_confirmations <= 0:
+            raise ValueError("temporal_confirmations must be a positive integer")
         if type(self.sampling_seed) is not int or self.sampling_seed < 0:
             raise ValueError("sampling_seed must be a nonnegative integer")
         for name in ("three_sigma_radius_rad", "period_seconds"):

@@ -148,7 +148,7 @@ class SpatialRunnerConfigurationTests(unittest.TestCase):
         result.update(overrides)
         return SimpleNamespace(**result)
 
-    def test_yaml_controls_spatial_sampling_and_disables_temporal_confirmation(self):
+    def test_yaml_controls_spatial_sampling_and_defaults_to_one_confirmation(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "policy.yaml"
             path.write_text(
@@ -163,6 +163,10 @@ class SpatialRunnerConfigurationTests(unittest.TestCase):
             self.assertEqual(config.sigma_rad, 0.02)
             self.assertEqual(config.sampling_seed, 19)
             self.assertEqual((period, confirmations), (0.4, 1))
+            path.write_text(path.read_text() + "  temporal_confirmations: 12\n")
+            config, period, confirmations = replay.resolve_sequence_settings(self.args(spatial_config=path))
+            self.assertEqual((period, confirmations), (0.4, 12))
+            self.assertEqual(config.temporal_confirmations, 12)
             for overrides in (dict(sequence_period=0.2), dict(sequence_confirmations=5), dict(mode="static")):
                 with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                     replay.resolve_sequence_settings(self.args(spatial_config=path, **overrides))
@@ -179,6 +183,86 @@ class SpatialRunnerConfigurationTests(unittest.TestCase):
             (None, 0.4, 9),
         )
         self.assertEqual(replay.resolve_sequence_settings(self.args(mode="static")), (None, None, None))
+
+
+class HybridSpatialEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        self.config = SpatialSelectionConfig(
+            three_sigma_radius_rad=0.3, temporal_confirmations=12,
+        )
+        self.initial = ["link2", "link3"]
+        # Eleven matching majorities must not survive a changed winner or a
+        # tied vote. Only the final twelve matching other-route majorities act.
+        winners = [1] * 11 + [2, None] + [1] * 12 + [1]
+        streaks = list(range(1, 12)) + [1, 0] + list(range(1, 13)) + [0]
+        commands = len(winners) * 15 + 1
+        self.trace = dict(
+            q=np.arange((commands + 1) * 7, dtype=float).reshape(commands + 1, 7) / 10000,
+            time=np.arange(commands + 1) * 0.02,
+            command_time=np.arange(commands) * 0.02,
+            stage_frames=np.asarray(replay.STAGE_FRAMES),
+            stage_index=np.zeros(commands, dtype=int),
+        )
+        selector = SpatialSequenceSelector(
+            self.config, 17, SimpleNamespace(actions=LINK_ACTIONS),
+            np.zeros(7), [0.1, 0.2, 0.3], [1, 0, 0, 0], [],
+        )
+        self.calls, self.events = [], []
+        for poll, (winner, streak) in enumerate(zip(winners, streaks)):
+            index = (poll + 1) * 15
+            current = self.initial if poll <= 24 else ["link2", "link4"]
+            votes = [1] * 25 + [2] * 25 if winner is None else [winner] * 26 + [3] * 24
+            with patch("safe_ik.learning.spatial_selection.predict_selection", side_effect=[prediction(i) for i in votes]):
+                proposal = selector.select(self.trace["q"][index], current)
+            self.calls.append(dict(proposal, q=self.trace["q"][index].copy(), time=float(self.trace["command_time"][index])))
+            accepted = poll == 24
+            proposed = proposal["link_frames"]
+            self.events.append(dict(
+                control_call_index=index, simulated_time=index * 0.02,
+                q=self.trace["q"][index].tolist(), current_sequence_before=current,
+                current_sequence_after=proposed if accepted else current,
+                proposed_sequence=proposed, accepted=accepted,
+                confirmation_streak=streak,
+                streak_after=0 if accepted else streak,
+                candidate_after=None if accepted or streak == 0 else proposed,
+                previous_stage="link2_pose", entry_stage="link2_pose", next_stage="link2_pose",
+                max_switches=3, switch_count_before=int(poll > 24),
+                switch_count_after=int(poll >= 24), blocked_by_switch_limit=False,
+                switch_guard_evaluated=False, blocked_by_switch_guard=False,
+            ))
+        self.transitions = [dict(
+            time=float(self.trace["command_time"][375]), previous="link2_pose",
+            next="link2_pose", reason="sequence_switch",
+        )]
+
+    def validate(self, events=None, confirmations=12):
+        return replay.timestamp_periodic_events(
+            self.events if events is None else events, self.calls, self.trace,
+            self.transitions, self.initial, period=0.3, confirmations=confirmations,
+            integration_period=0.02, max_switches=3,
+            spatial_config=self.config, spatial_position=17,
+        )
+
+    def test_every_poll_votes_and_only_twelve_same_consecutive_majorities_switch(self):
+        records = self.validate()
+        self.assertEqual([i for i, event in enumerate(records) if event["accepted"]], [24])
+        self.assertEqual(records[11]["confirmation_streak"], 1)
+        self.assertEqual(records[12]["confirmation_streak"], 0)
+        self.assertEqual(records[23]["confirmation_streak"], 11)
+        self.assertEqual(records[24]["confirmation_streak"], 12)
+        self.assertEqual(sum(len(event["spatial_vote"]["sample_actions"]) for event in records), 26 * 50)
+
+    def test_fabricated_streak_or_wrong_hybrid_configuration_is_rejected(self):
+        events = copy.deepcopy(self.events)
+        events[11]["confirmation_streak"] = 12
+        with self.assertRaisesRegex(ValueError, "confirmation evidence"):
+            self.validate(events)
+        events = copy.deepcopy(self.events)
+        events[12]["candidate_after"] = ["link2", "link5"]
+        with self.assertRaisesRegex(ValueError, "confirmation evidence"):
+            self.validate(events)
+        with self.assertRaisesRegex(ValueError, "matching temporal settings"):
+            self.validate(confirmations=1)
 
 
 if __name__ == "__main__":

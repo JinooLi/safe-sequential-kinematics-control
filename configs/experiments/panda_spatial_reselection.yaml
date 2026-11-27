@@ -8,3 +8,6 @@ spatial_reselection:
   # Simulated seconds; must be an integer multiple of the control timestep.
   period_seconds: 0.3
   sampling_seed: 20261126
+  # Consecutive polls with the same other-route majority required to switch.
+  # A tie or current-route majority clears this streak.
+  temporal_confirmations: 1

@@ -513,12 +513,15 @@ class PeriodicReselectionTests(unittest.TestCase):
             periodic_reselection_confirmations=2,
             periodic_reselection_max_switches=None,
             periodic_reselection_lock_on_ee=False,
+            periodic_stage_switch_guard=None,
         )
         for _ in range(len(proposals) + 1):
             left, right = self.step(default), self.step(explicit)
             self.assertEqual(left, right)
             self.assertTrue(all(e["max_switches"] is None for e in left))
             self.assertTrue(all(not e["blocked_by_switch_limit"] for e in left))
+            self.assertTrue(all(not e["switch_guard_evaluated"] for e in left))
+            self.assertTrue(all(not e["blocked_by_switch_guard"] for e in left))
             self.assertEqual(default.active_sequence, explicit.active_sequence)
             self.assertEqual(
                 default.consume_stage_transition_events(),
@@ -531,6 +534,185 @@ class PeriodicReselectionTests(unittest.TestCase):
                 )
         self.assertEqual(default.periodic_reselection_count, 5)
         self.assertEqual(explicit.periodic_reselection_count, 5)
+
+    def test_switch_guard_waits_for_confirmation_and_reconsiders_next_poll(self):
+        route, proposed = ("link2", "link4"), ("link3", "link5")
+        queried, guarded = [], []
+        decisions = iter((False, True))
+
+        def selector(q):
+            queried.append(q.copy())
+            return proposed
+
+        def guard(q, current, chosen):
+            guarded.append((q.copy(), current, chosen))
+            q[:] = -10.0  # The guard cannot mutate the controller's input.
+            return next(decisions)
+
+        c = self.controller(
+            selector,
+            initial=route,
+            periodic_reselection_period=0.02,
+            periodic_reselection_confirmations=3,
+            periodic_stage_switch_guard=guard,
+        )
+        unchanged = self.controller(
+            lambda q: route,
+            initial=route,
+            periodic_reselection_period=0.02,
+        )
+        events = []
+        for tick in range(4):
+            q = np.zeros(7)
+            if tick:
+                q[0] = 1.0  # Complete link2; the guard still receives the full route.
+            events.extend(self.step(c, q))
+            self.step(unchanged, q)
+            self.assertEqual(len(guarded), int(tick == 3))
+            self.assertEqual(c.active_sequence, route)
+            self.assertEqual(c.active_stage_name, unchanged.active_stage_name)
+            self.assertEqual(
+                list(c._progress_best_errors), list(unchanged._progress_best_errors)
+            )
+            self.assertEqual(
+                list(c.applied_velocity_norms), list(unchanged.applied_velocity_norms)
+            )
+            for key in ("P", "q", "A", "lower", "upper"):
+                np.testing.assert_array_equal(
+                    getattr(c.solver.problems[-1], key),
+                    getattr(unchanged.solver.problems[-1], key),
+                )
+        self.assertEqual(len(queried), 3)
+        self.assertEqual(
+            [e["switch_guard_evaluated"] for e in events], [False, False, True]
+        )
+        self.assertEqual(
+            [e["blocked_by_switch_guard"] for e in events], [False, False, True]
+        )
+        self.assertFalse(events[-1]["accepted"])
+        self.assertEqual(events[-1]["candidate_after"], list(proposed))
+        self.assertEqual(events[-1]["streak_after"], 3)
+        self.assertEqual(c.periodic_reselection_count, 0)
+        self.assertEqual(c.consume_stage_transition_events(), (
+            ("link2_position", "link4_position", "target_reached"),
+        ))
+
+        q[6] = 0.25
+        (accepted,) = self.step(c, q)
+        self.assertEqual(len(queried), 4)  # One selector call per scheduled poll.
+        self.assertEqual(len(guarded), 2)
+        for index, (guard_q, current, chosen) in enumerate(guarded):
+            np.testing.assert_array_equal(guard_q, queried[index + 2])
+            self.assertEqual(current, route)
+            self.assertEqual(chosen, proposed)
+        self.assertEqual(accepted["confirmation_streak"], 4)
+        self.assertTrue(accepted["switch_guard_evaluated"])
+        self.assertFalse(accepted["blocked_by_switch_guard"])
+        self.assertTrue(accepted["accepted"])
+        self.assertIsNone(accepted["candidate_after"])
+        self.assertEqual(accepted["streak_after"], 0)
+        self.assertEqual(c.active_sequence, proposed)
+        self.assertEqual(c.periodic_reselection_count, 1)
+        self.assertEqual(len(c._progress_best_errors), 1)
+        self.assertEqual(len(c.applied_velocity_norms), 1)
+
+    def test_guard_rejection_keeps_normal_current_and_different_proposal_resets(self):
+        a, b, d = ("link2",), ("link3",), ("link4",)
+        proposals = iter((b, b, a, b, d, d))
+        guarded = []
+        c = self.controller(
+            lambda q: next(proposals),
+            initial=a,
+            periodic_reselection_period=0.02,
+            periodic_reselection_confirmations=2,
+            periodic_stage_switch_guard=(
+                lambda q, current, proposed: guarded.append(proposed) or False
+            ),
+        )
+        events = []
+        for _ in range(7):
+            events.extend(self.step(c))
+        self.assertEqual(
+            [e["confirmation_streak"] for e in events], [1, 2, 0, 1, 1, 2]
+        )
+        self.assertEqual(
+            [e["switch_guard_evaluated"] for e in events],
+            [False, True, False, False, False, True],
+        )
+        self.assertIsNone(events[2]["candidate_after"])
+        self.assertEqual(events[4]["candidate_after"], list(d))
+        self.assertEqual(guarded, [b, d])
+        self.assertTrue(all(not e["accepted"] for e in events))
+        self.assertEqual(c.active_sequence, a)
+        self.assertEqual(c.consume_stage_transition_events(), ())
+
+    def test_switch_cap_takes_precedence_over_guard(self):
+        for cap in (0, 1):
+            with self.subTest(cap=cap):
+                proposals = iter([("link3",)] * 2 + [("link5",)] * 3)
+                guarded = []
+                c = self.controller(
+                    lambda q: next(proposals),
+                    periodic_reselection_period=0.02,
+                    periodic_reselection_confirmations=2,
+                    periodic_reselection_max_switches=cap,
+                    periodic_stage_switch_guard=(
+                        lambda q, current, proposed: guarded.append(proposed) or True
+                    ),
+                )
+                events = []
+                for _ in range(6):
+                    events.extend(self.step(c))
+                self.assertEqual(len(guarded), cap)
+                self.assertEqual(c.periodic_reselection_count, cap)
+                self.assertTrue(all(not e["blocked_by_switch_guard"] for e in events))
+                for event in events:
+                    if event["blocked_by_switch_limit"]:
+                        self.assertFalse(event["switch_guard_evaluated"])
+                        self.assertFalse(event["accepted"])
+                self.assertTrue(events[-1]["blocked_by_switch_limit"])
+                self.assertEqual(events[-1]["candidate_after"], ["link5"])
+                self.assertEqual(events[-1]["streak_after"], 3)
+
+    def test_switch_guard_requires_callable_and_periodic_reselection(self):
+        for guard in (False, True, 0, "guard"):
+            with self.subTest(guard=guard), self.assertRaisesRegex(ValueError, "callable"):
+                self.controller(lambda q: (), periodic_stage_switch_guard=guard)
+        with self.assertRaisesRegex(ValueError, "requires periodic reselection"):
+            PandaTrajectoryController(
+                self.config, Kinematics(), Safety(), (self.candidate,), Solver(),
+                periodic_stage_switch_guard=lambda q, current, proposed: True,
+            )
+
+    def test_switch_guard_requires_boolean_result(self):
+        invalid = (None, 0, 1, "true", [], np.array(True), np.array([True]))
+        for result in invalid:
+            with self.subTest(result=result):
+                c = self.controller(
+                    lambda q: ("link5",),
+                    periodic_reselection_period=0.02,
+                    periodic_reselection_confirmations=1,
+                    periodic_stage_switch_guard=lambda q, current, proposed: result,
+                )
+                self.step(c)
+                with self.assertRaisesRegex(ValueError, "must return a boolean"):
+                    self.step(c)
+                self.assertEqual(c.active_sequence, ("link2", "link4"))
+                self.assertEqual(c.periodic_reselection_count, 0)
+                self.assertEqual(c.consume_stage_transition_events(), ())
+        for result in (True, False, np.bool_(True), np.bool_(False)):
+            with self.subTest(result=result):
+                c = self.controller(
+                    lambda q: ("link5",),
+                    periodic_reselection_period=0.02,
+                    periodic_reselection_confirmations=1,
+                    periodic_stage_switch_guard=lambda q, current, proposed: result,
+                )
+                self.step(c)
+                (event,) = self.step(c)
+                self.assertIs(event["accepted"], bool(result))
+                self.assertIs(event["blocked_by_switch_guard"], not bool(result))
+                self.assertIs(event["switch_guard_evaluated"], True)
 
     def test_switch_cap_requires_nonnegative_integer_and_periodic_policy(self):
         for limit in (-1, 1.2, 3.0, True, False, np.bool_(True), "3", np.nan):

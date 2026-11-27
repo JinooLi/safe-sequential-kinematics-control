@@ -19,11 +19,15 @@ controlling the final EE. Only consecutive identical proposals for a different
 complete route trigger a switch. A switch restarts that route at its first link;
 ordinary already-reached checks still apply. The episode clock is never reset.
 The optional sequence-lock-on-ee flag stops polling permanently at the first
-entry into EE, including an initially selected Direct action.
+entry into EE, including an initially selected Direct action. An optional score
+gain guard compares the proposed and current complete routes at the same polled
+state, after temporal confirmation, using the already-computed probabilities.
 
 The spatial policy instead queries Gaussian configurations around each polled
-state. A strict majority can change the route immediately, without a temporal
-confirmation streak. The Gaussian samples are network inputs, not robot states.
+state. By default a strict majority can change the route immediately. YAML may
+require consecutive polls with the same other-route majority; no majority or a
+current-route majority clears that streak. Gaussian samples are network inputs,
+not robot states.
 """
 
 from __future__ import annotations
@@ -324,6 +328,52 @@ def validate_sequence_lock_on_ee(value, mode="periodic"):
     return bool(value)
 
 
+def validate_sequence_min_probability_gain(value, mode="periodic"):
+    """The optional exact-state score margin applies only to periodic selection."""
+    if value is None:
+        return None
+    if (
+        mode != "periodic"
+        or isinstance(value, (bool, np.bool_))
+        or not isinstance(value, (int, float, np.integer, np.floating))
+        or not np.isfinite(value) or not 0 <= value <= 1
+    ):
+        raise ValueError("sequence minimum probability gain requires periodic mode and a finite value in [0,1]")
+    return float(value)
+
+
+def _sequence_probability_gain(probabilities, current_sequence, proposed_sequence):
+    """Compare complete catalog routes at one already-inferred configuration."""
+    catalog = tuple(tuple(f"link{i}" for i in links) for links in LINK_ACTIONS)
+    current, proposed = tuple(current_sequence), tuple(proposed_sequence)
+    scores = np.asarray(probabilities, dtype=np.float64)
+    if (
+        scores.shape != (len(catalog),) or not np.isfinite(scores).all()
+        or np.any((scores < 0) | (scores > 1))
+        or current not in catalog or proposed not in catalog
+    ):
+        raise ValueError("switch guard needs finite probabilities and complete catalog routes")
+    return float(scores[catalog.index(proposed)] - scores[catalog.index(current)])
+
+
+def make_probability_gain_switch_guard(calls, min_probability_gain):
+    """Reuse the latest scheduled inference; never query the model at commit."""
+    threshold = validate_sequence_min_probability_gain(min_probability_gain)
+    if threshold is None:
+        return None
+
+    def guard(q, current_sequence, proposed_sequence):
+        if not calls:
+            raise ValueError("switch guard requires the latest scheduled inference")
+        call = calls[-1]
+        np.testing.assert_array_equal(q, call["q"])
+        return _sequence_probability_gain(
+            call["probabilities"], current_sequence, proposed_sequence,
+        ) >= threshold
+
+    return guard
+
+
 def resolve_sequence_settings(args):
     """Keep temporal flags and spatial YAML settings unambiguous."""
     spatial_path = getattr(args, "spatial_config", None)
@@ -333,9 +383,9 @@ def resolve_sequence_settings(args):
         if spatial_path is None:
             raise ValueError("spatial mode requires --spatial-config")
         if period is not None or confirmations is not None:
-            raise ValueError("spatial mode uses YAML period_seconds and no temporal confirmation count")
+            raise ValueError("spatial mode uses YAML period_seconds and temporal_confirmations, not periodic CLI overrides")
         config = load_spatial_selection_config(spatial_path)
-        return config, config.period_seconds, 1
+        return config, config.period_seconds, config.temporal_confirmations
     if spatial_path is not None:
         raise ValueError("--spatial-config requires spatial mode")
     if args.mode == "periodic":
@@ -424,7 +474,7 @@ def _periodic_ee_lock_cutoff(trace, transitions, initial_sequence, integration_p
 def timestamp_periodic_events(
     events, calls, trace, transitions, initial_sequence, *, period, confirmations,
     integration_period, max_switches=None, lock_on_ee=False, ee_lock_event=None,
-    spatial_config=None, spatial_position=None,
+    spatial_config=None, spatial_position=None, min_probability_gain=None,
 ):
     """Certify polling completeness, model action identity and switch timestamps.
 
@@ -438,14 +488,18 @@ def timestamp_periodic_events(
     if spatial_config is not None:
         if (
             not isinstance(spatial_config, SpatialSelectionConfig)
-            or confirmations != 1 or period != spatial_config.period_seconds
+            or confirmations != spatial_config.temporal_confirmations
+            or period != spatial_config.period_seconds
             or type(spatial_position) is not int or spatial_position < 0
         ):
-            raise ValueError("spatial audit requires matching settings, N=1 and a partition position")
+            raise ValueError("spatial audit requires matching temporal settings and a partition position")
         spatial_rng = np.random.Generator(np.random.PCG64(
             np.random.SeedSequence([spatial_config.sampling_seed, spatial_position])
         ))
     max_switches = validate_sequence_max_switches(max_switches)
+    min_probability_gain = validate_sequence_min_probability_gain(
+        min_probability_gain, "spatial" if spatial_config is not None else "periodic",
+    )
     lock_on_ee = validate_sequence_lock_on_ee(lock_on_ee)
     cutoff = _periodic_ee_lock_cutoff(
         trace, transitions, initial_sequence, integration_period, lock_on_ee, ee_lock_event,
@@ -461,6 +515,7 @@ def timestamp_periodic_events(
     if current not in catalog:
         raise ValueError("initial periodic route is not an original model action")
     timed, switch_count = [], 0
+    candidate, streak = None, 0
     for poll_index, (event, call) in enumerate(zip(events, calls)):
         index = event["control_call_index"]
         if type(index) is not int:
@@ -496,28 +551,48 @@ def timestamp_periodic_events(
         ):
             source = "model argmax" if spatial_config is None else "spatial vote decision"
             raise ValueError(f"periodic controller action differs from the {source} or active route")
+        # Reconstruct the streak from independently verified proposals rather
+        # than trusting the controller's own reported confirmation count.
+        expected_candidate_before = None if candidate is None else list(candidate)
+        if (
+            event.get("candidate_before", expected_candidate_before) != expected_candidate_before
+            or event.get("streak_before", streak) != streak
+        ):
+            raise ValueError("periodic prior confirmation evidence is inconsistent")
+        if proposal == current:
+            candidate, streak = None, 0
+        elif proposal == candidate:
+            streak += 1
+        else:
+            candidate, streak = proposal, 1
         exhausted = max_switches is not None and switch_count >= max_switches
-        confirmed = event["confirmation_streak"] >= confirmations
+        confirmed = streak >= confirmations
         blocked = confirmed and exhausted
-        accepted = confirmed and not exhausted
-        if spatial_config is not None and confirmed != (proposal != current):
-            raise ValueError("spatial majority must be considered immediately without a temporal streak")
+        guard_evaluated = confirmed and not exhausted and min_probability_gain is not None
+        probability_gain = (
+            _sequence_probability_gain(scores, current, proposal) if guard_evaluated else None
+        )
+        blocked_by_guard = guard_evaluated and probability_gain < min_probability_gain
+        accepted = confirmed and not exhausted and not blocked_by_guard
         if (
             event["max_switches"] != max_switches
             or event["switch_count_before"] != switch_count
             or event["blocked_by_switch_limit"] != blocked
+            or event.get("switch_guard_evaluated", False) != guard_evaluated
+            or event.get("blocked_by_switch_guard", False) != blocked_by_guard
+            or event["confirmation_streak"] != streak
             or event["accepted"] != accepted
-            or (proposal == current and confirmed)
         ):
-            raise ValueError("periodic switch-limit or confirmation evidence is inconsistent")
-        if event["accepted"]:
-            if (
-                proposal == current
-                or event["streak_after"] != 0 or event["candidate_after"] is not None
-            ):
-                raise ValueError("periodic switch lacks the required confirmation evidence")
+            raise ValueError("periodic switch-limit, switch-guard or confirmation evidence is inconsistent")
+        if accepted:
             current = proposal
             switch_count += 1
+            candidate, streak = None, 0
+        if (
+            event["streak_after"] != streak
+            or event["candidate_after"] != (None if candidate is None else list(candidate))
+        ):
+            raise ValueError("periodic pending confirmation evidence is inconsistent")
         if event["switch_count_after"] != switch_count:
             raise ValueError("periodic accepted-switch count changed without a switch")
         if tuple(event["current_sequence_after"]) != current:
@@ -525,7 +600,7 @@ def timestamp_periodic_events(
         # One authoritative record keeps both inference and controller evidence
         # without repeating q/probabilities in phase-wide summary payloads.
         record = dict(call)
-        record.update(event, time=timestamp)
+        record.update(event, time=timestamp, switch_probability_gain=probability_gain)
         timed.append(record)
     accepted = [event for event in timed if event["accepted"]]
     switches = [event for event in transitions if event.get("reason") == "sequence_switch"]
@@ -657,6 +732,9 @@ def evaluate_case(task):
                 case["target_position"], case["target_quaternion"], task["obstacles"],
             ) if spatial_config is not None else None
         )
+        probability_gain_guard = make_probability_gain_switch_guard(
+            calls, task.get("sequence_min_probability_gain"),
+        )
 
         def select(q):
             if spatial_selector is not None:
@@ -702,6 +780,8 @@ def evaluate_case(task):
                     periodic_reselection_lock_on_ee=task.get("sequence_lock_on_ee", False),
                     initial_stage_sequence=tuple(initial["link_frames"]),
                 )
+                if probability_gain_guard is not None:
+                    periodic_options["periodic_stage_switch_guard"] = probability_gain_guard
             controller = PandaTrajectoryController(
                 *args, stage_selector=select if mode in ("adaptive", "threshold_weighted") else None,
                 **collision_options, **periodic_options,
@@ -743,6 +823,7 @@ def evaluate_case(task):
                 ee_lock_event=controllers[0].periodic_ee_lock_event,
                 spatial_config=spatial_config,
                 spatial_position=task["partition_position"],
+                min_probability_gain=task.get("sequence_min_probability_gain"),
             )
             switches = sum(event["accepted"] for event in decisions)
             if controllers[0].periodic_reselection_count != switches:
@@ -754,6 +835,7 @@ def evaluate_case(task):
                 sequence_confirmations=task["sequence_confirmations"],
                 sequence_max_switches=task.get("sequence_max_switches"),
                 sequence_lock_on_ee=task.get("sequence_lock_on_ee", False),
+                sequence_min_probability_gain=task.get("sequence_min_probability_gain"),
                 initial_direct=controllers[0].periodic_initial_direct,
                 periodic_ee_locked=controllers[0].periodic_ee_locked,
                 periodic_ee_lock_time=lock_event["simulated_time"] if lock_event else None,
@@ -762,6 +844,8 @@ def evaluate_case(task):
                 periodic_ee_lock_event=lock_event,
                 periodic_poll_count=len(decisions), periodic_switch_count=switches,
                 periodic_blocked_switch_proposals=sum(event["blocked_by_switch_limit"] for event in decisions),
+                periodic_switch_guard_evaluations=sum(event["switch_guard_evaluated"] for event in decisions),
+                periodic_blocked_by_switch_guard=sum(event["blocked_by_switch_guard"] for event in decisions),
                 periodic_switch_limit_exhausted=(
                     task.get("sequence_max_switches") is not None
                     and switches >= task["sequence_max_switches"]
@@ -906,6 +990,9 @@ def aggregate(rows, requested):
             periodic_blocked_switch_proposals=sum(row.get("periodic_blocked_switch_proposals", 0) for row in completed),
             periodic_scenes_with_blocked_switch_proposals=sum(row.get("periodic_blocked_switch_proposals", 0) > 0 for row in completed),
             periodic_scenes_at_switch_limit=sum(row.get("periodic_switch_limit_exhausted", False) for row in completed),
+            periodic_switch_guard_evaluations=sum(row.get("periodic_switch_guard_evaluations", 0) for row in completed),
+            periodic_blocked_by_switch_guard=sum(row.get("periodic_blocked_by_switch_guard", 0) for row in completed),
+            periodic_scenes_blocked_by_switch_guard=sum(row.get("periodic_blocked_by_switch_guard", 0) > 0 for row in completed),
             initial_direct_scenes=sum(row.get("initial_direct", False) for row in completed),
             periodic_ee_locked_scenes=sum(row.get("periodic_ee_locked", False) for row in completed),
             periodic_ee_lock_reasons=dict(Counter(row["periodic_ee_lock_reason"] for row in completed if row.get("periodic_ee_locked", False))),
@@ -930,6 +1017,9 @@ def run(args):
     )
     sequence_lock_on_ee = validate_sequence_lock_on_ee(
         getattr(args, "sequence_lock_on_ee", False), args.mode,
+    )
+    sequence_min_probability_gain = validate_sequence_min_probability_gain(
+        getattr(args, "sequence_min_probability_gain", None), args.mode,
     )
     for name in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS"):
         os.environ[name] = "1"
@@ -967,6 +1057,7 @@ def run(args):
                 sequence_confirmations=sequence_confirmations,
                 sequence_max_switches=sequence_max_switches,
                 sequence_lock_on_ee=sequence_lock_on_ee,
+                sequence_min_probability_gain=sequence_min_probability_gain,
             )
             if spatial_config is not None:
                 task["spatial_reselection"] = asdict(spatial_config)
@@ -1049,6 +1140,14 @@ def run(args):
             sequence_confirmations=sequence_confirmations,
             sequence_max_switches=sequence_max_switches,
             sequence_lock_on_ee=sequence_lock_on_ee,
+            sequence_min_probability_gain=sequence_min_probability_gain,
+            probability_gain_guard=(dict(
+                comparison="p(proposed_complete_route|current_q)-p(current_complete_route|current_q)>=minimum_gain",
+                evaluation="only_after_temporal_confirmation_and_before_switch; switch_cap_has_priority",
+                scores="reuse_latest_scheduled_exact_q_probabilities; no_extra_inference",
+                rejection="keep_current_route_and_pending_candidate_streak; reevaluate_at_next_poll",
+                minimum_gain=sequence_min_probability_gain,
+            ) if sequence_min_probability_gain is not None else None),
             switch_limit_counts="accepted_complete_route_changes_only; initial_selection_and_reached_stage_advances_excluded",
             switch_limit_exhausted="continue_scheduled_inference_and_streak_update_until_optional_EE_lock; reject_confirmed_route_changes",
             period_control_steps=periodic_schedule_steps(
@@ -1100,13 +1199,15 @@ def run(args):
             context="same_saved_IK_final_EE_pose_and_obstacles; only_current_q_varies",
             initial_selection="one_original_model_argmax_inference_at_t0; no_Gaussian_draw",
             polling="period_seconds,2*period_seconds,... on_simulation_clock; no_t0_or_terminal_poll",
-            period_control_steps=periodic_schedule_steps(sequence_period, 1, experiment.config.trajectory.integration_period),
+            period_control_steps=periodic_schedule_steps(sequence_period, sequence_confirmations, experiment.config.trajectory.integration_period),
             sample_choice="original_16_action_argmax_for_each_sample",
             selection_rule="strictly_more_than_half_of_samples_vote_for_one_complete_route",
             minimum_majority_votes=spatial_config.sample_count // 2 + 1,
-            no_majority="retain_current_complete_route_without_switch_or_progress_window_reset",
-            same_route_majority="retain_current_route_and_stage",
-            temporal_confirmations_required=1,
+            no_majority="propose_current_complete_route; clear_candidate_and_streak; no_progress_window_reset",
+            same_route_majority="retain_current_route_and_stage; clear_candidate_and_streak",
+            temporal_confirmations_required=spatial_config.temporal_confirmations,
+            confirmation="N_consecutive_polls_with_same_other_route_strict_majority",
+            different_candidate_majority="replace_candidate_and_set_streak_to_one",
             accepted_switch="restart_new_route_at_first_link; skip_already_reached_with_existing_criterion",
             sequence_max_switches=sequence_max_switches,
             sequence_lock_on_ee=sequence_lock_on_ee,
@@ -1185,6 +1286,7 @@ def run(args):
         statistics = aggregate(results, len(tasks))
         atomic_json(output / "analysis.json", statistics)
         fields = ("case_id", "partition", "partition_position", "test_position", "dataset_index", "execution_status", "success", "goal_reached", "reason", "elapsed", "completion_time", "stored_static_success", "static_replay_matches", "collision_stall_gate_checks", "collision_stall_skipped_stages", "collision_stall_diagnostic_failures", "sequence_period", "sequence_confirmations", "sequence_max_switches", "sequence_lock_on_ee", "initial_direct", "periodic_ee_locked", "periodic_ee_lock_time", "periodic_ee_lock_control_call_index", "periodic_ee_lock_reason", "periodic_poll_count", "periodic_switch_count", "periodic_blocked_switch_proposals", "periodic_switch_limit_exhausted", "initial_inference_count", "total_inference_count", "task_wall_time")
+        fields += ("sequence_min_probability_gain", "periodic_switch_guard_evaluations", "periodic_blocked_by_switch_guard")
         if spatial_config is not None:
             fields += ("spatial_poll_count", "spatial_sample_count", "spatial_neural_evaluations", "spatial_majority_polls", "spatial_no_majority_polls", "spatial_selection_wall_seconds")
         with (output / "comparison.csv").open("x", newline="") as stream:
@@ -1220,9 +1322,10 @@ def main():
     parser.add_argument("--partition", choices=("test", "validation"), default="test", help="Existing held-out split to replay; never creates a new split")
     parser.add_argument("--sampling-seed", type=int, default=20261125, help="Nonnegative seed for independent per-test-position weighted sampling")
     parser.add_argument("--probability-threshold", type=float, default=0.5, help="Original action scores must strictly exceed this threshold")
-    parser.add_argument("--spatial-config", type=Path, help="Spatial mode: YAML with sample count, three-sigma radius, poll period and seed")
+    parser.add_argument("--spatial-config", type=Path, help="Spatial mode: YAML with sample count, three-sigma radius, poll period, seed and temporal confirmations")
     parser.add_argument("--sequence-period", type=float, help="Periodic-mode polling interval in simulated seconds (default 0.1); integer multiple of control dt")
     parser.add_argument("--sequence-confirmations", type=int, help="Consecutive identical proposals required in periodic mode (default 5)")
+    parser.add_argument("--sequence-min-probability-gain", type=float, help="Periodic mode only: require this exact-state probability gain over the current complete route after temporal confirmation (disabled by default)")
     parser.add_argument("--sequence-max-switches", type=int, help="Optional nonnegative cap in periodic/spatial mode; polls continue after the cap")
     parser.add_argument("--sequence-lock-on-ee", action="store_true", help="Periodic/spatial mode: permanently stop polling and route changes at first EE entry, including initial Direct")
     parser.add_argument("--offset", type=int, default=0)

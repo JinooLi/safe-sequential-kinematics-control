@@ -149,6 +149,7 @@ class SpatialConfigurationTests(unittest.TestCase):
     def test_invalid_count_seed_radius_or_period_rejected(self):
         for field, values in (
             ("sample_count", [0, -1, True, 50.0]),
+            ("temporal_confirmations", [0, -1, True, 12.0, "12"]),
             ("sampling_seed", [-1, False, 1.0]),
             ("three_sigma_radius_rad", [0, -0.1, True, float("nan"), float("inf")]),
             ("period_seconds", [0, -0.3, False, float("nan"), "0.3"]),
@@ -162,6 +163,8 @@ class SpatialConfigurationTests(unittest.TestCase):
             path = Path(directory) / "spatial.yaml"
             path.write_text("spatial_reselection:\n  sample_count: 30\n  three_sigma_radius_rad: 0.06\n  period_seconds: 0.4\n  sampling_seed: 5\n")
             self.assertEqual(load_spatial_selection_config(path), SpatialSelectionConfig(30, .06, .4, 5))
+            path.write_text(path.read_text() + "  temporal_confirmations: 12\n")
+            self.assertEqual(load_spatial_selection_config(path).temporal_confirmations, 12)
             for contents in ("", "[]", "spatial_reselection: []", "spatial_reselection:\n  sampl_count: 50", "spatial_reselection:\n  sample_count: true"):
                 path.write_text(contents)
                 with self.subTest(contents=contents), self.assertRaises(ValueError):
